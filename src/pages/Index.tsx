@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -17,12 +17,19 @@ const Index = () => {
   const [lastName, setLastName] = useState('');
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('login');
-  const { login, signup, user } = useAuth();
+  const { login, signup, user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
 
   // Redirect if already logged in
-  if (user) {
-    navigate('/dashboard');
+  useEffect(() => {
+    if (user && !authLoading) {
+      console.log('User is logged in, redirecting to dashboard');
+      navigate('/dashboard');
+    }
+  }, [user, authLoading, navigate]);
+
+  // Don't render the login form if user is already authenticated
+  if (user && !authLoading) {
     return null;
   }
 
@@ -31,9 +38,10 @@ const Index = () => {
     setLoading(true);
     
     try {
+      console.log('Starting login process');
       await login(email, password);
       toast.success('Welcome back!');
-      navigate('/dashboard');
+      console.log('Login successful, should redirect soon');
     } catch (error: any) {
       console.error('Login error:', error);
       toast.error(error.message || 'Login failed. Please try again.');
@@ -47,6 +55,7 @@ const Index = () => {
     setLoading(true);
     
     try {
+      console.log('Starting signup process');
       await signup(email, password, firstName, lastName);
       toast.success('Account created! Please check your email to verify your account.');
       setActiveTab('login');
