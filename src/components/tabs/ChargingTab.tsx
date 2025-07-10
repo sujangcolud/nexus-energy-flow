@@ -1,158 +1,232 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from 'sonner';
-import { Zap } from 'lucide-react';
+import { Zap, Plus, Trash2 } from 'lucide-react';
+
+interface ChargingSession {
+  id: string;
+  start_percentage: number;
+  end_percentage: number;
+  per_percent_rate: number;
+  kcal: number;
+  per_unit_rate: number;
+  total_amount: number;
+  payment_mode: string;
+  session_date: string;
+  created_at: string;
+}
 
 const ChargingTab = () => {
-  const [formData, setFormData] = useState({
-    startPercent: '',
-    endPercent: '',
-    perPercentRate: '',
-    kcal: '',
-    perUnitRate: '',
-    paymentMode: '',
-    totalAmount: ''
-  });
+  const { user } = useAuth();
+  const [sessions, setSessions] = useState<ChargingSession[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  
+  // Form state
+  const [startPercentage, setStartPercentage] = useState(0);
+  const [endPercentage, setEndPercentage] = useState(0);
+  const [perPercentRate, setPerPercentRate] = useState(0);
+  const [kcal, setKcal] = useState(0);
+  const [perUnitRate, setPerUnitRate] = useState(0);
+  const [paymentMode, setPaymentMode] = useState('');
 
-  const updateFormData = (field: string, value: string) => {
-    const newData = { ...formData, [field]: value };
+  const fetchSessions = async () => {
+    if (!user) return;
     
-    // Auto-calculate total amount
-    if (['startPercent', 'endPercent', 'perPercentRate', 'kcal', 'perUnitRate'].includes(field)) {
-      const start = parseFloat(newData.startPercent) || 0;
-      const end = parseFloat(newData.endPercent) || 0;
-      const perPercent = parseFloat(newData.perPercentRate) || 0;
-      const kcal = parseFloat(newData.kcal) || 0;
-      const perUnit = parseFloat(newData.perUnitRate) || 0;
-      
-      let amount1 = 0, amount2 = 0;
-      if (end > start && perPercent) {
-        amount1 = (end - start) * perPercent;
-      }
-      if (kcal && perUnit) {
-        amount2 = kcal * perUnit;
-      }
-      
-      const total = amount1 + amount2;
-      newData.totalAmount = total > 0 ? total.toFixed(2) : '';
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('charging_sessions')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setSessions(data || []);
+    } catch (error) {
+      console.error('Error fetching charging sessions:', error);
+      toast.error('Failed to load charging sessions');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchSessions();
+  }, [user]);
+
+  const calculateTotal = () => {
+    let percentageAmount = 0;
+    let unitAmount = 0;
+    
+    if (endPercentage > startPercentage && perPercentRate > 0) {
+      percentageAmount = (endPercentage - startPercentage) * perPercentRate;
     }
     
-    setFormData(newData);
+    if (kcal > 0 && perUnitRate > 0) {
+      unitAmount = kcal * perUnitRate;
+    }
+    
+    return percentageAmount + unitAmount;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!formData.totalAmount || !formData.paymentMode) {
-      toast.error('Please fill in the charging details and select payment mode');
+    if (!user || !paymentMode) {
+      toast.error('Please fill all required fields');
       return;
     }
 
-    // Mock submission
-    console.log('Submitting charging data:', formData);
-    toast.success('Charging session submitted successfully!');
-    
-    // Reset form
-    setFormData({
-      startPercent: '',
-      endPercent: '',
-      perPercentRate: '',
-      kcal: '',
-      perUnitRate: '',
-      paymentMode: '',
-      totalAmount: ''
-    });
+    const totalAmount = calculateTotal();
+    if (totalAmount <= 0) {
+      toast.error('Please enter valid charging data');
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const { error } = await supabase
+        .from('charging_sessions')
+        .insert({
+          user_id: user.id,
+          start_percentage: startPercentage || null,
+          end_percentage: endPercentage || null,
+          per_percent_rate: perPercentRate || null,
+          kcal: kcal || null,
+          per_unit_rate: perUnitRate || null,
+          total_amount: totalAmount,
+          payment_mode: paymentMode
+        });
+
+      if (error) throw error;
+
+      toast.success('Charging session submitted successfully!');
+      
+      // Reset form
+      setStartPercentage(0);
+      setEndPercentage(0);
+      setPerPercentRate(0);
+      setKcal(0);
+      setPerUnitRate(0);
+      setPaymentMode('');
+      
+      // Refresh sessions
+      fetchSessions();
+    } catch (error) {
+      console.error('Error submitting charging session:', error);
+      toast.error('Failed to submit charging session');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('charging_sessions')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast.success('Charging session deleted successfully');
+      fetchSessions();
+    } catch (error) {
+      console.error('Error deleting charging session:', error);
+      toast.error('Failed to delete charging session');
+    }
   };
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3 mb-6">
-        <Zap className="h-6 w-6 text-blue-600" />
-        <h2 className="text-2xl font-bold text-gray-900">Charging Management</h2>
+      <div className="flex items-center gap-2">
+        <Zap className="h-5 w-5 text-yellow-600" />
+        <h2 className="text-xl font-semibold text-gray-900">Charging Sessions</h2>
       </div>
 
-      <Card className="max-w-2xl">
+      {/* Charging Form */}
+      <Card>
         <CardHeader>
-          <CardTitle>New Charging Session</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Plus className="h-4 w-4" />
+            Add New Charging Session
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="startPercent">Start Percentage (%)</Label>
+                <label className="text-sm font-medium">Start Percentage (%)</label>
                 <Input
-                  id="startPercent"
                   type="number"
                   min="0"
                   max="100"
                   step="0.1"
-                  placeholder="Start %"
-                  value={formData.startPercent}
-                  onChange={(e) => updateFormData('startPercent', e.target.value)}
+                  value={startPercentage}
+                  onChange={(e) => setStartPercentage(parseFloat(e.target.value) || 0)}
+                  placeholder="0"
                 />
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="endPercent">End Percentage (%)</Label>
+                <label className="text-sm font-medium">End Percentage (%)</label>
                 <Input
-                  id="endPercent"
                   type="number"
                   min="0"
                   max="100"
                   step="0.1"
-                  placeholder="End %"
-                  value={formData.endPercent}
-                  onChange={(e) => updateFormData('endPercent', e.target.value)}
+                  value={endPercentage}
+                  onChange={(e) => setEndPercentage(parseFloat(e.target.value) || 0)}
+                  placeholder="0"
                 />
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="perPercentRate">Rate per Percent (Rs.)</Label>
+                <label className="text-sm font-medium">Rate per % (Rs.)</label>
                 <Input
-                  id="perPercentRate"
                   type="number"
                   min="0"
                   step="0.01"
-                  placeholder="Per % rate"
-                  value={formData.perPercentRate}
-                  onChange={(e) => updateFormData('perPercentRate', e.target.value)}
+                  value={perPercentRate}
+                  onChange={(e) => setPerPercentRate(parseFloat(e.target.value) || 0)}
+                  placeholder="0.00"
                 />
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="kcal">Energy Consumed (kWh)</Label>
+                <label className="text-sm font-medium">kCal</label>
                 <Input
-                  id="kcal"
                   type="number"
                   min="0"
                   step="0.01"
-                  placeholder="kWh"
-                  value={formData.kcal}
-                  onChange={(e) => updateFormData('kcal', e.target.value)}
+                  value={kcal}
+                  onChange={(e) => setKcal(parseFloat(e.target.value) || 0)}
+                  placeholder="0.00"
                 />
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="perUnitRate">Rate per Unit (Rs.)</Label>
+                <label className="text-sm font-medium">Rate per Unit (Rs.)</label>
                 <Input
-                  id="perUnitRate"
                   type="number"
                   min="0"
                   step="0.01"
-                  placeholder="Per unit rate"
-                  value={formData.perUnitRate}
-                  onChange={(e) => updateFormData('perUnitRate', e.target.value)}
+                  value={perUnitRate}
+                  onChange={(e) => setPerUnitRate(parseFloat(e.target.value) || 0)}
+                  placeholder="0.00"
                 />
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="paymentMode">Payment Mode</Label>
-                <Select value={formData.paymentMode} onValueChange={(value) => updateFormData('paymentMode', value)}>
+                <label className="text-sm font-medium">Payment Mode</label>
+                <Select value={paymentMode} onValueChange={setPaymentMode} required>
                   <SelectTrigger>
                     <SelectValue placeholder="Select payment mode" />
                   </SelectTrigger>
@@ -165,26 +239,74 @@ const ChargingTab = () => {
               </div>
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="totalAmount">Total Amount (Rs.)</Label>
-              <Input
-                id="totalAmount"
-                type="text"
-                placeholder="Auto-calculated"
-                value={formData.totalAmount}
-                readOnly
-                className="bg-gray-50 font-semibold text-lg"
-              />
+            <div className="flex items-center justify-between pt-4">
+              <div className="text-lg font-medium text-gray-900">
+                Total Amount: Rs. {calculateTotal().toFixed(2)}
+              </div>
+              <Button type="submit" disabled={submitting}>
+                {submitting ? 'Submitting...' : 'Submit Session'}
+              </Button>
             </div>
-            
-            <Button 
-              type="submit" 
-              className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
-              size="lg"
-            >
-              Submit Charging Session
-            </Button>
           </form>
+        </CardContent>
+      </Card>
+
+      {/* Sessions List */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Recent Charging Sessions</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="text-center py-4">Loading sessions...</div>
+          ) : sessions.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              No charging sessions found. Create your first session above.
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Start %</TableHead>
+                    <TableHead>End %</TableHead>
+                    <TableHead>Rate/%</TableHead>
+                    <TableHead>kCal</TableHead>
+                    <TableHead>Rate/Unit</TableHead>
+                    <TableHead>Total</TableHead>
+                    <TableHead>Payment</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {sessions.map((session) => (
+                    <TableRow key={session.id}>
+                      <TableCell>{session.start_percentage || '-'}</TableCell>
+                      <TableCell>{session.end_percentage || '-'}</TableCell>
+                      <TableCell>{session.per_percent_rate || '-'}</TableCell>
+                      <TableCell>{session.kcal || '-'}</TableCell>
+                      <TableCell>{session.per_unit_rate || '-'}</TableCell>
+                      <TableCell>Rs. {session.total_amount}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{session.payment_mode}</Badge>
+                      </TableCell>
+                      <TableCell>{new Date(session.session_date).toLocaleDateString()}</TableCell>
+                      <TableCell>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => handleDelete(session.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

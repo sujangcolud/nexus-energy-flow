@@ -14,16 +14,274 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      charging_sessions: {
+        Row: {
+          created_at: string | null
+          end_percentage: number | null
+          id: string
+          kcal: number | null
+          payment_mode: string
+          per_percent_rate: number | null
+          per_unit_rate: number | null
+          session_date: string | null
+          start_percentage: number | null
+          total_amount: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          end_percentage?: number | null
+          id?: string
+          kcal?: number | null
+          payment_mode: string
+          per_percent_rate?: number | null
+          per_unit_rate?: number | null
+          session_date?: string | null
+          start_percentage?: number | null
+          total_amount: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          end_percentage?: number | null
+          id?: string
+          kcal?: number | null
+          payment_mode?: string
+          per_percent_rate?: number | null
+          per_unit_rate?: number | null
+          session_date?: string | null
+          start_percentage?: number | null
+          total_amount?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      cooperative_savings: {
+        Row: {
+          contribution_amount: number
+          contribution_date: string | null
+          created_at: string | null
+          cycle_period: string | null
+          id: string
+          member_id: string
+          user_id: string
+        }
+        Insert: {
+          contribution_amount: number
+          contribution_date?: string | null
+          created_at?: string | null
+          cycle_period?: string | null
+          id?: string
+          member_id: string
+          user_id: string
+        }
+        Update: {
+          contribution_amount?: number
+          contribution_date?: string | null
+          created_at?: string | null
+          cycle_period?: string | null
+          id?: string
+          member_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      deposits: {
+        Row: {
+          amount: number
+          created_at: string | null
+          deposit_date: string | null
+          deposited_by: string
+          id: string
+          mode: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          deposit_date?: string | null
+          deposited_by: string
+          id?: string
+          mode: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          deposit_date?: string | null
+          deposited_by?: string
+          id?: string
+          mode?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      expenses: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string | null
+          description: string
+          expense_date: string | null
+          id: string
+          payment_mode: string
+          remarks: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          category: string
+          created_at?: string | null
+          description: string
+          expense_date?: string | null
+          id?: string
+          payment_mode: string
+          remarks?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string | null
+          description?: string
+          expense_date?: string | null
+          id?: string
+          payment_mode?: string
+          remarks?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      orders: {
+        Row: {
+          created_at: string | null
+          id: string
+          item_name: string
+          order_date: string | null
+          payment_mode: string
+          quantity: number
+          rate: number
+          total: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          item_name: string
+          order_date?: string | null
+          payment_mode: string
+          quantity?: number
+          rate: number
+          total: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          item_name?: string
+          order_date?: string | null
+          payment_mode?: string
+          quantity?: number
+          rate?: number
+          total?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string | null
+          email: string | null
+          first_name: string | null
+          id: string
+          last_name: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email?: string | null
+          first_name?: string | null
+          id: string
+          last_name?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string | null
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      withdrawals: {
+        Row: {
+          amount: number
+          created_at: string | null
+          id: string
+          purpose: string
+          recipient: string | null
+          user_id: string
+          withdrawal_date: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          id?: string
+          purpose: string
+          recipient?: string | null
+          user_id: string
+          withdrawal_date?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          id?: string
+          purpose?: string
+          recipient?: string | null
+          user_id?: string
+          withdrawal_date?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_current_user_role: {
+        Args: Record<PropertyKey, never>
+        Returns: Database["public"]["Enums"]["app_role"]
+      }
+      has_role: {
+        Args: { _role: Database["public"]["Enums"]["app_role"] }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "user" | "super_user" | "super_admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +408,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["user", "super_user", "super_admin"],
+    },
   },
 } as const
