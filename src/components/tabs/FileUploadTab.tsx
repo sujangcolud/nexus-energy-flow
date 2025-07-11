@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -10,21 +9,23 @@ import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
 import { Upload, FileText, AlertCircle } from 'lucide-react';
 
+type DataType = 'orders' | 'charging_sessions' | 'expenses' | 'deposits' | 'withdrawals' | 'cooperative_savings' | 'menu_items';
+
 const FileUploadTab = () => {
   const { user } = useAuth();
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [dataType, setDataType] = useState('');
+  const [dataType, setDataType] = useState<DataType | ''>('');
   const [file, setFile] = useState<File | null>(null);
 
   const dataTypes = [
-    { value: 'orders', label: 'Orders' },
-    { value: 'charging_sessions', label: 'Charging Sessions' },
-    { value: 'expenses', label: 'Expenses' },
-    { value: 'deposits', label: 'Deposits' },
-    { value: 'withdrawals', label: 'Withdrawals' },
-    { value: 'cooperative_savings', label: 'Cooperative Savings' },
-    { value: 'menu_items', label: 'Menu Items' }
+    { value: 'orders' as const, label: 'Orders' },
+    { value: 'charging_sessions' as const, label: 'Charging Sessions' },
+    { value: 'expenses' as const, label: 'Expenses' },
+    { value: 'deposits' as const, label: 'Deposits' },
+    { value: 'withdrawals' as const, label: 'Withdrawals' },
+    { value: 'cooperative_savings' as const, label: 'Cooperative Savings' },
+    { value: 'menu_items' as const, label: 'Menu Items' }
   ];
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -153,8 +154,9 @@ const FileUploadTab = () => {
       for (let i = 0; i < totalBatches; i++) {
         const batch = transformedData.slice(i * batchSize, (i + 1) * batchSize);
         
+        // Use type assertion to satisfy TypeScript
         const { error } = await supabase
-          .from(dataType)
+          .from(dataType as DataType)
           .insert(batch);
 
         if (error) throw error;
@@ -192,7 +194,7 @@ const FileUploadTab = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">Data Type</label>
-              <Select value={dataType} onValueChange={setDataType}>
+              <Select value={dataType} onValueChange={(value: DataType) => setDataType(value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select data type" />
                 </SelectTrigger>
