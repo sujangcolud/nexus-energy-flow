@@ -49,8 +49,9 @@ const WithdrawalsTab = () => {
         amount: parseFloat(formData.amount),
         purpose: formData.purpose,
         recipient: formData.recipient,
-        method: formData.method,
-        reference_number: formData.reference, // Assuming 'reference_number' is the column name
+        // method: formData.method, // Temporarily removed due to schema mismatch
+        withdrawal_method: formData.method, // Assuming 'withdrawal_method' as a possible column name
+        reference_number: formData.reference,
         remarks: formData.remarks,
         withdrawal_date: new Date().toISOString(),
       };
@@ -79,7 +80,7 @@ const WithdrawalsTab = () => {
   };
 
   return (
-    <div className="space-y-6 pt-4 md:pt-6"> {/* Added top padding */}
+    <div className="space-y-6"> {/* Removed top padding pt-4 md:pt-6 */}
       <div className="flex items-center gap-3 mb-6">
         <TrendingDown className="h-6 w-6 text-red-600" />
         <h2 className="text-2xl font-bold text-gray-900">Withdrawals Management</h2>
