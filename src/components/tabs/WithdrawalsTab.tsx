@@ -1,5 +1,7 @@
 
 import { useState } from 'react';
+import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -18,6 +20,8 @@ const WithdrawalsTab = () => {
     reference: '',
     remarks: ''
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { user } = useAuth();
 
   const withdrawalMethods = ['Cash', 'Bank Transfer', 'Cheque', 'Digital Payment'];
 
@@ -33,19 +37,45 @@ const WithdrawalsTab = () => {
       return;
     }
 
-    // Mock submission
-    console.log('Submitting withdrawal:', formData);
-    toast.success('Withdrawal recorded successfully!');
-    
-    // Reset form
-    setFormData({
-      amount: '',
-      purpose: '',
-      recipient: '',
-      method: '',
-      reference: '',
-      remarks: ''
-    });
+    if (!user) {
+      toast.error('You must be logged in to record a withdrawal.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const withdrawalData = {
+        user_id: user.id,
+        amount: parseFloat(formData.amount),
+        purpose: formData.purpose,
+        recipient: formData.recipient,
+        method: formData.method,
+        reference_number: formData.reference, // Assuming 'reference_number' is the column name
+        remarks: formData.remarks,
+        withdrawal_date: new Date().toISOString(),
+      };
+
+      const { error } = await supabase.from('withdrawals').insert([withdrawalData]);
+
+      if (error) {
+        throw error;
+      }
+
+      toast.success('Withdrawal recorded successfully!');
+      setFormData({ // Reset form
+        amount: '',
+        purpose: '',
+        recipient: '',
+        method: '',
+        reference: '',
+        remarks: ''
+      });
+    } catch (error: any) {
+      console.error('Error recording withdrawal:', error);
+      toast.error(error.message || 'Failed to record withdrawal. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -136,10 +166,21 @@ const WithdrawalsTab = () => {
             
             <Button 
               type="submit" 
-              className="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800"
+              className="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 disabled:opacity-70"
               size="lg"
+              disabled={isSubmitting}
             >
-              Record Withdrawal
+              {isSubmitting ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Recording...
+                </>
+              ) : (
+                'Record Withdrawal'
+              )}
             </Button>
           </form>
         </CardContent>

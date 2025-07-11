@@ -1,5 +1,7 @@
 
 import { useState } from 'react';
+import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -15,6 +17,8 @@ const DepositsTab = () => {
     depositedBy: '',
     reference: ''
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { user } = useAuth();
 
   const depositModes = ['Fonepay', 'Esewa', 'Bank Transfer', 'Cash Deposit', 'Cheque'];
 
@@ -30,17 +34,41 @@ const DepositsTab = () => {
       return;
     }
 
-    // Mock submission
-    console.log('Submitting deposit:', formData);
-    toast.success('Deposit recorded successfully!');
-    
-    // Reset form
-    setFormData({
-      amount: '',
-      mode: '',
-      depositedBy: '',
-      reference: ''
-    });
+    if (!user) {
+      toast.error('You must be logged in to record a deposit.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const depositData = {
+        user_id: user.id,
+        amount: parseFloat(formData.amount),
+        mode: formData.mode, // Assuming 'mode' is the column name for deposit mode
+        deposited_by: formData.depositedBy, // Assuming 'deposited_by'
+        reference_number: formData.reference, // Assuming 'reference_number'
+        deposit_date: new Date().toISOString(),
+      };
+
+      const { error } = await supabase.from('deposits').insert([depositData]);
+
+      if (error) {
+        throw error;
+      }
+
+      toast.success('Deposit recorded successfully!');
+      setFormData({ // Reset form
+        amount: '',
+        mode: '',
+        depositedBy: '',
+        reference: ''
+      });
+    } catch (error: any) {
+      console.error('Error recording deposit:', error);
+      toast.error(error.message || 'Failed to record deposit. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -107,10 +135,21 @@ const DepositsTab = () => {
             
             <Button 
               type="submit" 
-              className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800"
+              className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 disabled:opacity-70"
               size="lg"
+              disabled={isSubmitting}
             >
-              Record Deposit
+              {isSubmitting ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Recording...
+                </>
+              ) : (
+                'Record Deposit'
+              )}
             </Button>
           </form>
         </CardContent>
