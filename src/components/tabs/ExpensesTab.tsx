@@ -93,7 +93,7 @@ const ExpensesTab = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pt-4 md:pt-6"> {/* Added top padding */}
       <div className="flex items-center gap-3 mb-6">
         <Receipt className="h-6 w-6 text-blue-600" />
         <h2 className="text-2xl font-bold text-gray-900">Expenses Management</h2>

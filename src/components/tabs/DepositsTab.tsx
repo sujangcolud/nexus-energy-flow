@@ -44,9 +44,9 @@ const DepositsTab = () => {
       const depositData = {
         user_id: user.id,
         amount: parseFloat(formData.amount),
-        mode: formData.mode, // Assuming 'mode' is the column name for deposit mode
-        deposited_by: formData.depositedBy, // Assuming 'deposited_by'
-        reference_number: formData.reference, // Assuming 'reference_number'
+        mode: formData.mode,
+        deposited_by: formData.depositedBy,
+        reference: formData.reference, // Changed from reference_number to reference
         deposit_date: new Date().toISOString(),
       };
 
@@ -72,7 +72,7 @@ const DepositsTab = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pt-4 md:pt-6"> {/* Added top padding */}
       <div className="flex items-center gap-3 mb-6">
         <TrendingUp className="h-6 w-6 text-green-600" />
         <h2 className="text-2xl font-bold text-gray-900">Deposits Management</h2>
