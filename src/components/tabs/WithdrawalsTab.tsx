@@ -44,17 +44,22 @@ const WithdrawalsTab = () => {
 
     setIsSubmitting(true);
     try {
-      const withdrawalData = {
+      const withdrawalData: any = { // Use 'any' type temporarily for dynamic property setting
         user_id: user.id,
         amount: parseFloat(formData.amount),
         purpose: formData.purpose,
-        recipient: formData.recipient,
-        // method: formData.method, // Temporarily removed due to schema mismatch
-        withdrawal_method: formData.method, // Assuming 'withdrawal_method' as a possible column name
-        reference_number: formData.reference,
-        remarks: formData.remarks,
         withdrawal_date: new Date().toISOString(),
       };
+
+      // Add optional fields from your provided list if they exist in formData and are not empty
+      // Based on your list: 'recipient', 'method', 'reference', 'remarks' are not standard fields for withdrawals.
+      // If you have columns for these in Supabase and want to save them, ensure they are listed in your schema.
+      // For now, sticking to the schema provided: only amount and purpose are core.
+
+      // Example of how you might add an optional field if it *was* in your schema:
+      // if (formData.remarks) {
+      //   withdrawalData.remarks = formData.remarks;
+      // }
 
       const { error } = await supabase.from('withdrawals').insert([withdrawalData]);
 
