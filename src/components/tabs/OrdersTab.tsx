@@ -50,14 +50,21 @@ const OrdersTab = () => {
   const fetchOrders = async () => {
     if (!user) return;
     
+    console.log('Fetching orders for user:', user.id);
     setLoading(true);
     try {
       const { data, error } = await supabase
         .from('orders')
         .select('*')
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching orders:', error);
+        throw error;
+      }
+      
+      console.log('Orders fetched successfully:', data);
       setOrders(data || []);
     } catch (error) {
       console.error('Error fetching orders:', error);
@@ -68,6 +75,7 @@ const OrdersTab = () => {
   };
 
   const fetchMenuItems = async () => {
+    console.log('Fetching menu items');
     try {
       const { data, error } = await supabase
         .from('menu_items')
@@ -76,7 +84,12 @@ const OrdersTab = () => {
         .order('category')
         .order('name');
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching menu items:', error);
+        throw error;
+      }
+      
+      console.log('Menu items fetched successfully:', data);
       setMenuItems(data || []);
     } catch (error) {
       console.error('Error fetching menu items:', error);
@@ -106,6 +119,8 @@ const OrdersTab = () => {
         quantity: 1
       }]);
     }
+    
+    toast.success(`${item.name} added to cart`);
   };
 
   const updateCartQuantity = (id: string, quantity: number) => {
@@ -132,21 +147,34 @@ const OrdersTab = () => {
       return;
     }
 
+    console.log('Submitting order:', { cart, paymentMode, userId: user.id });
     setSubmitting(true);
+    
     try {
-      const orderPromises = cart.map(item => 
-        supabase.from('orders').insert({
+      const orderPromises = cart.map(item => {
+        const orderData = {
           user_id: user.id,
           item_name: item.name,
           quantity: item.quantity,
           rate: item.price,
           total: item.price * item.quantity,
           payment_mode: paymentMode
-        })
-      );
+        };
+        
+        console.log('Inserting order:', orderData);
+        return supabase.from('orders').insert(orderData);
+      });
 
-      await Promise.all(orderPromises);
+      const results = await Promise.all(orderPromises);
+      
+      // Check if any insertions failed
+      const errors = results.filter(result => result.error);
+      if (errors.length > 0) {
+        console.error('Order insertion errors:', errors);
+        throw new Error('Failed to insert some orders');
+      }
 
+      console.log('All orders inserted successfully');
       toast.success('Order submitted successfully!');
       
       // Reset cart and payment mode
@@ -154,7 +182,7 @@ const OrdersTab = () => {
       setPaymentMode('');
       
       // Refresh orders
-      fetchOrders();
+      await fetchOrders();
     } catch (error) {
       console.error('Error submitting order:', error);
       toast.error('Failed to submit order');
@@ -164,6 +192,7 @@ const OrdersTab = () => {
   };
 
   const handleDelete = async (id: string) => {
+    console.log('Deleting order:', id);
     try {
       const { error } = await supabase
         .from('orders')
@@ -172,6 +201,7 @@ const OrdersTab = () => {
 
       if (error) throw error;
 
+      console.log('Order deleted successfully');
       toast.success('Order deleted successfully');
       fetchOrders();
     } catch (error) {
@@ -196,130 +226,145 @@ const OrdersTab = () => {
         <h2 className="text-xl font-semibold text-gray-900">Orders Management</h2>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Menu Items */}
-        <div className="lg:col-span-2 space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Menu Items</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {Object.entries(groupedMenuItems).map(([category, items]) => (
-                <div key={category} className="mb-6">
-                  <h3 className="text-lg font-semibold mb-3 text-gray-800">{category}</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {items.map((item) => (
-                      <Card key={item.id} className="hover:shadow-md transition-shadow">
-                        <CardContent className="p-4">
-                          <div className="flex justify-between items-start mb-2">
-                            <h4 className="font-medium text-gray-900">{item.name}</h4>
-                            <span className="font-bold text-blue-600">Rs. {item.price}</span>
+      {menuItems.length === 0 ? (
+        <Card>
+          <CardContent className="p-6">
+            <div className="text-center">
+              <p className="text-gray-500 mb-4">No menu items available. Please contact an admin to add menu items.</p>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Menu Items */}
+          <div className="lg:col-span-2 space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Menu Items</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {Object.entries(groupedMenuItems).map(([category, items]) => (
+                  <div key={category} className="mb-6 last:mb-0">
+                    <h3 className="text-lg font-semibold mb-3 text-gray-800 border-b pb-2">{category}</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {items.map((item) => (
+                        <Card key={item.id} className="hover:shadow-md transition-shadow border-l-4 border-l-blue-500">
+                          <CardContent className="p-4">
+                            <div className="flex justify-between items-start mb-2">
+                              <h4 className="font-medium text-gray-900 text-base leading-tight">{item.name}</h4>
+                              <span className="font-bold text-blue-600 text-lg whitespace-nowrap ml-2">Rs. {item.price}</span>
+                            </div>
+                            {item.description && (
+                              <p className="text-sm text-gray-600 mb-3 leading-relaxed">{item.description}</p>
+                            )}
+                            <Button
+                              onClick={() => addToCart(item)}
+                              size="sm"
+                              className="w-full bg-gray-900 hover:bg-gray-700 text-white"
+                            >
+                              <Plus className="h-4 w-4 mr-2" />
+                              Add to Cart
+                            </Button>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Cart */}
+          <div className="space-y-4">
+            <Card className="sticky top-4">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <ShoppingBag className="h-4 w-4" />
+                  Cart ({cart.length} items)
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {cart.length === 0 ? (
+                  <p className="text-center text-gray-500 py-8">Your cart is empty</p>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="max-h-64 overflow-y-auto space-y-3">
+                      {cart.map((item) => (
+                        <div key={item.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                          <div className="flex-1 min-w-0">
+                            <h5 className="font-medium text-sm truncate">{item.name}</h5>
+                            <p className="text-xs text-gray-600">Rs. {item.price} each</p>
                           </div>
-                          {item.description && (
-                            <p className="text-sm text-gray-600 mb-3">{item.description}</p>
-                          )}
-                          <Button
-                            onClick={() => addToCart(item)}
-                            size="sm"
-                            className="w-full"
-                          >
-                            <Plus className="h-4 w-4 mr-2" />
-                            Add to Cart
-                          </Button>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Cart */}
-        <div className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <ShoppingBag className="h-4 w-4" />
-                Cart ({cart.length} items)
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {cart.length === 0 ? (
-                <p className="text-center text-gray-500 py-4">Your cart is empty</p>
-              ) : (
-                <div className="space-y-3">
-                  {cart.map((item) => (
-                    <div key={item.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                      <div className="flex-1">
-                        <h5 className="font-medium text-sm">{item.name}</h5>
-                        <p className="text-xs text-gray-600">Rs. {item.price} each</p>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => updateCartQuantity(item.id, item.quantity - 1)}
+                              className="h-8 w-8 p-0"
+                            >
+                              <Minus className="h-3 w-3" />
+                            </Button>
+                            <span className="w-8 text-center text-sm font-medium">{item.quantity}</span>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => updateCartQuantity(item.id, item.quantity + 1)}
+                              className="h-8 w-8 p-0"
+                            >
+                              <Plus className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => removeFromCart(item.id)}
+                              className="h-8 w-8 p-0 ml-2"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    
+                    <div className="border-t pt-4">
+                      <div className="flex justify-between font-semibold text-lg mb-4">
+                        <span>Total:</span>
+                        <span>Rs. {getCartTotal().toFixed(2)}</span>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => updateCartQuantity(item.id, item.quantity - 1)}
+
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">Payment Mode *</label>
+                          <Select value={paymentMode} onValueChange={setPaymentMode} required>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select payment mode" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Cash">Cash</SelectItem>
+                              <SelectItem value="Esewa">Esewa</SelectItem>
+                              <SelectItem value="Fonepay">Fonepay</SelectItem>
+                              <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <Button 
+                          onClick={handleSubmitOrder} 
+                          disabled={submitting || !paymentMode} 
+                          className="w-full bg-green-600 hover:bg-green-700"
                         >
-                          <Minus className="h-3 w-3" />
-                        </Button>
-                        <span className="w-8 text-center text-sm">{item.quantity}</span>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => updateCartQuantity(item.id, item.quantity + 1)}
-                        >
-                          <Plus className="h-3 w-3" />
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => removeFromCart(item.id)}
-                        >
-                          <Trash2 className="h-3 w-3" />
+                          {submitting ? 'Submitting...' : 'Submit Order'}
                         </Button>
                       </div>
                     </div>
-                  ))}
-                  
-                  <div className="border-t pt-3 mt-3">
-                    <div className="flex justify-between font-semibold text-lg">
-                      <span>Total:</span>
-                      <span>Rs. {getCartTotal().toFixed(2)}</span>
-                    </div>
                   </div>
-
-                  <div className="space-y-3">
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Payment Mode</label>
-                      <Select value={paymentMode} onValueChange={setPaymentMode} required>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select payment mode" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Cash">Cash</SelectItem>
-                          <SelectItem value="Esewa">Esewa</SelectItem>
-                          <SelectItem value="Fonepay">Fonepay</SelectItem>
-                          <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <Button 
-                      onClick={handleSubmitOrder} 
-                      disabled={submitting || !paymentMode} 
-                      className="w-full"
-                    >
-                      {submitting ? 'Submitting...' : 'Submit Order'}
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Orders List */}
       <Card>
@@ -338,13 +383,13 @@ const OrdersTab = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Item</TableHead>
-                    <TableHead>Qty</TableHead>
-                    <TableHead>Rate</TableHead>
-                    <TableHead>Total</TableHead>
-                    <TableHead>Payment</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Actions</TableHead>
+                    <TableHead className="whitespace-nowrap">Item</TableHead>
+                    <TableHead className="whitespace-nowrap">Qty</TableHead>
+                    <TableHead className="whitespace-nowrap">Rate</TableHead>
+                    <TableHead className="whitespace-nowrap">Total</TableHead>
+                    <TableHead className="whitespace-nowrap">Payment</TableHead>
+                    <TableHead className="whitespace-nowrap">Date</TableHead>
+                    <TableHead className="whitespace-nowrap">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
