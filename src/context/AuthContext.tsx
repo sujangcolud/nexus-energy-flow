@@ -17,9 +17,11 @@ export interface AppUser {
 interface AuthContextType {
   user: AppUser | null;
   session: Session | null;
+  userRole: UserRole | null;
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string, firstName: string, lastName: string) => Promise<void>;
   logout: () => Promise<void>;
+  signOut: () => Promise<void>;
   loading: boolean;
   hasRole: (requiredRole: UserRole) => boolean;
 }
@@ -172,6 +174,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setSession(null);
   };
 
+  const signOut = logout; // Alias for backward compatibility
+
   const hasRole = (requiredRole: UserRole): boolean => {
     if (!user) return false;
     
@@ -188,9 +192,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     <AuthContext.Provider value={{ 
       user, 
       session, 
+      userRole: user?.role || null,
       login, 
       signup, 
-      logout, 
+      logout,
+      signOut, 
       loading, 
       hasRole 
     }}>
