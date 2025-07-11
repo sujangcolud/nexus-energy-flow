@@ -231,11 +231,13 @@ const OrdersTab = () => {
         <h2 className="text-xl font-semibold text-gray-900">Food Orders</h2>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Menu Items */}
-        <div className="lg:col-span-2 space-y-6">
-          <Card>
-            <CardHeader>
+      {/* Main content grid: Menu Items on the left, Cart on the right for larger screens */}
+      {/* Stacks vertically on smaller screens (default behavior of grid without specific small screen column defs) */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8"> {/* Adjusted gap for lg */}
+        {/* Menu Items Section */}
+        <div className="md:col-span-2 space-y-6">
+          <Card className="shadow-sm"> {/* Added subtle shadow to menu card container */}
+            <CardHeader className="border-b border-border/50"> {/* Added border to header */}
               <CardTitle className="flex items-center gap-2">
                 <Package className="h-4 w-4" />
                 Menu Items
@@ -253,13 +255,14 @@ const OrdersTab = () => {
                   />
                 </div>
               </div>
-              <div className="flex items-center gap-2 mb-4 flex-wrap">
-                <Filter className="h-5 w-5 text-gray-500" />
+              <div className="flex items-center gap-2 mb-6 flex-wrap pb-2"> {/* Increased mb, added pb for spacing */}
+                <Filter className="h-5 w-5 text-muted-foreground" /> {/* Changed text-gray-500 to text-muted-foreground */}
                 <Button
                   key="all-categories"
                   onClick={() => setSelectedCategory(null)}
-                  variant={selectedCategory === null ? 'default' : 'outline'}
+                  variant={selectedCategory === null ? 'default' : 'secondary'} // Changed outline to secondary for inactive
                   size="sm"
+                  className={`transition-all duration-150 ease-in-out ${selectedCategory === null ? 'shadow-md' : 'hover:bg-accent hover:text-accent-foreground'}`}
                 >
                   All Categories
                 </Button>
@@ -267,8 +270,9 @@ const OrdersTab = () => {
                   <Button
                     key={category}
                     onClick={() => setSelectedCategory(category)}
-                    variant={selectedCategory === category ? 'default' : 'outline'}
+                    variant={selectedCategory === category ? 'default' : 'secondary'} // Changed outline to secondary for inactive
                     size="sm"
+                    className={`transition-all duration-150 ease-in-out ${selectedCategory === category ? 'shadow-md' : 'hover:bg-accent hover:text-accent-foreground'}`}
                   >
                     {category}
                   </Button>
@@ -285,31 +289,30 @@ const OrdersTab = () => {
                 if (items.length === 0) return null; // Don't render category if no items after filter
                 return (
                   <div key={category} className="space-y-4">
-                    <h3 className="text-lg font-semibold text-gray-800 border-b pb-2">
+                    <h3 className="text-lg font-semibold text-gray-800 border-b border-border/50 pb-2.5 mb-3">
                       {category}
                     </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                       {items.map((item) => (
-                        <Card key={item.id} className="hover:shadow-md transition-shadow">
-                          <CardContent className="p-4 flex flex-col h-full">
-                            <div className="flex justify-between items-start mb-2">
-                              <h4 className="font-medium text-gray-900">{item.name}</h4>
-                              <Badge variant="secondary">₹{item.price}</Badge>
+                        <Card
+                          key={item.id}
+                          className="flex flex-col h-full transition-all duration-200 ease-in-out hover:shadow-lg hover:ring-1 hover:ring-primary/50 transform hover:scale-[1.02] cursor-pointer group border border-border/50 rounded-md overflow-hidden" // Adjusted shadow, ring, border, rounded
+                          onClick={() => addToCart(item)}
+                        >
+                          <CardContent className="p-3 flex flex-col flex-grow"> {/* Reduced padding to p-3 */}
+                            <div className="flex justify-between items-start mb-1.5"> {/* Reduced mb */}
+                              <h4 className="font-semibold text-sm text-gray-800 dark:text-gray-200 group-hover:text-primary transition-colors line-clamp-2"> {/* Adjusted text size, color, line-clamp */}
+                                {item.name}
+                              </h4>
+                              <Badge variant="outline" className="text-xs px-1.5 py-0.5">NRs. {item.price}</Badge> {/* Currency updated, adjusted badge style & padding */}
                             </div>
                             {item.description && (
-                              <p className="text-sm text-gray-600 mb-3 line-clamp-2 flex-grow">
+                              <p className="text-xs text-gray-500 dark:text-gray-400 mb-2 line-clamp-1 flex-grow"> {/* Adjusted text size, color, mb, line-clamp */}
                                 {item.description}
                               </p>
                             )}
-                             {!item.description && <div className="flex-grow"></div>} {/* Ensure button aligns if no description */}
-                            <Button
-                              onClick={() => addToCart(item)}
-                              size="sm"
-                              className="w-full mt-auto" // mt-auto pushes button to bottom
-                            >
-                              <Plus className="h-4 w-4 mr-1" />
-                              Add to Cart
-                            </Button>
+                            {!item.description && <div className="flex-grow min-h-[1rem]"></div>} {/* Adjusted min-h */}
+                            {/* "Add to Cart" button is intentionally removed as per user request - card itself is clickable */}
                           </CardContent>
                         </Card>
                       ))}
@@ -329,75 +332,80 @@ const OrdersTab = () => {
         {/* Cart */}
         <div className="space-y-6">
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <span className="flex items-center gap-2">
-                  <ShoppingCart className="h-4 w-4" />
-                  Cart ({cart.length})
+            <CardHeader className="bg-muted/30 dark:bg-muted/50 border-b border-border/50">
+              <CardTitle className="flex items-center justify-between text-lg">
+                <span className="flex items-center gap-2.5 text-primary font-semibold">
+                  <ShoppingCart className="h-5 w-5" />
+                  Your Cart ({cart.length})
                 </span>
                 {cart.length > 0 && (
-                  <Button variant="outline" size="sm" onClick={clearCart}>
-                    <Trash2 className="h-4 w-4" />
+                  <Button variant="ghost" size="sm" onClick={clearCart} className="text-muted-foreground hover:text-destructive transition-colors group">
+                    <Trash2 className="h-4 w-4 mr-1.5 group-hover:animate-shake" /> Clear Cart
                   </Button>
                 )}
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="p-4 space-y-5">
               {cart.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  Your cart is empty
+                <div className="text-center py-12 text-muted-foreground flex flex-col items-center justify-center min-h-[300px]">
+                  <ShoppingCart className="h-16 w-16 mb-4 text-gray-300 dark:text-gray-700 opacity-70" />
+                  <p className="font-semibold text-lg mb-1">Your cart is empty</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Looks like you haven't added anything yet.</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Time to explore the menu!</p>
                 </div>
               ) : (
                 <>
-                  <div className="space-y-3">
+                  <div className="space-y-2.5 max-h-[280px] md:max-h-[320px] overflow-y-auto pr-1 simple-scrollbar">
                     {cart.map((item) => (
-                      <div key={item.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                        <div className="flex-1">
-                          <h4 className="font-medium text-sm">{item.name}</h4>
-                          <p className="text-xs text-gray-600">₹{item.price} each</p>
+                      <div key={item.id} className="flex items-center justify-between p-3 bg-background hover:bg-muted/30 dark:hover:bg-muted/20 rounded-lg border border-border/70 hover:border-primary/30 transition-all duration-150 ease-in-out group">
+                        <div className="flex-1 mr-2 min-w-0">
+                          <h4 className="font-medium text-sm truncate group-hover:text-primary transition-colors" title={item.name}>{item.name}</h4>
+                          <p className="text-xs text-muted-foreground">NRs. {item.price} each</p>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1.5">
                           <Button
                             variant="outline"
-                            size="sm"
+                            size="icon"
                             onClick={() => updateCartQuantity(item.id, item.quantity - 1)}
-                            className="h-8 w-8 p-0"
+                            className="h-7 w-7 border-border/70 hover:bg-red-500/10 hover:border-red-500/70 group/qty"
+                            aria-label={`Decrease quantity of ${item.name}`}
                           >
-                            <Minus className="h-3 w-3" />
+                            <Minus className="h-3.5 w-3.5 text-muted-foreground group-hover/qty:text-red-500 transition-colors" />
                           </Button>
-                          <span className="text-sm font-medium w-8 text-center">
+                          <span className="text-sm font-semibold w-7 text-center tabular-nums">
                             {item.quantity}
                           </span>
                           <Button
                             variant="outline"
-                            size="sm"
+                            size="icon"
                             onClick={() => updateCartQuantity(item.id, item.quantity + 1)}
-                            className="h-8 w-8 p-0"
+                            className="h-7 w-7 border-border/70 hover:bg-green-500/10 hover:border-green-500/70 group/qty"
+                            aria-label={`Increase quantity of ${item.name}`}
                           >
-                            <Plus className="h-3 w-3" />
+                            <Plus className="h-3.5 w-3.5 text-muted-foreground group-hover/qty:text-green-500 transition-colors" />
                           </Button>
                         </div>
                       </div>
                     ))}
                   </div>
 
-                  <Separator />
+                  <Separator className="my-4 border-border/50" />
 
                   <div className="space-y-4">
-                    <div className="flex justify-between items-center font-semibold">
+                    <div className="flex justify-between items-center font-bold text-lg">
                       <span>Total:</span>
-                      <span>₹{getCartTotal().toFixed(2)}</span>
+                      <span className="text-primary">NRs. {getCartTotal().toFixed(2)}</span>
                     </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="payment-mode">Payment Mode</Label>
-                      <Select value={paymentMode} onValueChange={setPaymentMode}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select payment mode" />
+                    <div className="space-y-1.5">
+                      <Label htmlFor="payment-mode" className="text-sm font-medium text-foreground/90">Payment Mode</Label>
+                      <Select value={paymentMode} onValueChange={setPaymentMode} disabled={submitting || cart.length === 0}>
+                        <SelectTrigger className="w-full text-sm py-2.5 border-border/70 focus:border-primary focus:ring-1 focus:ring-primary/50 transition-colors">
+                          <SelectValue placeholder="Choose payment method" />
                         </SelectTrigger>
                         <SelectContent>
                           {paymentModes.map((mode) => (
-                            <SelectItem key={mode} value={mode}>
+                            <SelectItem key={mode} value={mode} className="text-sm">
                               {mode}
                             </SelectItem>
                           ))}
@@ -407,10 +415,25 @@ const OrdersTab = () => {
 
                     <Button 
                       onClick={submitOrder} 
-                      disabled={submitting || !paymentMode}
-                      className="w-full"
+                      disabled={submitting || !paymentMode || cart.length === 0}
+                      size="lg"
+                      className="w-full font-semibold bg-green-600 hover:bg-green-700 text-white rounded-lg shadow-md hover:shadow-lg focus-visible:ring-2 focus-visible:ring-green-400 focus-visible:ring-offset-2 transition-all duration-200 ease-in-out transform hover:scale-[1.01] active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed"
+                      aria-label="Place your order"
                     >
-                      {submitting ? 'Placing Order...' : 'Place Order'}
+                      {submitting ? (
+                        <>
+                          <svg className="animate-spin -ml-1 mr-2.5 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Placing Order...
+                        </>
+                      ) : (
+                        <>
+                          <ShoppingCart className="h-5 w-5 mr-2.5" />
+                          Place Order (NRs. {getCartTotal().toFixed(2)})
+                        </>
+                      )}
                     </Button>
                   </div>
                 </>
@@ -421,42 +444,44 @@ const OrdersTab = () => {
       </div>
 
       {/* Order History */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Order History</CardTitle>
+      <Card className="mt-8 shadow-sm hover:shadow-md transition-shadow">
+        <CardHeader className="border-b border-border/50"> {/* Added border to header */}
+          <CardTitle className="text-lg font-semibold">Order History</CardTitle> {/* Adjusted title styling */}
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0"> {/* Removed padding for full-width table */}
           {loading ? (
-            <div className="text-center py-4">Loading orders...</div>
+            <div className="text-center py-10 text-muted-foreground">Loading orders...</div>
           ) : orders.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              No orders found. Place your first order above!
+            <div className="text-center py-12 text-muted-foreground flex flex-col items-center justify-center min-h-[150px]">
+              <Package className="h-12 w-12 mb-3 text-gray-300 dark:text-gray-700 opacity-70" />
+              <p className="font-semibold text-md">No past orders found</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Your order history will appear here.</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <Table>
+            <div className="overflow-x-auto simple-scrollbar">
+              <Table className="min-w-full"> {/* Ensured table takes min-w-full for scrolling */}
                 <TableHeader>
-                  <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Item</TableHead>
-                    <TableHead>Quantity</TableHead>
-                    <TableHead>Rate</TableHead>
-                    <TableHead>Total</TableHead>
-                    <TableHead>Payment</TableHead>
+                  <TableRow className="bg-muted/50 dark:bg-muted/30">
+                    <TableHead className="py-2.5 px-4 text-xs font-medium text-muted-foreground whitespace-nowrap">Date</TableHead>
+                    <TableHead className="py-2.5 px-4 text-xs font-medium text-muted-foreground whitespace-nowrap">Item</TableHead>
+                    <TableHead className="py-2.5 px-4 text-xs font-medium text-muted-foreground whitespace-nowrap text-center">Quantity</TableHead>
+                    <TableHead className="py-2.5 px-4 text-xs font-medium text-muted-foreground whitespace-nowrap text-right">Rate</TableHead>
+                    <TableHead className="py-2.5 px-4 text-xs font-medium text-muted-foreground whitespace-nowrap text-right">Total</TableHead>
+                    <TableHead className="py-2.5 px-4 text-xs font-medium text-muted-foreground whitespace-nowrap">Payment</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {orders.map((order) => (
-                    <TableRow key={order.id}>
-                      <TableCell>
+                    <TableRow key={order.id} className="hover:bg-muted/20 dark:hover:bg-muted/10 transition-colors border-b border-border/30 last:border-b-0">
+                      <TableCell className="py-2.5 px-4 text-sm whitespace-nowrap">
                         {new Date(order.order_date).toLocaleDateString()}
                       </TableCell>
-                      <TableCell className="font-medium">{order.item_name}</TableCell>
-                      <TableCell>{order.quantity}</TableCell>
-                      <TableCell>₹{Number(order.rate).toFixed(2)}</TableCell>
-                      <TableCell>₹{Number(order.total).toFixed(2)}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline">{order.payment_mode}</Badge>
+                      <TableCell className="py-2.5 px-4 text-sm font-medium whitespace-nowrap">{order.item_name}</TableCell>
+                      <TableCell className="py-2.5 px-4 text-sm text-center whitespace-nowrap">{order.quantity}</TableCell>
+                      <TableCell className="py-2.5 px-4 text-sm text-right whitespace-nowrap">NRs. {Number(order.rate).toFixed(2)}</TableCell>
+                      <TableCell className="py-2.5 px-4 text-sm text-right whitespace-nowrap">NRs. {Number(order.total).toFixed(2)}</TableCell>
+                      <TableCell className="py-2.5 px-4 text-sm whitespace-nowrap">
+                        <Badge variant="outline" className="font-normal text-xs">{order.payment_mode}</Badge>
                       </TableCell>
                     </TableRow>
                   ))}
