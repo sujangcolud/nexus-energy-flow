@@ -1,5 +1,7 @@
 
 import { useState } from 'react';
+import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -17,6 +19,8 @@ const ExpensesTab = () => {
     category: '',
     remarks: ''
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { user } = useAuth();
 
   const expenseCategories = [
     'Electricity',
@@ -49,18 +53,43 @@ const ExpensesTab = () => {
       return;
     }
 
-    // Mock submission
-    console.log('Submitting expense:', formData);
-    toast.success('Expense recorded successfully!');
-    
-    // Reset form
-    setFormData({
-      description: '',
-      amount: '',
-      paymentMode: '',
-      category: '',
-      remarks: ''
-    });
+    if (!user) {
+      toast.error('You must be logged in to record an expense.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const expenseData = {
+        user_id: user.id,
+        description: formData.description,
+        amount: parseFloat(formData.amount),
+        payment_mode: formData.paymentMode,
+        category: formData.category,
+        remarks: formData.remarks,
+        expense_date: new Date().toISOString(),
+      };
+
+      const { error } = await supabase.from('expenses').insert([expenseData]);
+
+      if (error) {
+        throw error;
+      }
+
+      toast.success('Expense recorded successfully!');
+      setFormData({ // Reset form
+        description: '',
+        amount: '',
+        paymentMode: '',
+        category: '',
+        remarks: ''
+      });
+    } catch (error: any) {
+      console.error('Error recording expense:', error);
+      toast.error(error.message || 'Failed to record expense. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -144,10 +173,21 @@ const ExpensesTab = () => {
             
             <Button 
               type="submit" 
-              className="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800"
+              className="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 disabled:opacity-70"
               size="lg"
+              disabled={isSubmitting}
             >
-              Record Expense
+              {isSubmitting ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Recording...
+                </>
+              ) : (
+                'Record Expense'
+              )}
             </Button>
           </form>
         </CardContent>
