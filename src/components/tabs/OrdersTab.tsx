@@ -252,22 +252,27 @@ const OrdersTab = () => {
                     className="w-full"
                   />
                 </div>
-                <div className="flex items-center gap-2">
-                  <Filter className="h-5 w-5 text-gray-500" />
-                  <Select value={selectedCategory || 'All'} onValueChange={(value) => setSelectedCategory(value === 'All' ? null : value)}>
-                    <SelectTrigger className="w-full sm:w-[180px]">
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="All">All Categories</SelectItem>
-                      {productCategories.map((category) => (
-                        <SelectItem key={category} value={category}>
-                          {category}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+              </div>
+              <div className="flex items-center gap-2 mb-4 flex-wrap">
+                <Filter className="h-5 w-5 text-gray-500" />
+                <Button
+                  key="all-categories"
+                  onClick={() => setSelectedCategory(null)}
+                  variant={selectedCategory === null ? 'default' : 'outline'}
+                  size="sm"
+                >
+                  All Categories
+                </Button>
+                {productCategories.map((category) => (
+                  <Button
+                    key={category}
+                    onClick={() => setSelectedCategory(category)}
+                    variant={selectedCategory === category ? 'default' : 'outline'}
+                    size="sm"
+                  >
+                    {category}
+                  </Button>
+                ))}
               </div>
 
               {Object.keys(currentMenuItemsToDisplay).length === 0 && searchTerm && (
