@@ -54,9 +54,11 @@ const OrdersTab = () => {
 
   const paymentModes = [
     'Cash',
-    'UPI',
-    'Card',
-    'Net Banking'
+    'Esewa',
+    'Fonepay',
+    'Bank',
+    'Cheque',
+    'Credit'
   ];
 
   const fetchOrders = async () => {
@@ -225,7 +227,7 @@ const OrdersTab = () => {
   const currentMenuItemsToDisplay = filteredMenuItems();
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pt-4 md:pt-6"> {/* Added top padding */}
       <div className="flex items-center gap-2">
         <ShoppingCart className="h-5 w-5 text-blue-600" />
         <h2 className="text-xl font-semibold text-gray-900">Food Orders</h2>
