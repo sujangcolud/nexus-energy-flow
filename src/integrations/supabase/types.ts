@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      analytics_cache: {
+        Row: {
+          cache_key: string
+          created_at: string | null
+          data: Json
+          expires_at: string
+          id: string
+        }
+        Insert: {
+          cache_key: string
+          created_at?: string | null
+          data: Json
+          expires_at: string
+          id?: string
+        }
+        Update: {
+          cache_key?: string
+          created_at?: string | null
+          data?: Json
+          expires_at?: string
+          id?: string
+        }
+        Relationships: []
+      }
       charging_sessions: {
         Row: {
           created_at: string | null
@@ -152,6 +176,39 @@ export type Database = {
         }
         Relationships: []
       }
+      menu_items: {
+        Row: {
+          category: string
+          created_at: string | null
+          description: string | null
+          id: string
+          is_available: boolean | null
+          name: string
+          price: number
+          updated_at: string | null
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_available?: boolean | null
+          name: string
+          price: number
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_available?: boolean | null
+          name?: string
+          price?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       orders: {
         Row: {
           created_at: string | null
@@ -212,6 +269,36 @@ export type Database = {
           id?: string
           last_name?: string | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      reports: {
+        Row: {
+          created_at: string | null
+          date_range_end: string | null
+          date_range_start: string | null
+          id: string
+          report_data: Json
+          report_type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          date_range_end?: string | null
+          date_range_start?: string | null
+          id?: string
+          report_data: Json
+          report_type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          date_range_end?: string | null
+          date_range_start?: string | null
+          id?: string
+          report_data?: Json
+          report_type?: string
+          user_id?: string
         }
         Relationships: []
       }

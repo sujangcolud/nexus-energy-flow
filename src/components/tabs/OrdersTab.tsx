@@ -22,16 +22,25 @@ interface Order {
   created_at: string;
 }
 
+interface MenuItem {
+  id: string;
+  name: string;
+  description: string | null;
+  price: number;
+  category: string;
+  is_available: boolean;
+}
+
 const OrdersTab = () => {
   const { user } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   
   // Form state
-  const [itemName, setItemName] = useState('');
+  const [selectedMenuItem, setSelectedMenuItem] = useState('');
   const [quantity, setQuantity] = useState(1);
-  const [rate, setRate] = useState(0);
   const [paymentMode, setPaymentMode] = useState('');
 
   const fetchOrders = async () => {
@@ -54,27 +63,60 @@ const OrdersTab = () => {
     }
   };
 
+  const fetchMenuItems = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('menu_items')
+        .select('*')
+        .eq('is_available', true)
+        .order('category')
+        .order('name');
+
+      if (error) throw error;
+      setMenuItems(data || []);
+    } catch (error) {
+      console.error('Error fetching menu items:', error);
+      toast.error('Failed to load menu items');
+    }
+  };
+
   useEffect(() => {
     fetchOrders();
+    fetchMenuItems();
   }, [user]);
+
+  const getSelectedItem = () => {
+    return menuItems.find(item => item.id === selectedMenuItem);
+  };
+
+  const calculateTotal = () => {
+    const item = getSelectedItem();
+    return item ? item.price * quantity : 0;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !itemName || !paymentMode || rate <= 0) {
+    if (!user || !selectedMenuItem || !paymentMode || quantity <= 0) {
       toast.error('Please fill all required fields');
+      return;
+    }
+
+    const selectedItem = getSelectedItem();
+    if (!selectedItem) {
+      toast.error('Selected item not found');
       return;
     }
 
     setSubmitting(true);
     try {
-      const total = quantity * rate;
+      const total = selectedItem.price * quantity;
       const { error } = await supabase
         .from('orders')
         .insert({
           user_id: user.id,
-          item_name: itemName,
+          item_name: selectedItem.name,
           quantity,
-          rate,
+          rate: selectedItem.price,
           total,
           payment_mode: paymentMode
         });
@@ -84,9 +126,8 @@ const OrdersTab = () => {
       toast.success('Order submitted successfully!');
       
       // Reset form
-      setItemName('');
+      setSelectedMenuItem('');
       setQuantity(1);
-      setRate(0);
       setPaymentMode('');
       
       // Refresh orders
@@ -116,6 +157,15 @@ const OrdersTab = () => {
     }
   };
 
+  // Group menu items by category
+  const groupedMenuItems = menuItems.reduce((acc, item) => {
+    if (!acc[item.category]) {
+      acc[item.category] = [];
+    }
+    acc[item.category].push(item);
+    return acc;
+  }, {} as Record<string, MenuItem[]>);
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2">
@@ -134,13 +184,32 @@ const OrdersTab = () => {
         <CardContent>
           <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Item Name</label>
-              <Input
-                value={itemName}
-                onChange={(e) => setItemName(e.target.value)}
-                placeholder="Enter item name"
-                required
-              />
+              <label className="text-sm font-medium">Menu Item</label>
+              <Select value={selectedMenuItem} onValueChange={setSelectedMenuItem} required>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select menu item" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(groupedMenuItems).map(([category, items]) => (
+                    <div key={category}>
+                      <div className="px-2 py-1 text-sm font-semibold text-gray-500 bg-gray-50">
+                        {category}
+                      </div>
+                      {items.map((item) => (
+                        <SelectItem key={item.id} value={item.id}>
+                          <div className="flex justify-between items-center w-full">
+                            <span>{item.name}</span>
+                            <span className="ml-2 text-sm text-gray-500">Rs. {item.price}</span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </div>
+                  ))}
+                </SelectContent>
+              </Select>
+              {getSelectedItem() && (
+                <p className="text-xs text-gray-500">{getSelectedItem()?.description}</p>
+              )}
             </div>
             
             <div className="space-y-2">
@@ -150,19 +219,6 @@ const OrdersTab = () => {
                 min="1"
                 value={quantity}
                 onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
-                required
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Rate (Rs.)</label>
-              <Input
-                type="number"
-                min="0"
-                step="0.01"
-                value={rate}
-                onChange={(e) => setRate(parseFloat(e.target.value) || 0)}
-                placeholder="0.00"
                 required
               />
             </div>
@@ -182,13 +238,12 @@ const OrdersTab = () => {
               </Select>
             </div>
             
-            <div className="md:col-span-2 lg:col-span-4 flex items-end gap-4">
-              <div className="flex-1">
-                <div className="text-sm font-medium text-gray-600">
-                  Total: Rs. {(quantity * rate).toFixed(2)}
-                </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Total Amount</label>
+              <div className="flex items-center justify-between p-2 bg-gray-50 rounded-md">
+                <span className="text-lg font-semibold">Rs. {calculateTotal().toFixed(2)}</span>
               </div>
-              <Button type="submit" disabled={submitting}>
+              <Button type="submit" disabled={submitting} className="w-full">
                 {submitting ? 'Submitting...' : 'Submit Order'}
               </Button>
             </div>
@@ -199,7 +254,7 @@ const OrdersTab = () => {
       {/* Orders List */}
       <Card>
         <CardHeader>
-          <CardTitle>Recent Orders</CardTitle>
+          <CardTitle>Recent Orders ({orders.length})</CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
