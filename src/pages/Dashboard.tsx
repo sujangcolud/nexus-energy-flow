@@ -105,8 +105,15 @@ const Dashboard = () => {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Mobile-only active tab title */}
+        <div className="sm:hidden mb-4 text-center">
+          <h2 className="text-lg font-semibold text-gray-800">
+            {tabs.find(tab => tab.id === activeTab)?.label}
+          </h2>
+        </div>
+
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-9 gap-1 mb-8">
+          <TabsList className="grid w-full grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-9 gap-1 mb-4 sm:mb-8"> {/* Adjusted mb for sm screens */}
             {tabs.map((tab) => {
               const Icon = tab.icon;
               return (
