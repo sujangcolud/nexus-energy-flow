@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -12,6 +11,7 @@ import WithdrawalsTab from '@/components/tabs/WithdrawalsTab';
 import CooperativeSavingsTab from '@/components/tabs/CooperativeSavingsTab';
 import InsightsTab from '@/components/tabs/InsightsTab';
 import ReportsTab from '@/components/tabs/ReportsTab';
+import ReportsViewTab from '@/components/tabs/ReportsViewTab';
 import MenuManagementTab from '@/components/tabs/MenuManagementTab';
 import FileUploadTab from '@/components/tabs/FileUploadTab';
 
@@ -45,6 +45,7 @@ const Dashboard = () => {
     const analyticsTab = [
       { id: 'insights', label: 'Analytics', icon: BarChart3, component: InsightsTab },
       { id: 'reports', label: 'Reports', icon: FileText, component: ReportsTab },
+      { id: 'reports-view', label: 'View Reports', icon: FileText, component: ReportsViewTab },
       { id: 'upload', label: 'Upload', icon: Upload, component: FileUploadTab },
     ];
 
