@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
-import { ShoppingCart, Plus, Minus, Trash2, Package } from 'lucide-react';
+import { ShoppingCart, Plus, Minus, Trash2, Package, Filter } from 'lucide-react';
 
 interface Order {
   id: string;
@@ -48,6 +48,9 @@ const OrdersTab = () => {
   const [paymentMode, setPaymentMode] = useState('');
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState<string>('');
+
 
   const paymentModes = [
     'Cash',
@@ -189,6 +192,38 @@ const OrdersTab = () => {
     return acc;
   }, {} as Record<string, MenuItem[]>);
 
+  const productCategories = Object.keys(groupedMenuItems);
+
+  useEffect(() => {
+    if (productCategories.length > 0 && !selectedCategory) {
+      setSelectedCategory(productCategories[0]);
+    }
+  }, [productCategories, selectedCategory]);
+
+  const filteredMenuItems = () => {
+    let itemsToDisplay = groupedMenuItems;
+
+    if (selectedCategory) {
+      itemsToDisplay = { [selectedCategory]: groupedMenuItems[selectedCategory] || [] };
+    }
+
+    if (searchTerm) {
+      const lowerSearchTerm = searchTerm.toLowerCase();
+      const result: Record<string, MenuItem[]> = {};
+      for (const category in itemsToDisplay) {
+        result[category] = itemsToDisplay[category].filter(item =>
+          item.name.toLowerCase().includes(lowerSearchTerm) ||
+          item.category.toLowerCase().includes(lowerSearchTerm) ||
+          (item.description && item.description.toLowerCase().includes(lowerSearchTerm))
+        );
+      }
+      itemsToDisplay = result;
+    }
+    return itemsToDisplay;
+  };
+
+  const currentMenuItemsToDisplay = filteredMenuItems();
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2">
@@ -206,40 +241,78 @@ const OrdersTab = () => {
                 Menu Items
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
-              {Object.entries(groupedMenuItems).map(([category, items]) => (
-                <div key={category} className="space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-800 border-b pb-2">
-                    {category}
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {items.map((item) => (
-                      <Card key={item.id} className="hover:shadow-md transition-shadow cursor-pointer">
-                        <CardContent className="p-4">
-                          <div className="flex justify-between items-start mb-2">
-                            <h4 className="font-medium text-gray-900">{item.name}</h4>
-                            <Badge variant="secondary">₹{item.price}</Badge>
-                          </div>
-                          {item.description && (
-                            <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-                              {item.description}
-                            </p>
-                          )}
-                          <Button 
-                            onClick={() => addToCart(item)}
-                            size="sm" 
-                            className="w-full"
-                          >
-                            <Plus className="h-4 w-4 mr-1" />
-                            Add to Cart
-                          </Button>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
+            <CardContent className="space-y-4">
+              {/* Search and Category Filters */}
+              <div className="flex flex-col sm:flex-row gap-4 mb-4">
+                <div className="flex-grow">
+                  <Input
+                    placeholder="Search menu items..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full"
+                  />
                 </div>
-              ))}
-              {menuItems.length === 0 && (
+                <div className="flex items-center gap-2">
+                  <Filter className="h-5 w-5 text-gray-500" />
+                  <Select value={selectedCategory || 'All'} onValueChange={(value) => setSelectedCategory(value === 'All' ? null : value)}>
+                    <SelectTrigger className="w-full sm:w-[180px]">
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="All">All Categories</SelectItem>
+                      {productCategories.map((category) => (
+                        <SelectItem key={category} value={category}>
+                          {category}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {Object.keys(currentMenuItemsToDisplay).length === 0 && searchTerm && (
+                <div className="text-center py-8 text-gray-500">
+                  No items match your search for "{searchTerm}".
+                </div>
+              )}
+
+              {Object.entries(currentMenuItemsToDisplay).map(([category, items]) => {
+                if (items.length === 0) return null; // Don't render category if no items after filter
+                return (
+                  <div key={category} className="space-y-4">
+                    <h3 className="text-lg font-semibold text-gray-800 border-b pb-2">
+                      {category}
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {items.map((item) => (
+                        <Card key={item.id} className="hover:shadow-md transition-shadow">
+                          <CardContent className="p-4 flex flex-col h-full">
+                            <div className="flex justify-between items-start mb-2">
+                              <h4 className="font-medium text-gray-900">{item.name}</h4>
+                              <Badge variant="secondary">₹{item.price}</Badge>
+                            </div>
+                            {item.description && (
+                              <p className="text-sm text-gray-600 mb-3 line-clamp-2 flex-grow">
+                                {item.description}
+                              </p>
+                            )}
+                             {!item.description && <div className="flex-grow"></div>} {/* Ensure button aligns if no description */}
+                            <Button
+                              onClick={() => addToCart(item)}
+                              size="sm"
+                              className="w-full mt-auto" // mt-auto pushes button to bottom
+                            >
+                              <Plus className="h-4 w-4 mr-1" />
+                              Add to Cart
+                            </Button>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+              {menuItems.length === 0 && !searchTerm && (
                 <div className="text-center py-8 text-gray-500">
                   No menu items available
                 </div>
