@@ -1,9 +1,9 @@
+
 import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { LogOut, User, ShoppingCart, Zap, Receipt, CreditCard, Banknote, Users, BarChart3, FileText, UtensilsCrossed } from 'lucide-react';
+import { LogOut, User, ShoppingCart, Zap, Receipt, CreditCard, Banknote, Users, BarChart3, FileText, UtensilsCrossed, Upload } from 'lucide-react';
 import OrdersTab from '@/components/tabs/OrdersTab';
 import ChargingTab from '@/components/tabs/ChargingTab';
 import ExpensesTab from '@/components/tabs/ExpensesTab';
@@ -13,6 +13,7 @@ import CooperativeSavingsTab from '@/components/tabs/CooperativeSavingsTab';
 import InsightsTab from '@/components/tabs/InsightsTab';
 import ReportsTab from '@/components/tabs/ReportsTab';
 import MenuManagementTab from '@/components/tabs/MenuManagementTab';
+import FileUploadTab from '@/components/tabs/FileUploadTab';
 
 const Dashboard = () => {
   const { user, signOut, userRole } = useAuth();
@@ -44,6 +45,7 @@ const Dashboard = () => {
     const analyticsTab = [
       { id: 'insights', label: 'Analytics', icon: BarChart3, component: InsightsTab },
       { id: 'reports', label: 'Reports', icon: FileText, component: ReportsTab },
+      { id: 'upload', label: 'Upload', icon: Upload, component: FileUploadTab },
     ];
 
     // All users get base tabs and analytics
@@ -103,7 +105,7 @@ const Dashboard = () => {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-1 mb-8">
+          <TabsList className="grid w-full grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-9 gap-1 mb-8">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               return (

@@ -3,7 +3,6 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -11,10 +10,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { toast } from 'sonner';
-import { FileText, Download, Calendar as CalendarIcon, BarChart3, Filter } from 'lucide-react';
+import { FileText, Download, Calendar as CalendarIcon, Filter } from 'lucide-react';
 import { format } from 'date-fns';
 
-interface Report {
+interface ReportData {
   id: string;
   report_type: string;
   report_data: any;
@@ -25,7 +24,7 @@ interface Report {
 
 const ReportsTab = () => {
   const { user } = useAuth();
-  const [reports, setReports] = useState<Report[]>([]);
+  const [reports, setReports] = useState<ReportData[]>([]);
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [reportType, setReportType] = useState('');
@@ -35,12 +34,10 @@ const ReportsTab = () => {
   const reportTypes = [
     { value: 'orders', label: 'Orders Report' },
     { value: 'charging', label: 'Charging Sessions Report' },
-    { value: 'expenses', label: 'Expenses Report' },
+    { value: 'savings', label: 'Savings Report' },
     { value: 'deposits', label: 'Deposits Report' },
-    { value: 'withdrawals', label: 'Withdrawals Report' },
-    { value: 'cooperative_savings', label: 'Cooperative Savings Report' },
-    { value: 'financial_summary', label: 'Financial Summary' },
-    { value: 'business_analytics', label: 'Business Analytics' }
+    { value: 'expenses', label: 'Expenses Report' },
+    { value: 'withdrawals', label: 'Withdrawals Report' }
   ];
 
   const fetchReports = async () => {
@@ -79,35 +76,29 @@ const ReportsTab = () => {
       const startDate = dateFrom ? format(dateFrom, 'yyyy-MM-dd') : null;
       const endDate = dateTo ? format(dateTo, 'yyyy-MM-dd') : null;
 
-      // Build date filter condition
+      // Build date filter
       const dateFilter = startDate && endDate 
-        ? `and ${getDateColumn(reportType)} >= '${startDate}' and ${getDateColumn(reportType)} <= '${endDate}'`
+        ? `and created_at >= '${startDate}' and created_at <= '${endDate}'`
         : '';
 
       switch (reportType) {
         case 'orders':
-          reportData = await generateOrdersReport(dateFilter);
+          reportData = await generateOrdersReport(startDate, endDate);
           break;
         case 'charging':
-          reportData = await generateChargingReport(dateFilter);
+          reportData = await generateChargingReport(startDate, endDate);
           break;
-        case 'expenses':
-          reportData = await generateExpensesReport(dateFilter);
+        case 'savings':
+          reportData = await generateSavingsReport(startDate, endDate);
           break;
         case 'deposits':
-          reportData = await generateDepositsReport(dateFilter);
+          reportData = await generateDepositsReport(startDate, endDate);
+          break;
+        case 'expenses':
+          reportData = await generateExpensesReport(startDate, endDate);
           break;
         case 'withdrawals':
-          reportData = await generateWithdrawalsReport(dateFilter);
-          break;
-        case 'cooperative_savings':
-          reportData = await generateCooperativeReport(dateFilter);
-          break;
-        case 'financial_summary':
-          reportData = await generateFinancialSummary(dateFilter);
-          break;
-        case 'business_analytics':
-          reportData = await generateBusinessAnalytics(dateFilter);
+          reportData = await generateWithdrawalsReport(startDate, endDate);
           break;
       }
 
@@ -126,6 +117,11 @@ const ReportsTab = () => {
 
       toast.success('Report generated successfully!');
       fetchReports();
+      
+      // Reset form
+      setReportType('');
+      setDateFrom(undefined);
+      setDateTo(undefined);
     } catch (error) {
       console.error('Error generating report:', error);
       toast.error('Failed to generate report');
@@ -134,254 +130,121 @@ const ReportsTab = () => {
     }
   };
 
-  const getDateColumn = (reportType: string): string => {
-    const mapping: { [key: string]: string } = {
-      orders: 'order_date',
-      charging: 'session_date',
-      expenses: 'expense_date',
-      deposits: 'deposit_date',
-      withdrawals: 'withdrawal_date',
-      cooperative_savings: 'contribution_date'
-    };
-    return mapping[reportType] || 'created_at';
-  };
-
-  const generateOrdersReport = async (dateFilter: string) => {
-    const { data: orders } = await supabase
-      .from('orders')
-      .select('*')
-      .order('order_date', { ascending: false });
-
-    const filteredOrders = dateFilter ? 
-      orders?.filter(order => {
-        const orderDate = new Date(order.order_date);
-        return dateFrom && dateTo ? orderDate >= dateFrom && orderDate <= dateTo : true;
-      }) : orders;
-
-    const totalRevenue = filteredOrders?.reduce((sum, order) => sum + Number(order.total), 0) || 0;
-    const totalOrders = filteredOrders?.length || 0;
-    const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
-
-    const itemsSummary = filteredOrders?.reduce((acc: any, order) => {
-      if (!acc[order.item_name]) {
-        acc[order.item_name] = { quantity: 0, revenue: 0 };
-      }
-      acc[order.item_name].quantity += order.quantity;
-      acc[order.item_name].revenue += Number(order.total);
-      return acc;
-    }, {});
-
-    return {
-      summary: {
-        totalRevenue,
-        totalOrders,
-        avgOrderValue,
-        dateRange: { from: dateFrom, to: dateTo }
-      },
-      orders: filteredOrders,
-      itemsSummary
-    };
-  };
-
-  const generateChargingReport = async (dateFilter: string) => {
-    const { data: sessions } = await supabase
-      .from('charging_sessions')
-      .select('*')
-      .order('session_date', { ascending: false });
-
-    const filteredSessions = dateFilter ? 
-      sessions?.filter(session => {
-        const sessionDate = new Date(session.session_date);
-        return dateFrom && dateTo ? sessionDate >= dateFrom && sessionDate <= dateTo : true;
-      }) : sessions;
-
-    const totalRevenue = filteredSessions?.reduce((sum, session) => sum + Number(session.total_amount), 0) || 0;
-    const totalSessions = filteredSessions?.length || 0;
-    const totalKcal = filteredSessions?.reduce((sum, session) => sum + Number(session.kcal || 0), 0) || 0;
-
-    return {
-      summary: {
-        totalRevenue,
-        totalSessions,
-        totalKcal,
-        avgSessionValue: totalSessions > 0 ? totalRevenue / totalSessions : 0,
-        dateRange: { from: dateFrom, to: dateTo }
-      },
-      sessions: filteredSessions
-    };
-  };
-
-  const generateExpensesReport = async (dateFilter: string) => {
-    const { data: expenses } = await supabase
-      .from('expenses')
-      .select('*')
-      .order('expense_date', { ascending: false });
-
-    const filteredExpenses = dateFilter ? 
-      expenses?.filter(expense => {
-        const expenseDate = new Date(expense.expense_date);
-        return dateFrom && dateTo ? expenseDate >= dateFrom && expenseDate <= dateTo : true;
-      }) : expenses;
-
-    const totalExpenses = filteredExpenses?.reduce((sum, expense) => sum + Number(expense.amount), 0) || 0;
+  const generateOrdersReport = async (startDate: string | null, endDate: string | null) => {
+    let query = supabase.from('orders').select('*');
     
-    const categoryBreakdown = filteredExpenses?.reduce((acc: any, expense) => {
-      if (!acc[expense.category]) {
-        acc[expense.category] = 0;
-      }
-      acc[expense.category] += Number(expense.amount);
-      return acc;
-    }, {});
+    if (startDate && endDate) {
+      query = query.gte('order_date', startDate).lte('order_date', endDate);
+    }
+    
+    const { data: orders } = await query.order('order_date', { ascending: false });
+
+    const totalRevenue = orders?.reduce((sum, order) => sum + Number(order.total), 0) || 0;
+    const totalOrders = orders?.length || 0;
 
     return {
-      summary: {
-        totalExpenses,
-        totalTransactions: filteredExpenses?.length || 0,
-        categoryBreakdown,
-        dateRange: { from: dateFrom, to: dateTo }
-      },
-      expenses: filteredExpenses
+      summary: { totalRevenue, totalOrders },
+      data: orders,
+      dateRange: { from: startDate, to: endDate }
     };
   };
 
-  const generateDepositsReport = async (dateFilter: string) => {
-    const { data: deposits } = await supabase
-      .from('deposits')
-      .select('*')
-      .order('deposit_date', { ascending: false });
+  const generateChargingReport = async (startDate: string | null, endDate: string | null) => {
+    let query = supabase.from('charging_sessions').select('*');
+    
+    if (startDate && endDate) {
+      query = query.gte('session_date', startDate).lte('session_date', endDate);
+    }
+    
+    const { data: sessions } = await query.order('session_date', { ascending: false });
 
-    const filteredDeposits = dateFilter ? 
-      deposits?.filter(deposit => {
-        const depositDate = new Date(deposit.deposit_date);
-        return dateFrom && dateTo ? depositDate >= dateFrom && depositDate <= dateTo : true;
-      }) : deposits;
-
-    const totalDeposits = filteredDeposits?.reduce((sum, deposit) => sum + Number(deposit.amount), 0) || 0;
+    const totalRevenue = sessions?.reduce((sum, session) => sum + Number(session.total_amount), 0) || 0;
+    const totalSessions = sessions?.length || 0;
 
     return {
-      summary: {
-        totalDeposits,
-        totalTransactions: filteredDeposits?.length || 0,
-        dateRange: { from: dateFrom, to: dateTo }
-      },
-      deposits: filteredDeposits
+      summary: { totalRevenue, totalSessions },
+      data: sessions,
+      dateRange: { from: startDate, to: endDate }
     };
   };
 
-  const generateWithdrawalsReport = async (dateFilter: string) => {
-    const { data: withdrawals } = await supabase
-      .from('withdrawals')
-      .select('*')
-      .order('withdrawal_date', { ascending: false });
+  const generateSavingsReport = async (startDate: string | null, endDate: string | null) => {
+    let query = supabase.from('cooperative_savings').select('*');
+    
+    if (startDate && endDate) {
+      query = query.gte('contribution_date', startDate).lte('contribution_date', endDate);
+    }
+    
+    const { data: savings } = await query.order('contribution_date', { ascending: false });
 
-    const filteredWithdrawals = dateFilter ? 
-      withdrawals?.filter(withdrawal => {
-        const withdrawalDate = new Date(withdrawal.withdrawal_date);
-        return dateFrom && dateTo ? withdrawalDate >= dateFrom && withdrawalDate <= dateTo : true;
-      }) : withdrawals;
-
-    const totalWithdrawals = filteredWithdrawals?.reduce((sum, withdrawal) => sum + Number(withdrawal.amount), 0) || 0;
+    const totalSavings = savings?.reduce((sum, saving) => sum + Number(saving.contribution_amount), 0) || 0;
+    const totalContributions = savings?.length || 0;
 
     return {
-      summary: {
-        totalWithdrawals,
-        totalTransactions: filteredWithdrawals?.length || 0,
-        dateRange: { from: dateFrom, to: dateTo }
-      },
-      withdrawals: filteredWithdrawals
+      summary: { totalSavings, totalContributions },
+      data: savings,
+      dateRange: { from: startDate, to: endDate }
     };
   };
 
-  const generateCooperativeReport = async (dateFilter: string) => {
-    const { data: savings } = await supabase
-      .from('cooperative_savings')
-      .select('*')
-      .order('contribution_date', { ascending: false });
+  const generateDepositsReport = async (startDate: string | null, endDate: string | null) => {
+    let query = supabase.from('deposits').select('*');
+    
+    if (startDate && endDate) {
+      query = query.gte('deposit_date', startDate).lte('deposit_date', endDate);
+    }
+    
+    const { data: deposits } = await query.order('deposit_date', { ascending: false });
 
-    const filteredSavings = dateFilter ? 
-      savings?.filter(saving => {
-        const savingDate = new Date(saving.contribution_date);
-        return dateFrom && dateTo ? savingDate >= dateFrom && savingDate <= dateTo : true;
-      }) : savings;
-
-    const totalContributions = filteredSavings?.reduce((sum, saving) => sum + Number(saving.contribution_amount), 0) || 0;
+    const totalDeposits = deposits?.reduce((sum, deposit) => sum + Number(deposit.amount), 0) || 0;
+    const totalTransactions = deposits?.length || 0;
 
     return {
-      summary: {
-        totalContributions,
-        totalTransactions: filteredSavings?.length || 0,
-        dateRange: { from: dateFrom, to: dateTo }
-      },
-      savings: filteredSavings
+      summary: { totalDeposits, totalTransactions },
+      data: deposits,
+      dateRange: { from: startDate, to: endDate }
     };
   };
 
-  const generateFinancialSummary = async (dateFilter: string) => {
-    const ordersData = await generateOrdersReport(dateFilter);
-    const chargingData = await generateChargingReport(dateFilter);
-    const expensesData = await generateExpensesReport(dateFilter);
-    const depositsData = await generateDepositsReport(dateFilter);
-    const withdrawalsData = await generateWithdrawalsReport(dateFilter);
+  const generateExpensesReport = async (startDate: string | null, endDate: string | null) => {
+    let query = supabase.from('expenses').select('*');
+    
+    if (startDate && endDate) {
+      query = query.gte('expense_date', startDate).lte('expense_date', endDate);
+    }
+    
+    const { data: expenses } = await query.order('expense_date', { ascending: false });
 
-    const totalIncome = ordersData.summary.totalRevenue + chargingData.summary.totalRevenue;
-    const totalExpenses = expensesData.summary.totalExpenses;
-    const netProfit = totalIncome - totalExpenses;
-    const profitMargin = totalIncome > 0 ? (netProfit / totalIncome) * 100 : 0;
+    const totalExpenses = expenses?.reduce((sum, expense) => sum + Number(expense.amount), 0) || 0;
+    const totalTransactions = expenses?.length || 0;
 
     return {
-      summary: {
-        totalIncome,
-        totalExpenses,
-        netProfit,
-        profitMargin,
-        breakEvenPoint: totalExpenses,
-        dateRange: { from: dateFrom, to: dateTo }
-      },
-      breakdown: {
-        orders: ordersData.summary,
-        charging: chargingData.summary,
-        expenses: expensesData.summary,
-        deposits: depositsData.summary,
-        withdrawals: withdrawalsData.summary
-      }
+      summary: { totalExpenses, totalTransactions },
+      data: expenses,
+      dateRange: { from: startDate, to: endDate }
     };
   };
 
-  const generateBusinessAnalytics = async (dateFilter: string) => {
-    const financialData = await generateFinancialSummary(dateFilter);
-    const ordersData = await generateOrdersReport(dateFilter);
-    const chargingData = await generateChargingReport(dateFilter);
+  const generateWithdrawalsReport = async (startDate: string | null, endDate: string | null) => {
+    let query = supabase.from('withdrawals').select('*');
+    
+    if (startDate && endDate) {
+      query = query.gte('withdrawal_date', startDate).lte('withdrawal_date', endDate);
+    }
+    
+    const { data: withdrawals } = await query.order('withdrawal_date', { ascending: false });
 
-    // Advanced analytics calculations
-    const dailyAverage = {
-      revenue: financialData.summary.totalIncome / (dateTo && dateFrom ? 
-        Math.ceil((dateTo.getTime() - dateFrom.getTime()) / (1000 * 60 * 60 * 24)) : 30),
-      orders: ordersData.summary.totalOrders / (dateTo && dateFrom ? 
-        Math.ceil((dateTo.getTime() - dateFrom.getTime()) / (1000 * 60 * 60 * 24)) : 30),
-      chargingSessions: chargingData.summary.totalSessions / (dateTo && dateFrom ? 
-        Math.ceil((dateTo.getTime() - dateFrom.getTime()) / (1000 * 60 * 60 * 24)) : 30)
-    };
+    const totalWithdrawals = withdrawals?.reduce((sum, withdrawal) => sum + Number(withdrawal.amount), 0) || 0;
+    const totalTransactions = withdrawals?.length || 0;
 
     return {
-      summary: financialData.summary,
-      analytics: {
-        dailyAverages: dailyAverage,
-        topPerformingItems: ordersData.itemsSummary,
-        operationalMetrics: {
-          totalVehiclesCharged: chargingData.summary.totalSessions,
-          totalEnergyConsumed: chargingData.summary.totalKcal,
-          avgChargingValue: chargingData.summary.avgSessionValue
-        }
-      },
-      trends: {
-        revenueGrowth: 'N/A', // Would need historical data for comparison
-        customerRetention: 'N/A',
-        seasonalPatterns: 'N/A'
-      }
+      summary: { totalWithdrawals, totalTransactions },
+      data: withdrawals,
+      dateRange: { from: startDate, to: endDate }
     };
   };
 
-  const downloadReport = (report: Report) => {
+  const downloadReport = (report: ReportData) => {
     const dataStr = JSON.stringify(report.report_data, null, 2);
     const dataBlob = new Blob([dataStr], { type: 'application/json' });
     const url = URL.createObjectURL(dataBlob);
@@ -396,14 +259,14 @@ const ReportsTab = () => {
     <div className="space-y-6">
       <div className="flex items-center gap-2">
         <FileText className="h-5 w-5 text-blue-600" />
-        <h2 className="text-xl font-semibold text-gray-900">Reports & Analytics</h2>
+        <h2 className="text-xl font-semibold text-gray-900">Reports Generation</h2>
       </div>
 
       {/* Report Generation Form */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <BarChart3 className="h-4 w-4" />
+            <Filter className="h-4 w-4" />
             Generate New Report
           </CardTitle>
         </CardHeader>
@@ -515,20 +378,14 @@ const ReportsTab = () => {
                       </TableCell>
                       <TableCell>{format(new Date(report.created_at), 'MMM dd, yyyy HH:mm')}</TableCell>
                       <TableCell className="max-w-xs">
-                        {report.report_data.summary ? (
+                        {report.report_data.summary && (
                           <div className="text-sm">
-                            {report.report_data.summary.totalRevenue && (
-                              <div>Revenue: Rs. {report.report_data.summary.totalRevenue.toLocaleString()}</div>
-                            )}
-                            {report.report_data.summary.totalIncome && (
-                              <div>Income: Rs. {report.report_data.summary.totalIncome.toLocaleString()}</div>
-                            )}
-                            {report.report_data.summary.netProfit !== undefined && (
-                              <div>Profit: Rs. {report.report_data.summary.netProfit.toLocaleString()}</div>
-                            )}
+                            {Object.entries(report.report_data.summary).map(([key, value]) => (
+                              <div key={key}>
+                                {key}: {typeof value === 'number' ? value.toLocaleString() : String(value)}
+                              </div>
+                            ))}
                           </div>
-                        ) : (
-                          'Detailed data available'
                         )}
                       </TableCell>
                       <TableCell>

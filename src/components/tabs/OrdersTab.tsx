@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from 'sonner';
-import { ShoppingCart, Plus, Trash2 } from 'lucide-react';
+import { ShoppingCart, Plus, Minus, Trash2, ShoppingBag } from 'lucide-react';
 
 interface Order {
   id: string;
@@ -31,16 +31,20 @@ interface MenuItem {
   is_available: boolean;
 }
 
+interface CartItem {
+  id: string;
+  name: string;
+  price: number;
+  quantity: number;
+}
+
 const OrdersTab = () => {
   const { user } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [cart, setCart] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  
-  // Form state
-  const [selectedMenuItem, setSelectedMenuItem] = useState('');
-  const [quantity, setQuantity] = useState(1);
   const [paymentMode, setPaymentMode] = useState('');
 
   const fetchOrders = async () => {
@@ -85,49 +89,68 @@ const OrdersTab = () => {
     fetchMenuItems();
   }, [user]);
 
-  const getSelectedItem = () => {
-    return menuItems.find(item => item.id === selectedMenuItem);
-  };
-
-  const calculateTotal = () => {
-    const item = getSelectedItem();
-    return item ? item.price * quantity : 0;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user || !selectedMenuItem || !paymentMode || quantity <= 0) {
-      toast.error('Please fill all required fields');
-      return;
+  const addToCart = (item: MenuItem) => {
+    const existingItem = cart.find(cartItem => cartItem.id === item.id);
+    
+    if (existingItem) {
+      setCart(cart.map(cartItem => 
+        cartItem.id === item.id 
+          ? { ...cartItem, quantity: cartItem.quantity + 1 }
+          : cartItem
+      ));
+    } else {
+      setCart([...cart, {
+        id: item.id,
+        name: item.name,
+        price: item.price,
+        quantity: 1
+      }]);
     }
+  };
 
-    const selectedItem = getSelectedItem();
-    if (!selectedItem) {
-      toast.error('Selected item not found');
+  const updateCartQuantity = (id: string, quantity: number) => {
+    if (quantity <= 0) {
+      setCart(cart.filter(item => item.id !== id));
+    } else {
+      setCart(cart.map(item => 
+        item.id === id ? { ...item, quantity } : item
+      ));
+    }
+  };
+
+  const removeFromCart = (id: string) => {
+    setCart(cart.filter(item => item.id !== id));
+  };
+
+  const getCartTotal = () => {
+    return cart.reduce((total, item) => total + (item.price * item.quantity), 0);
+  };
+
+  const handleSubmitOrder = async () => {
+    if (!user || cart.length === 0 || !paymentMode) {
+      toast.error('Please add items to cart and select payment mode');
       return;
     }
 
     setSubmitting(true);
     try {
-      const total = selectedItem.price * quantity;
-      const { error } = await supabase
-        .from('orders')
-        .insert({
+      const orderPromises = cart.map(item => 
+        supabase.from('orders').insert({
           user_id: user.id,
-          item_name: selectedItem.name,
-          quantity,
-          rate: selectedItem.price,
-          total,
+          item_name: item.name,
+          quantity: item.quantity,
+          rate: item.price,
+          total: item.price * item.quantity,
           payment_mode: paymentMode
-        });
+        })
+      );
 
-      if (error) throw error;
+      await Promise.all(orderPromises);
 
       toast.success('Order submitted successfully!');
       
-      // Reset form
-      setSelectedMenuItem('');
-      setQuantity(1);
+      // Reset cart and payment mode
+      setCart([]);
       setPaymentMode('');
       
       // Refresh orders
@@ -173,83 +196,130 @@ const OrdersTab = () => {
         <h2 className="text-xl font-semibold text-gray-900">Orders Management</h2>
       </div>
 
-      {/* Order Form */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Plus className="h-4 w-4" />
-            Add New Order
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Menu Item</label>
-              <Select value={selectedMenuItem} onValueChange={setSelectedMenuItem} required>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select menu item" />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.entries(groupedMenuItems).map(([category, items]) => (
-                    <div key={category}>
-                      <div className="px-2 py-1 text-sm font-semibold text-gray-500 bg-gray-50">
-                        {category}
-                      </div>
-                      {items.map((item) => (
-                        <SelectItem key={item.id} value={item.id}>
-                          <div className="flex justify-between items-center w-full">
-                            <span>{item.name}</span>
-                            <span className="ml-2 text-sm text-gray-500">Rs. {item.price}</span>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Menu Items */}
+        <div className="lg:col-span-2 space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Menu Items</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {Object.entries(groupedMenuItems).map(([category, items]) => (
+                <div key={category} className="mb-6">
+                  <h3 className="text-lg font-semibold mb-3 text-gray-800">{category}</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {items.map((item) => (
+                      <Card key={item.id} className="hover:shadow-md transition-shadow">
+                        <CardContent className="p-4">
+                          <div className="flex justify-between items-start mb-2">
+                            <h4 className="font-medium text-gray-900">{item.name}</h4>
+                            <span className="font-bold text-blue-600">Rs. {item.price}</span>
                           </div>
-                        </SelectItem>
-                      ))}
+                          {item.description && (
+                            <p className="text-sm text-gray-600 mb-3">{item.description}</p>
+                          )}
+                          <Button
+                            onClick={() => addToCart(item)}
+                            size="sm"
+                            className="w-full"
+                          >
+                            <Plus className="h-4 w-4 mr-2" />
+                            Add to Cart
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Cart */}
+        <div className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <ShoppingBag className="h-4 w-4" />
+                Cart ({cart.length} items)
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {cart.length === 0 ? (
+                <p className="text-center text-gray-500 py-4">Your cart is empty</p>
+              ) : (
+                <div className="space-y-3">
+                  {cart.map((item) => (
+                    <div key={item.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                      <div className="flex-1">
+                        <h5 className="font-medium text-sm">{item.name}</h5>
+                        <p className="text-xs text-gray-600">Rs. {item.price} each</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => updateCartQuantity(item.id, item.quantity - 1)}
+                        >
+                          <Minus className="h-3 w-3" />
+                        </Button>
+                        <span className="w-8 text-center text-sm">{item.quantity}</span>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => updateCartQuantity(item.id, item.quantity + 1)}
+                        >
+                          <Plus className="h-3 w-3" />
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => removeFromCart(item.id)}
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </div>
                     </div>
                   ))}
-                </SelectContent>
-              </Select>
-              {getSelectedItem() && (
-                <p className="text-xs text-gray-500">{getSelectedItem()?.description}</p>
+                  
+                  <div className="border-t pt-3 mt-3">
+                    <div className="flex justify-between font-semibold text-lg">
+                      <span>Total:</span>
+                      <span>Rs. {getCartTotal().toFixed(2)}</span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Payment Mode</label>
+                      <Select value={paymentMode} onValueChange={setPaymentMode} required>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select payment mode" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Cash">Cash</SelectItem>
+                          <SelectItem value="Esewa">Esewa</SelectItem>
+                          <SelectItem value="Fonepay">Fonepay</SelectItem>
+                          <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <Button 
+                      onClick={handleSubmitOrder} 
+                      disabled={submitting || !paymentMode} 
+                      className="w-full"
+                    >
+                      {submitting ? 'Submitting...' : 'Submit Order'}
+                    </Button>
+                  </div>
+                </div>
               )}
-            </div>
-            
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Quantity</label>
-              <Input
-                type="number"
-                min="1"
-                value={quantity}
-                onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
-                required
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Payment Mode</label>
-              <Select value={paymentMode} onValueChange={setPaymentMode} required>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select payment mode" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Cash">Cash</SelectItem>
-                  <SelectItem value="Esewa">Esewa</SelectItem>
-                  <SelectItem value="Fonepay">Fonepay</SelectItem>
-                  <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Total Amount</label>
-              <div className="flex items-center justify-between p-2 bg-gray-50 rounded-md">
-                <span className="text-lg font-semibold">Rs. {calculateTotal().toFixed(2)}</span>
-              </div>
-              <Button type="submit" disabled={submitting} className="w-full">
-                {submitting ? 'Submitting...' : 'Submit Order'}
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
 
       {/* Orders List */}
       <Card>
