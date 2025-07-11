@@ -46,9 +46,15 @@ const DepositsTab = () => {
         amount: parseFloat(formData.amount),
         mode: formData.mode,
         deposited_by: formData.depositedBy,
-        reference: formData.reference, // Changed from reference_number to reference
+        // reference: formData.reference, // Column not found in schema, omitting for now
         deposit_date: new Date().toISOString(),
       };
+
+      // If you later confirm the correct column name for 'reference', it can be added here.
+      // For example, if the column is 'transaction_reference':
+      // if (formData.reference) {
+      //   (depositData as any).transaction_reference = formData.reference;
+      // }
 
       const { error } = await supabase.from('deposits').insert([depositData]);
 
@@ -72,7 +78,7 @@ const DepositsTab = () => {
   };
 
   return (
-    <div className="space-y-6 pt-4 md:pt-6"> {/* Added top padding */}
+    <div className="space-y-6"> {/* Removed top padding pt-4 md:pt-6 */}
       <div className="flex items-center gap-3 mb-6">
         <TrendingUp className="h-6 w-6 text-green-600" />
         <h2 className="text-2xl font-bold text-gray-900">Deposits Management</h2>
