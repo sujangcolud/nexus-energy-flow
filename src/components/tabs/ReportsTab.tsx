@@ -61,7 +61,7 @@ const ReportsTab = () => {
   const { user } = useAuth();
   const [reports, setReports] = useState<ReportData[]>([]);
   const [staticExpenses, setStaticExpenses] = useState<StaticExpense[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true); // Initialize loading to true
   const [generating, setGenerating] = useState(false);
   const [reportType, setReportType] = useState('');
   const [dateFrom, setDateFrom] = useState<Date>();

@@ -1,10 +1,11 @@
 
-import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'; // Import Card components
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent } from '@/components/ui/card';
+import { Outlet, useLocation, NavLink } from 'react-router-dom'; // Import NavLink instead of Link for active styling
 import { LogOut, User, ShoppingCart, Zap, Receipt, CreditCard, Banknote, Users, BarChart3, FileText, UtensilsCrossed, Database } from 'lucide-react';
+
+// Tab components are now rendered by routes, but their types/icons might be needed for nav items.
 import OrdersTab from '@/components/tabs/OrdersTab';
 import ChargingTab from '@/components/tabs/ChargingTab';
 import ExpensesTab from '@/components/tabs/ExpensesTab';
@@ -19,7 +20,7 @@ import DataInputTab from '@/components/tabs/DataInputTab';
 
 const Dashboard = () => {
   const { user, signOut, userRole } = useAuth();
-  const [activeTab, setActiveTab] = useState('orders');
+  const location = useLocation(); // To determine if we are on a sub-page
 
   const handleSignOut = async () => {
     try {
@@ -29,55 +30,69 @@ const Dashboard = () => {
     }
   };
 
-  // Define tabs based on user role
-  const getTabs = () => {
-    const baseTabs = [
-      { id: 'orders', label: 'Orders', icon: ShoppingCart, component: OrdersTab },
-      { id: 'charging', label: 'Charging', icon: Zap, component: ChargingTab },
-      { id: 'expenses', label: 'Expenses', icon: Receipt, component: ExpensesTab },
-      { id: 'deposits', label: 'Deposits', icon: CreditCard, component: DepositsTab },
-      { id: 'withdrawals', label: 'Withdrawals', icon: Banknote, component: WithdrawalsTab },
-      { id: 'cooperative', label: 'Savings', icon: Users, component: CooperativeSavingsTab },
+  // Define items for navigation cards. 'path' will be used for <Link>
+  // The 'component' property is no longer used here for rendering, but kept for consistency or future use.
+  const getNavItems = () => {
+    const baseItems = [
+      { id: 'orders', path: 'orders', label: 'Orders', icon: ShoppingCart, component: OrdersTab },
+      { id: 'charging', path: 'charging', label: 'Charging', icon: Zap, component: ChargingTab },
+      { id: 'expenses', path: 'expenses', label: 'Expenses', icon: Receipt, component: ExpensesTab },
+      { id: 'deposits', path: 'deposits', label: 'Deposits', icon: CreditCard, component: DepositsTab },
+      { id: 'withdrawals', path: 'withdrawals', label: 'Withdrawals', icon: Banknote, component: WithdrawalsTab },
+      { id: 'cooperative', path: 'cooperative', label: 'Savings', icon: Users, component: CooperativeSavingsTab },
     ];
 
-    const adminTabs = [
-      { id: 'menu', label: 'Menu', icon: UtensilsCrossed, component: MenuManagementTab },
+    const adminItems = [
+      { id: 'menu', path: 'menu', label: 'Menu', icon: UtensilsCrossed, component: MenuManagementTab },
     ];
 
-    const analyticsTab = [
-      { id: 'insights', label: 'Analytics', icon: BarChart3, component: InsightsTab },
-      { id: 'reports', label: 'Reports', icon: FileText, component: ReportsTab },
-      { id: 'reports-view', label: 'View Reports', icon: FileText, component: ReportsViewTab },
-      { id: 'data-input', label: 'Data Input', icon: Database, component: DataInputTab },
+    const analyticsItems = [
+      { id: 'insights', path: 'insights', label: 'Analytics', icon: BarChart3, component: InsightsTab },
+      { id: 'reports', path: 'reports', label: 'Reports', icon: FileText, component: ReportsTab },
+      { id: 'reports-view', path: 'reports-view', label: 'View Reports', icon: FileText, component: ReportsViewTab },
+      { id: 'data-input', path: 'data-input', label: 'Data Input', icon: Database, component: DataInputTab },
     ];
 
-    // All users get base tabs and analytics
-    let tabs = [...baseTabs, ...analyticsTab];
-
-    // Super admins get menu management
+    let items = [...baseItems, ...analyticsItems];
     if (userRole === 'super_admin') {
-      tabs = [...baseTabs, ...adminTabs, ...analyticsTab];
+      items = [...baseItems, ...adminItems, ...analyticsItems];
     }
-
-    return tabs;
+    return items;
   };
 
-  const tabs = getTabs();
+  const navItems = getNavItems();
+
+  // Determine if a sub-page is active. A more robust way might be to check against specific paths.
+  // For now, if pathname is not just "/dashboard" or "/dashboard/", it's a sub-page.
+  const isSubPageActive = location.pathname !== '/dashboard' && location.pathname !== '/dashboard/';
+
+  // Find current page title for mobile view
+  const currentPage = navItems.find(item => location.pathname.includes(`/dashboard/${item.path}`));
+  const currentPageTitle = currentPage?.label || 'Dashboard';
+
 
   return (
-    <div className="min-h-screen bg-background text-foreground"> {/* Use CSS variables for background and text */}
+    <div className="min-h-screen bg-background text-foreground">
       {/* Header */}
-      <header className="bg-card shadow-md border-b border-border"> {/* Use card for header bg, add shadow and border */}
+      <header className="bg-card shadow-md border-b border-border sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center gap-3">
-              <div className="bg-primary text-primary-foreground p-2 rounded-lg shadow-sm"> {/* Use primary color */}
-                <BarChart3 className="h-6 w-6" />
-              </div>
-              <div>
-                <h1 className="text-xl font-bold text-foreground">EcoSoft Pro</h1> {/* Use foreground color */}
-                <p className="text-sm text-gray-500">Business Management System</p>
-              </div>
+              <NavLink to="/dashboard" end className={({ isActive }) =>
+                `flex items-center gap-3 group ${isActive ? 'cursor-default' : ''}`
+              }>
+                {({ isActive }) => (
+                  <>
+                    <div className={`p-2 rounded-lg shadow-sm transition-all group-hover:shadow-md ${isActive ? 'bg-primary text-primary-foreground' : 'bg-primary text-primary-foreground'}`}> {/* Keep logo bg consistent or style if needed */}
+                      <BarChart3 className="h-6 w-6" />
+                    </div>
+                    <div>
+                      <h1 className={`text-xl font-bold transition-colors ${isActive ? 'text-primary' : 'text-foreground group-hover:text-primary'}`}>EcoSoft Pro</h1>
+                      <p className="text-sm text-gray-500">Business Management System</p>
+                    </div>
+                  </>
+                )}
+              </NavLink>
             </div>
             
             <div className="flex items-center gap-4">
@@ -85,7 +100,7 @@ const Dashboard = () => {
                 <User className="h-4 w-4" />
                 <span>{user?.email}</span>
                 {userRole && (
-                  <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-medium">
+                  <span className="bg-primary/10 text-primary px-2 py-1 rounded text-xs font-medium">
                     {userRole}
                   </span>
                 )}
@@ -107,62 +122,45 @@ const Dashboard = () => {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Mobile-only active tab title */}
-        <div className="sm:hidden mb-4 text-center">
-          <h2 className="text-lg font-semibold text-gray-800">
-            {tabs.find(tab => tab.id === activeTab)?.label}
-          </h2>
-        </div>
+        {/* Mobile-only active page title */}
+        {isSubPageActive && (
+          <div className="sm:hidden mb-4 text-center">
+            <h2 className="text-lg font-semibold text-gray-800">
+              {currentPageTitle}
+            </h2>
+          </div>
+        )}
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          {/* New Card-based Navigation */}
+        {/* Show navigation cards only on the main /dashboard path */}
+        {!isSubPageActive ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-8">
-            {tabs.map((tab) => {
-              const Icon = tab.icon;
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              // Active state for cards is not strictly needed if they only show on the base dashboard page
+              // However, if we wanted to highlight the "Dashboard" link itself in a global nav, this logic would be elsewhere.
+              // For now, cards don't have an "active" state themselves, they are pure navigation triggers.
               return (
-                <Card
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`cursor-pointer transition-all duration-200 ease-in-out hover:shadow-xl hover:scale-105 group
-                              ${activeTab === tab.id
-                                ? 'ring-2 ring-primary shadow-lg scale-105 bg-accent'
-                                : 'bg-card hover:bg-accent/50'}`}
-                >
-                  <CardContent className="flex flex-col items-center justify-center p-6 space-y-4"> {/* Increased space-y */}
-                    <div className={`p-3.5 rounded-full transition-colors duration-200 ease-in-out
-                                     ${activeTab === tab.id
-                                       ? 'bg-primary text-primary-foreground'
-                                       : 'bg-accent group-hover:bg-primary/10 text-primary'}`}>
-                      <Icon className="h-7 w-7" /> {/* Slightly smaller icon for better padding feel */}
-                    </div>
-                    <p className={`text-center font-semibold transition-colors duration-200 ease-in-out
-                                     ${activeTab === tab.id
-                                       ? 'text-primary'
-                                       : 'text-foreground group-hover:text-primary'}`}>
-                      {tab.label}
-                    </p>
-                  </CardContent>
-                </Card>
+                <Link key={item.id} to={item.path} className="block group">
+                  <Card
+                    className={`cursor-pointer transition-all duration-200 ease-in-out hover:shadow-xl hover:scale-105 bg-card hover:bg-accent/50 h-full`}
+                  >
+                    <CardContent className="flex flex-col items-center justify-center p-6 space-y-4 h-full">
+                      <div className={`p-3.5 rounded-full transition-colors duration-200 ease-in-out bg-accent group-hover:bg-primary/10 text-primary`}>
+                        <Icon className="h-7 w-7" />
+                      </div>
+                      <p className={`text-center font-semibold transition-colors duration-200 ease-in-out text-foreground group-hover:text-primary`}>
+                        {item.label}
+                      </p>
+                    </CardContent>
+                  </Card>
+                </Link>
               );
             })}
           </div>
-
-          {/* Original TabsList can be removed or hidden as navigation is now card-based */}
-          <TabsList className="hidden"> {/* Hide the original TabsList */}
-            {tabs.map((tab) => (
-              <TabsTrigger key={tab.id} value={tab.id}>{tab.label}</TabsTrigger>
-            ))}
-          </TabsList>
-
-          {tabs.map((tab) => {
-            const Component = tab.component;
-            return (
-              <TabsContent key={tab.id} value={tab.id} className="mt-6">
-                <Component />
-              </TabsContent>
-            );
-          })}
-        </Tabs>
+        ) : (
+          // If on a sub-page, render the sub-page's content via Outlet
+          <Outlet />
+        )}
       </main>
     </div>
   );
