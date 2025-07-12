@@ -62,10 +62,14 @@ const ExpensesTab = () => {
     if (!user) return;
     setLoading(true);
     try {
+      const oneWeekAgo = new Date();
+      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
       const { data, error } = await supabase
         .from('expenses')
         .select('*')
         .eq('user_id', user.id)
+        .gte('created_at', oneWeekAgo.toISOString())
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -242,7 +246,7 @@ const ExpensesTab = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead>Date</TableHead>
-                  <TableHead className="max-w-[200px]">Description</TableHead>
+                  <TableHead className="w-[200px]">Description</TableHead>
                   <TableHead>Category</TableHead>
                   <TableHead>Payment Mode</TableHead>
                   <TableHead className="text-right">Amount</TableHead>
@@ -268,7 +272,7 @@ const ExpensesTab = () => {
                     {expenses.map((expense) => (
                       <TableRow key={expense.id}>
                         <TableCell>{new Date(expense.expense_date).toLocaleDateString()}</TableCell>
-                        <TableCell className="font-medium whitespace-normal break-words">{expense.description}</TableCell>
+                        <TableCell className="font-medium whitespace-normal break-words w-[200px]">{expense.description}</TableCell>
                         <TableCell>{expense.category}</TableCell>
                         <TableCell>{expense.payment_mode}</TableCell>
                         <TableCell className="text-right">Rs. {expense.amount.toFixed(2)}</TableCell>
