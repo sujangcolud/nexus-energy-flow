@@ -3,11 +3,12 @@ import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea'; // Import Textarea
+import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { Save, Database, UploadCloud } from 'lucide-react'; // Updated icons
+import { Save, Database, UploadCloud } from 'lucide-react';
+import { format } from 'date-fns';
 
 type DataType = 'orders' | 'charging_sessions' | 'expenses' | 'deposits' | 'withdrawals' | 'cooperative_savings' | 'menu_items';
 
@@ -134,8 +135,22 @@ const DataInputTab = () => {
           if (field.type === 'number' && transformed[field.name]) {
             transformed[field.name] = parseFloat(transformed[field.name]) || 0;
           }
-          if (field.type === 'date' && !transformed[field.name]) {
-            transformed[field.name] = new Date().toISOString().split('T')[0];
+          if (field.type === 'date') {
+            if (transformed[field.name]) {
+              // If a date is provided, parse it. This assumes a common format like YYYY-MM-DD or MM/DD/YYYY.
+              // new Date() is flexible enough to handle many formats.
+              const parsedDate = new Date(transformed[field.name]);
+              // Check if the parsed date is valid
+              if (!isNaN(parsedDate.getTime())) {
+                transformed[field.name] = format(parsedDate, 'yyyy-MM-dd');
+              } else {
+                // If parsing fails, throw an error for that row
+                throw new Error(`Invalid date format for '${field.name}' in one of the rows. Please use YYYY-MM-DD.`);
+              }
+            } else {
+              // If no date is provided, default to today.
+              transformed[field.name] = new Date().toISOString().split('T')[0];
+            }
           }
         });
 

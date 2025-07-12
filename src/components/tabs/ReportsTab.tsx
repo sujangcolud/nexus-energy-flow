@@ -260,21 +260,24 @@ const ReportsTab = () => {
     if (!user) return;
 
     try {
-      const { error } = await supabase
+      // Add detailed logging to see the full response from Supabase
+      const response = await supabase
         .from('reports')
         .delete()
         .eq('id', reportId);
 
-      if (error) throw error;
+      console.log('Supabase delete response:', response);
+
+      if (response.error) {
+        // Explicitly throw the error to be caught by the catch block
+        throw response.error;
+      }
 
       toast.success('Report deleted successfully!');
-      // Manually filter out the deleted report from the local state for an immediate UI update
       setReports(currentReports => currentReports.filter(report => report.id !== reportId));
-      // Also re-fetch to ensure consistency, though the UI update is already handled.
-      fetchReports();
     } catch (error) {
-      console.error('Error deleting report:', error);
-      toast.error('Failed to delete report.');
+      console.error('Detailed error deleting report:', error);
+      toast.error(`Failed to delete report. Error: ${(error as any).message || 'Unknown error'}`);
     }
   };
 
