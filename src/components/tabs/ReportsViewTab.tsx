@@ -233,8 +233,8 @@ const ReportsViewTab = () => {
         <CardHeader>
           <CardTitle>Date Range Filter</CardTitle>
         </CardHeader>
-        <CardContent className="flex gap-4 items-end">
-          <div className="space-y-2">
+        <CardContent className="flex flex-col sm:flex-row gap-4 sm:items-end">
+          <div className="space-y-2 w-full sm:w-auto"> {/* Ensure inputs take full width when stacked */}
             <Label htmlFor="startDate">Start Date</Label>
             <Input
               id="startDate"
@@ -259,7 +259,7 @@ const ReportsViewTab = () => {
       </Card>
 
       <Tabs defaultValue="combined" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4">
           <TabsTrigger value="combined">Combined Daily</TabsTrigger>
           <TabsTrigger value="payment">Payment Methods</TabsTrigger>
           <TabsTrigger value="balances">Balances</TabsTrigger>

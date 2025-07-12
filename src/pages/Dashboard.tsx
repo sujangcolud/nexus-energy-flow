@@ -123,8 +123,8 @@ const Dashboard = () => {
                   value={tab.id}
                   className="flex items-center gap-2 px-3 py-2 text-xs md:text-sm"
                 >
-                  <Icon className="h-4 w-4" />
-                  <span className="hidden sm:inline">{tab.label}</span>
+                  <Icon className="h-4 w-4 flex-shrink-0" /> {/* Ensure icon doesn't shrink */}
+                  <span className="hidden sm:inline whitespace-nowrap overflow-hidden text-ellipsis">{tab.label}</span>
                 </TabsTrigger>
               );
             })}
