@@ -119,13 +119,14 @@ const ReportsViewTab = () => {
   const handleRowClick = (date: string) => {
     const details = {
       date,
-      orders: reportData.orders.filter((o: any) => o.order_date === date),
-      charging: reportData.charging.filter((c: any) => c.session_date === date),
-      expenses: reportData.expenses.filter((e: any) => e.expense_date === date),
-      savings: reportData.savings.filter((s: any) => s.contribution_date === date),
-      deposits: reportData.deposits.filter((d: any) => d.deposit_date === date),
-      withdrawals: reportData.withdrawals.filter((w: any) => w.withdrawal_date === date),
+      orders: reportData.orders.filter((o: any) => o.order_date && o.order_date.startsWith(date)),
+      charging: reportData.charging.filter((c: any) => c.session_date && c.session_date.startsWith(date)),
+      expenses: reportData.expenses.filter((e: any) => e.expense_date && e.expense_date.startsWith(date)),
+      savings: reportData.savings.filter((s: any) => s.contribution_date && s.contribution_date.startsWith(date)),
+      deposits: reportData.deposits.filter((d: any) => d.deposit_date && d.deposit_date.startsWith(date)),
+      withdrawals: reportData.withdrawals.filter((w: any) => w.withdrawal_date && w.withdrawal_date.startsWith(date)),
     };
+
     setSelectedDayData(details);
     setIsDetailModalOpen(true);
   };
