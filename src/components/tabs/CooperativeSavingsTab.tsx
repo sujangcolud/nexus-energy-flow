@@ -176,7 +176,7 @@ const CooperativeSavingsTab = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead>Date</TableHead>
-                  <TableHead>Cooperative Name</TableHead>
+                  <TableHead className="max-w-[200px]">Cooperative Name</TableHead>
                   <TableHead className="text-right">Amount</TableHead>
                 </TableRow>
               </TableHeader>
@@ -193,7 +193,7 @@ const CooperativeSavingsTab = () => {
                   savings.map((saving) => (
                     <TableRow key={saving.id}>
                       <TableCell>{new Date(saving.contribution_date).toLocaleDateString()}</TableCell>
-                      <TableCell className="font-medium">{saving.member_id}</TableCell>
+                      <TableCell className="font-medium whitespace-normal break-words">{saving.member_id}</TableCell>
                       <TableCell className="text-right">Rs. {saving.contribution_amount.toFixed(2)}</TableCell>
                     </TableRow>
                   ))

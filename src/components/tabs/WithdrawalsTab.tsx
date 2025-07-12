@@ -204,7 +204,7 @@ const WithdrawalsTab = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead>Date</TableHead>
-                  <TableHead>Purpose</TableHead>
+                  <TableHead className="max-w-[200px]">Purpose</TableHead>
                   <TableHead>Recipient</TableHead>
                   <TableHead className="text-right">Amount</TableHead>
                 </TableRow>
@@ -222,7 +222,7 @@ const WithdrawalsTab = () => {
                   withdrawals.map((withdrawal) => (
                     <TableRow key={withdrawal.id}>
                       <TableCell>{new Date(withdrawal.withdrawal_date).toLocaleDateString()}</TableCell>
-                      <TableCell className="font-medium">{withdrawal.purpose}</TableCell>
+                      <TableCell className="font-medium whitespace-normal break-words">{withdrawal.purpose}</TableCell>
                       <TableCell>{withdrawal.recipient || '-'}</TableCell>
                       <TableCell className="text-right">Rs. {withdrawal.amount.toFixed(2)}</TableCell>
                     </TableRow>
