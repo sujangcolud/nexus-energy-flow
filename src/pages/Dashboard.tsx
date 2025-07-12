@@ -1,8 +1,9 @@
+
 import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { LogOut, User, ShoppingCart, Zap, Receipt, CreditCard, Banknote, Users, BarChart3, FileText, UtensilsCrossed, Upload } from 'lucide-react';
+import { LogOut, User, ShoppingCart, Zap, Receipt, CreditCard, Banknote, Users, BarChart3, FileText, UtensilsCrossed, Database } from 'lucide-react';
 import OrdersTab from '@/components/tabs/OrdersTab';
 import ChargingTab from '@/components/tabs/ChargingTab';
 import ExpensesTab from '@/components/tabs/ExpensesTab';
@@ -13,7 +14,7 @@ import InsightsTab from '@/components/tabs/InsightsTab';
 import ReportsTab from '@/components/tabs/ReportsTab';
 import ReportsViewTab from '@/components/tabs/ReportsViewTab';
 import MenuManagementTab from '@/components/tabs/MenuManagementTab';
-import FileUploadTab from '@/components/tabs/FileUploadTab';
+import DataInputTab from '@/components/tabs/DataInputTab';
 
 const Dashboard = () => {
   const { user, signOut, userRole } = useAuth();
@@ -46,7 +47,7 @@ const Dashboard = () => {
       { id: 'insights', label: 'Analytics', icon: BarChart3, component: InsightsTab },
       { id: 'reports', label: 'Reports', icon: FileText, component: ReportsTab },
       { id: 'reports-view', label: 'View Reports', icon: FileText, component: ReportsViewTab },
-      { id: 'upload', label: 'Upload', icon: Upload, component: FileUploadTab },
+      { id: 'data-input', label: 'Data Input', icon: Database, component: DataInputTab },
     ];
 
     // All users get base tabs and analytics
@@ -113,7 +114,7 @@ const Dashboard = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-9 gap-1 mb-4 sm:mb-8"> {/* Adjusted mb for sm screens */}
+          <TabsList className="grid w-full grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-9 gap-1 mb-4 sm:mb-8">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               return (

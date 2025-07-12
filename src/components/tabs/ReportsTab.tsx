@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -9,8 +8,11 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { FileText, Download, Calendar as CalendarIcon, Filter } from 'lucide-react';
+import { FileText, Download, Calendar as CalendarIcon, Filter, Plus, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface ReportData {
@@ -22,14 +24,27 @@ interface ReportData {
   created_at: string;
 }
 
+interface StaticExpense {
+  id: string;
+  name: string;
+  amount: number;
+  is_recurring: boolean;
+  user_id: string;
+  created_at: string;
+}
+
 const ReportsTab = () => {
   const { user } = useAuth();
   const [reports, setReports] = useState<ReportData[]>([]);
+  const [staticExpenses, setStaticExpenses] = useState<StaticExpense[]>([]);
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [reportType, setReportType] = useState('');
   const [dateFrom, setDateFrom] = useState<Date>();
   const [dateTo, setDateTo] = useState<Date>();
+  const [newExpenseName, setNewExpenseName] = useState('');
+  const [newExpenseAmount, setNewExpenseAmount] = useState('');
+  const [isRecurring, setIsRecurring] = useState(false);
 
   const reportTypes = [
     { value: 'orders', label: 'Orders Report' },
@@ -60,8 +75,27 @@ const ReportsTab = () => {
     }
   };
 
+  const fetchStaticExpenses = async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('static_expenses')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setStaticExpenses(data || []);
+    } catch (error) {
+      console.error('Error fetching static expenses:', error);
+      toast.error('Failed to load static expenses');
+    }
+  };
+
   useEffect(() => {
     fetchReports();
+    fetchStaticExpenses();
   }, [user]);
 
   const generateReport = async () => {
@@ -75,11 +109,6 @@ const ReportsTab = () => {
       let reportData: any = {};
       const startDate = dateFrom ? format(dateFrom, 'yyyy-MM-dd') : null;
       const endDate = dateTo ? format(dateTo, 'yyyy-MM-dd') : null;
-
-      // Build date filter
-      const dateFilter = startDate && endDate 
-        ? `and created_at >= '${startDate}' and created_at <= '${endDate}'`
-        : '';
 
       switch (reportType) {
         case 'orders':
@@ -245,167 +274,348 @@ const ReportsTab = () => {
   };
 
   const downloadReport = (report: ReportData) => {
-    const dataStr = JSON.stringify(report.report_data, null, 2);
-    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    // Convert to CSV format
+    const csvData = convertToCSV(report.report_data.data, report.report_type);
+    const dataBlob = new Blob([csvData], { type: 'text/csv' });
     const url = URL.createObjectURL(dataBlob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `${report.report_type}_report_${format(new Date(report.created_at), 'yyyy-MM-dd')}.json`;
+    link.download = `${report.report_type}_report_${format(new Date(report.created_at), 'yyyy-MM-dd')}.csv`;
     link.click();
     URL.revokeObjectURL(url);
   };
 
+  const convertToCSV = (data: any[], reportType: string) => {
+    if (!data || data.length === 0) return '';
+    
+    const headers = Object.keys(data[0]).join(',');
+    const rows = data.map(row => 
+      Object.values(row).map(value => 
+        typeof value === 'string' ? `"${value}"` : value
+      ).join(',')
+    ).join('\n');
+    
+    return `${headers}\n${rows}`;
+  };
+
+  const addStaticExpense = async () => {
+    if (!user || !newExpenseName || !newExpenseAmount) {
+      toast.error('Please fill in all fields');
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('static_expenses')
+        .insert({
+          user_id: user.id,
+          name: newExpenseName,
+          amount: parseFloat(newExpenseAmount),
+          is_recurring: isRecurring
+        });
+
+      if (error) throw error;
+
+      toast.success('Static expense added successfully!');
+      setNewExpenseName('');
+      setNewExpenseAmount('');
+      setIsRecurring(false);
+      fetchStaticExpenses();
+    } catch (error) {
+      console.error('Error adding static expense:', error);
+      toast.error('Failed to add static expense');
+    }
+  };
+
+  const deleteStaticExpense = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('static_expenses')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast.success('Static expense deleted successfully!');
+      fetchStaticExpenses();
+    } catch (error) {
+      console.error('Error deleting static expense:', error);
+      toast.error('Failed to delete static expense');
+    }
+  };
+
   return (
-    <div className="space-y-6"> {/* Removed top padding pt-4 md:pt-6 */}
+    <div className="space-y-6">
       <div className="flex items-center gap-2">
         <FileText className="h-5 w-5 text-blue-600" />
         <h2 className="text-xl font-semibold text-gray-900">Reports Generation</h2>
       </div>
 
-      {/* Report Generation Form */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Filter className="h-4 w-4" />
-            Generate New Report
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Report Type</label>
-              <Select value={reportType} onValueChange={setReportType}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select report type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {reportTypes.map((type) => (
-                    <SelectItem key={type.value} value={type.value}>
-                      {type.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <label className="text-sm font-medium">From Date</label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-full justify-start text-left">
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {dateFrom ? format(dateFrom, 'PPP') : 'Pick a date'}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={dateFrom}
-                    onSelect={setDateFrom}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-            
-            <div className="space-y-2">
-              <label className="text-sm font-medium">To Date</label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-full justify-start text-left">
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {dateTo ? format(dateTo, 'PPP') : 'Pick a date'}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={dateTo}
-                    onSelect={setDateTo}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-            
-            <div className="space-y-2">
-              <label className="text-sm font-medium">&nbsp;</label>
-              <Button onClick={generateReport} disabled={generating} className="w-full">
-                {generating ? 'Generating...' : 'Generate Report'}
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <Tabs defaultValue="individual" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="individual">Individual Reports</TabsTrigger>
+          <TabsTrigger value="static-expenses">Static Expenses</TabsTrigger>
+        </TabsList>
 
-      {/* Generated Reports List */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Generated Reports ({reports.length})</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <div className="text-center py-4">Loading reports...</div>
-          ) : reports.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              No reports generated yet. Create your first report above.
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Report Type</TableHead>
-                    <TableHead>Date Range</TableHead>
-                    <TableHead>Generated</TableHead>
-                    <TableHead>Summary</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {reports.map((report) => (
-                    <TableRow key={report.id}>
-                      <TableCell>
-                        <Badge variant="outline">
-                          {reportTypes.find(t => t.value === report.report_type)?.label || report.report_type}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {report.date_range_start && report.date_range_end
-                          ? `${format(new Date(report.date_range_start), 'MMM dd')} - ${format(new Date(report.date_range_end), 'MMM dd, yyyy')}`
-                          : 'All time'
-                        }
-                      </TableCell>
-                      <TableCell>{format(new Date(report.created_at), 'MMM dd, yyyy HH:mm')}</TableCell>
-                      <TableCell className="max-w-xs">
-                        {report.report_data.summary && (
-                          <div className="text-sm">
-                            {Object.entries(report.report_data.summary).map(([key, value]) => (
-                              <div key={key}>
-                                {key}: {typeof value === 'number' ? value.toLocaleString() : String(value)}
+        <TabsContent value="individual" className="space-y-6">
+          {/* Report Generation Form */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Filter className="h-4 w-4" />
+                Generate Individual Report
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Report Type</label>
+                  <Select value={reportType} onValueChange={setReportType}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select report type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {reportTypes.map((type) => (
+                        <SelectItem key={type.value} value={type.value}>
+                          {type.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">From Date</label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className="w-full justify-start text-left">
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {dateFrom ? format(dateFrom, 'PPP') : 'Pick a date'}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                      <Calendar
+                        mode="single"
+                        selected={dateFrom}
+                        onSelect={setDateFrom}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">To Date</label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className="w-full justify-start text-left">
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {dateTo ? format(dateTo, 'PPP') : 'Pick a date'}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                      <Calendar
+                        mode="single"
+                        selected={dateTo}
+                        onSelect={setDateTo}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">&nbsp;</label>
+                  <Button onClick={generateReport} disabled={generating} className="w-full">
+                    {generating ? 'Generating...' : 'Generate Report'}
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Generated Reports List */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Generated Reports ({reports.length})</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {loading ? (
+                <div className="text-center py-4">Loading reports...</div>
+              ) : reports.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  No reports generated yet. Create your first report above.
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Report Type</TableHead>
+                        <TableHead>Date Range</TableHead>
+                        <TableHead>Generated</TableHead>
+                        <TableHead>Summary</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {reports.map((report) => (
+                        <TableRow key={report.id}>
+                          <TableCell>
+                            <Badge variant="outline">
+                              {reportTypes.find(t => t.value === report.report_type)?.label || report.report_type}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            {report.date_range_start && report.date_range_end
+                              ? `${format(new Date(report.date_range_start), 'MMM dd')} - ${format(new Date(report.date_range_end), 'MMM dd, yyyy')}`
+                              : 'All time'
+                            }
+                          </TableCell>
+                          <TableCell>{format(new Date(report.created_at), 'MMM dd, yyyy HH:mm')}</TableCell>
+                          <TableCell className="max-w-xs">
+                            {report.report_data.summary && (
+                              <div className="text-sm">
+                                {Object.entries(report.report_data.summary).map(([key, value]) => (
+                                  <div key={key}>
+                                    {key}: {typeof value === 'number' ? value.toLocaleString() : String(value)}
+                                  </div>
+                                ))}
                               </div>
-                            ))}
-                          </div>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => downloadReport(report)}
-                        >
-                          <Download className="h-4 w-4 mr-2" />
-                          Download
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => downloadReport(report)}
+                            >
+                              <Download className="h-4 w-4 mr-2" />
+                              Download CSV
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="static-expenses" className="space-y-6">
+          {/* Add Static Expense Form */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Plus className="h-4 w-4" />
+                Add Static/Recurring Expense
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="expense-name">Expense Name</Label>
+                  <Input
+                    id="expense-name"
+                    placeholder="Enter expense name"
+                    value={newExpenseName}
+                    onChange={(e) => setNewExpenseName(e.target.value)}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="expense-amount">Amount (NRs.)</Label>
+                  <Input
+                    id="expense-amount"
+                    type="number"
+                    placeholder="Enter amount"
+                    value={newExpenseAmount}
+                    onChange={(e) => setNewExpenseAmount(e.target.value)}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label>Type</Label>
+                  <div className="flex items-center space-x-4">
+                    <label className="flex items-center space-x-2">
+                      <input
+                        type="radio"
+                        checked={!isRecurring}
+                        onChange={() => setIsRecurring(false)}
+                      />
+                      <span>Static</span>
+                    </label>
+                    <label className="flex items-center space-x-2">
+                      <input
+                        type="radio"
+                        checked={isRecurring}
+                        onChange={() => setIsRecurring(true)}
+                      />
+                      <span>Recurring</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+              
+              <Button onClick={addStaticExpense} className="mt-4">
+                <Plus className="h-4 w-4 mr-2" />
+                Add Expense
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Static Expenses List */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Static & Recurring Expenses ({staticExpenses.length})</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {staticExpenses.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  No static expenses added yet. Add your first expense above.
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Expense Name</TableHead>
+                        <TableHead>Amount</TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {staticExpenses.map((expense) => (
+                        <TableRow key={expense.id}>
+                          <TableCell className="font-medium">{expense.name}</TableCell>
+                          <TableCell>NRs. {expense.amount.toLocaleString()}</TableCell>
+                          <TableCell>
+                            <Badge variant={expense.is_recurring ? "default" : "secondary"}>
+                              {expense.is_recurring ? "Recurring" : "Static"}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => deleteStaticExpense(expense.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

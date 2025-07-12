@@ -18,6 +18,8 @@ interface AnalyticsData {
   profitMargin: number;
   fixedCosts: number;
   variableCostRatio: number;
+  staticExpenses: number;
+  recurringExpenses: number;
   topSellingItems: Array<{ name: string; quantity: number; revenue: number }>;
   categoryBreakdown: Record<string, number>;
   dailyAverage: {
@@ -47,6 +49,8 @@ const InsightsTab = () => {
     profitMargin: 0,
     fixedCosts: 0,
     variableCostRatio: 0,
+    staticExpenses: 0,
+    recurringExpenses: 0,
     topSellingItems: [],
     categoryBreakdown: {},
     dailyAverage: { revenue: 0, orders: 0, chargingSessions: 0 },
@@ -69,14 +73,16 @@ const InsightsTab = () => {
         expensesData,
         depositsData,
         withdrawalsData,
-        cooperativeData
+        cooperativeData,
+        staticExpensesData
       ] = await Promise.all([
         supabase.from('orders').select('*'),
         supabase.from('charging_sessions').select('*'),
         supabase.from('expenses').select('*'),
         supabase.from('deposits').select('*'),
         supabase.from('withdrawals').select('*'),
-        supabase.from('cooperative_savings').select('*')
+        supabase.from('cooperative_savings').select('*'),
+        supabase.from('static_expenses').select('*')
       ]);
 
       const orders = ordersData.data || [];
@@ -85,6 +91,7 @@ const InsightsTab = () => {
       const deposits = depositsData.data || [];
       const withdrawals = withdrawalsData.data || [];
       const cooperative = cooperativeData.data || [];
+      const staticExpenses = staticExpensesData.data || [];
 
       // Calculate metrics
       const ordersRevenue = orders.reduce((sum, order) => sum + Number(order.total), 0);
@@ -96,26 +103,30 @@ const InsightsTab = () => {
       const totalWithdrawals = withdrawals.reduce((sum, withdrawal) => sum + Number(withdrawal.amount), 0);
       const cooperativeSavings = cooperative.reduce((sum, saving) => sum + Number(saving.contribution_amount), 0);
       
-      const netProfit = totalRevenue - totalExpenses;
+      const staticExpensesTotal = staticExpenses.reduce((sum, expense) => sum + Number(expense.amount), 0);
+      const recurringExpensesTotal = staticExpenses
+        .filter(expense => expense.is_recurring)
+        .reduce((sum, expense) => sum + Number(expense.amount), 0);
+      
+      const netProfit = totalRevenue - totalExpenses - staticExpensesTotal;
       const profitMargin = totalRevenue > 0 ? (netProfit / totalRevenue) * 100 : 0;
 
-      // Calculate proper Break Even Point (BEP)
-      // BEP = Fixed Costs / (Price per Unit - Variable Cost per Unit)
-      // For service business: BEP = Fixed Costs / Contribution Margin Ratio
-      
-      // Estimate fixed costs (rent, utilities, etc.) - categories that are typically fixed
+      // Enhanced Break Even Point calculation with static expenses
       const fixedCostCategories = ['Rent', 'Utilities', 'Insurance', 'Salaries', 'Equipment'];
-      const fixedCosts = expenses
+      const fixedCostsFromExpenses = expenses
         .filter(expense => fixedCostCategories.includes(expense.category))
         .reduce((sum, expense) => sum + Number(expense.amount), 0);
       
+      // Include static/recurring expenses as fixed costs
+      const totalFixedCosts = fixedCostsFromExpenses + staticExpensesTotal;
+      
       // Variable costs (remaining expenses)
-      const variableCosts = totalExpenses - fixedCosts;
+      const variableCosts = totalExpenses - fixedCostsFromExpenses;
       const variableCostRatio = totalRevenue > 0 ? variableCosts / totalRevenue : 0;
       const contributionMarginRatio = 1 - variableCostRatio;
       
-      // Break Even Point in revenue
-      const breakEvenPoint = contributionMarginRatio > 0 ? fixedCosts / contributionMarginRatio : 0;
+      // Break Even Point in revenue (includes static expenses)
+      const breakEvenPoint = contributionMarginRatio > 0 ? totalFixedCosts / contributionMarginRatio : 0;
 
       // Top selling items analysis
       const itemSales = orders.reduce((acc: any, order) => {
@@ -162,8 +173,10 @@ const InsightsTab = () => {
         cooperativeSavings,
         breakEvenPoint,
         profitMargin,
-        fixedCosts,
+        fixedCosts: totalFixedCosts,
         variableCostRatio: variableCostRatio * 100,
+        staticExpenses: staticExpensesTotal,
+        recurringExpenses: recurringExpensesTotal,
         topSellingItems,
         categoryBreakdown,
         dailyAverage,
@@ -180,7 +193,7 @@ const InsightsTab = () => {
   const metrics = [
     {
       title: 'Total Revenue',
-      value: `Rs. ${data.totalRevenue.toLocaleString()}`,
+      value: `NRs. ${data.totalRevenue.toLocaleString()}`,
       icon: DollarSign,
       color: 'text-green-600',
       bgColor: 'bg-green-50',
@@ -188,14 +201,14 @@ const InsightsTab = () => {
     },
     {
       title: 'Total Expenses',
-      value: `Rs. ${data.totalExpenses.toLocaleString()}`,
+      value: `NRs. ${data.totalExpenses.toLocaleString()}`,
       icon: TrendingDown,
       color: 'text-red-600',
       bgColor: 'bg-red-50'
     },
     {
       title: 'Net Profit',
-      value: `Rs. ${data.netProfit.toLocaleString()}`,
+      value: `NRs. ${data.netProfit.toLocaleString()}`,
       icon: TrendingUp,
       color: data.netProfit >= 0 ? 'text-green-600' : 'text-red-600',
       bgColor: data.netProfit >= 0 ? 'bg-green-50' : 'bg-red-50',
@@ -218,7 +231,7 @@ const InsightsTab = () => {
     },
     {
       title: 'Break Even Point',
-      value: `Rs. ${data.breakEvenPoint.toLocaleString()}`,
+      value: `NRs. ${data.breakEvenPoint.toLocaleString()}`,
       icon: Activity,
       color: 'text-purple-600',
       bgColor: 'bg-purple-50',
@@ -226,14 +239,14 @@ const InsightsTab = () => {
     },
     {
       title: 'Total Deposits',
-      value: `Rs. ${data.totalDeposits.toLocaleString()}`,
+      value: `NRs. ${data.totalDeposits.toLocaleString()}`,
       icon: CreditCard,
       color: 'text-indigo-600',
       bgColor: 'bg-indigo-50'
     },
     {
       title: 'Cooperative Savings',
-      value: `Rs. ${data.cooperativeSavings.toLocaleString()}`,
+      value: `NRs. ${data.cooperativeSavings.toLocaleString()}`,
       icon: PiggyBank,
       color: 'text-pink-600',
       bgColor: 'bg-pink-50'
@@ -313,7 +326,7 @@ const InsightsTab = () => {
                       <span className="font-medium">{item.name}</span>
                       <span className="text-sm text-gray-500 ml-2">({item.quantity} sold)</span>
                     </div>
-                    <span className="text-sm font-medium">Rs. {item.revenue.toLocaleString()}</span>
+                    <span className="text-sm font-medium">NRs. {item.revenue.toLocaleString()}</span>
                   </div>
                 ))
               ) : (
@@ -334,7 +347,7 @@ const InsightsTab = () => {
                 Object.entries(data.categoryBreakdown).map(([category, amount]) => (
                   <div key={category} className="flex items-center justify-between py-2 border-b last:border-b-0">
                     <span className="font-medium">{category}</span>
-                    <span className="text-sm font-medium">Rs. {amount.toLocaleString()}</span>
+                    <span className="text-sm font-medium">NRs. {amount.toLocaleString()}</span>
                   </div>
                 ))
               ) : (
@@ -353,7 +366,7 @@ const InsightsTab = () => {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-600">Daily Revenue</span>
-                <span className="text-sm font-medium">Rs. {data.dailyAverage.revenue.toFixed(0)}</span>
+                <span className="text-sm font-medium">NRs. {data.dailyAverage.revenue.toFixed(0)}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-600">Daily Orders</span>
@@ -367,7 +380,7 @@ const InsightsTab = () => {
           </CardContent>
         </Card>
 
-        {/* Financial Health & Break Even Analysis */}
+        {/* Enhanced Financial Health & Break Even Analysis */}
         <Card>
           <CardHeader>
             <CardTitle>Financial Health & Break Even Analysis</CardTitle>
@@ -381,8 +394,16 @@ const InsightsTab = () => {
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Fixed Costs</span>
-                <span className="text-sm font-medium">Rs. {data.fixedCosts.toLocaleString()}</span>
+                <span className="text-sm text-gray-600">Fixed Costs (incl. Static)</span>
+                <span className="text-sm font-medium">NRs. {data.fixedCosts.toLocaleString()}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">Static Expenses</span>
+                <span className="text-sm font-medium">NRs. {data.staticExpenses.toLocaleString()}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">Recurring Expenses</span>
+                <span className="text-sm font-medium">NRs. {data.recurringExpenses.toLocaleString()}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-600">Variable Cost Ratio</span>
@@ -391,13 +412,13 @@ const InsightsTab = () => {
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-600">Break Even Status</span>
                 <span className={`text-sm font-medium ${data.totalRevenue >= data.breakEvenPoint ? 'text-green-600' : 'text-red-600'}`}>
-                  {data.totalRevenue >= data.breakEvenPoint ? 'Above Break Even' : `₹${(data.breakEvenPoint - data.totalRevenue).toLocaleString()} needed`}
+                  {data.totalRevenue >= data.breakEvenPoint ? 'Above Break Even' : `NRs. ${(data.breakEvenPoint - data.totalRevenue).toLocaleString()} needed`}
                 </span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-600">Cash Flow</span>
                 <span className={`text-sm font-medium ${data.totalDeposits > data.totalWithdrawals ? 'text-green-600' : 'text-red-600'}`}>
-                  Rs. {(data.totalDeposits - data.totalWithdrawals).toLocaleString()}
+                  NRs. {(data.totalDeposits - data.totalWithdrawals).toLocaleString()}
                 </span>
               </div>
             </div>
