@@ -114,7 +114,7 @@ const Dashboard = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-9 gap-1 mb-4 sm:mb-8">
+          <TabsList className="flex flex-wrap w-full gap-2 mb-4 sm:mb-8"> {/* Changed from grid to flex-wrap */}
             {tabs.map((tab) => {
               const Icon = tab.icon;
               return (
