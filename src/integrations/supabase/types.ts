@@ -302,6 +302,33 @@ export type Database = {
         }
         Relationships: []
       }
+      static_expenses: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          is_recurring: boolean
+          name: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          is_recurring?: boolean
+          name: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          is_recurring?: boolean
+          name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string | null
