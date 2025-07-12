@@ -2,7 +2,7 @@
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Outlet, useLocation, NavLink } from 'react-router-dom'; // Import NavLink instead of Link for active styling
+import { Outlet, useLocation, NavLink, Link } from 'react-router-dom'; // Import NavLink and Link
 import { LogOut, User, ShoppingCart, Zap, Receipt, CreditCard, Banknote, Users, BarChart3, FileText, UtensilsCrossed, Database } from 'lucide-react';
 
 // Tab components are now rendered by routes, but their types/icons might be needed for nav items.
