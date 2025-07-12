@@ -3,12 +3,11 @@ import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea'; // Import Textarea
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from 'sonner';
-import { Plus, Save, Trash2, Database } from 'lucide-react';
+import { Save, Database, UploadCloud } from 'lucide-react'; // Updated icons
 
 type DataType = 'orders' | 'charging_sessions' | 'expenses' | 'deposits' | 'withdrawals' | 'cooperative_savings' | 'menu_items';
 
@@ -22,8 +21,7 @@ interface TableField {
 const DataInputTab = () => {
   const { user } = useAuth();
   const [dataType, setDataType] = useState<DataType | ''>('');
-  const [numberOfRows, setNumberOfRows] = useState(5);
-  const [tableData, setTableData] = useState<any[]>([]);
+  const [bulkData, setBulkData] = useState('');
   const [saving, setSaving] = useState(false);
 
   const dataTypes = [
@@ -92,75 +90,46 @@ const DataInputTab = () => {
     ]
   };
 
-  const generateTable = () => {
-    if (!dataType) {
-      toast.error('Please select a data type');
-      return;
-    }
-
-    const fields = tableFields[dataType];
-    const emptyRows = Array.from({ length: numberOfRows }, () => {
-      const row: any = {};
-      fields.forEach(field => {
-        row[field.name] = '';
-      });
-      return row;
-    });
-
-    setTableData(emptyRows);
-  };
-
-  const updateCellValue = (rowIndex: number, fieldName: string, value: string) => {
-    const updatedData = [...tableData];
-    updatedData[rowIndex][fieldName] = value;
-    setTableData(updatedData);
-  };
-
-  const addRow = () => {
-    if (!dataType) return;
-    
-    const fields = tableFields[dataType];
-    const newRow: any = {};
-    fields.forEach(field => {
-      newRow[field.name] = '';
-    });
-    setTableData([...tableData, newRow]);
-  };
-
-  const removeRow = (index: number) => {
-    const updatedData = tableData.filter((_, i) => i !== index);
-    setTableData(updatedData);
-  };
-
   const saveData = async () => {
-    if (!user || !dataType || tableData.length === 0) {
-      toast.error('Please generate table and fill in data');
+    if (!user || !dataType || !bulkData) {
+      toast.error('Please select a data type and paste some data.');
       return;
     }
 
     setSaving(true);
     try {
-      // Validate required fields
       const fields = tableFields[dataType];
       const requiredFields = fields.filter(f => f.required).map(f => f.name);
       
-      const validRows = tableData.filter(row => {
+      const rows = bulkData.trim().split('\n');
+      const parsedData = rows.map((row, index) => {
+        const columns = row.split('\t'); // Split by tab character
+
+        if (columns.length !== fields.length) {
+          throw new Error(`Row ${index + 1} has ${columns.length} columns, but ${fields.length} were expected.`);
+        }
+
+        const rowData: any = {};
+        fields.forEach((field, i) => {
+          rowData[field.name] = columns[i].trim();
+        });
+
+        return rowData;
+      });
+
+      const validRows = parsedData.filter(row => {
         return requiredFields.every(field => row[field] && row[field].toString().trim() !== '');
       });
 
       if (validRows.length === 0) {
-        toast.error('Please fill in at least one complete row with all required fields');
+        toast.error('No valid rows found. Please ensure required fields are not empty.');
         return;
       }
 
-      // Transform data for database
       const transformedData = validRows.map(row => {
         const transformed: any = { ...row };
-        
-        // Add user_id to all records
         transformed.user_id = user.id;
 
-        // Type-specific transformations
         fields.forEach(field => {
           if (field.type === 'number' && transformed[field.name]) {
             transformed[field.name] = parseFloat(transformed[field.name]) || 0;
@@ -170,7 +139,6 @@ const DataInputTab = () => {
           }
         });
 
-        // Special handling for menu items (no user_id)
         if (dataType === 'menu_items') {
           delete transformed.user_id;
           if (transformed.is_available === 'false') {
@@ -179,79 +147,42 @@ const DataInputTab = () => {
             transformed.is_available = true;
           }
         }
-
         return transformed;
       });
 
-      // Save to database
-      const { error } = await supabase
-        .from(dataType)
-        .insert(transformedData);
-
+      const { error } = await supabase.from(dataType).insert(transformedData);
       if (error) throw error;
 
-      toast.success(`Successfully saved ${transformedData.length} records!`);
-      setTableData([]);
+      toast.success(`Successfully uploaded ${transformedData.length} records!`);
+      setBulkData('');
       setDataType('');
-    } catch (error) {
-      console.error('Error saving data:', error);
-      toast.error('Failed to save data. Please try again.');
+    } catch (error: any) {
+      console.error('Error saving bulk data:', error);
+      toast.error(error.message || 'Failed to save data. Check format and try again.');
     } finally {
       setSaving(false);
     }
-  };
-
-  const renderCell = (rowIndex: number, field: TableField, value: string) => {
-    if (field.type === 'select') {
-      return (
-        <Select
-          value={value}
-          onValueChange={(newValue) => updateCellValue(rowIndex, field.name, newValue)}
-        >
-          <SelectTrigger className="w-full min-w-[120px]">
-            <SelectValue placeholder="Select..." />
-          </SelectTrigger>
-          <SelectContent>
-            {field.options?.map((option) => (
-              <SelectItem key={option} value={option}>
-                {option}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      );
-    }
-
-    return (
-      <Input
-        type={field.type === 'number' ? 'number' : field.type}
-        value={value}
-        onChange={(e) => updateCellValue(rowIndex, field.name, e.target.value)}
-        className="min-w-[120px]"
-        placeholder={field.required ? 'Required' : 'Optional'}
-      />
-    );
   };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2">
         <Database className="h-5 w-5 text-blue-600" />
-        <h2 className="text-xl font-semibold text-gray-900">Data Input</h2>
+        <h2 className="text-xl font-semibold text-gray-900">Bulk Data Input</h2>
       </div>
 
-      {/* Configuration */}
+      {/* Data Input Area */}
       <Card>
         <CardHeader>
-          <CardTitle>Configure Data Table</CardTitle>
+          <CardTitle>Copy and Paste Data</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-2">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <div className="space-y-2 md:col-span-1">
               <label className="text-sm font-medium">Data Type *</label>
               <Select value={dataType} onValueChange={(value: DataType) => setDataType(value)}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select data type" />
+                  <SelectValue placeholder="Select data type to upload" />
                 </SelectTrigger>
                 <SelectContent>
                   {dataTypes.map((type) => (
@@ -262,108 +193,45 @@ const DataInputTab = () => {
                 </SelectContent>
               </Select>
             </div>
+          </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Number of Rows</label>
-              <Input
-                type="number"
-                min="1"
-                max="50"
-                value={numberOfRows}
-                onChange={(e) => setNumberOfRows(parseInt(e.target.value) || 5)}
-              />
-            </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Paste Data from Spreadsheet</label>
+            <Textarea
+              placeholder="Copy data from Google Sheets, Excel, or a TSV file and paste it here. Each row should be on a new line, and each column separated by a tab."
+              value={bulkData}
+              onChange={(e) => setBulkData(e.target.value)}
+              rows={15}
+              disabled={!dataType}
+            />
+          </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium">&nbsp;</label>
-              <Button onClick={generateTable} className="w-full">
-                Generate Table
-              </Button>
-            </div>
+          <div className="mt-4 flex justify-end">
+            <Button onClick={saveData} disabled={saving || !dataType || !bulkData}>
+              <UploadCloud className="h-4 w-4 mr-2" />
+              {saving ? 'Uploading...' : 'Parse and Upload Data'}
+            </Button>
           </div>
         </CardContent>
       </Card>
 
-      {/* Data Table */}
-      {dataType && tableData.length > 0 && (
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Data Entry Table - {dataTypes.find(t => t.value === dataType)?.label}</CardTitle>
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={addRow}>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Row
-              </Button>
-              <Button onClick={saveData} disabled={saving}>
-                <Save className="h-4 w-4 mr-2" />
-                {saving ? 'Saving...' : 'Save All Data'}
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-12">#</TableHead>
-                    {tableFields[dataType].map((field) => (
-                      <TableHead key={field.name} className="min-w-[120px]">
-                        {field.name.replace(/_/g, ' ').toUpperCase()}
-                        {field.required && <span className="text-red-500 ml-1">*</span>}
-                      </TableHead>
-                    ))}
-                    <TableHead className="w-12">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {tableData.map((row, rowIndex) => (
-                    <TableRow key={rowIndex}>
-                      <TableCell className="text-center">{rowIndex + 1}</TableCell>
-                      {tableFields[dataType].map((field) => (
-                        <TableCell key={field.name}>
-                          {renderCell(rowIndex, field, row[field.name] || '')}
-                        </TableCell>
-                      ))}
-                      <TableCell>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => removeRow(rowIndex)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-            
-            <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-              <p className="text-sm text-blue-800">
-                <strong>Instructions:</strong> Fill in the required fields (marked with *) for each row. 
-                Date fields will default to today if left empty. Click "Save All Data" when ready.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
       {/* Field Guidelines */}
       {dataType && (
-        <Card>
+        <Card className="bg-blue-50 border-blue-200">
           <CardHeader>
-            <CardTitle>Field Guidelines for {dataTypes.find(t => t.value === dataType)?.label}</CardTitle>
+            <CardTitle>Column Order for "{dataTypes.find(t => t.value === dataType)?.label}"</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-              {tableFields[dataType].map((field) => (
-                <div key={field.name} className="flex justify-between">
-                  <span className="font-medium">{field.name.replace(/_/g, ' ')}</span>
-                  <span className={field.required ? 'text-red-600' : 'text-gray-500'}>
-                    {field.required ? 'Required' : 'Optional'} ({field.type})
-                  </span>
-                </div>
+            <p className="text-sm text-blue-800 mb-4">
+              When you copy from your spreadsheet, ensure the columns are in the following order. Required fields are marked with <span className="text-red-500 font-bold">*</span>.
+            </p>
+            <div className="text-sm font-mono bg-white p-3 rounded">
+              {tableFields[dataType].map((field, index) => (
+                <span key={field.name}>
+                  {field.name}
+                  {field.required && <span className="text-red-500">*</span>}
+                  {index < tableFields[dataType].length - 1 && <span className="text-gray-400 mx-1"> -&gt; </span>}
+                </span>
               ))}
             </div>
           </CardContent>
