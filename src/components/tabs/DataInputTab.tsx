@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { Save, Database, UploadCloud } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, parse } from 'date-fns';
 
 type DataType = 'orders' | 'charging_sessions' | 'expenses' | 'deposits' | 'withdrawals' | 'cooperative_savings' | 'menu_items';
 
@@ -104,7 +104,9 @@ const DataInputTab = () => {
       
       const rows = bulkData.trim().split('\n');
       const parsedData = rows.map((row, index) => {
-        const columns = row.split('\t'); // Split by tab character
+        console.log(`Row ${index + 1} raw data: "${row}"`);
+        const columns = row.split('\t');
+        console.log(`Row ${index + 1} split into columns:`, columns);
 
         if (columns.length !== fields.length) {
           throw new Error(`Row ${index + 1} has ${columns.length} columns, but ${fields.length} were expected.`);
@@ -115,6 +117,7 @@ const DataInputTab = () => {
           rowData[field.name] = columns[i].trim();
         });
 
+        console.log(`Row ${index + 1} parsed into object:`, rowData);
         return rowData;
       });
 
@@ -136,20 +139,19 @@ const DataInputTab = () => {
             transformed[field.name] = parseFloat(transformed[field.name]) || 0;
           }
           if (field.type === 'date') {
-            if (transformed[field.name]) {
-              // If a date is provided, parse it. This assumes a common format like YYYY-MM-DD or MM/DD/YYYY.
-              // new Date() is flexible enough to handle many formats.
-              const parsedDate = new Date(transformed[field.name]);
-              // Check if the parsed date is valid
+            const dateString = transformed[field.name];
+            if (dateString) {
+              // Use date-fns's parse function for reliable parsing.
+              // It requires a format string. We'll assume 'yyyy-MM-dd'.
+              const parsedDate = parse(dateString, 'yyyy-MM-dd', new Date());
               if (!isNaN(parsedDate.getTime())) {
                 transformed[field.name] = format(parsedDate, 'yyyy-MM-dd');
               } else {
-                // If parsing fails, throw an error for that row
-                throw new Error(`Invalid date format for '${field.name}' in one of the rows. Please use YYYY-MM-DD.`);
+                throw new Error(`Invalid date format for '${field.name}' (value: "${dateString}"). Please use YYYY-MM-DD.`);
               }
             } else {
               // If no date is provided, default to today.
-              transformed[field.name] = new Date().toISOString().split('T')[0];
+              transformed[field.name] = format(new Date(), 'yyyy-MM-dd');
             }
           }
         });
