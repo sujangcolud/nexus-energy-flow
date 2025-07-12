@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -7,10 +7,23 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from 'sonner';
 import { TrendingDown } from 'lucide-react';
 
+interface Withdrawal {
+  id: string;
+  amount: number;
+  purpose: string;
+  recipient: string | null;
+  reference_number: string | null;
+  remarks: string | null;
+  withdrawal_date: string;
+}
+
 const WithdrawalsTab = () => {
+  const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
+  const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
     amount: '',
     purpose: '',
@@ -24,6 +37,32 @@ const WithdrawalsTab = () => {
   const updateFormData = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
+
+  const fetchRecentWithdrawals = async () => {
+    if (!user) return;
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('withdrawals')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('withdrawal_date', { ascending: false })
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      if (error) throw error;
+      setWithdrawals(data || []);
+    } catch (error) {
+      console.error('Error fetching recent withdrawals:', error);
+      toast.error('Failed to load recent withdrawals.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchRecentWithdrawals();
+  }, [user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,6 +103,7 @@ const WithdrawalsTab = () => {
         referenceNumber: '',
         remarks: ''
       });
+      fetchRecentWithdrawals(); // Re-fetch after successful submission
     } catch (error: any) {
       console.error('Error recording withdrawal:', error);
       toast.error(error.message || 'Failed to record withdrawal. Please try again.');
@@ -150,6 +190,47 @@ const WithdrawalsTab = () => {
               {isSubmitting ? 'Recording...' : 'Record Withdrawal'}
             </Button>
           </form>
+        </CardContent>
+      </Card>
+
+      {/* Recent Withdrawals Table */}
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle>Recent Withdrawals</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Purpose</TableHead>
+                  <TableHead>Recipient</TableHead>
+                  <TableHead className="text-right">Amount</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center">Loading...</TableCell>
+                  </TableRow>
+                ) : withdrawals.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center">No recent withdrawals found.</TableCell>
+                  </TableRow>
+                ) : (
+                  withdrawals.map((withdrawal) => (
+                    <TableRow key={withdrawal.id}>
+                      <TableCell>{new Date(withdrawal.withdrawal_date).toLocaleDateString()}</TableCell>
+                      <TableCell className="font-medium">{withdrawal.purpose}</TableCell>
+                      <TableCell>{withdrawal.recipient || '-'}</TableCell>
+                      <TableCell className="text-right">Rs. {withdrawal.amount.toFixed(2)}</TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </div>
