@@ -673,8 +673,8 @@ const ReportsTab = () => {
                         <TableRow>
                           {displayedKeys.map((key) => (
                             <TableHead key={key}>{key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</TableHead>
-                        ))}
-                      </TableRow>
+                          ))}
+                        </TableRow>
                       </TableHeader>
                       <TableBody>
                         {tableData.map((row: any, rowIndex: number) => (
@@ -694,15 +694,7 @@ const ReportsTab = () => {
                   </div>
                 );
               })()}
-            </div>
-            <DialogFooter>
-                  </TableBody>
-                </Table>
-                </div>
-              ) : (
-                <p className="text-center text-muted-foreground">No detailed data available for this report.</p>
-              )}
-            </div>
+            </div> {/* Closes "overflow-y-auto py-4 grow" div */}
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsReportViewerOpen(false)}>Close</Button>
               <Button onClick={() => downloadReport(viewingReportData)}> {/* Keep download option */}
