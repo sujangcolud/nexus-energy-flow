@@ -43,9 +43,14 @@ const ChargingTab = () => {
     
     setLoading(true);
     try {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const startOfDay = today.toISOString();
+
       const { data, error } = await supabase
         .from('charging_sessions')
         .select('*')
+        .gte('created_at', startOfDay)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -124,23 +129,6 @@ const ChargingTab = () => {
       toast.error('Failed to submit charging session');
     } finally {
       setSubmitting(false);
-    }
-  };
-
-  const handleDelete = async (id: string) => {
-    try {
-      const { error } = await supabase
-        .from('charging_sessions')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-
-      toast.success('Charging session deleted successfully');
-      fetchSessions();
-    } catch (error) {
-      console.error('Error deleting charging session:', error);
-      toast.error('Failed to delete charging session');
     }
   };
 
@@ -276,7 +264,6 @@ const ChargingTab = () => {
                     <TableHead>Total</TableHead>
                     <TableHead>Payment</TableHead>
                     <TableHead>Date</TableHead>
-                    <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -292,15 +279,6 @@ const ChargingTab = () => {
                         <Badge variant="outline">{session.payment_mode}</Badge>
                       </TableCell>
                       <TableCell>{new Date(session.session_date).toLocaleDateString()}</TableCell>
-                      <TableCell>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => handleDelete(session.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

@@ -40,13 +40,16 @@ const DepositsTab = () => {
     if (!user) return;
     setLoading(true);
     try {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const startOfDay = today.toISOString();
+
       const { data, error } = await supabase
         .from('deposits')
         .select('*')
         .eq('user_id', user.id)
-        .order('deposit_date', { ascending: false })
-        .order('created_at', { ascending: false })
-        .limit(10);
+        .gte('created_at', startOfDay)
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
       setDeposits(data || []);

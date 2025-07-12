@@ -7,8 +7,9 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { FileText, Calculator, DollarSign, TrendingUp } from 'lucide-react';
+import { FileText, Calculator, DollarSign, TrendingUp, ShoppingCart, Zap, Receipt, CreditCard, Banknote, Users } from 'lucide-react';
 
 const ReportsViewTab = () => {
   const [dateRange, setDateRange] = useState({
@@ -18,6 +19,8 @@ const ReportsViewTab = () => {
   const [reportData, setReportData] = useState<any>({});
   const [isLoading, setIsLoading] = useState(false);
   const { user } = useAuth();
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [selectedDayData, setSelectedDayData] = useState<any>(null);
 
   const formatCurrency = (amount: number) => `NRs. ${amount.toFixed(2)}`;
 
@@ -111,6 +114,20 @@ const ReportsViewTab = () => {
     }));
 
     return result.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  };
+
+  const handleRowClick = (date: string) => {
+    const details = {
+      date,
+      orders: reportData.orders.filter((o: any) => o.order_date === date),
+      charging: reportData.charging.filter((c: any) => c.session_date === date),
+      expenses: reportData.expenses.filter((e: any) => e.expense_date === date),
+      savings: reportData.savings.filter((s: any) => s.contribution_date === date),
+      deposits: reportData.deposits.filter((d: any) => d.deposit_date === date),
+      withdrawals: reportData.withdrawals.filter((w: any) => w.withdrawal_date === date),
+    };
+    setSelectedDayData(details);
+    setIsDetailModalOpen(true);
   };
 
   const generatePaymentMethodReport = () => {
@@ -302,7 +319,7 @@ const ReportsViewTab = () => {
                 </TableHeader>
                 <TableBody>
                   {dailyCombinedData.map((day, index) => (
-                    <TableRow key={index}>
+                    <TableRow key={index} onClick={() => handleRowClick(day.date)} className="cursor-pointer hover:bg-muted/50">
                       <TableCell>{day.date}</TableCell>
                       <TableCell>{formatCurrency(day.orders)}</TableCell>
                       <TableCell>{formatCurrency(day.charging)}</TableCell>
@@ -417,7 +434,68 @@ const ReportsViewTab = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Daily Detail Modal */}
+      <Dialog open={isDetailModalOpen} onOpenChange={setIsDetailModalOpen}>
+        <DialogContent className="sm:max-w-4xl max-h-[90vh]">
+          <DialogHeader>
+            <DialogTitle>Daily Transaction Details</DialogTitle>
+            <DialogDescription>
+              Detailed breakdown for {selectedDayData?.date}.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="overflow-y-auto p-4 space-y-6">
+            {selectedDayData && (
+              <>
+                {/* Orders */}
+                <DetailSection title="Orders" icon={ShoppingCart} data={selectedDayData.orders} columns={['item_name', 'quantity', 'rate', 'total', 'payment_mode']} />
+                {/* Charging */}
+                <DetailSection title="Charging" icon={Zap} data={selectedDayData.charging} columns={['total_amount', 'payment_mode', 'start_percentage', 'end_percentage']} />
+                {/* Expenses */}
+                <DetailSection title="Expenses" icon={Receipt} data={selectedDayData.expenses} columns={['description', 'category', 'amount', 'payment_mode']} />
+                {/* Deposits */}
+                <DetailSection title="Deposits" icon={CreditCard} data={selectedDayData.deposits} columns={['deposited_by', 'mode', 'amount']} />
+                {/* Withdrawals */}
+                <DetailSection title="Withdrawals" icon={Banknote} data={selectedDayData.withdrawals} columns={['purpose', 'recipient', 'amount']} />
+                {/* Savings */}
+                <DetailSection title="Savings" icon={Users} data={selectedDayData.savings} columns={['member_id', 'contribution_amount']} />
+              </>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
+  );
+};
+
+// Helper component for rendering detail sections in the modal
+const DetailSection = ({ title, icon: Icon, data, columns }: { title: string, icon: React.ElementType, data: any[], columns: string[] }) => {
+  if (!data || data.length === 0) return null;
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-lg">
+          <Icon className="h-5 w-5" /> {title} ({data.length})
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              {columns.map(col => <TableHead key={col}>{col.replace(/_/g, ' ')}</TableHead>)}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {data.map((item, index) => (
+              <TableRow key={index}>
+                {columns.map(col => <TableCell key={col}>{item[col]}</TableCell>)}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </CardContent>
+    </Card>
   );
 };
 
