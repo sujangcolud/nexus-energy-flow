@@ -102,9 +102,17 @@ const DataInputTab = () => {
       const fields = tableFields[dataType];
       const requiredFields = fields.filter(f => f.required).map(f => f.name);
       
-      const rows = bulkData.trim().split('\n');
+      // Trim data, split into rows, and slice(1) to remove the header row.
+      const rows = bulkData.trim().split('\n').slice(1);
+
+      if (rows.length === 0) {
+        toast.error("No data rows found. Please make sure to paste data including the header row.");
+        return;
+      }
+
       const parsedData = rows.map((row, index) => {
-        console.log(`Row ${index + 1} raw data: "${row}"`);
+        // We log index + 2 because index 0 is the first data row (row 2 in the sheet)
+        console.log(`Row ${index + 2} raw data: "${row}"`);
         const columns = row.split('\t');
         console.log(`Row ${index + 1} split into columns:`, columns);
 
@@ -135,8 +143,10 @@ const DataInputTab = () => {
         transformed.user_id = user.id;
 
         fields.forEach(field => {
-          if (field.type === 'number' && transformed[field.name]) {
-            transformed[field.name] = parseFloat(transformed[field.name]) || 0;
+          if (field.type === 'number') {
+            // If the field is a number, parse it. If it's an empty string, set it to null.
+            const numValue = transformed[field.name];
+            transformed[field.name] = numValue ? (parseFloat(numValue) || 0) : null;
           }
           if (field.type === 'date') {
             const dateString = transformed[field.name];
