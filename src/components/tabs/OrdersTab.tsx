@@ -66,14 +66,10 @@ const OrdersTab = () => {
     
     setLoading(true);
     try {
-      const oneWeekAgo = new Date();
-      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-
       const { data, error } = await supabase
         .from('orders')
         .select('*')
         .eq('user_id', user.id)
-        .gte('created_at', oneWeekAgo.toISOString())
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -469,7 +465,7 @@ const OrdersTab = () => {
                 <TableHeader>
                   <TableRow className="bg-muted/50 dark:bg-muted/30">
                     <TableHead className="py-2.5 px-4 text-xs font-medium text-muted-foreground whitespace-nowrap">Date</TableHead>
-                    <TableHead className="py-2.5 px-4 text-xs font-medium text-muted-foreground whitespace-nowrap w-[200px]">Item</TableHead>
+                    <TableHead className="py-2.5 px-4 text-xs font-medium text-muted-foreground whitespace-nowrap max-w-[200px]">Item</TableHead>
                     <TableHead className="py-2.5 px-4 text-xs font-medium text-muted-foreground whitespace-nowrap text-center">Quantity</TableHead>
                     <TableHead className="py-2.5 px-4 text-xs font-medium text-muted-foreground whitespace-nowrap text-right">Rate</TableHead>
                     <TableHead className="py-2.5 px-4 text-xs font-medium text-muted-foreground whitespace-nowrap text-right">Total</TableHead>
@@ -489,7 +485,7 @@ const OrdersTab = () => {
                       <TableCell className="py-2.5 px-4 text-sm whitespace-nowrap">
                         {new Date(order.order_date).toLocaleDateString()}
                       </TableCell>
-                      <TableCell className="py-2.5 px-4 text-sm font-medium whitespace-normal break-words w-[200px]">{order.item_name}</TableCell>
+                      <TableCell className="py-2.5 px-4 text-sm font-medium whitespace-normal break-words">{order.item_name}</TableCell>
                       <TableCell className="py-2.5 px-4 text-sm text-center whitespace-nowrap">{order.quantity}</TableCell>
                       <TableCell className="py-2.5 px-4 text-sm text-right whitespace-nowrap">NRs. {Number(order.rate).toFixed(2)}</TableCell>
                       <TableCell className="py-2.5 px-4 text-sm text-right whitespace-nowrap">NRs. {Number(order.total).toFixed(2)}</TableCell>

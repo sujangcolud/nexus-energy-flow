@@ -38,14 +38,10 @@ const CooperativeSavingsTab = () => {
     if (!user) return;
     setLoading(true);
     try {
-      const oneWeekAgo = new Date();
-      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-
       const { data, error } = await supabase
         .from('cooperative_savings')
         .select('*')
         .eq('user_id', user.id)
-        .gte('created_at', oneWeekAgo.toISOString())
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -178,7 +174,7 @@ const CooperativeSavingsTab = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead>Date</TableHead>
-                  <TableHead className="w-[200px]">Cooperative Name</TableHead>
+                  <TableHead className="max-w-[200px]">Cooperative Name</TableHead>
                   <TableHead className="text-right">Amount</TableHead>
                 </TableRow>
               </TableHeader>
@@ -202,7 +198,7 @@ const CooperativeSavingsTab = () => {
                     {savings.map((saving) => (
                       <TableRow key={saving.id}>
                         <TableCell>{new Date(saving.contribution_date).toLocaleDateString()}</TableCell>
-                        <TableCell className="font-medium whitespace-normal break-words w-[200px]">{saving.member_id}</TableCell>
+                        <TableCell className="font-medium whitespace-normal break-words">{saving.member_id}</TableCell>
                         <TableCell className="text-right">Rs. {saving.contribution_amount.toFixed(2)}</TableCell>
                       </TableRow>
                     ))}

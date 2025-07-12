@@ -43,13 +43,9 @@ const ChargingTab = () => {
     
     setLoading(true);
     try {
-      const oneWeekAgo = new Date();
-      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-
       const { data, error } = await supabase
         .from('charging_sessions')
         .select('*')
-        .gte('created_at', oneWeekAgo.toISOString())
         .order('created_at', { ascending: false });
 
       if (error) throw error;
