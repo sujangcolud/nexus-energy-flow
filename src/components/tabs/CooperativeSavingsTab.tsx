@@ -38,13 +38,16 @@ const CooperativeSavingsTab = () => {
     if (!user) return;
     setLoading(true);
     try {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const startOfDay = today.toISOString();
+
       const { data, error } = await supabase
         .from('cooperative_savings')
         .select('*')
         .eq('user_id', user.id)
-        .order('contribution_date', { ascending: false })
-        .order('created_at', { ascending: false })
-        .limit(10);
+        .gte('created_at', startOfDay)
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
       setSavings(data || []);
@@ -176,7 +179,7 @@ const CooperativeSavingsTab = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead>Date</TableHead>
-                  <TableHead>Cooperative Name</TableHead>
+                  <TableHead className="max-w-[200px]">Cooperative Name</TableHead>
                   <TableHead className="text-right">Amount</TableHead>
                 </TableRow>
               </TableHeader>
@@ -193,7 +196,7 @@ const CooperativeSavingsTab = () => {
                   savings.map((saving) => (
                     <TableRow key={saving.id}>
                       <TableCell>{new Date(saving.contribution_date).toLocaleDateString()}</TableCell>
-                      <TableCell className="font-medium">{saving.member_id}</TableCell>
+                      <TableCell className="font-medium whitespace-normal break-words">{saving.member_id}</TableCell>
                       <TableCell className="text-right">Rs. {saving.contribution_amount.toFixed(2)}</TableCell>
                     </TableRow>
                   ))

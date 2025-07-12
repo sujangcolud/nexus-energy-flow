@@ -40,13 +40,16 @@ const DepositsTab = () => {
     if (!user) return;
     setLoading(true);
     try {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const startOfDay = today.toISOString();
+
       const { data, error } = await supabase
         .from('deposits')
         .select('*')
         .eq('user_id', user.id)
-        .order('deposit_date', { ascending: false })
-        .order('created_at', { ascending: false })
-        .limit(10);
+        .gte('created_at', startOfDay)
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
       setDeposits(data || []);
@@ -181,7 +184,7 @@ const DepositsTab = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead>Date</TableHead>
-                  <TableHead>Deposited By</TableHead>
+                  <TableHead className="max-w-[200px]">Deposited By</TableHead>
                   <TableHead>Mode</TableHead>
                   <TableHead className="text-right">Amount</TableHead>
                 </TableRow>
@@ -199,7 +202,7 @@ const DepositsTab = () => {
                   deposits.map((deposit) => (
                     <TableRow key={deposit.id}>
                       <TableCell>{new Date(deposit.deposit_date).toLocaleDateString()}</TableCell>
-                      <TableCell className="font-medium">{deposit.deposited_by}</TableCell>
+                      <TableCell className="font-medium whitespace-normal break-words">{deposit.deposited_by}</TableCell>
                       <TableCell>{deposit.mode}</TableCell>
                       <TableCell className="text-right">Rs. {deposit.amount.toFixed(2)}</TableCell>
                     </TableRow>

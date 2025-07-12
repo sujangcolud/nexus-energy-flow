@@ -140,7 +140,7 @@ const InsightsTab = () => {
       const topSellingItems = Object.entries(itemSales)
         .map(([name, data]: [string, any]) => ({ name, ...data }))
         .sort((a, b) => b.revenue - a.revenue)
-        .slice(0, 5);
+        .slice(0, 10);
 
       // Category breakdown for expenses
       const categoryBreakdown = expenses.reduce((acc: any, expense) => {
