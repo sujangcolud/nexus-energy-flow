@@ -12,9 +12,20 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { FileText, Download, Calendar as CalendarIcon, Filter, Plus, Trash2, Eye } from 'lucide-react';
+import { FileText, Download, Calendar as CalendarIcon, Filter, Plus, Trash2, Eye, AlertTriangle } from 'lucide-react';
 import { format } from 'date-fns';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface ReportData {
   id: string;
@@ -60,6 +71,7 @@ const ReportsTab = () => {
   const [isRecurring, setIsRecurring] = useState(false);
   const [isReportViewerOpen, setIsReportViewerOpen] = useState(false);
   const [viewingReportData, setViewingReportData] = useState<ReportData | null>(null);
+  const [reportToDelete, setReportToDelete] = useState<ReportData | null>(null);
 
   const reportTypes = [
     { value: 'orders', label: 'Orders Report' },
@@ -305,6 +317,31 @@ const ReportsTab = () => {
     setIsReportViewerOpen(true);
   };
 
+  const handleDeleteReport = async (reportId: string) => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('reports')
+        .delete()
+        .eq('id', reportId);
+
+      if (error) throw error;
+
+      toast.success('Report deleted successfully!');
+      fetchReports(); // Refresh the list
+    } catch (error) {
+      console.error('Error deleting report:', error);
+      toast.error('Failed to delete report.');
+    } finally {
+      setReportToDelete(null); // Close dialog
+    }
+  };
+
+  const openDeleteConfirmDialog = (report: ReportData) => {
+    setReportToDelete(report);
+  };
+
   const convertToCSV = (data: any[], reportType: string) => {
     if (!data || data.length === 0) return '';
 
@@ -531,17 +568,30 @@ const ReportsTab = () => {
                             )}
                           </TableCell>
                           <TableCell>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleViewReport(report)} // Updated onClick
-                              className="whitespace-nowrap"
-                            >
-                              <Eye className="h-4 w-4 mr-1 sm:mr-2" /> {/* New Icon */}
-                              View Report {/* New Text */}
-                            </Button>
+                            <div className="flex items-center gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleViewReport(report)}
+                                className="whitespace-nowrap"
+                              >
+                                <Eye className="h-4 w-4 mr-1 sm:mr-2" />
+                                View
+                              </Button>
+                              <AlertDialogTrigger asChild>
+                                <Button
+                                  variant="destructive"
+                                  size="sm"
+                                  onClick={() => openDeleteConfirmDialog(report)}
+                                  className="whitespace-nowrap"
+                                >
+                                  <Trash2 className="h-4 w-4 mr-1 sm:mr-2" />
+                                  Delete
+                                </Button>
+                              </AlertDialogTrigger>
+                            </div>
                           </TableCell>
-                        </TableRow>
+                          </TableRow>
                       ))}
                     </TableBody>
                   </Table>
@@ -663,6 +713,32 @@ const ReportsTab = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Delete Report Confirmation Dialog */}
+      {reportToDelete && (
+        <AlertDialog open={!!reportToDelete} onOpenChange={() => setReportToDelete(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center">
+                <AlertTriangle className="h-5 w-5 mr-2 text-red-500" />
+                Confirm Deletion
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete the report: <strong>{reportTypes.find(t => t.value === reportToDelete.report_type)?.label || reportToDelete.report_type}</strong> generated on <strong>{format(new Date(reportToDelete.created_at), 'MMM dd, yyyy HH:mm')}</strong>? This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => handleDeleteReport(reportToDelete.id)}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                Delete Report
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
 
       {/* Report Viewer Dialog */}
       {viewingReportData && (

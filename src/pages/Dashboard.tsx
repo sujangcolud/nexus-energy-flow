@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'; // Import Card components
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LogOut, User, ShoppingCart, Zap, Receipt, CreditCard, Banknote, Users, BarChart3, FileText, UtensilsCrossed, Database } from 'lucide-react';
 import OrdersTab from '@/components/tabs/OrdersTab';
@@ -64,17 +65,17 @@ const Dashboard = () => {
   const tabs = getTabs();
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background text-foreground"> {/* Use CSS variables for background and text */}
       {/* Header */}
-      <header className="bg-white shadow-sm border-b">
+      <header className="bg-card shadow-md border-b border-border"> {/* Use card for header bg, add shadow and border */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center gap-3">
-              <div className="bg-blue-600 text-white p-2 rounded-lg">
+              <div className="bg-primary text-primary-foreground p-2 rounded-lg shadow-sm"> {/* Use primary color */}
                 <BarChart3 className="h-6 w-6" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-gray-900">EcoSoft Pro</h1>
+                <h1 className="text-xl font-bold text-foreground">EcoSoft Pro</h1> {/* Use foreground color */}
                 <p className="text-sm text-gray-500">Business Management System</p>
               </div>
             </div>
@@ -114,20 +115,43 @@ const Dashboard = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="flex flex-wrap w-full gap-2 mb-4 sm:mb-8"> {/* Changed from grid to flex-wrap */}
+          {/* New Card-based Navigation */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-8">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               return (
-                <TabsTrigger
+                <Card
                   key={tab.id}
-                  value={tab.id}
-                  className="flex items-center gap-2 px-3 py-2 text-xs md:text-sm"
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`cursor-pointer transition-all duration-200 ease-in-out hover:shadow-xl hover:scale-105 group
+                              ${activeTab === tab.id
+                                ? 'ring-2 ring-primary shadow-lg scale-105 bg-accent'
+                                : 'bg-card hover:bg-accent/50'}`}
                 >
-                  <Icon className="h-4 w-4 flex-shrink-0" /> {/* Ensure icon doesn't shrink */}
-                  <span className="hidden sm:inline whitespace-nowrap overflow-hidden text-ellipsis">{tab.label}</span>
-                </TabsTrigger>
+                  <CardContent className="flex flex-col items-center justify-center p-6 space-y-4"> {/* Increased space-y */}
+                    <div className={`p-3.5 rounded-full transition-colors duration-200 ease-in-out
+                                     ${activeTab === tab.id
+                                       ? 'bg-primary text-primary-foreground'
+                                       : 'bg-accent group-hover:bg-primary/10 text-primary'}`}>
+                      <Icon className="h-7 w-7" /> {/* Slightly smaller icon for better padding feel */}
+                    </div>
+                    <p className={`text-center font-semibold transition-colors duration-200 ease-in-out
+                                     ${activeTab === tab.id
+                                       ? 'text-primary'
+                                       : 'text-foreground group-hover:text-primary'}`}>
+                      {tab.label}
+                    </p>
+                  </CardContent>
+                </Card>
               );
             })}
+          </div>
+
+          {/* Original TabsList can be removed or hidden as navigation is now card-based */}
+          <TabsList className="hidden"> {/* Hide the original TabsList */}
+            {tabs.map((tab) => (
+              <TabsTrigger key={tab.id} value={tab.id}>{tab.label}</TabsTrigger>
+            ))}
           </TabsList>
 
           {tabs.map((tab) => {
