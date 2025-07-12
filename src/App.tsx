@@ -7,10 +7,33 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
-import Dashboard from "./pages/Dashboard";
+import Dashboard from "./pages/Dashboard"; // Will serve as layout
 import ProtectedRoute from "./components/ProtectedRoute";
 
+// Import Tab Components for Routing
+import OrdersTab from "./components/tabs/OrdersTab";
+import ChargingTab from "./components/tabs/ChargingTab";
+import ExpensesTab from "./components/tabs/ExpensesTab";
+import DepositsTab from "./components/tabs/DepositsTab";
+import WithdrawalsTab from "./components/tabs/WithdrawalsTab";
+import CooperativeSavingsTab from "./components/tabs/CooperativeSavingsTab";
+import MenuManagementTab from "./components/tabs/MenuManagementTab"; // Consider admin roles for this route
+import InsightsTab from "./components/tabs/InsightsTab";
+import ReportsTab from "./components/tabs/ReportsTab";
+import ReportsViewTab from "./components/tabs/ReportsViewTab";
+import DataInputTab from "./components/tabs/DataInputTab";
+import { Outlet } from "react-router-dom"; // Needed for nested routes
+
 const queryClient = new QueryClient();
+
+// Define a DashboardLayout component that includes the Outlet for nested routes
+// This might be similar to the current Dashboard component but will now include <Outlet />
+// For now, we assume Dashboard.tsx itself will be modified to include <Outlet />
+// and the main content of Dashboard (the cards) will be on an index route or part of the layout.
+
+// A component to represent the main dashboard view with cards, if we make it an index route.
+// For simplicity, Dashboard.tsx will handle its own content (cards) + Outlet for now.
+// const DashboardHomePage = () => <div>Dashboard Home - Cards Here</div>;
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -22,13 +45,35 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route 
-              path="/dashboard" 
+              path="/dashboard"
               element={
                 <ProtectedRoute>
-                  <Dashboard />
+                  <Dashboard /> {/* Dashboard now acts as a layout component */}
                 </ProtectedRoute>
               } 
-            />
+            >
+              {/* Index route for /dashboard to show cards or default content */}
+              {/* For now, Dashboard component itself will decide to show cards or Outlet content */}
+              {/* If cards are always visible WITH page content, Dashboard handles that. */}
+              {/* If cards are ONLY on /dashboard and specific content on /dashboard/subpath, then an index route is better. */}
+              {/* Let's assume Dashboard will render cards if no child route matches, or always render cards above <Outlet /> */}
+
+              {/* Child routes for dashboard sections */}
+              <Route path="orders" element={<OrdersTab />} />
+              <Route path="charging" element={<ChargingTab />} />
+              <Route path="expenses" element={<ExpensesTab />} />
+              <Route path="deposits" element={<DepositsTab />} />
+              <Route path="withdrawals" element={<WithdrawalsTab />} />
+              <Route path="cooperative" element={<CooperativeSavingsTab />} />
+              {/* TODO: Add role-based protection for menu if needed at route level, or handle in MenuManagementTab */}
+              <Route path="menu" element={<MenuManagementTab />} />
+              <Route path="insights" element={<InsightsTab />} />
+              <Route path="reports" element={<ReportsTab />} />
+              <Route path="reports-view" element={<ReportsViewTab />} />
+              <Route path="data-input" element={<DataInputTab />} />
+              {/* It might be good to have an index route that explicitly shows the cards */}
+              {/* <Route index element={<DashboardPageWithCards />} /> */}
+            </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
