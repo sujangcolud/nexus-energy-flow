@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -7,10 +7,21 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from 'sonner';
 import { TrendingUp } from 'lucide-react';
 
+interface Deposit {
+  id: string;
+  amount: number;
+  mode: string;
+  deposited_by: string;
+  deposit_date: string;
+}
+
 const DepositsTab = () => {
+  const [deposits, setDeposits] = useState<Deposit[]>([]);
+  const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
     amount: '',
     mode: '',
@@ -24,6 +35,32 @@ const DepositsTab = () => {
   const updateFormData = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
+
+  const fetchRecentDeposits = async () => {
+    if (!user) return;
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('deposits')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('deposit_date', { ascending: false })
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      if (error) throw error;
+      setDeposits(data || []);
+    } catch (error) {
+      console.error('Error fetching recent deposits:', error);
+      toast.error('Failed to load recent deposits.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchRecentDeposits();
+  }, [user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,6 +97,7 @@ const DepositsTab = () => {
         mode: '',
         depositedBy: ''
       });
+      fetchRecentDeposits(); // Re-fetch after successful submission
     } catch (error: any) {
       console.error('Error recording deposit:', error);
       toast.error(error.message || 'Failed to record deposit. Please try again.');
@@ -129,6 +167,47 @@ const DepositsTab = () => {
               {isSubmitting ? 'Recording...' : 'Record Deposit'}
             </Button>
           </form>
+        </CardContent>
+      </Card>
+
+      {/* Recent Deposits Table */}
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle>Recent Deposits</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Deposited By</TableHead>
+                  <TableHead>Mode</TableHead>
+                  <TableHead className="text-right">Amount</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center">Loading...</TableCell>
+                  </TableRow>
+                ) : deposits.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center">No recent deposits found.</TableCell>
+                  </TableRow>
+                ) : (
+                  deposits.map((deposit) => (
+                    <TableRow key={deposit.id}>
+                      <TableCell>{new Date(deposit.deposit_date).toLocaleDateString()}</TableCell>
+                      <TableCell className="font-medium">{deposit.deposited_by}</TableCell>
+                      <TableCell>{deposit.mode}</TableCell>
+                      <TableCell className="text-right">Rs. {deposit.amount.toFixed(2)}</TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </div>

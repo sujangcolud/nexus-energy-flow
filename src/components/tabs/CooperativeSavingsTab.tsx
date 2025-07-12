@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -7,10 +7,21 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from 'sonner';
 import { PiggyBank } from 'lucide-react';
 
+interface Saving {
+  id: string;
+  contribution_amount: number;
+  member_id: string;
+  cycle_period: string | null;
+  contribution_date: string;
+}
+
 const CooperativeSavingsTab = () => {
+  const [savings, setSavings] = useState<Saving[]>([]);
+  const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
     amount: '',
     cooperativeName: '',
@@ -22,6 +33,32 @@ const CooperativeSavingsTab = () => {
   const updateFormData = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
+
+  const fetchRecentSavings = async () => {
+    if (!user) return;
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('cooperative_savings')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('contribution_date', { ascending: false })
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      if (error) throw error;
+      setSavings(data || []);
+    } catch (error) {
+      console.error('Error fetching recent savings:', error);
+      toast.error('Failed to load recent savings.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchRecentSavings();
+  }, [user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,6 +95,7 @@ const CooperativeSavingsTab = () => {
         cooperativeName: '',
         remarks: ''
       });
+      fetchRecentSavings(); // Re-fetch after successful submission
     } catch (error: any) {
       console.error('Error recording savings:', error);
       toast.error(error.message || 'Failed to record savings. Please try again.');
@@ -124,6 +162,45 @@ const CooperativeSavingsTab = () => {
               {isSubmitting ? 'Recording...' : 'Record Contribution'}
             </Button>
           </form>
+        </CardContent>
+      </Card>
+
+      {/* Recent Savings Table */}
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle>Recent Savings Contributions</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Cooperative Name</TableHead>
+                  <TableHead className="text-right">Amount</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={3} className="text-center">Loading...</TableCell>
+                  </TableRow>
+                ) : savings.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={3} className="text-center">No recent savings found.</TableCell>
+                  </TableRow>
+                ) : (
+                  savings.map((saving) => (
+                    <TableRow key={saving.id}>
+                      <TableCell>{new Date(saving.contribution_date).toLocaleDateString()}</TableCell>
+                      <TableCell className="font-medium">{saving.member_id}</TableCell>
+                      <TableCell className="text-right">Rs. {saving.contribution_amount.toFixed(2)}</TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </div>

@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -8,10 +8,23 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from 'sonner';
 import { Receipt } from 'lucide-react';
 
+interface Expense {
+  id: string;
+  description: string;
+  amount: number;
+  category: string;
+  payment_mode: string;
+  remarks: string | null;
+  expense_date: string;
+}
+
 const ExpensesTab = () => {
+  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
     description: '',
     amount: '',
@@ -44,6 +57,32 @@ const ExpensesTab = () => {
   const updateFormData = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
+
+  const fetchRecentExpenses = async () => {
+    if (!user) return;
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('expenses')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('expense_date', { ascending: false })
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      if (error) throw error;
+      setExpenses(data || []);
+    } catch (error) {
+      console.error('Error fetching recent expenses:', error);
+      toast.error('Failed to load recent expenses.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchRecentExpenses();
+  }, [user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,6 +123,7 @@ const ExpensesTab = () => {
         category: '',
         remarks: ''
       });
+      fetchRecentExpenses(); // Re-fetch after successful submission
     } catch (error: any) {
       console.error('Error recording expense:', error);
       toast.error(error.message || 'Failed to record expense. Please try again.');
@@ -190,6 +230,49 @@ const ExpensesTab = () => {
               )}
             </Button>
           </form>
+        </CardContent>
+      </Card>
+
+      {/* Recent Expenses Table */}
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle>Recent Expenses</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Description</TableHead>
+                  <TableHead>Category</TableHead>
+                  <TableHead>Payment Mode</TableHead>
+                  <TableHead className="text-right">Amount</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center">Loading...</TableCell>
+                  </TableRow>
+                ) : expenses.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center">No recent expenses found.</TableCell>
+                  </TableRow>
+                ) : (
+                  expenses.map((expense) => (
+                    <TableRow key={expense.id}>
+                      <TableCell>{new Date(expense.expense_date).toLocaleDateString()}</TableCell>
+                      <TableCell className="font-medium">{expense.description}</TableCell>
+                      <TableCell>{expense.category}</TableCell>
+                      <TableCell>{expense.payment_mode}</TableCell>
+                      <TableCell className="text-right">Rs. {expense.amount.toFixed(2)}</TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </div>
