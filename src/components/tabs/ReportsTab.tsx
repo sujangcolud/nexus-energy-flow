@@ -56,11 +56,11 @@ interface StaticExpense {
 
 const REPORT_COLUMN_ORDERS: Record<string, string[]> = {
   orders: ['item_name', 'quantity', 'rate', 'total', 'payment_mode', 'order_date'],
-  charging: ['total_amount', 'payment_mode', 'start_percentage', 'end_percentage', 'kcal', 'per_unit_rate', 'per_percent_rate', 'session_date'],
+  charging_sessions: ['total_amount', 'payment_mode', 'start_percentage', 'end_percentage', 'kcal', 'per_unit_rate', 'per_percent_rate', 'session_date'],
   expenses: ['description', 'category', 'amount', 'payment_mode', 'remarks', 'expense_date'],
   deposits: ['deposited_by', 'amount', 'mode', 'deposit_date'],
   withdrawals: ['purpose', 'recipient', 'amount', 'reference_number', 'remarks', 'withdrawal_date'],
-  savings: ['member_id', 'contribution_amount', 'cycle_period', 'contribution_date'],
+  cooperative_savings: ['member_id', 'contribution_amount', 'cycle_period', 'contribution_date'],
 };
 
 const EXCLUDED_KEYS_FROM_REPORTS = ['id', 'user_id', 'created_at', 'updated_at'];
@@ -72,6 +72,8 @@ const DetailedReportView = ({ dataType, columns }: { dataType: string, columns: 
   const [page, setPage] = useState(1);
   const [count, setCount] = useState(0);
   const ROWS_PER_PAGE = 15;
+  const [dateFrom, setDateFrom] = useState<Date | undefined>(undefined);
+  const [dateTo, setDateTo] = useState<Date | undefined>(undefined);
 
   const fetchDetailedData = async () => {
     setLoading(true);
@@ -79,9 +81,16 @@ const DetailedReportView = ({ dataType, columns }: { dataType: string, columns: 
       const from = (page - 1) * ROWS_PER_PAGE;
       const to = from + ROWS_PER_PAGE - 1;
 
-      const { data: pageData, error, count: totalCount } = await supabase
-        .from(dataType)
-        .select('*', { count: 'exact' })
+      let query = supabase.from(dataType).select('*', { count: 'exact' });
+
+      if (dateFrom) {
+        query = query.gte('created_at', format(dateFrom, 'yyyy-MM-dd'));
+      }
+      if (dateTo) {
+        query = query.lte('created_at', format(dateTo, 'yyyy-MM-dd'));
+      }
+
+      const { data: pageData, error, count: totalCount } = await query
         .order('created_at', { ascending: false })
         .range(from, to);
 
@@ -99,12 +108,26 @@ const DetailedReportView = ({ dataType, columns }: { dataType: string, columns: 
 
   useEffect(() => {
     fetchDetailedData();
-  }, [page, dataType]);
+  }, [page, dataType, dateFrom, dateTo]);
 
   const totalPages = Math.ceil(count / ROWS_PER_PAGE);
 
   return (
     <div className="space-y-4">
+      <div className="flex gap-4">
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="outline"><CalendarIcon className="mr-2 h-4 w-4" />{dateFrom ? format(dateFrom, 'PPP') : 'From Date'}</Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={dateFrom} onSelect={setDateFrom} initialFocus /></PopoverContent>
+        </Popover>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="outline"><CalendarIcon className="mr-2 h-4 w-4" />{dateTo ? format(dateTo, 'PPP') : 'To Date'}</Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={dateTo} onSelect={setDateTo} initialFocus /></PopoverContent>
+        </Popover>
+      </div>
       <Table>
         <TableHeader>
           <TableRow>
@@ -160,7 +183,7 @@ const ReportsTab = () => {
 
   const reportTypes = [
     { value: 'orders', label: 'Orders Report' },
-    { value: 'charging', label: 'Charging Sessions Report' },
+    { value: 'charging_sessions', label: 'Charging Sessions Report' },
     { value: 'savings', label: 'Savings Report' },
     { value: 'deposits', label: 'Deposits Report' },
     { value: 'expenses', label: 'Expenses Report' },
@@ -200,11 +223,48 @@ const ReportsTab = () => {
   }, [user]);
 
   const generateReport = async () => {
-    // ... (generateReport logic remains the same)
+    if (!user || !reportType) {
+      toast.error('Please select a report type');
+      return;
+    }
+    setGenerating(true);
+    try {
+      let reportData: any = {};
+      const startDate = dateFrom ? format(dateFrom, 'yyyy-MM-dd') : null;
+      const endDate = dateTo ? format(dateTo, 'yyyy-MM-dd') : null;
+      let query;
+      switch (reportType) {
+        case 'orders':
+          query = supabase.from('orders').select('*');
+          if (startDate && endDate) query = query.gte('order_date', startDate).lte('order_date', endDate);
+          const { data: orders } = await query;
+          reportData = { data: orders };
+          break;
+        // Add cases for other report types here
+      }
+      const { error } = await supabase.from('reports').insert({
+        user_id: user.id,
+        report_type: reportType,
+        report_data: reportData,
+        date_range_start: startDate,
+        date_range_end: endDate
+      });
+      if (error) throw error;
+      toast.success('Report generated successfully!');
+      fetchReports();
+      setReportType('');
+      setDateFrom(undefined);
+      setDateTo(undefined);
+    } catch (error) {
+      console.error('Error generating report:', error);
+      toast.error('Failed to generate report');
+    } finally {
+      setGenerating(false);
+    }
   };
 
   const downloadReport = (report: ReportData) => {
-    // ... (downloadReport logic remains the same)
+    // ... download logic
   };
 
   const handleViewReport = (report: ReportData) => {
@@ -213,15 +273,24 @@ const ReportsTab = () => {
   };
 
   const handleDeleteReport = async (reportId: string) => {
-    // ... (handleDeleteReport logic remains the same)
+    if (!user) return;
+    try {
+      const { error } = await supabase.from('reports').delete().eq('id', reportId);
+      if (error) throw error;
+      toast.success('Report deleted successfully!');
+      setReports(reports.filter(r => r.id !== reportId));
+    } catch (error) {
+      console.error('Error deleting report:', error);
+      toast.error('Failed to delete report.');
+    }
   };
 
   const addStaticExpense = async () => {
-    // ... (addStaticExpense logic remains the same)
+    // ...
   };
 
   const deleteStaticExpense = async (id: string) => {
-    // ... (deleteStaticExpense logic remains the same)
+    // ...
   };
 
   return (
@@ -242,7 +311,39 @@ const ReportsTab = () => {
           <Card>
             <CardHeader><CardTitle className="flex items-center gap-2"><Filter className="h-4 w-4" />Generate Individual Report</CardTitle></CardHeader>
             <CardContent>
-              {/* Form for generating reports */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Report Type</label>
+                  <Select value={reportType} onValueChange={setReportType}>
+                    <SelectTrigger><SelectValue placeholder="Select report type" /></SelectTrigger>
+                    <SelectContent>
+                      {reportTypes.map((type) => (<SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">From Date</label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className="w-full justify-start text-left"><CalendarIcon className="mr-2 h-4 w-4" />{dateFrom ? format(dateFrom, 'PPP') : 'Pick a date'}</Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={dateFrom} onSelect={setDateFrom} initialFocus /></PopoverContent>
+                  </Popover>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">To Date</label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className="w-full justify-start text-left"><CalendarIcon className="mr-2 h-4 w-4" />{dateTo ? format(dateTo, 'PPP') : 'Pick a date'}</Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={dateTo} onSelect={setDateTo} initialFocus /></PopoverContent>
+                  </Popover>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">&nbsp;</label>
+                  <Button onClick={generateReport} disabled={generating} className="w-full">{generating ? 'Generating...' : 'Generate Report'}</Button>
+                </div>
+              </div>
             </CardContent>
           </Card>
           <Card>
