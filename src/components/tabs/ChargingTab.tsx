@@ -43,14 +43,9 @@ const ChargingTab = () => {
     
     setLoading(true);
     try {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const startOfDay = today.toISOString();
-
       const { data, error } = await supabase
         .from('charging_sessions')
         .select('*')
-        .gte('created_at', startOfDay)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -267,6 +262,13 @@ const ChargingTab = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
+                  <TableRow className="bg-gray-100 font-semibold">
+                    <TableCell colSpan={5} className="text-right font-bold">Total</TableCell>
+                    <TableCell className="font-bold">
+                      Rs. {sessions.reduce((acc, session) => acc + Number(session.total_amount), 0).toFixed(2)}
+                    </TableCell>
+                    <TableCell colSpan={2}></TableCell>
+                  </TableRow>
                   {sessions.map((session) => (
                     <TableRow key={session.id}>
                       <TableCell>{session.start_percentage || '-'}</TableCell>
