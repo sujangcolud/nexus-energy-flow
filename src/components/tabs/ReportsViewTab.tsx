@@ -473,11 +473,24 @@ const ReportsViewTab = () => {
 const DetailSection = ({ title, icon: Icon, data, columns }: { title: string, icon: React.ElementType, data: any[], columns: string[] }) => {
   if (!data || data.length === 0) return null;
 
+  // Calculate total amount for the section
+  const total = data.reduce((sum, item) => {
+    const amount = item.total || item.total_amount || item.amount || item.contribution_amount || 0;
+    return sum + Number(amount);
+  }, 0);
+
+  const amountColumn = columns.find(c => ['total', 'total_amount', 'amount', 'contribution_amount'].includes(c));
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-lg">
-          <Icon className="h-5 w-5" /> {title} ({data.length})
+        <CardTitle className="flex items-center justify-between text-lg">
+          <span className="flex items-center gap-2">
+            <Icon className="h-5 w-5" /> {title} ({data.length})
+          </span>
+          <span className="text-base font-semibold">
+            Total: NRs. {total.toFixed(2)}
+          </span>
         </CardTitle>
       </CardHeader>
       <CardContent>

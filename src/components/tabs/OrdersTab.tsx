@@ -66,15 +66,10 @@ const OrdersTab = () => {
     
     setLoading(true);
     try {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const startOfDay = today.toISOString();
-
       const { data, error } = await supabase
         .from('orders')
         .select('*')
         .eq('user_id', user.id)
-        .gte('created_at', startOfDay)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -478,6 +473,13 @@ const OrdersTab = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
+                  <TableRow className="bg-gray-100 font-semibold">
+                    <TableCell colSpan={4} className="text-right font-bold">Total</TableCell>
+                    <TableCell className="text-right font-bold">
+                      NRs. {orders.reduce((acc, order) => acc + Number(order.total), 0).toFixed(2)}
+                    </TableCell>
+                    <TableCell></TableCell>
+                  </TableRow>
                   {orders.map((order) => (
                     <TableRow key={order.id} className="hover:bg-muted/20 dark:hover:bg-muted/10 transition-colors border-b border-border/30 last:border-b-0">
                       <TableCell className="py-2.5 px-4 text-sm whitespace-nowrap">

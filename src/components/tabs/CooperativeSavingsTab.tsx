@@ -38,15 +38,10 @@ const CooperativeSavingsTab = () => {
     if (!user) return;
     setLoading(true);
     try {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const startOfDay = today.toISOString();
-
       const { data, error } = await supabase
         .from('cooperative_savings')
         .select('*')
         .eq('user_id', user.id)
-        .gte('created_at', startOfDay)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -193,13 +188,21 @@ const CooperativeSavingsTab = () => {
                     <TableCell colSpan={3} className="text-center">No recent savings found.</TableCell>
                   </TableRow>
                 ) : (
-                  savings.map((saving) => (
-                    <TableRow key={saving.id}>
-                      <TableCell>{new Date(saving.contribution_date).toLocaleDateString()}</TableCell>
-                      <TableCell className="font-medium whitespace-normal break-words">{saving.member_id}</TableCell>
-                      <TableCell className="text-right">Rs. {saving.contribution_amount.toFixed(2)}</TableCell>
+                  <>
+                    <TableRow className="bg-gray-100 font-semibold">
+                      <TableCell colSpan={2} className="text-right font-bold">Total</TableCell>
+                      <TableCell className="text-right font-bold">
+                        Rs. {savings.reduce((acc, s) => acc + Number(s.contribution_amount), 0).toFixed(2)}
+                      </TableCell>
                     </TableRow>
-                  ))
+                    {savings.map((saving) => (
+                      <TableRow key={saving.id}>
+                        <TableCell>{new Date(saving.contribution_date).toLocaleDateString()}</TableCell>
+                        <TableCell className="font-medium whitespace-normal break-words">{saving.member_id}</TableCell>
+                        <TableCell className="text-right">Rs. {saving.contribution_amount.toFixed(2)}</TableCell>
+                      </TableRow>
+                    ))}
+                  </>
                 )}
               </TableBody>
             </Table>

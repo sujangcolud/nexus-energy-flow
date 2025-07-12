@@ -42,15 +42,10 @@ const WithdrawalsTab = () => {
     if (!user) return;
     setLoading(true);
     try {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const startOfDay = today.toISOString();
-
       const { data, error } = await supabase
         .from('withdrawals')
         .select('*')
         .eq('user_id', user.id)
-        .gte('created_at', startOfDay)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -222,14 +217,22 @@ const WithdrawalsTab = () => {
                     <TableCell colSpan={4} className="text-center">No recent withdrawals found.</TableCell>
                   </TableRow>
                 ) : (
-                  withdrawals.map((withdrawal) => (
-                    <TableRow key={withdrawal.id}>
-                      <TableCell>{new Date(withdrawal.withdrawal_date).toLocaleDateString()}</TableCell>
-                      <TableCell className="font-medium whitespace-normal break-words">{withdrawal.purpose}</TableCell>
-                      <TableCell>{withdrawal.recipient || '-'}</TableCell>
-                      <TableCell className="text-right">Rs. {withdrawal.amount.toFixed(2)}</TableCell>
+                  <>
+                    <TableRow className="bg-gray-100 font-semibold">
+                      <TableCell colSpan={3} className="text-right font-bold">Total</TableCell>
+                      <TableCell className="text-right font-bold">
+                        Rs. {withdrawals.reduce((acc, w) => acc + Number(w.amount), 0).toFixed(2)}
+                      </TableCell>
                     </TableRow>
-                  ))
+                    {withdrawals.map((withdrawal) => (
+                      <TableRow key={withdrawal.id}>
+                        <TableCell>{new Date(withdrawal.withdrawal_date).toLocaleDateString()}</TableCell>
+                        <TableCell className="font-medium whitespace-normal break-words">{withdrawal.purpose}</TableCell>
+                        <TableCell>{withdrawal.recipient || '-'}</TableCell>
+                        <TableCell className="text-right">Rs. {withdrawal.amount.toFixed(2)}</TableCell>
+                      </TableRow>
+                    ))}
+                  </>
                 )}
               </TableBody>
             </Table>

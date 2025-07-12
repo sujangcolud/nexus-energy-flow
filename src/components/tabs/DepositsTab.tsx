@@ -40,15 +40,10 @@ const DepositsTab = () => {
     if (!user) return;
     setLoading(true);
     try {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const startOfDay = today.toISOString();
-
       const { data, error } = await supabase
         .from('deposits')
         .select('*')
         .eq('user_id', user.id)
-        .gte('created_at', startOfDay)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -199,14 +194,22 @@ const DepositsTab = () => {
                     <TableCell colSpan={4} className="text-center">No recent deposits found.</TableCell>
                   </TableRow>
                 ) : (
-                  deposits.map((deposit) => (
-                    <TableRow key={deposit.id}>
-                      <TableCell>{new Date(deposit.deposit_date).toLocaleDateString()}</TableCell>
-                      <TableCell className="font-medium whitespace-normal break-words">{deposit.deposited_by}</TableCell>
-                      <TableCell>{deposit.mode}</TableCell>
-                      <TableCell className="text-right">Rs. {deposit.amount.toFixed(2)}</TableCell>
+                  <>
+                    <TableRow className="bg-gray-100 font-semibold">
+                      <TableCell colSpan={3} className="text-right font-bold">Total</TableCell>
+                      <TableCell className="text-right font-bold">
+                        Rs. {deposits.reduce((acc, deposit) => acc + Number(deposit.amount), 0).toFixed(2)}
+                      </TableCell>
                     </TableRow>
-                  ))
+                    {deposits.map((deposit) => (
+                      <TableRow key={deposit.id}>
+                        <TableCell>{new Date(deposit.deposit_date).toLocaleDateString()}</TableCell>
+                        <TableCell className="font-medium whitespace-normal break-words">{deposit.deposited_by}</TableCell>
+                        <TableCell>{deposit.mode}</TableCell>
+                        <TableCell className="text-right">Rs. {deposit.amount.toFixed(2)}</TableCell>
+                      </TableRow>
+                    ))}
+                  </>
                 )}
               </TableBody>
             </Table>

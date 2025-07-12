@@ -62,15 +62,10 @@ const ExpensesTab = () => {
     if (!user) return;
     setLoading(true);
     try {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const startOfDay = today.toISOString();
-
       const { data, error } = await supabase
         .from('expenses')
         .select('*')
         .eq('user_id', user.id)
-        .gte('created_at', startOfDay)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -263,15 +258,23 @@ const ExpensesTab = () => {
                     <TableCell colSpan={5} className="text-center">No recent expenses found.</TableCell>
                   </TableRow>
                 ) : (
-                  expenses.map((expense) => (
-                    <TableRow key={expense.id}>
-                      <TableCell>{new Date(expense.expense_date).toLocaleDateString()}</TableCell>
-                      <TableCell className="font-medium whitespace-normal break-words">{expense.description}</TableCell>
-                      <TableCell>{expense.category}</TableCell>
-                      <TableCell>{expense.payment_mode}</TableCell>
-                      <TableCell className="text-right">Rs. {expense.amount.toFixed(2)}</TableCell>
+                  <>
+                    <TableRow className="bg-gray-100 font-semibold">
+                      <TableCell colSpan={4} className="text-right font-bold">Total</TableCell>
+                      <TableCell className="text-right font-bold">
+                        Rs. {expenses.reduce((acc, expense) => acc + Number(expense.amount), 0).toFixed(2)}
+                      </TableCell>
                     </TableRow>
-                  ))
+                    {expenses.map((expense) => (
+                      <TableRow key={expense.id}>
+                        <TableCell>{new Date(expense.expense_date).toLocaleDateString()}</TableCell>
+                        <TableCell className="font-medium whitespace-normal break-words">{expense.description}</TableCell>
+                        <TableCell>{expense.category}</TableCell>
+                        <TableCell>{expense.payment_mode}</TableCell>
+                        <TableCell className="text-right">Rs. {expense.amount.toFixed(2)}</TableCell>
+                      </TableRow>
+                    ))}
+                  </>
                 )}
               </TableBody>
             </Table>
