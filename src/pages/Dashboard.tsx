@@ -114,14 +114,14 @@ const Dashboard = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="flex flex-wrap w-full gap-2 mb-4 sm:mb-8"> {/* Changed from grid to flex-wrap */}
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-9 gap-1 mb-4 sm:mb-8">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               return (
                 <TabsTrigger
                   key={tab.id}
                   value={tab.id}
-                  className="flex items-center gap-2 px-3 py-2 text-xs md:text-sm"
+                  className="flex items-center justify-center gap-2 px-3 py-2 text-xs md:text-sm"
                 >
                   <Icon className="h-4 w-4 flex-shrink-0" /> {/* Ensure icon doesn't shrink */}
                   <span className="hidden sm:inline whitespace-nowrap overflow-hidden text-ellipsis">{tab.label}</span>

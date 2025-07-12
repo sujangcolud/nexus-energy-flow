@@ -230,12 +230,12 @@ const ReportsViewTab = () => {
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Date Range Filter</CardTitle>
+        <CardHeader className="p-4">
+          <CardTitle className="text-base">Date Range Filter</CardTitle>
         </CardHeader>
-        <CardContent className="flex flex-col sm:flex-row gap-4 sm:items-end">
-          <div className="space-y-2 w-full sm:w-auto"> {/* Ensure inputs take full width when stacked */}
-            <Label htmlFor="startDate">Start Date</Label>
+        <CardContent className="flex flex-col sm:flex-row gap-3 sm:items-end p-4 pt-0">
+          <div className="space-y-1 w-full sm:w-auto"> {/* Ensure inputs take full width when stacked */}
+            <Label htmlFor="startDate" className="text-xs">Start Date</Label>
             <Input
               id="startDate"
               type="date"
@@ -268,13 +268,13 @@ const ReportsViewTab = () => {
 
         <TabsContent value="combined">
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+            <CardHeader className="p-4">
+              <CardTitle className="flex items-center gap-2 text-base">
                 <Calculator className="h-5 w-5" />
                 Daily Combined Report
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-0 sm:p-2 md:p-4">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -322,13 +322,13 @@ const ReportsViewTab = () => {
 
         <TabsContent value="payment">
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+            <CardHeader className="p-4">
+              <CardTitle className="flex items-center gap-2 text-base">
                 <DollarSign className="h-5 w-5" />
                 Payment Method Analytics
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-0 sm:p-2 md:p-4">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -351,13 +351,13 @@ const ReportsViewTab = () => {
 
         <TabsContent value="balances">
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+            <CardHeader className="p-4">
+              <CardTitle className="flex items-center gap-2 text-base">
                 <TrendingUp className="h-5 w-5" />
                 Account Balances
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-0 sm:p-2 md:p-4">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -380,33 +380,33 @@ const ReportsViewTab = () => {
 
         <TabsContent value="projection">
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+            <CardHeader className="p-4">
+              <CardTitle className="flex items-center gap-2 text-base">
                 <TrendingUp className="h-5 w-5" />
                 Monthly Financial Projection
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <CardContent className="p-4 pt-0">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <Card>
-                  <CardContent className="pt-6">
-                    <div className="text-2xl font-bold text-green-600">
+                  <CardContent className="p-4">
+                    <div className="text-xl font-bold text-green-600">
                       {formatCurrency(projectionData.projectedMonthlyIncome)}
                     </div>
                     <p className="text-sm text-muted-foreground">Projected Monthly Income</p>
                   </CardContent>
                 </Card>
                 <Card>
-                  <CardContent className="pt-6">
-                    <div className="text-2xl font-bold text-red-600">
+                  <CardContent className="p-4">
+                    <div className="text-xl font-bold text-red-600">
                       {formatCurrency(projectionData.projectedMonthlyExpenses)}
                     </div>
                     <p className="text-sm text-muted-foreground">Projected Monthly Expenses</p>
                   </CardContent>
                 </Card>
                 <Card>
-                  <CardContent className="pt-6">
-                    <div className="text-2xl font-bold text-blue-600">
+                  <CardContent className="p-4">
+                    <div className="text-xl font-bold text-blue-600">
                       {formatCurrency(projectionData.projectedMonthlyProfit)}
                     </div>
                     <p className="text-sm text-muted-foreground">Projected Monthly Profit</p>

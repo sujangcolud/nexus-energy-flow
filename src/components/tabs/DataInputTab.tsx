@@ -242,13 +242,13 @@ const DataInputTab = () => {
 
       {/* Configuration */}
       <Card>
-        <CardHeader>
-          <CardTitle>Configure Data Table</CardTitle>
+        <CardHeader className="p-4">
+          <CardTitle className="text-base">Configure Data Table</CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Data Type *</label>
+        <CardContent className="p-4 pt-0">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div className="space-y-1">
+              <label className="text-xs font-medium">Data Type *</label>
               <Select value={dataType} onValueChange={(value: DataType) => setDataType(value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select data type" />
@@ -263,8 +263,8 @@ const DataInputTab = () => {
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Number of Rows</label>
+            <div className="space-y-1">
+              <label className="text-xs font-medium">Number of Rows</label>
               <Input
                 type="number"
                 min="1"
@@ -274,8 +274,8 @@ const DataInputTab = () => {
               />
             </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium">&nbsp;</label>
+            <div className="space-y-1">
+              <label className="text-xs font-medium">&nbsp;</label> {/* Keep label for spacing if needed or remove */}
               <Button onClick={generateTable} className="w-full">
                 Generate Table
               </Button>
@@ -287,20 +287,20 @@ const DataInputTab = () => {
       {/* Data Table */}
       {dataType && tableData.length > 0 && (
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Data Entry Table - {dataTypes.find(t => t.value === dataType)?.label}</CardTitle>
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={addRow}>
-                <Plus className="h-4 w-4 mr-2" />
+          <CardHeader className="p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+            <CardTitle className="text-base">Data Entry Table - {dataTypes.find(t => t.value === dataType)?.label}</CardTitle>
+            <div className="flex gap-2 w-full sm:w-auto">
+              <Button variant="outline" onClick={addRow} className="w-1/2 sm:w-auto">
+                <Plus className="h-4 w-4 mr-1 sm:mr-2" />
                 Add Row
               </Button>
-              <Button onClick={saveData} disabled={saving}>
-                <Save className="h-4 w-4 mr-2" />
-                {saving ? 'Saving...' : 'Save All Data'}
+              <Button onClick={saveData} disabled={saving} className="w-1/2 sm:w-auto">
+                <Save className="h-4 w-4 mr-1 sm:mr-2" />
+                {saving ? 'Saving...' : 'Save'}
               </Button>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-0 sm:p-2">
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
@@ -352,11 +352,11 @@ const DataInputTab = () => {
       {/* Field Guidelines */}
       {dataType && (
         <Card>
-          <CardHeader>
-            <CardTitle>Field Guidelines for {dataTypes.find(t => t.value === dataType)?.label}</CardTitle>
+          <CardHeader className="p-4">
+            <CardTitle className="text-base">Field Guidelines for {dataTypes.find(t => t.value === dataType)?.label}</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+          <CardContent className="p-4 pt-0">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
               {tableFields[dataType].map((field) => (
                 <div key={field.name} className="flex justify-between">
                   <span className="font-medium">{field.name.replace(/_/g, ' ')}</span>

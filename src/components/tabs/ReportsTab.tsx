@@ -405,16 +405,16 @@ const ReportsTab = () => {
         <TabsContent value="individual" className="space-y-6">
           {/* Report Generation Form */}
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+            <CardHeader className="p-4">
+              <CardTitle className="flex items-center gap-2 text-base">
                 <Filter className="h-4 w-4" />
                 Generate Individual Report
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Report Type</label>
+            <CardContent className="p-4 pt-0">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                <div className="space-y-1">
+                  <label className="text-xs font-medium">Report Type</label>
                   <Select value={reportType} onValueChange={setReportType}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select report type" />
@@ -481,10 +481,10 @@ const ReportsTab = () => {
 
           {/* Generated Reports List */}
           <Card>
-            <CardHeader>
-              <CardTitle>Generated Reports ({reports.length})</CardTitle>
+            <CardHeader className="p-4">
+              <CardTitle className="text-base">Generated Reports ({reports.length})</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-0 sm:p-2 md:p-4"> {/* More aggressive padding reduction, especially for mobile */}
               {loading ? (
                 <div className="text-center py-4">Loading reports...</div>
               ) : reports.length === 0 ? (
@@ -554,16 +554,16 @@ const ReportsTab = () => {
         <TabsContent value="static-expenses" className="space-y-6">
           {/* Add Static Expense Form */}
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+            <CardHeader className="p-4">
+              <CardTitle className="flex items-center gap-2 text-base">
                 <Plus className="h-4 w-4" />
                 Add Static/Recurring Expense
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="expense-name">Expense Name</Label>
+            <CardContent className="p-4 pt-0">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className="space-y-1">
+                  <Label htmlFor="expense-name" className="text-xs">Expense Name</Label>
                   <Input
                     id="expense-name"
                     placeholder="Enter expense name"
@@ -615,10 +615,10 @@ const ReportsTab = () => {
 
           {/* Static Expenses List */}
           <Card>
-            <CardHeader>
-              <CardTitle>Static & Recurring Expenses ({staticExpenses.length})</CardTitle>
+            <CardHeader className="p-4">
+              <CardTitle className="text-base">Static & Recurring Expenses ({staticExpenses.length})</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-0 sm:p-2 md:p-4">
               {staticExpenses.length === 0 ? (
                 <div className="text-center py-8 text-gray-500">
                   No static expenses added yet. Add your first expense above.
