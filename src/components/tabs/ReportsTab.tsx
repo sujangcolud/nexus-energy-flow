@@ -12,8 +12,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { FileText, Download, Calendar as CalendarIcon, Filter, Plus, Trash2 } from 'lucide-react';
+import { FileText, Download, Calendar as CalendarIcon, Filter, Plus, Trash2, Eye } from 'lucide-react';
 import { format } from 'date-fns';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 
 interface ReportData {
   id: string;
@@ -45,6 +46,8 @@ const ReportsTab = () => {
   const [newExpenseName, setNewExpenseName] = useState('');
   const [newExpenseAmount, setNewExpenseAmount] = useState('');
   const [isRecurring, setIsRecurring] = useState(false);
+  const [isReportViewerOpen, setIsReportViewerOpen] = useState(false);
+  const [viewingReportData, setViewingReportData] = useState<ReportData | null>(null);
 
   const reportTypes = [
     { value: 'orders', label: 'Orders Report' },
@@ -285,6 +288,11 @@ const ReportsTab = () => {
     URL.revokeObjectURL(url);
   };
 
+  const handleViewReport = (report: ReportData) => {
+    setViewingReportData(report);
+    setIsReportViewerOpen(true);
+  };
+
   const convertToCSV = (data: any[], reportType: string) => {
     if (!data || data.length === 0) return '';
     
@@ -473,12 +481,13 @@ const ReportsTab = () => {
                             }
                           </TableCell>
                           <TableCell>{format(new Date(report.created_at), 'MMM dd, yyyy HH:mm')}</TableCell>
-                          <TableCell className="max-w-xs">
+                          <TableCell className="max-w-xs text-xs sm:text-sm"> {/* Adjusted text size for smaller screens */}
                             {report.report_data.summary && (
-                              <div className="text-sm">
+                              <div className="flex flex-col space-y-1"> {/* Flex column layout */}
                                 {Object.entries(report.report_data.summary).map(([key, value]) => (
-                                  <div key={key}>
-                                    {key}: {typeof value === 'number' ? value.toLocaleString() : String(value)}
+                                  <div key={key} className="flex justify-between sm:justify-start sm:gap-1"> {/* Justify between on smallest, then normal */}
+                                    <span className="font-medium">{key}:</span>
+                                    <span>{typeof value === 'number' ? value.toLocaleString() : String(value)}</span>
                                   </div>
                                 ))}
                               </div>
@@ -488,10 +497,11 @@ const ReportsTab = () => {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => downloadReport(report)}
+                              onClick={() => handleViewReport(report)} // Updated onClick
+                              className="whitespace-nowrap"
                             >
-                              <Download className="h-4 w-4 mr-2" />
-                              Download CSV
+                              <Eye className="h-4 w-4 mr-1 sm:mr-2" /> {/* New Icon */}
+                              View Report {/* New Text */}
                             </Button>
                           </TableCell>
                         </TableRow>
@@ -616,6 +626,65 @@ const ReportsTab = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Report Viewer Dialog */}
+      {viewingReportData && (
+        <Dialog open={isReportViewerOpen} onOpenChange={setIsReportViewerOpen}>
+          <DialogContent className="sm:max-w-4xl max-h-[80vh] flex flex-col">
+            <DialogHeader>
+              <DialogTitle>
+                Report: {reportTypes.find(t => t.value === viewingReportData.report_type)?.label || viewingReportData.report_type}
+              </DialogTitle>
+              <div className="text-sm text-muted-foreground">
+                Generated: {format(new Date(viewingReportData.created_at), 'MMM dd, yyyy HH:mm')}
+                {viewingReportData.date_range_start && viewingReportData.date_range_end && (
+                  <span>
+                    {' '} | Range: {format(new Date(viewingReportData.date_range_start), 'PPP')} - {format(new Date(viewingReportData.date_range_end), 'PPP')}
+                  </span>
+                )}
+              </div>
+            </DialogHeader>
+            <div className="overflow-y-auto py-4 grow"> {/* Make table content scrollable */}
+              {viewingReportData.report_data && viewingReportData.report_data.data && viewingReportData.report_data.data.length > 0 ? (
+                <div className="overflow-x-auto"> {/* ADD THIS WRAPPER for horizontal table scroll */}
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                      {Object.keys(viewingReportData.report_data.data[0]).map((key) => (
+                        <TableHead key={key}>{key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</TableHead>
+                      ))}
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {viewingReportData.report_data.data.map((row: any, rowIndex: number) => (
+                      <TableRow key={rowIndex}>
+                        {Object.values(row).map((value: any, cellIndex: number) => (
+                          <TableCell key={cellIndex}>
+                            {typeof value === 'boolean' ? (value ? 'Yes' : 'No') :
+                             value instanceof Date ? format(value, 'PPP p') :
+                             (typeof value === 'object' && value !== null) ? JSON.stringify(value) :
+                             String(value)}
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+                </div>
+              ) : (
+                <p className="text-center text-muted-foreground">No detailed data available for this report.</p>
+              )}
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsReportViewerOpen(false)}>Close</Button>
+              <Button onClick={() => downloadReport(viewingReportData)}> {/* Keep download option */}
+                <Download className="h-4 w-4 mr-2" />
+                Download CSV
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 };
