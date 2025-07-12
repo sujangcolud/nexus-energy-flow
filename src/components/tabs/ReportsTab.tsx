@@ -12,9 +12,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { FileText, Download, Calendar as CalendarIcon, Filter, Plus, Trash2, Eye } from 'lucide-react';
+import { FileText, Download, Calendar as CalendarIcon, Filter, Plus, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 
 interface ReportData {
   id: string;
@@ -34,18 +33,6 @@ interface StaticExpense {
   created_at: string;
 }
 
-const REPORT_COLUMN_ORDERS: Record<string, string[]> = {
-  orders: ['item_name', 'quantity', 'rate', 'total', 'payment_mode', 'order_date'],
-  charging: ['total_amount', 'payment_mode', 'start_percentage', 'end_percentage', 'kcal', 'per_unit_rate', 'per_percent_rate', 'session_date'],
-  expenses: ['description', 'category', 'amount', 'payment_mode', 'remarks', 'expense_date'],
-  deposits: ['deposited_by', 'amount', 'mode', 'deposit_date'],
-  withdrawals: ['purpose', 'recipient', 'amount', 'reference_number', 'remarks', 'withdrawal_date'],
-  savings: ['member_id', 'contribution_amount', 'cycle_period', 'contribution_date'],
-};
-
-const EXCLUDED_KEYS_FROM_REPORTS = ['id', 'user_id', 'created_at', 'updated_at'];
-
-
 const ReportsTab = () => {
   const { user } = useAuth();
   const [reports, setReports] = useState<ReportData[]>([]);
@@ -58,8 +45,6 @@ const ReportsTab = () => {
   const [newExpenseName, setNewExpenseName] = useState('');
   const [newExpenseAmount, setNewExpenseAmount] = useState('');
   const [isRecurring, setIsRecurring] = useState(false);
-  const [isReportViewerOpen, setIsReportViewerOpen] = useState(false);
-  const [viewingReportData, setViewingReportData] = useState<ReportData | null>(null);
 
   const reportTypes = [
     { value: 'orders', label: 'Orders Report' },
@@ -300,44 +285,14 @@ const ReportsTab = () => {
     URL.revokeObjectURL(url);
   };
 
-  const handleViewReport = (report: ReportData) => {
-    setViewingReportData(report);
-    setIsReportViewerOpen(true);
-  };
-
   const convertToCSV = (data: any[], reportType: string) => {
     if (!data || data.length === 0) return '';
-
-    const reportSpecificOrder = REPORT_COLUMN_ORDERS[reportType] || [];
-    const allKeysFromData = Object.keys(data[0]);
-
-    let orderedKeys = reportSpecificOrder.filter(key =>
-      allKeysFromData.includes(key) && !EXCLUDED_KEYS_FROM_REPORTS.includes(key)
-    );
-
-    allKeysFromData.forEach(key => {
-      if (!orderedKeys.includes(key) && !EXCLUDED_KEYS_FROM_REPORTS.includes(key)) {
-        orderedKeys.push(key);
-      }
-    });
-
-    const displayedKeys = orderedKeys;
-
-    const headers = displayedKeys.join(',');
     
+    const headers = Object.keys(data[0]).join(',');
     const rows = data.map(row => 
-      displayedKeys.map(key => {
-        const value = row[key];
-        // Basic escaping for CSV: if value contains comma, quote, or newline, wrap in double quotes
-        // and double up existing double quotes.
-        if (typeof value === 'string') {
-          if (value.includes(',') || value.includes('"') || value.includes('\n')) {
-            return `"${value.replace(/"/g, '""')}"`;
-          }
-          return value;
-        }
-        return value === null || value === undefined ? '' : value; // Handle null/undefined explicitly for CSV
-      }).join(',')
+      Object.values(row).map(value =>
+        typeof value === 'string' ? `"${value}"` : value
+      ).join(',')
     ).join('\n');
     
     return `${headers}\n${rows}`;
@@ -405,16 +360,16 @@ const ReportsTab = () => {
         <TabsContent value="individual" className="space-y-6">
           {/* Report Generation Form */}
           <Card>
-            <CardHeader className="p-4">
-              <CardTitle className="flex items-center gap-2 text-base">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
                 <Filter className="h-4 w-4" />
                 Generate Individual Report
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-4 pt-0">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-                <div className="space-y-1">
-                  <label className="text-xs font-medium">Report Type</label>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Report Type</label>
                   <Select value={reportType} onValueChange={setReportType}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select report type" />
@@ -481,10 +436,10 @@ const ReportsTab = () => {
 
           {/* Generated Reports List */}
           <Card>
-            <CardHeader className="p-4">
-              <CardTitle className="text-base">Generated Reports ({reports.length})</CardTitle>
+            <CardHeader>
+              <CardTitle>Generated Reports ({reports.length})</CardTitle>
             </CardHeader>
-            <CardContent className="p-0 sm:p-2 md:p-4"> {/* More aggressive padding reduction, especially for mobile */}
+            <CardContent>
               {loading ? (
                 <div className="text-center py-4">Loading reports...</div>
               ) : reports.length === 0 ? (
@@ -518,13 +473,12 @@ const ReportsTab = () => {
                             }
                           </TableCell>
                           <TableCell>{format(new Date(report.created_at), 'MMM dd, yyyy HH:mm')}</TableCell>
-                          <TableCell className="max-w-xs text-xs sm:text-sm"> {/* Adjusted text size for smaller screens */}
+                          <TableCell className="max-w-xs">
                             {report.report_data.summary && (
-                              <div className="flex flex-col space-y-1"> {/* Flex column layout */}
+                              <div className="text-sm">
                                 {Object.entries(report.report_data.summary).map(([key, value]) => (
-                                  <div key={key} className="flex justify-between sm:justify-start sm:gap-1"> {/* Justify between on smallest, then normal */}
-                                    <span className="font-medium">{key}:</span>
-                                    <span>{typeof value === 'number' ? value.toLocaleString() : String(value)}</span>
+                                  <div key={key}>
+                                    {key}: {typeof value === 'number' ? value.toLocaleString() : String(value)}
                                   </div>
                                 ))}
                               </div>
@@ -534,11 +488,10 @@ const ReportsTab = () => {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => handleViewReport(report)} // Updated onClick
-                              className="whitespace-nowrap"
+                              onClick={() => downloadReport(report)}
                             >
-                              <Eye className="h-4 w-4 mr-1 sm:mr-2" /> {/* New Icon */}
-                              View Report {/* New Text */}
+                              <Download className="h-4 w-4 mr-2" />
+                              Download CSV
                             </Button>
                           </TableCell>
                         </TableRow>
@@ -554,16 +507,16 @@ const ReportsTab = () => {
         <TabsContent value="static-expenses" className="space-y-6">
           {/* Add Static Expense Form */}
           <Card>
-            <CardHeader className="p-4">
-              <CardTitle className="flex items-center gap-2 text-base">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
                 <Plus className="h-4 w-4" />
                 Add Static/Recurring Expense
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-4 pt-0">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <div className="space-y-1">
-                  <Label htmlFor="expense-name" className="text-xs">Expense Name</Label>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="expense-name">Expense Name</Label>
                   <Input
                     id="expense-name"
                     placeholder="Enter expense name"
@@ -615,10 +568,10 @@ const ReportsTab = () => {
 
           {/* Static Expenses List */}
           <Card>
-            <CardHeader className="p-4">
-              <CardTitle className="text-base">Static & Recurring Expenses ({staticExpenses.length})</CardTitle>
+            <CardHeader>
+              <CardTitle>Static & Recurring Expenses ({staticExpenses.length})</CardTitle>
             </CardHeader>
-            <CardContent className="p-0 sm:p-2 md:p-4">
+            <CardContent>
               {staticExpenses.length === 0 ? (
                 <div className="text-center py-8 text-gray-500">
                   No static expenses added yet. Add your first expense above.
@@ -663,85 +616,6 @@ const ReportsTab = () => {
           </Card>
         </TabsContent>
       </Tabs>
-
-      {/* Report Viewer Dialog */}
-      {viewingReportData && (
-        <Dialog open={isReportViewerOpen} onOpenChange={setIsReportViewerOpen}>
-          <DialogContent className="sm:max-w-4xl max-h-[80vh] flex flex-col">
-            <DialogHeader>
-              <DialogTitle>
-                Report: {reportTypes.find(t => t.value === viewingReportData.report_type)?.label || viewingReportData.report_type}
-              </DialogTitle>
-              <div className="text-sm text-muted-foreground">
-                Generated: {format(new Date(viewingReportData.created_at), 'MMM dd, yyyy HH:mm')}
-                {viewingReportData.date_range_start && viewingReportData.date_range_end && (
-                  <span>
-                    {' '} | Range: {format(new Date(viewingReportData.date_range_start), 'PPP')} - {format(new Date(viewingReportData.date_range_end), 'PPP')}
-                  </span>
-                )}
-              </div>
-            </DialogHeader>
-            <div className="overflow-y-auto py-4 grow"> {/* Make table content scrollable */}
-              {((): JSX.Element => {
-                const tableData = viewingReportData.report_data?.data;
-                if (!tableData || tableData.length === 0) {
-                  return <p className="text-center text-muted-foreground">No detailed data available for this report.</p>;
-                }
-
-                const reportSpecificOrder = REPORT_COLUMN_ORDERS[viewingReportData.report_type] || [];
-                const allKeysFromData = Object.keys(tableData[0]);
-
-                // Start with the predefined order, filtering out any that might not exist in this specific dataset
-                let orderedKeys = reportSpecificOrder.filter(key => allKeysFromData.includes(key) && !EXCLUDED_KEYS_FROM_REPORTS.includes(key));
-
-                // Add any other keys from data that are not in predefined order and not excluded
-                allKeysFromData.forEach(key => {
-                  if (!orderedKeys.includes(key) && !EXCLUDED_KEYS_FROM_REPORTS.includes(key)) {
-                    orderedKeys.push(key);
-                  }
-                });
-
-                const displayedKeys = orderedKeys;
-
-                return (
-                  <div className="overflow-x-auto"> {/* WRAPPER for horizontal table scroll */}
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          {displayedKeys.map((key) => (
-                            <TableHead key={key}>{key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</TableHead>
-                          ))}
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {tableData.map((row: any, rowIndex: number) => (
-                          <TableRow key={rowIndex}>
-                            {displayedKeys.map((key) => (
-                              <TableCell key={key}>
-                                {typeof row[key] === 'boolean' ? (row[key] ? 'Yes' : 'No') :
-                                 row[key] instanceof Date ? format(row[key], 'PPP p') :
-                                 (typeof row[key] === 'object' && row[key] !== null) ? JSON.stringify(row[key]) :
-                                 String(row[key])}
-                              </TableCell>
-                            ))}
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                );
-              })()}
-            </div> {/* Closes "overflow-y-auto py-4 grow" div */}
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsReportViewerOpen(false)}>Close</Button>
-              <Button onClick={() => downloadReport(viewingReportData)}> {/* Keep download option */}
-                <Download className="h-4 w-4 mr-2" />
-                Download CSV
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      )}
     </div>
   );
 };
