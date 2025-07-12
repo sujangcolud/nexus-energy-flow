@@ -34,6 +34,18 @@ interface StaticExpense {
   created_at: string;
 }
 
+const REPORT_COLUMN_ORDERS: Record<string, string[]> = {
+  orders: ['item_name', 'quantity', 'rate', 'total', 'payment_mode', 'order_date'],
+  charging: ['total_amount', 'payment_mode', 'start_percentage', 'end_percentage', 'kcal', 'per_unit_rate', 'per_percent_rate', 'session_date'],
+  expenses: ['description', 'category', 'amount', 'payment_mode', 'remarks', 'expense_date'],
+  deposits: ['deposited_by', 'amount', 'mode', 'deposit_date'],
+  withdrawals: ['purpose', 'recipient', 'amount', 'reference_number', 'remarks', 'withdrawal_date'],
+  savings: ['member_id', 'contribution_amount', 'cycle_period', 'contribution_date'],
+};
+
+const EXCLUDED_KEYS_FROM_REPORTS = ['id', 'user_id', 'created_at', 'updated_at'];
+
+
 const ReportsTab = () => {
   const { user } = useAuth();
   const [reports, setReports] = useState<ReportData[]>([]);
@@ -296,8 +308,20 @@ const ReportsTab = () => {
   const convertToCSV = (data: any[], reportType: string) => {
     if (!data || data.length === 0) return '';
 
-    const EXCLUDED_KEYS = ['id', 'user_id', 'created_at'];
-    const displayedKeys = Object.keys(data[0]).filter(key => !EXCLUDED_KEYS.includes(key));
+    const reportSpecificOrder = REPORT_COLUMN_ORDERS[reportType] || [];
+    const allKeysFromData = Object.keys(data[0]);
+
+    let orderedKeys = reportSpecificOrder.filter(key =>
+      allKeysFromData.includes(key) && !EXCLUDED_KEYS_FROM_REPORTS.includes(key)
+    );
+
+    allKeysFromData.forEach(key => {
+      if (!orderedKeys.includes(key) && !EXCLUDED_KEYS_FROM_REPORTS.includes(key)) {
+        orderedKeys.push(key);
+      }
+    });
+
+    const displayedKeys = orderedKeys;
 
     const headers = displayedKeys.join(',');
     
@@ -312,7 +336,7 @@ const ReportsTab = () => {
           }
           return value;
         }
-        return value;
+        return value === null || value === undefined ? '' : value; // Handle null/undefined explicitly for CSV
       }).join(',')
     ).join('\n');
     
@@ -663,8 +687,21 @@ const ReportsTab = () => {
                 if (!tableData || tableData.length === 0) {
                   return <p className="text-center text-muted-foreground">No detailed data available for this report.</p>;
                 }
-                const EXCLUDED_KEYS = ['id', 'user_id', 'created_at'];
-                const displayedKeys = Object.keys(tableData[0]).filter(key => !EXCLUDED_KEYS.includes(key));
+
+                const reportSpecificOrder = REPORT_COLUMN_ORDERS[viewingReportData.report_type] || [];
+                const allKeysFromData = Object.keys(tableData[0]);
+
+                // Start with the predefined order, filtering out any that might not exist in this specific dataset
+                let orderedKeys = reportSpecificOrder.filter(key => allKeysFromData.includes(key) && !EXCLUDED_KEYS_FROM_REPORTS.includes(key));
+
+                // Add any other keys from data that are not in predefined order and not excluded
+                allKeysFromData.forEach(key => {
+                  if (!orderedKeys.includes(key) && !EXCLUDED_KEYS_FROM_REPORTS.includes(key)) {
+                    orderedKeys.push(key);
+                  }
+                });
+
+                const displayedKeys = orderedKeys;
 
                 return (
                   <div className="overflow-x-auto"> {/* WRAPPER for horizontal table scroll */}
