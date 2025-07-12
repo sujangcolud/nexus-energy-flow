@@ -330,6 +330,8 @@ export type Database = {
           id: string
           purpose: string
           recipient: string | null
+          reference_number: string | null
+          remarks: string | null
           user_id: string
           withdrawal_date: string | null
         }
@@ -339,6 +341,8 @@ export type Database = {
           id?: string
           purpose: string
           recipient?: string | null
+          reference_number?: string | null
+          remarks?: string | null
           user_id: string
           withdrawal_date?: string | null
         }
@@ -348,6 +352,8 @@ export type Database = {
           id?: string
           purpose?: string
           recipient?: string | null
+          reference_number?: string | null
+          remarks?: string | null
           user_id?: string
           withdrawal_date?: string | null
         }

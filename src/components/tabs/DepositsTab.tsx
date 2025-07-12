@@ -82,7 +82,7 @@ const DepositsTab = () => {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="amount">Deposit Amount (Rs.) *</Label>
+              <Label htmlFor="amount">Deposit Amount (NRs.) *</Label>
               <Input
                 id="amount"
                 type="number"

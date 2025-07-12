@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { TrendingDown } from 'lucide-react';
@@ -13,7 +14,9 @@ const WithdrawalsTab = () => {
   const [formData, setFormData] = useState({
     amount: '',
     purpose: '',
-    recipient: ''
+    recipient: '',
+    referenceNumber: '',
+    remarks: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { user } = useAuth();
@@ -42,6 +45,8 @@ const WithdrawalsTab = () => {
         amount: parseFloat(formData.amount),
         purpose: formData.purpose,
         recipient: formData.recipient || null,
+        reference_number: formData.referenceNumber || null,
+        remarks: formData.remarks || null,
         withdrawal_date: new Date().toISOString().split('T')[0],
       };
 
@@ -55,7 +60,9 @@ const WithdrawalsTab = () => {
       setFormData({
         amount: '',
         purpose: '',
-        recipient: ''
+        recipient: '',
+        referenceNumber: '',
+        remarks: ''
       });
     } catch (error: any) {
       console.error('Error recording withdrawal:', error);
@@ -79,7 +86,7 @@ const WithdrawalsTab = () => {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="amount">Withdrawal Amount (Rs.) *</Label>
+              <Label htmlFor="amount">Withdrawal Amount (NRs.) *</Label>
               <Input
                 id="amount"
                 type="number"
@@ -104,12 +111,33 @@ const WithdrawalsTab = () => {
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="recipient">Recipient (Optional)</Label>
+              <Label htmlFor="recipient">Recipient Name</Label>
               <Input
                 id="recipient"
                 placeholder="Name of recipient"
                 value={formData.recipient}
                 onChange={(e) => updateFormData('recipient', e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="referenceNumber">Reference Number</Label>
+              <Input
+                id="referenceNumber"
+                placeholder="Transaction reference number"
+                value={formData.referenceNumber}
+                onChange={(e) => updateFormData('referenceNumber', e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="remarks">Remarks</Label>
+              <Textarea
+                id="remarks"
+                placeholder="Additional remarks"
+                value={formData.remarks}
+                onChange={(e) => updateFormData('remarks', e.target.value)}
+                rows={3}
               />
             </div>
             
