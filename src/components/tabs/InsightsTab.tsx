@@ -16,6 +16,8 @@ interface AnalyticsData {
   cooperativeSavings: number;
   breakEvenPoint: number;
   profitMargin: number;
+  fixedCosts: number;
+  variableCostRatio: number;
   topSellingItems: Array<{ name: string; quantity: number; revenue: number }>;
   categoryBreakdown: Record<string, number>;
   dailyAverage: {
@@ -43,6 +45,8 @@ const InsightsTab = () => {
     cooperativeSavings: 0,
     breakEvenPoint: 0,
     profitMargin: 0,
+    fixedCosts: 0,
+    variableCostRatio: 0,
     topSellingItems: [],
     categoryBreakdown: {},
     dailyAverage: { revenue: 0, orders: 0, chargingSessions: 0 },
@@ -95,6 +99,24 @@ const InsightsTab = () => {
       const netProfit = totalRevenue - totalExpenses;
       const profitMargin = totalRevenue > 0 ? (netProfit / totalRevenue) * 100 : 0;
 
+      // Calculate proper Break Even Point (BEP)
+      // BEP = Fixed Costs / (Price per Unit - Variable Cost per Unit)
+      // For service business: BEP = Fixed Costs / Contribution Margin Ratio
+      
+      // Estimate fixed costs (rent, utilities, etc.) - categories that are typically fixed
+      const fixedCostCategories = ['Rent', 'Utilities', 'Insurance', 'Salaries', 'Equipment'];
+      const fixedCosts = expenses
+        .filter(expense => fixedCostCategories.includes(expense.category))
+        .reduce((sum, expense) => sum + Number(expense.amount), 0);
+      
+      // Variable costs (remaining expenses)
+      const variableCosts = totalExpenses - fixedCosts;
+      const variableCostRatio = totalRevenue > 0 ? variableCosts / totalRevenue : 0;
+      const contributionMarginRatio = 1 - variableCostRatio;
+      
+      // Break Even Point in revenue
+      const breakEvenPoint = contributionMarginRatio > 0 ? fixedCosts / contributionMarginRatio : 0;
+
       // Top selling items analysis
       const itemSales = orders.reduce((acc: any, order) => {
         if (!acc[order.item_name]) {
@@ -138,8 +160,10 @@ const InsightsTab = () => {
         totalDeposits,
         totalWithdrawals,
         cooperativeSavings,
-        breakEvenPoint: totalExpenses,
+        breakEvenPoint,
         profitMargin,
+        fixedCosts,
+        variableCostRatio: variableCostRatio * 100,
         topSellingItems,
         categoryBreakdown,
         dailyAverage,
@@ -197,7 +221,8 @@ const InsightsTab = () => {
       value: `Rs. ${data.breakEvenPoint.toLocaleString()}`,
       icon: Activity,
       color: 'text-purple-600',
-      bgColor: 'bg-purple-50'
+      bgColor: 'bg-purple-50',
+      subtitle: 'Revenue needed to break even'
     },
     {
       title: 'Total Deposits',
@@ -230,7 +255,7 @@ const InsightsTab = () => {
   }
 
   return (
-    <div className="space-y-6"> {/* Removed top padding pt-4 md:pt-6 */}
+    <div className="space-y-6">
       <div className="flex items-center gap-3 mb-6">
         <BarChart3 className="h-6 w-6 text-blue-600" />
         <h2 className="text-2xl font-bold text-gray-900">Business Analytics</h2>
@@ -254,6 +279,11 @@ const InsightsTab = () => {
                     {metric.change && (
                       <p className="text-xs text-gray-500 mt-1">
                         {metric.change}
+                      </p>
+                    )}
+                    {metric.subtitle && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        {metric.subtitle}
                       </p>
                     )}
                   </div>
@@ -337,10 +367,10 @@ const InsightsTab = () => {
           </CardContent>
         </Card>
 
-        {/* Financial Health */}
+        {/* Financial Health & Break Even Analysis */}
         <Card>
           <CardHeader>
-            <CardTitle>Financial Health</CardTitle>
+            <CardTitle>Financial Health & Break Even Analysis</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -351,9 +381,17 @@ const InsightsTab = () => {
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Revenue vs Expenses</span>
-                <span className="text-sm font-medium">
-                  {data.totalRevenue > data.totalExpenses ? 'Profitable' : 'Loss'}
+                <span className="text-sm text-gray-600">Fixed Costs</span>
+                <span className="text-sm font-medium">Rs. {data.fixedCosts.toLocaleString()}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">Variable Cost Ratio</span>
+                <span className="text-sm font-medium">{data.variableCostRatio.toFixed(1)}%</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">Break Even Status</span>
+                <span className={`text-sm font-medium ${data.totalRevenue >= data.breakEvenPoint ? 'text-green-600' : 'text-red-600'}`}>
+                  {data.totalRevenue >= data.breakEvenPoint ? 'Above Break Even' : `₹${(data.breakEvenPoint - data.totalRevenue).toLocaleString()} needed`}
                 </span>
               </div>
               <div className="flex items-center justify-between">

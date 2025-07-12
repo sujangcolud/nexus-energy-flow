@@ -4,7 +4,7 @@ import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from 'sonner';
@@ -25,10 +25,10 @@ const CooperativeSavingsTab = () => {
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   
-  // Form fields
-  const [memberId, setMemberId] = useState('');
-  const [contributionAmount, setContributionAmount] = useState('');
-  const [cyclePeriod, setCyclePeriod] = useState('');
+  // Reformed form fields: Amount, Name of Cooperative, Remarks
+  const [amount, setAmount] = useState('');
+  const [cooperativeName, setCooperativeName] = useState('');
+  const [remarks, setRemarks] = useState('');
 
   const fetchSavings = async () => {
     if (!user) return;
@@ -64,16 +64,16 @@ const CooperativeSavingsTab = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!user || !memberId || !contributionAmount || !cyclePeriod) {
+    if (!user || !amount || !cooperativeName) {
       toast.error('Please fill in all required fields');
       return;
     }
 
     const savingsData = {
       user_id: user.id,
-      member_id: memberId,
-      contribution_amount: parseFloat(contributionAmount),
-      cycle_period: cyclePeriod
+      member_id: cooperativeName, // Using cooperative name as member_id
+      contribution_amount: parseFloat(amount),
+      cycle_period: remarks || 'Monthly' // Using remarks as cycle_period or default to Monthly
     };
 
     console.log('Submitting cooperative savings:', savingsData);
@@ -93,9 +93,9 @@ const CooperativeSavingsTab = () => {
       toast.success('Cooperative savings added successfully!');
       
       // Reset form
-      setMemberId('');
-      setContributionAmount('');
-      setCyclePeriod('');
+      setAmount('');
+      setCooperativeName('');
+      setRemarks('');
       
       // Refresh data
       fetchSavings();
@@ -127,13 +127,13 @@ const CooperativeSavingsTab = () => {
   };
 
   return (
-    <div className="space-y-6"> {/* Removed top padding pt-4 md:pt-6 */}
+    <div className="space-y-6">
       <div className="flex items-center gap-2">
         <Users className="h-5 w-5 text-blue-600" />
         <h2 className="text-xl font-semibold text-gray-900">Cooperative Savings</h2>
       </div>
 
-      {/* Add New Savings */}
+      {/* Add New Savings - Reformed Form */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -143,45 +143,39 @@ const CooperativeSavingsTab = () => {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium">Member ID *</label>
-                <Input
-                  type="text"
-                  placeholder="Enter member ID"
-                  value={memberId}
-                  onChange={(e) => setMemberId(e.target.value)}
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Contribution Amount (Rs.) *</label>
+                <label className="text-sm font-medium">Amount (Rs.) *</label>
                 <Input
                   type="number"
                   step="0.01"
-                  placeholder="0.00"
-                  value={contributionAmount}
-                  onChange={(e) => setContributionAmount(e.target.value)}
+                  placeholder="Enter amount"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
                   required
                 />
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium">Cycle Period *</label>
-                <Select value={cyclePeriod} onValueChange={setCyclePeriod} required>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select cycle period" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Daily">Daily</SelectItem>
-                    <SelectItem value="Weekly">Weekly</SelectItem>
-                    <SelectItem value="Monthly">Monthly</SelectItem>
-                    <SelectItem value="Quarterly">Quarterly</SelectItem>
-                    <SelectItem value="Yearly">Yearly</SelectItem>
-                  </SelectContent>
-                </Select>
+                <label className="text-sm font-medium">Name of Cooperative *</label>
+                <Input
+                  type="text"
+                  placeholder="Enter cooperative name"
+                  value={cooperativeName}
+                  onChange={(e) => setCooperativeName(e.target.value)}
+                  required
+                />
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Remarks</label>
+              <Textarea
+                placeholder="Additional notes or remarks"
+                value={remarks}
+                onChange={(e) => setRemarks(e.target.value)}
+                rows={3}
+              />
             </div>
 
             <Button 
@@ -212,10 +206,10 @@ const CooperativeSavingsTab = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="whitespace-nowrap">Member ID</TableHead>
+                    <TableHead className="whitespace-nowrap">Cooperative Name</TableHead>
                     <TableHead className="whitespace-nowrap">Amount</TableHead>
-                    <TableHead className="whitespace-nowrap">Cycle Period</TableHead>
-                    <TableHead className="whitespace-nowrap">Contribution Date</TableHead>
+                    <TableHead className="whitespace-nowrap">Remarks</TableHead>
+                    <TableHead className="whitespace-nowrap">Date</TableHead>
                     <TableHead className="whitespace-nowrap">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
