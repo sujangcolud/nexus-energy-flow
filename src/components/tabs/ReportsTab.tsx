@@ -270,6 +270,8 @@ const ReportsTab = () => {
       toast.success('Report deleted successfully!');
       // Manually filter out the deleted report from the local state for an immediate UI update
       setReports(currentReports => currentReports.filter(report => report.id !== reportId));
+      // Also re-fetch to ensure consistency, though the UI update is already handled.
+      fetchReports();
     } catch (error) {
       console.error('Error deleting report:', error);
       toast.error('Failed to delete report.');
