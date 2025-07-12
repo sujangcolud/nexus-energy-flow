@@ -295,12 +295,25 @@ const ReportsTab = () => {
 
   const convertToCSV = (data: any[], reportType: string) => {
     if (!data || data.length === 0) return '';
+
+    const EXCLUDED_KEYS = ['id', 'user_id', 'created_at'];
+    const displayedKeys = Object.keys(data[0]).filter(key => !EXCLUDED_KEYS.includes(key));
+
+    const headers = displayedKeys.join(',');
     
-    const headers = Object.keys(data[0]).join(',');
     const rows = data.map(row => 
-      Object.values(row).map(value => 
-        typeof value === 'string' ? `"${value}"` : value
-      ).join(',')
+      displayedKeys.map(key => {
+        const value = row[key];
+        // Basic escaping for CSV: if value contains comma, quote, or newline, wrap in double quotes
+        // and double up existing double quotes.
+        if (typeof value === 'string') {
+          if (value.includes(',') || value.includes('"') || value.includes('\n')) {
+            return `"${value.replace(/"/g, '""')}"`;
+          }
+          return value;
+        }
+        return value;
+      }).join(',')
     ).join('\n');
     
     return `${headers}\n${rows}`;
@@ -645,36 +658,43 @@ const ReportsTab = () => {
               </div>
             </DialogHeader>
             <div className="overflow-y-auto py-4 grow"> {/* Make table content scrollable */}
-              {viewingReportData.report_data && viewingReportData.report_data.data && viewingReportData.report_data.data.length > 0 ? (
-                <div className="overflow-x-auto"> {/* ADD THIS WRAPPER for horizontal table scroll */}
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                      {Object.keys(viewingReportData.report_data.data[0]).map((key) => (
-                        <TableHead key={key}>{key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</TableHead>
-                      ))}
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {viewingReportData.report_data.data.map((row: any, rowIndex: number) => (
-                      <TableRow key={rowIndex}>
-                        {Object.values(row).map((value: any, cellIndex: number) => (
-                          <TableCell key={cellIndex}>
-                            {typeof value === 'boolean' ? (value ? 'Yes' : 'No') :
-                             value instanceof Date ? format(value, 'PPP p') :
-                             (typeof value === 'object' && value !== null) ? JSON.stringify(value) :
-                             String(value)}
-                          </TableCell>
+              {((): JSX.Element => {
+                const tableData = viewingReportData.report_data?.data;
+                if (!tableData || tableData.length === 0) {
+                  return <p className="text-center text-muted-foreground">No detailed data available for this report.</p>;
+                }
+                const EXCLUDED_KEYS = ['id', 'user_id', 'created_at'];
+                const displayedKeys = Object.keys(tableData[0]).filter(key => !EXCLUDED_KEYS.includes(key));
+
+                return (
+                  <div className="overflow-x-auto"> {/* WRAPPER for horizontal table scroll */}
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          {displayedKeys.map((key) => (
+                            <TableHead key={key}>{key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</TableHead>
+                          ))}
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {tableData.map((row: any, rowIndex: number) => (
+                          <TableRow key={rowIndex}>
+                            {displayedKeys.map((key) => (
+                              <TableCell key={key}>
+                                {typeof row[key] === 'boolean' ? (row[key] ? 'Yes' : 'No') :
+                                 row[key] instanceof Date ? format(row[key], 'PPP p') :
+                                 (typeof row[key] === 'object' && row[key] !== null) ? JSON.stringify(row[key]) :
+                                 String(row[key])}
+                              </TableCell>
+                            ))}
+                          </TableRow>
                         ))}
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-                </div>
-              ) : (
-                <p className="text-center text-muted-foreground">No detailed data available for this report.</p>
-              )}
-            </div>
+                      </TableBody>
+                    </Table>
+                  </div>
+                );
+              })()}
+            </div> {/* Closes "overflow-y-auto py-4 grow" div */}
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsReportViewerOpen(false)}>Close</Button>
               <Button onClick={() => downloadReport(viewingReportData)}> {/* Keep download option */}
