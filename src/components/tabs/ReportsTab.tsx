@@ -604,7 +604,7 @@ const ReportsTab = () => {
                           <TableCell>
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
-                                <Button variant="destructive" size="sm" onClick={() => deleteStaticExpense(expense.id)}>
+                                <Button variant="destructive" size="sm">
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
                               </AlertDialogTrigger>
@@ -665,11 +665,11 @@ const ReportsTab = () => {
               <div>
                 <h4 className="font-semibold">Report Data:</h4>
                 <div className="bg-gray-50 p-4 rounded-lg max-h-96 overflow-y-auto">
-                  {Array.isArray(viewingReportData.report_data) && viewingReportData.report_data.length > 0 ? (
+                    {viewingReportData.report_data && Array.isArray(viewingReportData.report_data.data) && viewingReportData.report_data.data.length > 0 ? (
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          {Object.keys(viewingReportData.report_data[0])
+                            {Object.keys(viewingReportData.report_data.data[0])
                             .filter(key => !EXCLUDED_KEYS_FROM_REPORTS.includes(key))
                             .map(key => (
                               <TableHead key={key} className="capitalize">
@@ -679,7 +679,7 @@ const ReportsTab = () => {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {viewingReportData.report_data.map((item: any, index: number) => (
+                          {viewingReportData.report_data.data.map((item: any, index: number) => (
                           <TableRow key={index}>
                             {Object.keys(item)
                               .filter(key => !EXCLUDED_KEYS_FROM_REPORTS.includes(key))
