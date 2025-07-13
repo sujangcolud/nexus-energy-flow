@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User, Session } from '@supabase/supabase-js';
@@ -46,12 +45,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       console.log('Profile data:', profile, 'Profile error:', profileError);
 
-      // Try to get user role
+      // Use the new security definer function to get user role safely
       const { data: userRole, error: roleError } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', userId)
-        .maybeSingle();
+        .rpc('get_current_user_role');
 
       console.log('Role data:', userRole, 'Role error:', roleError);
 
@@ -61,7 +57,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           id: userId,
           email: profile.email || '',
           name: `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'User',
-          role: (userRole?.role as UserRole) || 'user',
+          role: (userRole as UserRole) || 'user',
           first_name: profile.first_name,
           last_name: profile.last_name
         };
@@ -74,7 +70,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           id: userId,
           email: session?.user?.email || '',
           name: 'User',
-          role: (userRole?.role as UserRole) || 'user',
+          role: (userRole as UserRole) || 'user',
         };
         setUser(basicUser);
       }
