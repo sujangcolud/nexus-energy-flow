@@ -48,46 +48,17 @@ serve(async (req) => {
       throw new Error('Missing required fields')
     }
 
-    // Create the user using admin client
-    const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
-      email: email,
-      password: password,
-      email_confirm: true, // Auto-confirm email
-      user_metadata: {
-        first_name: firstName,
-        last_name: lastName
-      }
-    })
-
-    if (createError) {
-      throw new Error(`Failed to create user: ${createError.message}`)
-    }
-
-    if (!newUser.user) {
-      throw new Error('User creation failed')
-    }
-
-    // Create the profile for the new user
-    const { error: profileError } = await supabaseAdmin.from('profiles').insert({
-      id: newUser.user.id,
+    // Create the user using the new RPC function
+    const { data: newUserId, error: createError } = await supabaseAdmin.rpc('create_user_with_role', {
+      email,
+      password,
       first_name: firstName,
       last_name: lastName,
-      email: email,
+      role,
     });
 
-    if (profileError) {
-      console.error('Failed to create profile:', profileError);
-      // Don't throw here as user is already created, just log the error
-    }
-
-    // Assign the role to the new user
-    const { error: roleAssignError } = await supabaseAdmin
-      .from('user_roles')
-      .insert({ user_id: newUser.user.id, role: role });
-
-    if (roleAssignError) {
-      console.error('Failed to assign role:', roleAssignError);
-      // Don't throw here as user is already created, just log the error
+    if (createError) {
+      throw new Error(`Failed to create user: ${createError.message}`);
     }
 
     return new Response(
