@@ -443,11 +443,12 @@ const InsightsTab = () => {
       </div>
 
       {/* Detailed Analytics */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* NEW: Menu Category Analysis */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+      <div className="lg:flex lg:gap-6">
+        <div className="lg:w-1/2 flex flex-col space-y-6">
+          {/* NEW: Menu Category Analysis */}
+          <Card className="flex-grow">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
               <UtensilsCrossed className="h-5 w-5" />
               Menu Category Analysis
             </CardTitle>
@@ -487,10 +488,11 @@ const InsightsTab = () => {
           </CardContent>
         </Card>
 
-        {/* NEW: Payment Method Analysis */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+        <div className="lg:w-1/2 flex flex-col space-y-6">
+          {/* NEW: Payment Method Analysis */}
+          <Card className="flex-grow">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
               <Wallet className="h-5 w-5" />
               Payment Method Analysis
             </CardTitle>
@@ -687,6 +689,74 @@ const InsightsTab = () => {
             </div>
           </CardContent>
         </Card>
+          {/* Daily Averages */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Daily Averages (30 Days)</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Daily Revenue</span>
+                  <span className="text-sm font-medium">NRs. {data.dailyAverage.revenue.toFixed(0)}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Daily Orders</span>
+                  <span className="text-sm font-medium">{data.dailyAverage.orders.toFixed(1)}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Daily Charging Sessions</span>
+                  <span className="text-sm font-medium">{data.dailyAverage.chargingSessions.toFixed(1)}</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Enhanced Financial Health & Break Even Analysis */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Financial Health & Break Even Analysis</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Profit Margin</span>
+                  <span className={`text-sm font-medium ${data.profitMargin >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    {data.profitMargin.toFixed(1)}%
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Fixed Costs (incl. Static)</span>
+                  <span className="text-sm font-medium">NRs. {data.fixedCosts.toLocaleString()}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Static Expenses</span>
+                  <span className="text-sm font-medium">NRs. {data.staticExpenses.toLocaleString()}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Recurring Expenses</span>
+                  <span className="text-sm font-medium">NRs. {data.recurringExpenses.toLocaleString()}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Variable Cost Ratio</span>
+                  <span className="text-sm font-medium">{data.variableCostRatio.toFixed(1)}%</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Break Even Status</span>
+                  <span className={`text-sm font-medium ${data.totalRevenue >= data.breakEvenPoint ? 'text-green-600' : 'text-red-600'}`}>
+                    {data.totalRevenue >= data.breakEvenPoint ? 'Above Break Even' : `NRs. ${(data.breakEvenPoint - data.totalRevenue).toLocaleString()} needed`}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Cash Flow</span>
+                  <span className={`text-sm font-medium ${data.totalDeposits > data.totalWithdrawals ? 'text-green-600' : 'text-red-600'}`}>
+                    NRs. {(data.totalDeposits - data.totalWithdrawals).toLocaleString()}
+                  </span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );
