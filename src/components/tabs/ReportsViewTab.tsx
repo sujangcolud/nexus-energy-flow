@@ -470,8 +470,11 @@ const ReportsViewTab = () => {
 const DetailSection = ({ title, icon: Icon, data, columns }: { title: string, icon: React.ElementType, data: any[], columns: string[] }) => {
   if (!data || data.length === 0) return null;
 
+  // Group orders by item name and payment method (only for Orders section)
+  const processedData = title === 'Orders' ? groupOrdersByItemAndPayment(data) : data;
+
   // Calculate total amount for the section
-  const total = data.reduce((sum, item) => {
+  const total = processedData.reduce((sum, item) => {
     const amount = item.total || item.total_amount || item.amount || item.contribution_amount || 0;
     return sum + Number(amount);
   }, 0);
@@ -483,7 +486,7 @@ const DetailSection = ({ title, icon: Icon, data, columns }: { title: string, ic
       <CardHeader>
         <CardTitle className="flex items-center justify-between text-lg">
           <span className="flex items-center gap-2">
-            <Icon className="h-5 w-5" /> {title} ({data.length})
+            <Icon className="h-5 w-5" /> {title} ({processedData.length})
           </span>
           <span className="text-base font-semibold">
             Total: NRs. {total.toFixed(2)}
@@ -498,7 +501,7 @@ const DetailSection = ({ title, icon: Icon, data, columns }: { title: string, ic
             </TableRow>
           </TableHeader>
           <TableBody>
-            {data.map((item, index) => (
+            {processedData.map((item, index) => (
               <TableRow key={index}>
                 {columns.map(col => <TableCell key={col}>{item[col]}</TableCell>)}
               </TableRow>
@@ -508,6 +511,30 @@ const DetailSection = ({ title, icon: Icon, data, columns }: { title: string, ic
       </CardContent>
     </Card>
   );
+};
+
+// Helper function to group orders by item name and payment method
+const groupOrdersByItemAndPayment = (orders: any[]) => {
+  const grouped = orders.reduce((acc, order) => {
+    const key = `${order.item_name}_${order.payment_mode}`;
+    
+    if (!acc[key]) {
+      acc[key] = {
+        item_name: order.item_name,
+        quantity: 0,
+        rate: order.rate,
+        total: 0,
+        payment_mode: order.payment_mode
+      };
+    }
+    
+    acc[key].quantity += Number(order.quantity);
+    acc[key].total += Number(order.total);
+    
+    return acc;
+  }, {});
+  
+  return Object.values(grouped);
 };
 
 export default ReportsViewTab;
