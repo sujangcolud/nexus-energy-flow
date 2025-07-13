@@ -1,8 +1,8 @@
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Outlet, useLocation, NavLink, Link } from 'react-router-dom'; // Import NavLink and Link
-import { LogOut, User, ShoppingCart, Zap, Receipt, CreditCard, Banknote, Users, BarChart3, FileText, UtensilsCrossed, Database } from 'lucide-react';
+import { Outlet, useLocation, NavLink, Link, useNavigate } from 'react-router-dom'; // Import useNavigate
+import { LogOut, User, ShoppingCart, Zap, Receipt, CreditCard, Banknote, Users, BarChart3, FileText, UtensilsCrossed, Database, ArrowLeft } from 'lucide-react';
 
 // Tab components are now rendered by routes, but their types/icons might be needed for nav items.
 import OrdersTab from '@/components/tabs/OrdersTab';
@@ -19,7 +19,8 @@ import DataInputTab from '@/components/tabs/DataInputTab';
 
 const Dashboard = () => {
   const { user, signOut, userRole } = useAuth();
-  const location = useLocation(); // To determine if we are on a sub-page
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const handleSignOut = async () => {
     try {
@@ -73,10 +74,15 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* Header */}
-      <header className="bg-card shadow-md border-b border-border sticky top-0 z-50">
+      <header className="bg-red-500 shadow-md border-b border-border sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4">
+              {isSubPageActive && (
+                <Button variant="outline" size="icon" onClick={() => navigate(-1)}>
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+              )}
               <NavLink to="/dashboard" end className={({ isActive }) =>
                 `flex items-center gap-3 group ${isActive ? 'cursor-default' : ''}`
               }>
