@@ -61,7 +61,7 @@ const REPORT_COLUMN_ORDERS: Record<ValidTableName, string[]> = {
   orders: ['item_name', 'quantity', 'rate', 'total', 'payment_mode', 'order_date'],
   charging_sessions: ['total_amount', 'payment_mode', 'start_percentage', 'end_percentage', 'kcal', 'per_unit_rate', 'per_percent_rate', 'session_date'],
   expenses: ['description', 'category', 'amount', 'payment_mode', 'remarks', 'expense_date'],
-  deposits: ['deposited_by', 'amount', 'mode', 'deposit_date'],
+  deposits: ['deposited_by', 'amount', 'mode', 'deposit_date', 'remarks'],
   withdrawals: ['purpose', 'recipient', 'amount', 'reference_number', 'remarks', 'withdrawal_date'],
   cooperative_savings: ['member_id', 'contribution_amount', 'cycle_period', 'contribution_date'],
 };

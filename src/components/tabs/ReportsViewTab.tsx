@@ -452,7 +452,7 @@ const ReportsViewTab = () => {
                 {/* Expenses */}
                 <DetailSection title="Expenses" icon={Receipt} data={selectedDayData.expenses} columns={['description', 'category', 'amount', 'payment_mode']} />
                 {/* Deposits */}
-                <DetailSection title="Deposits" icon={CreditCard} data={selectedDayData.deposits} columns={['deposited_by', 'mode', 'amount']} />
+                <DetailSection title="Deposits" icon={CreditCard} data={selectedDayData.deposits} columns={['deposited_by', 'mode', 'amount', 'remarks']} />
                 {/* Withdrawals */}
                 <DetailSection title="Withdrawals" icon={Banknote} data={selectedDayData.withdrawals} columns={['purpose', 'recipient', 'amount']} />
                 {/* Savings */}
