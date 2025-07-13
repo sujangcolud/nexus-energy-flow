@@ -633,10 +633,44 @@ const ReportsTab = () => {
               </div>
               <div>
                 <h4 className="font-semibold">Report Data:</h4>
-                <div className="bg-gray-50 p-4 rounded-lg max-h-60 overflow-y-auto">
-                  <pre className="text-sm whitespace-pre-wrap">
-                    {JSON.stringify(viewingReportData.report_data, null, 2)}
-                  </pre>
+                <div className="bg-gray-50 p-4 rounded-lg max-h-96 overflow-y-auto">
+                  {Array.isArray(viewingReportData.report_data) && viewingReportData.report_data.length > 0 ? (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          {Object.keys(viewingReportData.report_data[0])
+                            .filter(key => !EXCLUDED_KEYS_FROM_REPORTS.includes(key))
+                            .map(key => (
+                              <TableHead key={key} className="capitalize">
+                                {key.replace(/_/g, ' ')}
+                              </TableHead>
+                            ))}
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {viewingReportData.report_data.map((item: any, index: number) => (
+                          <TableRow key={index}>
+                            {Object.keys(item)
+                              .filter(key => !EXCLUDED_KEYS_FROM_REPORTS.includes(key))
+                              .map(key => (
+                                <TableCell key={key}>
+                                  {key.includes('date') ? 
+                                    (item[key] ? format(new Date(item[key]), 'PPP') : '-') :
+                                    key.includes('amount') || key.includes('total') || key.includes('rate') ? 
+                                      (item[key] ? `NRs. ${parseFloat(item[key]).toFixed(2)}` : '-') :
+                                      (item[key] || '-')
+                                  }
+                                </TableCell>
+                              ))}
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  ) : (
+                    <div className="text-gray-500 text-center py-4">
+                      No data available for this report
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

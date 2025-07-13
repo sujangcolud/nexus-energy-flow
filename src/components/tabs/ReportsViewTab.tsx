@@ -84,22 +84,22 @@ const ReportsViewTab = () => {
     // A helper to get the date part of a timestamp
     const getDatePart = (isoString: string) => isoString.split('T')[0];
 
-    // Process all data types using the consistent 'created_at' field
-    const processData = (items: any[], type: string) => {
+    // Process all data types using their respective date fields
+    const processData = (items: any[], type: string, dateField: string, valueField: string) => {
       items?.forEach((item: any) => {
-        const date = getDatePart(item.created_at);
+        const date = getDatePart(item[dateField]);
         if (dailyData[date]) { // Only process if the date is in our range
-          dailyData[date][type] += parseFloat(item.total || item.total_amount || item.amount || item.contribution_amount || 0);
+          dailyData[date][type] += parseFloat(item[valueField] || 0);
         }
       });
     };
 
-    processData(reportData.orders, 'orders');
-    processData(reportData.charging, 'charging');
-    processData(reportData.expenses, 'expenses');
-    processData(reportData.savings, 'savings');
-    processData(reportData.deposits, 'deposits');
-    processData(reportData.withdrawals, 'withdrawals');
+    processData(reportData.orders, 'orders', 'order_date', 'total');
+    processData(reportData.charging, 'charging', 'session_date', 'total_amount');
+    processData(reportData.expenses, 'expenses', 'expense_date', 'amount');
+    processData(reportData.savings, 'savings', 'contribution_date', 'contribution_amount');
+    processData(reportData.deposits, 'deposits', 'deposit_date', 'amount');
+    processData(reportData.withdrawals, 'withdrawals', 'withdrawal_date', 'amount');
 
     // Calculate totals and balance
     const result = Object.values(dailyData).map((day: any) => ({
@@ -112,16 +112,16 @@ const ReportsViewTab = () => {
   };
 
   const handleRowClick = (date: string) => {
-    const filterByDate = (item: any) => item.created_at && item.created_at.startsWith(date);
+    const filterByDate = (item: any, dateField: string) => item[dateField] && item[dateField].startsWith(date);
 
     const details = {
       date,
-      orders: reportData.orders.filter(filterByDate),
-      charging: reportData.charging.filter(filterByDate),
-      expenses: reportData.expenses.filter(filterByDate),
-      savings: reportData.savings.filter(filterByDate),
-      deposits: reportData.deposits.filter(filterByDate),
-      withdrawals: reportData.withdrawals.filter(filterByDate),
+      orders: reportData.orders.filter((item: any) => filterByDate(item, 'order_date')),
+      charging: reportData.charging.filter((item: any) => filterByDate(item, 'session_date')),
+      expenses: reportData.expenses.filter((item: any) => filterByDate(item, 'expense_date')),
+      savings: reportData.savings.filter((item: any) => filterByDate(item, 'contribution_date')),
+      deposits: reportData.deposits.filter((item: any) => filterByDate(item, 'deposit_date')),
+      withdrawals: reportData.withdrawals.filter((item: any) => filterByDate(item, 'withdrawal_date')),
     };
 
     setSelectedDayData(details);
