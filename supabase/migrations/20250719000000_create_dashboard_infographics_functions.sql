@@ -7,6 +7,7 @@ RETURNS TABLE (
   profit NUMERIC
 ) AS $$
 BEGIN
+  SET LOCAL ROLE service_role;
   RETURN QUERY
   WITH months AS (
     SELECT TO_CHAR(d, 'YYYY-MM') AS month
@@ -56,6 +57,7 @@ RETURNS TABLE (
   amount NUMERIC
 ) AS $$
 BEGIN
+  SET LOCAL ROLE service_role;
   RETURN QUERY
   SELECT 'Orders' AS source, COALESCE(SUM(total), 0) AS amount FROM public.orders
   UNION ALL
@@ -70,6 +72,7 @@ RETURNS TABLE (
   amount NUMERIC
 ) AS $$
 BEGIN
+  SET LOCAL ROLE service_role;
   RETURN QUERY
   SELECT
     e.category,
@@ -88,6 +91,7 @@ RETURNS TABLE (
   withdrawals NUMERIC
 ) AS $$
 BEGIN
+  SET LOCAL ROLE service_role;
   RETURN QUERY
   WITH months AS (
     SELECT TO_CHAR(d, 'YYYY-MM') AS month
@@ -130,6 +134,7 @@ RETURNS TABLE (
   new_users BIGINT
 ) AS $$
 BEGIN
+  SET LOCAL ROLE service_role;
   RETURN QUERY
   WITH months AS (
     SELECT TO_CHAR(d, 'YYYY-MM') AS month
@@ -156,6 +161,7 @@ RETURNS TABLE (
   user_count BIGINT
 ) AS $$
 BEGIN
+  SET LOCAL ROLE service_role;
   RETURN QUERY
   SELECT
     r.role,
@@ -174,6 +180,7 @@ RETURNS TABLE (
   total_spent NUMERIC
 ) AS $$
 BEGIN
+  SET LOCAL ROLE service_role;
   RETURN QUERY
   WITH user_spending AS (
     SELECT
@@ -210,6 +217,7 @@ RETURNS TABLE (
   purchase_count BIGINT
 ) AS $$
 BEGIN
+  SET LOCAL ROLE service_role;
   RETURN QUERY
   SELECT
     o.item_name,
@@ -228,6 +236,7 @@ RETURNS TABLE (
   total_sales NUMERIC
 ) AS $$
 BEGIN
+  SET LOCAL ROLE service_role;
   RETURN QUERY
   WITH all_sales AS (
     SELECT payment_mode, total AS sales_amount FROM public.orders
@@ -249,6 +258,7 @@ RETURNS TABLE (
   total_savings NUMERIC
 ) AS $$
 BEGIN
+  SET LOCAL ROLE service_role;
   RETURN QUERY
   WITH months AS (
     SELECT TO_CHAR(d, 'YYYY-MM') AS month
@@ -275,6 +285,7 @@ RETURNS TABLE (
   item_count BIGINT
 ) AS $$
 BEGIN
+  SET LOCAL ROLE service_role;
   RETURN QUERY
   SELECT
     CASE WHEN is_available THEN 'Available' ELSE 'Unavailable' END AS status,
