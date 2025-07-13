@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from 'sonner';
-import { Users, Send, Shield, Database, BarChart3, UserCheck } from 'lucide-react';
+import { Users, UserPlus, Shield, Database, BarChart3, UserCheck, Eye, EyeOff } from 'lucide-react';
 
 type AppRole = 'user' | 'data_entry' | 'reports_viewer' | 'super_admin';
 
@@ -19,12 +19,28 @@ interface UserWithRole {
   role: AppRole;
 }
 
+interface NewUserData {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  role: AppRole;
+}
+
 const UserManagementTab = () => {
   const { user } = useAuth();
   const [users, setUsers] = useState<UserWithRole[]>([]);
   const [loading, setLoading] = useState(true);
-  const [inviteEmail, setInviteEmail] = useState('');
-  const [isInviting, setIsInviting] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  
+  const [newUser, setNewUser] = useState<NewUserData>({
+    email: '',
+    password: '',
+    firstName: '',
+    lastName: '',
+    role: 'user'
+  });
 
   const fetchUsersAndRoles = async () => {
     setLoading(true);
@@ -51,23 +67,53 @@ const UserManagementTab = () => {
     fetchUsersAndRoles();
   }, []);
 
-  const handleInviteUser = async (e: React.FormEvent) => {
+  const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inviteEmail) {
-      toast.error('Please enter an email address to send an invitation.');
+    
+    if (!newUser.email || !newUser.password || !newUser.firstName || !newUser.lastName) {
+      toast.error('Please fill in all required fields.');
       return;
     }
-    setIsInviting(true);
+
+    setIsCreating(true);
+    
     try {
-      // Using the admin API through a Supabase function would be ideal here
-      // For now, we'll create a placeholder user invitation system
-      toast.info('User invitation functionality needs to be implemented with admin privileges');
-      setInviteEmail('');
+      // Call the edge function to create user with admin privileges
+      const { data, error } = await supabase.functions.invoke('create-user', {
+        body: {
+          email: newUser.email,
+          password: newUser.password,
+          firstName: newUser.firstName,
+          lastName: newUser.lastName,
+          role: newUser.role
+        }
+      });
+
+      if (error) {
+        console.error('Error creating user:', error);
+        toast.error(error.message || 'Failed to create user.');
+        return;
+      }
+
+      toast.success(`User ${newUser.email} created successfully with role: ${newUser.role}`);
+      
+      // Reset form
+      setNewUser({
+        email: '',
+        password: '',
+        firstName: '',
+        lastName: '',
+        role: 'user'
+      });
+      
+      // Refresh users list
+      fetchUsersAndRoles();
+      
     } catch (error: any) {
-      console.error('Error inviting user:', error);
-      toast.error(error.message || 'Failed to send invitation.');
+      console.error('Error creating user:', error);
+      toast.error(error.message || 'Failed to create user.');
     } finally {
-      setIsInviting(false);
+      setIsCreating(false);
     }
   };
 
@@ -81,6 +127,15 @@ const UserManagementTab = () => {
       console.error('Error updating role:', error);
       toast.error(error.message || 'Failed to update role.');
     }
+  };
+
+  const generatePassword = () => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+    let password = '';
+    for (let i = 0; i < 12; i++) {
+      password += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    setNewUser(prev => ({ ...prev, password }));
   };
 
   const getRoleIcon = (role: AppRole) => {
@@ -120,24 +175,100 @@ const UserManagementTab = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Invite New User</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <UserPlus className="h-5 w-5" />
+            Create New User
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleInviteUser} className="flex items-end gap-4">
-            <div className="flex-grow space-y-2">
-              <Label htmlFor="invite-email">Email Address</Label>
+          <form onSubmit={handleCreateUser} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="firstName">First Name</Label>
+                <Input
+                  id="firstName"
+                  type="text"
+                  placeholder="John"
+                  value={newUser.firstName}
+                  onChange={(e) => setNewUser(prev => ({ ...prev, firstName: e.target.value }))}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="lastName">Last Name</Label>
+                <Input
+                  id="lastName"
+                  type="text"
+                  placeholder="Doe"
+                  value={newUser.lastName}
+                  onChange={(e) => setNewUser(prev => ({ ...prev, lastName: e.target.value }))}
+                  required
+                />
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="email">Email Address</Label>
               <Input
-                id="invite-email"
+                id="email"
                 type="email"
                 placeholder="user@example.com"
-                value={inviteEmail}
-                onChange={(e) => setInviteEmail(e.target.value)}
+                value={newUser.email}
+                onChange={(e) => setNewUser(prev => ({ ...prev, email: e.target.value }))}
                 required
               />
             </div>
-            <Button type="submit" disabled={isInviting}>
-              <Send className="h-4 w-4 mr-2" />
-              {isInviting ? 'Sending...' : 'Send Invitation'}
+            
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <div className="flex gap-2">
+                <div className="relative flex-grow">
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Enter password"
+                    value={newUser.password}
+                    onChange={(e) => setNewUser(prev => ({ ...prev, password: e.target.value }))}
+                    required
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7 p-0"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </Button>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={generatePassword}
+                >
+                  Generate
+                </Button>
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="role">Role</Label>
+              <Select value={newUser.role} onValueChange={(value: AppRole) => setNewUser(prev => ({ ...prev, role: value }))}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="user">User</SelectItem>
+                  <SelectItem value="data_entry">Data Entry</SelectItem>
+                  <SelectItem value="reports_viewer">Reports Viewer</SelectItem>
+                  <SelectItem value="super_admin">Super Admin</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <Button type="submit" disabled={isCreating} className="w-full">
+              <UserPlus className="h-4 w-4 mr-2" />
+              {isCreating ? 'Creating User...' : 'Create User'}
             </Button>
           </form>
         </CardContent>
