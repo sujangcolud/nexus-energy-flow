@@ -84,7 +84,7 @@ const ChargingTab = () => {
 
   useEffect(() => {
     fetchSessions();
-  }, [user]);
+  }, [user, page, range]);
 
   const calculateTotal = () => {
     let percentageAmount = 0;
