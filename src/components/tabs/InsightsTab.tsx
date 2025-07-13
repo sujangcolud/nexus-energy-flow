@@ -435,6 +435,33 @@ const InsightsTab = () => {
         <h2 className="text-2xl font-bold text-gray-900">Business Analytics</h2>
       </div>
 
+      {/* Account Balances */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Account Balances</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="border rounded-lg p-4">
+              <h4 className="font-medium text-gray-900">Cash Balance (Cash in hand)</h4>
+              <p className="text-2xl font-bold text-gray-900">NRs. {data.cashBalance.toLocaleString()}</p>
+            </div>
+            <div className="border rounded-lg p-4">
+              <h4 className="font-medium text-gray-900">Esewa Balance</h4>
+              <p className="text-2xl font-bold text-gray-900">NRs. {data.esewaBalance.toLocaleString()}</p>
+            </div>
+            <div className="border rounded-lg p-4">
+              <h4 className="font-medium text-gray-900">Fonepay (Bank Balance)</h4>
+              <p className="text-2xl font-bold text-gray-900">NRs. {data.fonepayBalance.toLocaleString()}</p>
+            </div>
+            <div className="border rounded-lg p-4">
+              <h4 className="font-medium text-gray-900">Cooperative Balance</h4>
+              <p className="text-2xl font-bold text-gray-900">NRs. {data.cooperativeBalance.toLocaleString()}</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Key Metrics Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {metrics.map((metric, index) => {
@@ -717,33 +744,6 @@ const InsightsTab = () => {
           </CardContent>
         </Card>
       </div>
-
-      {/* Account Balances */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Account Balances</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="border rounded-lg p-4">
-              <h4 className="font-medium text-gray-900">Cash Balance (Cash in hand)</h4>
-              <p className="text-2xl font-bold text-gray-900">NRs. {data.cashBalance.toLocaleString()}</p>
-            </div>
-            <div className="border rounded-lg p-4">
-              <h4 className="font-medium text-gray-900">Esewa Balance</h4>
-              <p className="text-2xl font-bold text-gray-900">NRs. {data.esewaBalance.toLocaleString()}</p>
-            </div>
-            <div className="border rounded-lg p-4">
-              <h4 className="font-medium text-gray-900">Fonepay (Bank Balance)</h4>
-              <p className="text-2xl font-bold text-gray-900">NRs. {data.fonepayBalance.toLocaleString()}</p>
-            </div>
-            <div className="border rounded-lg p-4">
-              <h4 className="font-medium text-gray-900">Cooperative Balance</h4>
-              <p className="text-2xl font-bold text-gray-900">NRs. {data.cooperativeBalance.toLocaleString()}</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 };
