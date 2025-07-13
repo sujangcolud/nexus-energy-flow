@@ -29,28 +29,82 @@ export default async (req: Request) => {
 
   let response: string;
 
-  if (question.toLowerCase().includes("how many users")) {
-    const { count, error } = await supabase
-      .from("users")
-      .select("*", { count: "exact", head: true });
+  if (question.toLowerCase().includes("monthly financial summary")) {
+    const { data, error } = await supabase.rpc("get_monthly_financial_summary");
     if (error) {
-      response = "Sorry, I couldn't fetch the number of users.";
+      response = "Sorry, I couldn't fetch the monthly financial summary.";
     } else {
-      response = `There are ${count} users.`;
+      response = JSON.stringify(data, null, 2);
     }
-  } else if (question.toLowerCase().includes("total revenue")) {
-    const { data, error } = await supabase.rpc("get_total_revenue");
+  } else if (question.toLowerCase().includes("income breakdown")) {
+    const { data, error } = await supabase.rpc("get_income_breakdown");
     if (error) {
-      response = "Sorry, I couldn't fetch the total revenue.";
+      response = "Sorry, I couldn't fetch the income breakdown.";
     } else {
-      response = `The total revenue is $${data.toFixed(2)}.`;
+      response = JSON.stringify(data, null, 2);
     }
-  } else if (question.toLowerCase().includes("total expenses")) {
-    const { data, error } = await supabase.rpc("get_total_expenses");
+  } else if (question.toLowerCase().includes("expense categorization")) {
+    const { data, error } = await supabase.rpc("get_expense_categorization");
     if (error) {
-      response = "Sorry, I couldn't fetch the total expenses.";
+      response = "Sorry, I couldn't fetch the expense categorization.";
     } else {
-      response = `The total expenses are $${data.toFixed(2)}.`;
+      response = JSON.stringify(data, null, 2);
+    }
+  } else if (question.toLowerCase().includes("monthly deposits and withdrawals")) {
+    const { data, error } = await supabase.rpc("get_monthly_deposits_withdrawals");
+    if (error) {
+      response = "Sorry, I couldn't fetch the monthly deposits and withdrawals.";
+    } else {
+      response = JSON.stringify(data, null, 2);
+    }
+  } else if (question.toLowerCase().includes("new user growth")) {
+    const { data, error } = await supabase.rpc("get_new_user_growth");
+    if (error) {
+      response = "Sorry, I couldn't fetch the new user growth.";
+    } else {
+      response = JSON.stringify(data, null, 2);
+    }
+  } else if (question.toLowerCase().includes("user role distribution")) {
+    const { data, error } = await supabase.rpc("get_user_role_distribution");
+    if (error) {
+      response = "Sorry, I couldn't fetch the user role distribution.";
+    } else {
+      response = JSON.stringify(data, null, 2);
+    }
+  } else if (question.toLowerCase().includes("top spenders")) {
+    const { data, error } = await supabase.rpc("get_top_spenders", { limit_count: 5 });
+    if (error) {
+      response = "Sorry, I couldn't fetch the top spenders.";
+    } else {
+      response = JSON.stringify(data, null, 2);
+    }
+  } else if (question.toLowerCase().includes("popular products")) {
+    const { data, error } = await supabase.rpc("get_popular_products");
+    if (error) {
+      response = "Sorry, I couldn't fetch the popular products.";
+    } else {
+      response = JSON.stringify(data, null, 2);
+    }
+  } else if (question.toLowerCase().includes("sales by payment mode")) {
+    const { data, error } = await supabase.rpc("get_sales_by_payment_mode");
+    if (error) {
+      response = "Sorry, I couldn't fetch the sales by payment mode.";
+    } else {
+      response = JSON.stringify(data, null, 2);
+    }
+  } else if (question.toLowerCase().includes("cooperative savings trend")) {
+    const { data, error } = await supabase.rpc("get_cooperative_savings_trend");
+    if (error) {
+      response = "Sorry, I couldn't fetch the cooperative savings trend.";
+    } else {
+      response = JSON.stringify(data, null, 2);
+    }
+  } else if (question.toLowerCase().includes("menu item availability")) {
+    const { data, error } = await supabase.rpc("get_menu_item_availability");
+    if (error) {
+      response = "Sorry, I couldn't fetch the menu item availability.";
+    } else {
+      response = JSON.stringify(data, null, 2);
     }
   } else {
     response = "Sorry, I don't understand that question.";
