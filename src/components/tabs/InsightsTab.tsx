@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { BarChart3, TrendingUp, TrendingDown, DollarSign, Users, Activity, Zap, ShoppingBag, CreditCard, PiggyBank } from 'lucide-react';
+import { BarChart3, TrendingUp, TrendingDown, DollarSign, Users, Activity, Zap, ShoppingBag, CreditCard, PiggyBank, UtensilsCrossed, Receipt, Wallet } from 'lucide-react';
 
 interface AnalyticsData {
   totalRevenue: number;
@@ -21,6 +21,20 @@ interface AnalyticsData {
   recurringExpenses: number;
   topSellingItems: Array<{ name: string; quantity: number; revenue: number }>;
   categoryBreakdown: Record<string, number>;
+  // New analytics data
+  menuCategoryAnalysis: Record<string, { revenue: number; quantity: number; orders: number }>;
+  paymentMethodAnalysis: {
+    orders: Record<string, { count: number; revenue: number }>;
+    charging: Record<string, { count: number; revenue: number }>;
+    expenses: Record<string, { count: number; amount: number }>;
+    overall: Record<string, { count: number; amount: number }>;
+  };
+  expenseCategoryAnalysis: Record<string, { 
+    amount: number; 
+    count: number; 
+    percentage: number;
+    paymentModes: Record<string, number>;
+  }>;
   dailyAverage: {
     revenue: number;
     orders: number;
@@ -52,6 +66,14 @@ const InsightsTab = () => {
     recurringExpenses: 0,
     topSellingItems: [],
     categoryBreakdown: {},
+    menuCategoryAnalysis: {},
+    paymentMethodAnalysis: {
+      orders: {},
+      charging: {},
+      expenses: {},
+      overall: {}
+    },
+    expenseCategoryAnalysis: {},
     dailyAverage: { revenue: 0, orders: 0, chargingSessions: 0 },
     monthlyGrowth: { revenue: 0, orders: 0 }
   });
@@ -73,7 +95,8 @@ const InsightsTab = () => {
         depositsData,
         withdrawalsData,
         cooperativeData,
-        staticExpensesData
+        staticExpensesData,
+        menuItemsData
       ] = await Promise.all([
         supabase.from('orders').select('*'),
         supabase.from('charging_sessions').select('*'),
@@ -81,7 +104,8 @@ const InsightsTab = () => {
         supabase.from('deposits').select('*'),
         supabase.from('withdrawals').select('*'),
         supabase.from('cooperative_savings').select('*'),
-        supabase.from('static_expenses').select('*')
+        supabase.from('static_expenses').select('*'),
+        supabase.from('menu_items').select('*')
       ]);
 
       const orders = ordersData.data || [];
@@ -91,8 +115,9 @@ const InsightsTab = () => {
       const withdrawals = withdrawalsData.data || [];
       const cooperative = cooperativeData.data || [];
       const staticExpenses = staticExpensesData.data || [];
+      const menuItems = menuItemsData.data || [];
 
-      // Calculate metrics
+      // Calculate existing metrics
       const ordersRevenue = orders.reduce((sum, order) => sum + Number(order.total), 0);
       const chargingRevenue = chargingSessions.reduce((sum, session) => sum + Number(session.total_amount), 0);
       const totalRevenue = ordersRevenue + chargingRevenue;
@@ -148,6 +173,111 @@ const InsightsTab = () => {
         return acc;
       }, {});
 
+      // NEW: Menu Category Analysis
+      const menuCategoryAnalysis = orders.reduce((acc: any, order) => {
+        // Find the menu item to get its category
+        const menuItem = menuItems.find(item => item.name === order.item_name);
+        const category = menuItem ? menuItem.category : 'Uncategorized';
+        
+        if (!acc[category]) {
+          acc[category] = { revenue: 0, quantity: 0, orders: 0 };
+        }
+        
+        acc[category].revenue += Number(order.total);
+        acc[category].quantity += order.quantity;
+        acc[category].orders += 1;
+        
+        return acc;
+      }, {});
+
+      // NEW: Payment Method Analysis
+      const paymentMethodAnalysis = {
+        orders: {} as Record<string, { count: number; revenue: number }>,
+        charging: {} as Record<string, { count: number; revenue: number }>,
+        expenses: {} as Record<string, { count: number; amount: number }>,
+        overall: {} as Record<string, { count: number; amount: number }>
+      };
+
+      // Orders payment analysis
+      orders.forEach(order => {
+        const mode = order.payment_mode;
+        if (!paymentMethodAnalysis.orders[mode]) {
+          paymentMethodAnalysis.orders[mode] = { count: 0, revenue: 0 };
+        }
+        paymentMethodAnalysis.orders[mode].count += 1;
+        paymentMethodAnalysis.orders[mode].revenue += Number(order.total);
+      });
+
+      // Charging sessions payment analysis
+      chargingSessions.forEach(session => {
+        const mode = session.payment_mode;
+        if (!paymentMethodAnalysis.charging[mode]) {
+          paymentMethodAnalysis.charging[mode] = { count: 0, revenue: 0 };
+        }
+        paymentMethodAnalysis.charging[mode].count += 1;
+        paymentMethodAnalysis.charging[mode].revenue += Number(session.total_amount);
+      });
+
+      // Expenses payment analysis
+      expenses.forEach(expense => {
+        const mode = expense.payment_mode;
+        if (!paymentMethodAnalysis.expenses[mode]) {
+          paymentMethodAnalysis.expenses[mode] = { count: 0, amount: 0 };
+        }
+        paymentMethodAnalysis.expenses[mode].count += 1;
+        paymentMethodAnalysis.expenses[mode].amount += Number(expense.amount);
+      });
+
+      // Overall payment analysis
+      const allPaymentModes = new Set([
+        ...Object.keys(paymentMethodAnalysis.orders),
+        ...Object.keys(paymentMethodAnalysis.charging),
+        ...Object.keys(paymentMethodAnalysis.expenses)
+      ]);
+
+      allPaymentModes.forEach(mode => {
+        const ordersData = paymentMethodAnalysis.orders[mode] || { count: 0, revenue: 0 };
+        const chargingData = paymentMethodAnalysis.charging[mode] || { count: 0, revenue: 0 };
+        const expensesData = paymentMethodAnalysis.expenses[mode] || { count: 0, amount: 0 };
+        
+        paymentMethodAnalysis.overall[mode] = {
+          count: ordersData.count + chargingData.count + expensesData.count,
+          amount: ordersData.revenue + chargingData.revenue - expensesData.amount
+        };
+      });
+
+      // NEW: Enhanced Expense Category Analysis
+      const expenseCategoryAnalysis = expenses.reduce((acc: any, expense) => {
+        const category = expense.category;
+        const amount = Number(expense.amount);
+        const paymentMode = expense.payment_mode;
+        
+        if (!acc[category]) {
+          acc[category] = { 
+            amount: 0, 
+            count: 0, 
+            percentage: 0,
+            paymentModes: {}
+          };
+        }
+        
+        acc[category].amount += amount;
+        acc[category].count += 1;
+        
+        if (!acc[category].paymentModes[paymentMode]) {
+          acc[category].paymentModes[paymentMode] = 0;
+        }
+        acc[category].paymentModes[paymentMode] += amount;
+        
+        return acc;
+      }, {});
+
+      // Calculate percentages for expense categories
+      Object.keys(expenseCategoryAnalysis).forEach(category => {
+        expenseCategoryAnalysis[category].percentage = 
+          totalExpenses > 0 ? (expenseCategoryAnalysis[category].amount / totalExpenses) * 100 : 0;
+      });
+
       // Daily averages (assuming 30 days for calculation)
       const dailyAverage = {
         revenue: totalRevenue / 30,
@@ -178,6 +308,9 @@ const InsightsTab = () => {
         recurringExpenses: recurringExpensesTotal,
         topSellingItems,
         categoryBreakdown,
+        menuCategoryAnalysis,
+        paymentMethodAnalysis,
+        expenseCategoryAnalysis,
         dailyAverage,
         monthlyGrowth
       });
@@ -311,6 +444,100 @@ const InsightsTab = () => {
 
       {/* Detailed Analytics */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* NEW: Menu Category Analysis */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <UtensilsCrossed className="h-5 w-5" />
+              Menu Category Analysis
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {Object.keys(data.menuCategoryAnalysis).length > 0 ? (
+                Object.entries(data.menuCategoryAnalysis)
+                  .sort(([,a], [,b]) => (b as any).revenue - (a as any).revenue)
+                  .map(([category, stats]) => {
+                    const categoryStats = stats as { revenue: number; quantity: number; orders: number };
+                    return (
+                      <div key={category} className="border rounded-lg p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <h4 className="font-medium text-gray-900">{category}</h4>
+                          <span className="text-sm font-medium text-green-600">
+                            NRs. {categoryStats.revenue.toLocaleString()}
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4 text-sm text-gray-600">
+                          <div>
+                            <span className="text-gray-500">Quantity Sold:</span>
+                            <span className="ml-2 font-medium">{categoryStats.quantity}</span>
+                          </div>
+                          <div>
+                            <span className="text-gray-500">Orders:</span>
+                            <span className="ml-2 font-medium">{categoryStats.orders}</span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })
+              ) : (
+                <p className="text-gray-500 text-center py-4">No menu category data available</p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* NEW: Payment Method Analysis */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Wallet className="h-5 w-5" />
+              Payment Method Analysis
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {Object.keys(data.paymentMethodAnalysis.overall).length > 0 ? (
+                Object.entries(data.paymentMethodAnalysis.overall)
+                  .sort(([,a], [,b]) => Math.abs((b as any).amount) - Math.abs((a as any).amount))
+                  .map(([method, stats]) => {
+                    const methodStats = stats as { count: number; amount: number };
+                    return (
+                      <div key={method} className="border rounded-lg p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <h4 className="font-medium text-gray-900">{method}</h4>
+                          <span className={`text-sm font-medium ${methodStats.amount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                            NRs. {methodStats.amount.toLocaleString()}
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-3 gap-2 text-xs text-gray-600">
+                          <div>
+                            <span className="text-gray-500">Orders:</span>
+                            <span className="ml-1 font-medium">
+                              {data.paymentMethodAnalysis.orders[method]?.count || 0}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-gray-500">Charging:</span>
+                            <span className="ml-1 font-medium">
+                              {data.paymentMethodAnalysis.charging[method]?.count || 0}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-gray-500">Total:</span>
+                            <span className="ml-1 font-medium">{methodStats.count}</span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })
+              ) : (
+                <p className="text-gray-500 text-center py-4">No payment method data available</p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Top Selling Items */}
         <Card>
           <CardHeader>
@@ -335,20 +562,57 @@ const InsightsTab = () => {
           </CardContent>
         </Card>
 
-        {/* Expense Categories */}
+        {/* NEW: Enhanced Expense Category Analysis */}
         <Card>
           <CardHeader>
-            <CardTitle>Expense Breakdown</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Receipt className="h-5 w-5" />
+              Expense Category Analysis
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {Object.keys(data.categoryBreakdown).length > 0 ? (
-                Object.entries(data.categoryBreakdown).map(([category, amount]) => (
-                  <div key={category} className="flex items-center justify-between py-2 border-b last:border-b-0">
-                    <span className="font-medium">{category}</span>
-                    <span className="text-sm font-medium">NRs. {amount.toLocaleString()}</span>
-                  </div>
-                ))
+              {Object.keys(data.expenseCategoryAnalysis).length > 0 ? (
+                Object.entries(data.expenseCategoryAnalysis)
+                  .sort(([,a], [,b]) => (b as any).amount - (a as any).amount)
+                  .map(([category, stats]) => {
+                    const expenseStats = stats as { 
+                      amount: number; 
+                      count: number; 
+                      percentage: number;
+                      paymentModes: Record<string, number>;
+                    };
+                    return (
+                      <div key={category} className="border rounded-lg p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <h4 className="font-medium text-gray-900">{category}</h4>
+                          <div className="text-right">
+                            <span className="text-sm font-medium text-red-600">
+                              NRs. {expenseStats.amount.toLocaleString()}
+                            </span>
+                            <span className="text-xs text-gray-500 ml-2">
+                              ({expenseStats.percentage.toFixed(1)}%)
+                            </span>
+                          </div>
+                        </div>
+                        <div className="mb-2">
+                          <span className="text-sm text-gray-500">
+                            {expenseStats.count} transaction{expenseStats.count !== 1 ? 's' : ''}
+                          </span>
+                        </div>
+                        <div className="text-xs text-gray-600">
+                          <span className="text-gray-500">Payment Methods:</span>
+                          <div className="grid grid-cols-2 gap-1 mt-1">
+                            {Object.entries(expenseStats.paymentModes).map(([method, amount]) => (
+                              <span key={method} className="text-xs">
+                                {method}: NRs. {(amount as number).toLocaleString()}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })
               ) : (
                 <p className="text-gray-500 text-center py-4">No expense data available</p>
               )}
