@@ -44,6 +44,10 @@ interface AnalyticsData {
     revenue: number;
     orders: number;
   };
+  cashBalance: number;
+  esewaBalance: number;
+  fonepayBalance: number;
+  cooperativeBalance: number;
 }
 
 const InsightsTab = () => {
@@ -75,7 +79,11 @@ const InsightsTab = () => {
     },
     expenseCategoryAnalysis: {},
     dailyAverage: { revenue: 0, orders: 0, chargingSessions: 0 },
-    monthlyGrowth: { revenue: 0, orders: 0 }
+    monthlyGrowth: { revenue: 0, orders: 0 },
+    cashBalance: 0,
+    esewaBalance: 0,
+    fonepayBalance: 0,
+    cooperativeBalance: 0,
   });
 
   useEffect(() => {
@@ -291,6 +299,23 @@ const InsightsTab = () => {
         orders: Math.random() * 15 - 5
       };
 
+      // Balance Calculations
+      const totalIncomeInCash = (paymentMethodAnalysis.orders['Cash']?.revenue || 0) + (paymentMethodAnalysis.charging['Cash']?.revenue || 0);
+      const totalExpenseInCash = paymentMethodAnalysis.expenses['Cash']?.amount || 0;
+      const cashBalance = totalIncomeInCash - totalExpenseInCash - totalWithdrawals - cooperativeSavings;
+
+      const totalIncomeInEsewa = (paymentMethodAnalysis.orders['Esewa']?.revenue || 0) + (paymentMethodAnalysis.charging['Esewa']?.revenue || 0);
+      const totalDepositsFromEsewa = deposits.filter(d => d.mode === 'Esewa').reduce((sum, d) => sum + Number(d.amount), 0);
+      const esewaBalance = totalIncomeInEsewa - totalDepositsFromEsewa;
+
+      const totalIncomeInFonepay = (paymentMethodAnalysis.orders['Fonepay']?.revenue || 0) + (paymentMethodAnalysis.charging['Fonepay']?.revenue || 0);
+      const withdrawalsFromBank = withdrawals.reduce((sum, w) => sum + Number(w.amount), 0);
+      const expenseFromFonepay = paymentMethodAnalysis.expenses['Fonepay']?.amount || 0;
+      const expenseFromCheque = paymentMethodAnalysis.expenses['Cheque']?.amount || 0;
+      const fonepayBalance = totalIncomeInFonepay - withdrawalsFromBank - expenseFromFonepay - expenseFromCheque;
+
+      const cooperativeBalance = cooperativeSavings - totalWithdrawals;
+
       setData({
         totalRevenue,
         totalExpenses,
@@ -312,7 +337,11 @@ const InsightsTab = () => {
         paymentMethodAnalysis,
         expenseCategoryAnalysis,
         dailyAverage,
-        monthlyGrowth
+        monthlyGrowth,
+        cashBalance,
+        esewaBalance,
+        fonepayBalance,
+        cooperativeBalance,
       });
 
     } catch (error) {
@@ -688,6 +717,33 @@ const InsightsTab = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Account Balances */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Account Balances</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="border rounded-lg p-4">
+              <h4 className="font-medium text-gray-900">Cash Balance (Cash in hand)</h4>
+              <p className="text-2xl font-bold text-gray-900">NRs. {data.cashBalance.toLocaleString()}</p>
+            </div>
+            <div className="border rounded-lg p-4">
+              <h4 className="font-medium text-gray-900">Esewa Balance</h4>
+              <p className="text-2xl font-bold text-gray-900">NRs. {data.esewaBalance.toLocaleString()}</p>
+            </div>
+            <div className="border rounded-lg p-4">
+              <h4 className="font-medium text-gray-900">Fonepay (Bank Balance)</h4>
+              <p className="text-2xl font-bold text-gray-900">NRs. {data.fonepayBalance.toLocaleString()}</p>
+            </div>
+            <div className="border rounded-lg p-4">
+              <h4 className="font-medium text-gray-900">Cooperative Balance</h4>
+              <p className="text-2xl font-bold text-gray-900">NRs. {data.cooperativeBalance.toLocaleString()}</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
