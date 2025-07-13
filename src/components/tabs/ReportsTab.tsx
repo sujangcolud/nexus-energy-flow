@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -54,7 +55,9 @@ interface StaticExpense {
   created_at: string;
 }
 
-const REPORT_COLUMN_ORDERS: Record<string, string[]> = {
+type ValidTableName = 'orders' | 'charging_sessions' | 'expenses' | 'deposits' | 'withdrawals' | 'cooperative_savings';
+
+const REPORT_COLUMN_ORDERS: Record<ValidTableName, string[]> = {
   orders: ['item_name', 'quantity', 'rate', 'total', 'payment_mode', 'order_date'],
   charging_sessions: ['total_amount', 'payment_mode', 'start_percentage', 'end_percentage', 'kcal', 'per_unit_rate', 'per_percent_rate', 'session_date'],
   expenses: ['description', 'category', 'amount', 'payment_mode', 'remarks', 'expense_date'],
@@ -66,7 +69,7 @@ const REPORT_COLUMN_ORDERS: Record<string, string[]> = {
 const EXCLUDED_KEYS_FROM_REPORTS = ['id', 'user_id', 'created_at', 'updated_at'];
 
 // New Component for Detailed View
-const DetailedReportView = ({ dataType, columns }: { dataType: string, columns: string[] }) => {
+const DetailedReportView = ({ dataType, columns }: { dataType: ValidTableName, columns: string[] }) => {
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -364,7 +367,7 @@ const ReportsTab = () => {
                 </TabsList>
                 {Object.entries(REPORT_COLUMN_ORDERS).map(([key, columns]) => (
                   <TabsContent key={key} value={key}>
-                    <DetailedReportView dataType={key} columns={columns} />
+                    <DetailedReportView dataType={key as ValidTableName} columns={columns} />
                   </TabsContent>
                 ))}
               </Tabs>
