@@ -443,12 +443,11 @@ const InsightsTab = () => {
       </div>
 
       {/* Detailed Analytics */}
-      <div className="lg:flex lg:gap-6">
-        <div className="lg:w-1/2 flex flex-col space-y-6">
-          {/* NEW: Menu Category Analysis */}
-          <Card className="flex-grow">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* NEW: Menu Category Analysis */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
               <UtensilsCrossed className="h-5 w-5" />
               Menu Category Analysis
             </CardTitle>
@@ -487,12 +486,11 @@ const InsightsTab = () => {
             </div>
           </CardContent>
         </Card>
-        </div>
-        <div className="lg:w-1/2 flex flex-col space-y-6">
-          {/* NEW: Payment Method Analysis */}
-          <Card className="flex-grow">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+
+        {/* NEW: Payment Method Analysis */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
               <Wallet className="h-5 w-5" />
               Payment Method Analysis
             </CardTitle>
@@ -689,7 +687,6 @@ const InsightsTab = () => {
             </div>
           </CardContent>
         </Card>
-        </div>
       </div>
     </div>
   );
