@@ -3,7 +3,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { supabase } from '@/integrations/supabase/client';
 import { User, Session } from '@supabase/supabase-js';
 
-export type UserRole = 'user' | 'super_user' | 'super_admin';
+export type UserRole = 'user' | 'data_entry' | 'reports_viewer' | 'super_admin';
 
 export interface AppUser {
   id: string;
@@ -74,7 +74,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           id: userId,
           email: session?.user?.email || '',
           name: 'User',
-          role: 'user',
+          role: (userRole?.role as UserRole) || 'user',
         };
         setUser(basicUser);
       }
@@ -181,8 +181,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     
     const roleHierarchy = {
       'user': 1,
-      'super_user': 2,
-      'super_admin': 3
+      'data_entry': 2,
+      'reports_viewer': 3,
+      'super_admin': 4
     };
     
     return roleHierarchy[user.role] >= roleHierarchy[requiredRole];

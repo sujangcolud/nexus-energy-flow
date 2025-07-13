@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -8,9 +9,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from 'sonner';
-import { Users, Send } from 'lucide-react';
+import { Users, Send, Shield, Database, BarChart3, UserCheck } from 'lucide-react';
 
-type AppRole = 'user' | 'admin' | 'super_admin';
+type AppRole = 'user' | 'data_entry' | 'reports_viewer' | 'super_admin';
 
 interface UserWithRole {
   id: string;
@@ -28,7 +29,6 @@ const UserManagementTab = () => {
   const fetchUsersAndRoles = async () => {
     setLoading(true);
     try {
-      // We need to call a Supabase function to get all users, as this is a protected operation.
       const { data, error } = await supabase.rpc('get_all_users_with_roles');
       if (error) throw error;
       setUsers(data || []);
@@ -53,7 +53,7 @@ const UserManagementTab = () => {
     setIsInviting(true);
     try {
       const { error } = await supabase.auth.inviteUserByEmail(inviteEmail, {
-        data: { role: 'user' }, // New users default to 'user' role
+        data: { role: 'user' },
       });
       if (error) throw error;
       toast.success(`Invitation sent to ${inviteEmail}`);
@@ -68,14 +68,41 @@ const UserManagementTab = () => {
 
   const handleRoleChange = async (userId: string, newRole: AppRole) => {
     try {
-      // We need a Supabase function to update roles, as this is a protected operation.
       const { error } = await supabase.rpc('update_user_role', { user_id_to_update: userId, new_role: newRole });
       if (error) throw error;
       toast.success('User role updated successfully.');
-      fetchUsersAndRoles(); // Refresh the list
+      fetchUsersAndRoles();
     } catch (error: any) {
       console.error('Error updating role:', error);
       toast.error(error.message || 'Failed to update role.');
+    }
+  };
+
+  const getRoleIcon = (role: AppRole) => {
+    switch (role) {
+      case 'super_admin':
+        return <Shield className="h-4 w-4 text-purple-600" />;
+      case 'data_entry':
+        return <Database className="h-4 w-4 text-blue-600" />;
+      case 'reports_viewer':
+        return <BarChart3 className="h-4 w-4 text-green-600" />;
+      default:
+        return <UserCheck className="h-4 w-4 text-gray-600" />;
+    }
+  };
+
+  const getRoleDescription = (role: AppRole) => {
+    switch (role) {
+      case 'super_admin':
+        return 'Full access to all features and user management';
+      case 'data_entry':
+        return 'Can manage orders, charging, expenses, deposits, withdrawals, and savings';
+      case 'reports_viewer':
+        return 'Can view reports, analytics, and import bulk data';
+      case 'user':
+        return 'Basic user access';
+      default:
+        return '';
     }
   };
 
@@ -113,6 +140,37 @@ const UserManagementTab = () => {
 
       <Card>
         <CardHeader>
+          <CardTitle>User Roles & Permissions</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <div className="p-4 border rounded-lg">
+              <div className="flex items-center gap-2 mb-2">
+                <Shield className="h-4 w-4 text-purple-600" />
+                <span className="font-semibold">Super Admin</span>
+              </div>
+              <p className="text-sm text-gray-600">Full access to all features and user management</p>
+            </div>
+            <div className="p-4 border rounded-lg">
+              <div className="flex items-center gap-2 mb-2">
+                <Database className="h-4 w-4 text-blue-600" />
+                <span className="font-semibold">Data Entry</span>
+              </div>
+              <p className="text-sm text-gray-600">Can manage orders, charging, expenses, deposits, withdrawals, and savings</p>
+            </div>
+            <div className="p-4 border rounded-lg col-span-1 md:col-span-2">
+              <div className="flex items-center gap-2 mb-2">
+                <BarChart3 className="h-4 w-4 text-green-600" />
+                <span className="font-semibold">Reports Viewer</span>
+              </div>
+              <p className="text-sm text-gray-600">Can view reports, analytics, and import bulk data</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
           <CardTitle>Existing Users</CardTitle>
         </CardHeader>
         <CardContent>
@@ -121,31 +179,40 @@ const UserManagementTab = () => {
               <TableRow>
                 <TableHead>Email</TableHead>
                 <TableHead>Role</TableHead>
+                <TableHead>Permissions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {loading ? (
-                <TableRow><TableCell colSpan={2} className="text-center">Loading users...</TableCell></TableRow>
+                <TableRow><TableCell colSpan={3} className="text-center">Loading users...</TableCell></TableRow>
               ) : (
                 users.map((u) => (
                   <TableRow key={u.id}>
                     <TableCell className="font-medium">{u.email}</TableCell>
                     <TableCell>
-                      <Select
-                        value={u.role}
-                        onValueChange={(newRole: AppRole) => handleRoleChange(u.id, newRole)}
-                        // Disable changing your own role or if the user is the only super_admin
-                        disabled={u.id === user?.id}
-                      >
-                        <SelectTrigger className="w-[180px]">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="user">User</SelectItem>
-                          <SelectItem value="admin">Admin</SelectItem>
-                          <SelectItem value="super_admin">Super Admin</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <div className="flex items-center gap-2">
+                        {getRoleIcon(u.role)}
+                        <Select
+                          value={u.role}
+                          onValueChange={(newRole: AppRole) => handleRoleChange(u.id, newRole)}
+                          disabled={u.id === user?.id}
+                        >
+                          <SelectTrigger className="w-[180px]">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="user">User</SelectItem>
+                            <SelectItem value="data_entry">Data Entry</SelectItem>
+                            <SelectItem value="reports_viewer">Reports Viewer</SelectItem>
+                            <SelectItem value="super_admin">Super Admin</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-sm text-gray-600">
+                        {getRoleDescription(u.role)}
+                      </span>
                     </TableCell>
                   </TableRow>
                 ))

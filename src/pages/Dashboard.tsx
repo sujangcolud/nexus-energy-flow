@@ -1,8 +1,8 @@
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Outlet, useLocation, NavLink, Link, useNavigate } from 'react-router-dom'; // Import useNavigate
-import { LogOut, User, ShoppingCart, Zap, Receipt, CreditCard, Banknote, Users, BarChart3, FileText, UtensilsCrossed, Database, ArrowLeft, UserCog } from 'lucide-react';
+import { Outlet, useLocation, NavLink, Link, useNavigate } from 'react-router-dom';
+import { LogOut, User, ShoppingCart, Zap, Receipt, CreditCard, Banknote, Users, BarChart3, FileText, UtensilsCrossed, Database, ArrowLeft, UserCog, Upload } from 'lucide-react';
 
 // Tab components are now rendered by routes, but their types/icons might be needed for nav items.
 import OrdersTab from '@/components/tabs/OrdersTab';
@@ -31,26 +31,25 @@ const Dashboard = () => {
     }
   };
 
-  // Define items for navigation cards. 'path' will be used for <Link>
-  // The 'component' property is no longer used here for rendering, but kept for consistency or future use.
+  // Define role-based navigation items
   const getNavItems = () => {
     const allItems = [
-      // Data Entry
-      { id: 'orders', path: 'orders', label: 'Orders', icon: ShoppingCart, component: OrdersTab, roles: ['user', 'admin', 'super_admin'] },
-      { id: 'charging', path: 'charging', label: 'Charging', icon: Zap, component: ChargingTab, roles: ['user', 'admin', 'super_admin'] },
-      { id: 'expenses', path: 'expenses', label: 'Expenses', icon: Receipt, component: ExpensesTab, roles: ['user', 'admin', 'super_admin'] },
-      { id: 'deposits', path: 'deposits', label: 'Deposits', icon: CreditCard, component: DepositsTab, roles: ['user', 'admin', 'super_admin'] },
-      { id: 'withdrawals', path: 'withdrawals', label: 'Withdrawals', icon: Banknote, component: WithdrawalsTab, roles: ['user', 'admin', 'super_admin'] },
-      { id: 'cooperative', path: 'cooperative', label: 'Savings', icon: Users, component: CooperativeSavingsTab, roles: ['user', 'admin', 'super_admin'] },
-      { id: 'data-input', path: 'data-input', label: 'Data Input', icon: Database, component: DataInputTab, roles: ['user', 'admin', 'super_admin'] },
+      // Data Entry - accessible to data_entry, super_admin
+      { id: 'orders', path: 'orders', label: 'Orders', icon: ShoppingCart, component: OrdersTab, roles: ['data_entry', 'super_admin'] },
+      { id: 'charging', path: 'charging', label: 'Charging', icon: Zap, component: ChargingTab, roles: ['data_entry', 'super_admin'] },
+      { id: 'expenses', path: 'expenses', label: 'Expenses', icon: Receipt, component: ExpensesTab, roles: ['data_entry', 'super_admin'] },
+      { id: 'deposits', path: 'deposits', label: 'Deposits', icon: CreditCard, component: DepositsTab, roles: ['data_entry', 'super_admin'] },
+      { id: 'withdrawals', path: 'withdrawals', label: 'Withdrawals', icon: Banknote, component: WithdrawalsTab, roles: ['data_entry', 'super_admin'] },
+      { id: 'cooperative', path: 'cooperative', label: 'Savings', icon: Users, component: CooperativeSavingsTab, roles: ['data_entry', 'super_admin'] },
 
-      // Admin
-      { id: 'reports', path: 'reports', label: 'Reports', icon: FileText, component: ReportsTab, roles: ['admin', 'super_admin'] },
-      { id: 'reports-view', path: 'reports-view', label: 'View Reports', icon: FileText, component: ReportsViewTab, roles: ['admin', 'super_admin'] },
-      { id: 'insights', path: 'insights', label: 'Analytics', icon: BarChart3, component: InsightsTab, roles: ['admin', 'super_admin'] },
+      // Reports and Analytics - accessible to reports_viewer, super_admin
+      { id: 'reports', path: 'reports', label: 'Reports', icon: FileText, component: ReportsTab, roles: ['reports_viewer', 'super_admin'] },
+      { id: 'reports-view', path: 'reports-view', label: 'View Reports', icon: FileText, component: ReportsViewTab, roles: ['reports_viewer', 'super_admin'] },
+      { id: 'insights', path: 'insights', label: 'Analytics', icon: BarChart3, component: InsightsTab, roles: ['reports_viewer', 'super_admin'] },
+      { id: 'data-input', path: 'data-input', label: 'Bulk Data Import', icon: Upload, component: DataInputTab, roles: ['reports_viewer', 'super_admin'] },
 
-      // Super Admin
-      { id: 'menu', path: 'menu', label: 'Menu', icon: UtensilsCrossed, component: MenuManagementTab, roles: ['super_admin'] },
+      // Super Admin Only
+      { id: 'menu', path: 'menu', label: 'Menu Management', icon: UtensilsCrossed, component: MenuManagementTab, roles: ['super_admin'] },
       { id: 'user_management', path: 'user-management', label: 'User Management', icon: UserCog, component: UserManagementTab, roles: ['super_admin'] },
     ];
 
@@ -61,14 +60,68 @@ const Dashboard = () => {
 
   const navItems = getNavItems();
 
-  // Determine if a sub-page is active. A more robust way might be to check against specific paths.
-  // For now, if pathname is not just "/dashboard" or "/dashboard/", it's a sub-page.
   const isSubPageActive = location.pathname !== '/dashboard' && location.pathname !== '/dashboard/';
-
-  // Find current page title for mobile view
   const currentPage = navItems.find(item => location.pathname.includes(`/dashboard/${item.path}`));
   const currentPageTitle = currentPage?.label || 'Dashboard';
 
+  // Show access denied message if user has no accessible items
+  if (userRole && navItems.length === 0) {
+    return (
+      <div className="min-h-screen bg-background text-foreground">
+        <header className="bg-card shadow-md border-b border-border sticky top-0 z-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center py-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg shadow-sm bg-primary text-primary-foreground">
+                  <BarChart3 className="h-6 w-6" />
+                </div>
+                <div>
+                  <h1 className="text-xl font-bold text-foreground">EcoSoft Pro</h1>
+                  <p className="text-sm text-gray-500">Business Management System</p>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <User className="h-4 w-4" />
+                  <span>{user?.email}</span>
+                  {userRole && (
+                    <span className="bg-primary/10 text-primary px-2 py-1 rounded text-xs font-medium">
+                      {userRole.replace('_', ' ')}
+                    </span>
+                  )}
+                </div>
+                
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleSignOut}
+                  className="flex items-center gap-2"
+                >
+                  <LogOut className="h-4 w-4" />
+                  Sign Out
+                </Button>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <Card className="max-w-md mx-auto">
+            <CardContent className="flex flex-col items-center justify-center p-8 space-y-4">
+              <div className="p-4 rounded-full bg-yellow-100 text-yellow-600">
+                <User className="h-8 w-8" />
+              </div>
+              <h2 className="text-xl font-semibold text-gray-900">Access Pending</h2>
+              <p className="text-center text-gray-600">
+                Your account role ({userRole.replace('_', ' ')}) is being configured. Please contact your administrator for access.
+              </p>
+            </CardContent>
+          </Card>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -87,7 +140,7 @@ const Dashboard = () => {
               }>
                 {({ isActive }) => (
                   <>
-                    <div className={`p-2 rounded-lg shadow-sm transition-all group-hover:shadow-md ${isActive ? 'bg-primary text-primary-foreground' : 'bg-primary text-primary-foreground'}`}> {/* Keep logo bg consistent or style if needed */}
+                    <div className="p-2 rounded-lg shadow-sm transition-all group-hover:shadow-md bg-primary text-primary-foreground">
                       <BarChart3 className="h-6 w-6" />
                     </div>
                     <div>
@@ -105,7 +158,7 @@ const Dashboard = () => {
                 <span>{user?.email}</span>
                 {userRole && (
                   <span className="bg-primary/10 text-primary px-2 py-1 rounded text-xs font-medium">
-                    {userRole}
+                    {userRole.replace('_', ' ')}
                   </span>
                 )}
               </div>
@@ -140,19 +193,16 @@ const Dashboard = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-8">
             {navItems.map((item) => {
               const Icon = item.icon;
-              // Active state for cards is not strictly needed if they only show on the base dashboard page
-              // However, if we wanted to highlight the "Dashboard" link itself in a global nav, this logic would be elsewhere.
-              // For now, cards don't have an "active" state themselves, they are pure navigation triggers.
               return (
                 <Link key={item.id} to={item.path} className="block group">
                   <Card
-                    className={`cursor-pointer transition-all duration-200 ease-in-out hover:shadow-xl hover:scale-105 bg-card hover:bg-accent/50 h-full`}
+                    className="cursor-pointer transition-all duration-200 ease-in-out hover:shadow-xl hover:scale-105 bg-card hover:bg-accent/50 h-full"
                   >
                     <CardContent className="flex flex-col items-center justify-center p-6 space-y-4 h-full">
-                      <div className={`p-3.5 rounded-full transition-colors duration-200 ease-in-out bg-accent group-hover:bg-primary/10 text-primary`}>
+                      <div className="p-3.5 rounded-full transition-colors duration-200 ease-in-out bg-accent group-hover:bg-primary/10 text-primary">
                         <Icon className="h-7 w-7" />
                       </div>
-                      <p className={`text-center font-semibold transition-colors duration-200 ease-in-out text-foreground group-hover:text-primary`}>
+                      <p className="text-center font-semibold transition-colors duration-200 ease-in-out text-foreground group-hover:text-primary">
                         {item.label}
                       </p>
                     </CardContent>
@@ -162,7 +212,6 @@ const Dashboard = () => {
             })}
           </div>
         ) : (
-          // If on a sub-page, render the sub-page's content via Outlet
           <Outlet />
         )}
       </main>
