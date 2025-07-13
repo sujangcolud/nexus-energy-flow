@@ -64,7 +64,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         success: true, 
-        user: newUser.user,
+        user_id: newUserId,
         message: `User created successfully with role: ${role}`
       }),
       {
