@@ -267,7 +267,22 @@ const ReportsTab = () => {
   };
 
   const downloadReport = (report: ReportData) => {
-    // ... download logic
+    try {
+      const csvData = JSON.stringify(report.report_data, null, 2);
+      const blob = new Blob([csvData], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${report.report_type}_report_${format(new Date(report.created_at), 'yyyy-MM-dd')}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success('Report downloaded successfully!');
+    } catch (error) {
+      console.error('Error downloading report:', error);
+      toast.error('Failed to download report');
+    }
   };
 
   const handleViewReport = (report: ReportData) => {
@@ -289,11 +304,45 @@ const ReportsTab = () => {
   };
 
   const addStaticExpense = async () => {
-    // ...
+    if (!user || !newExpenseName || !newExpenseAmount) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+    
+    try {
+      const { error } = await supabase.from('static_expenses').insert({
+        user_id: user.id,
+        name: newExpenseName,
+        amount: parseFloat(newExpenseAmount),
+        is_recurring: isRecurring
+      });
+      
+      if (error) throw error;
+      
+      toast.success('Static expense added successfully!');
+      setNewExpenseName('');
+      setNewExpenseAmount('');
+      setIsRecurring(false);
+      fetchStaticExpenses();
+    } catch (error) {
+      console.error('Error adding static expense:', error);
+      toast.error('Failed to add static expense');
+    }
   };
 
   const deleteStaticExpense = async (id: string) => {
-    // ...
+    if (!user) return;
+    
+    try {
+      const { error } = await supabase.from('static_expenses').delete().eq('id', id);
+      if (error) throw error;
+      
+      toast.success('Static expense deleted successfully!');
+      setStaticExpenses(staticExpenses.filter(e => e.id !== id));
+    } catch (error) {
+      console.error('Error deleting static expense:', error);
+      toast.error('Failed to delete static expense');
+    }
   };
 
   return (
@@ -352,7 +401,90 @@ const ReportsTab = () => {
           <Card>
             <CardHeader><CardTitle>Generated Reports ({reports.length})</CardTitle></CardHeader>
             <CardContent>
-              {/* Table of generated reports */}
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Report Type</TableHead>
+                      <TableHead>Date Range</TableHead>
+                      <TableHead>Generated At</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {loading ? (
+                      <TableRow>
+                        <TableCell colSpan={4} className="text-center">Loading...</TableCell>
+                      </TableRow>
+                    ) : reports.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={4} className="text-center">No reports generated yet.</TableCell>
+                      </TableRow>
+                    ) : (
+                      reports.map((report) => (
+                        <TableRow key={report.id}>
+                          <TableCell className="font-medium">
+                            <Badge>
+                              {reportTypes.find(t => t.value === report.report_type)?.label || report.report_type}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            {report.date_range_start && report.date_range_end
+                              ? `${format(new Date(report.date_range_start), 'PPP')} - ${format(new Date(report.date_range_end), 'PPP')}`
+                              : 'All Time'
+                            }
+                          </TableCell>
+                          <TableCell>{format(new Date(report.created_at), 'PPP')}</TableCell>
+                          <TableCell>
+                            <div className="flex gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleViewReport(report)}
+                                className="flex items-center gap-1"
+                              >
+                                <Eye className="h-4 w-4" />
+                                View
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => downloadReport(report)}
+                                className="flex items-center gap-1"
+                              >
+                                <Download className="h-4 w-4" />
+                                Download
+                              </Button>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button variant="destructive" size="sm" className="flex items-center gap-1">
+                                    <Trash2 className="h-4 w-4" />
+                                    Delete
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      This action cannot be undone. This will permanently delete the report.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction onClick={() => handleDeleteReport(report.id)}>
+                                      Delete
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -376,11 +508,141 @@ const ReportsTab = () => {
         </TabsContent>
 
         <TabsContent value="static-expenses" className="space-y-6">
-          {/* Static expenses content */}
+          <Card>
+            <CardHeader><CardTitle className="flex items-center gap-2"><Plus className="h-5 w-5 text-green-600" /> Add New Static Expense</CardTitle></CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="static-expense-name">Expense Name</Label>
+                  <Input id="static-expense-name" value={newExpenseName} onChange={(e) => setNewExpenseName(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="static-expense-amount">Amount</Label>
+                  <Input id="static-expense-amount" type="number" value={newExpenseAmount} onChange={(e) => setNewExpenseAmount(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="static-expense-recurring">Is Recurring</Label>
+                  <Select value={isRecurring ? 'true' : 'false'} onValueChange={(value) => setIsRecurring(value === 'true')}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select recurring status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="true">Yes</SelectItem>
+                      <SelectItem value="false">No</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Button onClick={addStaticExpense} disabled={!newExpenseName || !newExpenseAmount}>
+                    Add Expense
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader><CardTitle>Static Expenses ({staticExpenses.length})</CardTitle></CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Amount</TableHead>
+                      <TableHead>Recurring</TableHead>
+                      <TableHead>Added At</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {loading ? (
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-center">Loading...</TableCell>
+                      </TableRow>
+                    ) : staticExpenses.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-center">No static expenses added yet.</TableCell>
+                      </TableRow>
+                    ) : (
+                      staticExpenses.map((expense) => (
+                        <TableRow key={expense.id}>
+                          <TableCell className="font-medium">{expense.name}</TableCell>
+                          <TableCell>{expense.amount}</TableCell>
+                          <TableCell>{expense.is_recurring ? 'Yes' : 'No'}</TableCell>
+                          <TableCell>{format(new Date(expense.created_at), 'PPP')}</TableCell>
+                          <TableCell>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="destructive" size="sm" onClick={() => deleteStaticExpense(expense.id)}>
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    This action cannot be undone. This will permanently delete the static expense.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => deleteStaticExpense(expense.id)}>
+                                    Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
 
-      {/* Dialogs */}
+      {/* Report Viewer Dialog */}
+      <Dialog open={isReportViewerOpen} onOpenChange={setIsReportViewerOpen}>
+        <DialogContent className="sm:max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Report Details</DialogTitle>
+          </DialogHeader>
+          {viewingReportData && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <h4 className="font-semibold">Report Type:</h4>
+                  <p>{reportTypes.find(t => t.value === viewingReportData.report_type)?.label || viewingReportData.report_type}</p>
+                </div>
+                <div>
+                  <h4 className="font-semibold">Generated At:</h4>
+                  <p>{format(new Date(viewingReportData.created_at), 'PPP')}</p>
+                </div>
+                <div>
+                  <h4 className="font-semibold">Date Range:</h4>
+                  <p>
+                    {viewingReportData.date_range_start && viewingReportData.date_range_end
+                      ? `${format(new Date(viewingReportData.date_range_start), 'PPP')} - ${format(new Date(viewingReportData.date_range_end), 'PPP')}`
+                      : 'All Time'
+                    }
+                  </p>
+                </div>
+              </div>
+              <div>
+                <h4 className="font-semibold">Report Data:</h4>
+                <div className="bg-gray-50 p-4 rounded-lg max-h-60 overflow-y-auto">
+                  <pre className="text-sm whitespace-pre-wrap">
+                    {JSON.stringify(viewingReportData.report_data, null, 2)}
+                  </pre>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

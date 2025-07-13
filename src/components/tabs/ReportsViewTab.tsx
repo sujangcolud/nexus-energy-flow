@@ -64,6 +64,23 @@ const ReportsViewTab = () => {
   const generateDailyCombinedReport = () => {
     const dailyData: { [key: string]: any } = {};
     
+    // First, initialize all days in the date range with zero values
+    const startDate = new Date(dateRange.startDate);
+    const endDate = new Date(dateRange.endDate);
+    
+    for (let date = new Date(startDate); date <= endDate; date.setDate(date.getDate() + 1)) {
+      const dateStr = date.toISOString().split('T')[0];
+      dailyData[dateStr] = {
+        date: dateStr,
+        orders: 0,
+        charging: 0,
+        expenses: 0,
+        savings: 0,
+        deposits: 0,
+        withdrawals: 0
+      };
+    }
+    
     // A helper to get the date part of a timestamp
     const getDatePart = (isoString: string) => isoString.split('T')[0];
 
@@ -71,8 +88,9 @@ const ReportsViewTab = () => {
     const processData = (items: any[], type: string) => {
       items?.forEach((item: any) => {
         const date = getDatePart(item.created_at);
-        if (!dailyData[date]) dailyData[date] = { date, orders: 0, charging: 0, expenses: 0, savings: 0, deposits: 0, withdrawals: 0 };
-        dailyData[date][type] += parseFloat(item.total || item.total_amount || item.amount || item.contribution_amount);
+        if (dailyData[date]) { // Only process if the date is in our range
+          dailyData[date][type] += parseFloat(item.total || item.total_amount || item.amount || item.contribution_amount || 0);
+        }
       });
     };
 
