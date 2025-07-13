@@ -18,7 +18,10 @@ $$;
 
 -- Create new policies using the security definer function
 CREATE POLICY "Super admins can manage all roles" ON public.user_roles
-  FOR ALL USING (public.is_super_admin());
+  FOR ALL USING (public.is_super_admin()) WITH CHECK (public.is_super_admin());
+
+CREATE POLICY "Users can view their own roles" ON public.user_roles
+  FOR SELECT USING (auth.uid() = user_id);
 
 -- Also update the get_all_users_with_roles function to use the new approach
 CREATE OR REPLACE FUNCTION public.get_all_users_with_roles()
@@ -54,10 +57,6 @@ BEGIN
   -- Update or insert the role
   INSERT INTO public.user_roles (user_id, role)
   VALUES (user_id_to_update, new_role)
-  ON CONFLICT (user_id, role) DO NOTHING;
-
-  -- Remove old roles for this user (since we want one role per user)
-  DELETE FROM public.user_roles 
-  WHERE user_id = user_id_to_update AND role != new_role;
+  ON CONFLICT (user_id) DO UPDATE SET role = new_role;
 END;
 $$;
