@@ -79,7 +79,7 @@ const CooperativeSavingsTab = () => {
 
   useEffect(() => {
     fetchRecentSavings();
-  }, [user]);
+  }, [user, page, range]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

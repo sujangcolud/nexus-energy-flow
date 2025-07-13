@@ -124,7 +124,7 @@ const OrdersTab = () => {
   useEffect(() => {
     fetchOrders();
     fetchMenuItems();
-  }, [user]);
+  }, [user, page, range]);
 
   const addToCart = (menuItem: MenuItem) => {
     setCart(prevCart => {

@@ -103,7 +103,7 @@ const ExpensesTab = () => {
 
   useEffect(() => {
     fetchRecentExpenses();
-  }, [user]);
+  }, [user, page, range]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
