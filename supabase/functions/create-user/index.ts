@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -48,23 +47,57 @@ serve(async (req) => {
       throw new Error('Missing required fields')
     }
 
-    // Create the user using the new RPC function
-    const { data: newUserId, error: createError } = await supabaseAdmin.rpc('create_user_with_role', {
+    // Create the user using Supabase Admin API
+    const { data: newUser, error: createUserError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
-      first_name: firstName,
-      last_name: lastName,
-      role,
-    });
+      user_metadata: {
+        first_name: firstName,
+        last_name: lastName
+      },
+      email_confirm: true
+    })
 
-    if (createError) {
-      throw new Error(`Failed to create user: ${createError.message}`);
+    if (createUserError) {
+      throw new Error(`Failed to create user: ${createUserError.message}`)
+    }
+
+    if (!newUser.user) {
+      throw new Error('User creation failed - no user returned')
+    }
+
+    // Create profile
+    const { error: profileError } = await supabaseAdmin
+      .from('profiles')
+      .insert({
+        id: newUser.user.id,
+        first_name: firstName,
+        last_name: lastName,
+        email: email
+      })
+
+    if (profileError) {
+      console.error('Profile creation error:', profileError)
+      // Don't throw here as user is already created
+    }
+
+    // Assign role
+    const { error: roleAssignError } = await supabaseAdmin
+      .from('user_roles')
+      .insert({
+        user_id: newUser.user.id,
+        role: role
+      })
+
+    if (roleAssignError) {
+      console.error('Role assignment error:', roleAssignError)
+      // Don't throw here as user is already created
     }
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        user_id: newUserId,
+        user_id: newUser.user.id,
         message: `User created successfully with role: ${role}`
       }),
       {
