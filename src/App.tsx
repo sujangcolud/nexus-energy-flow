@@ -22,6 +22,7 @@ import InsightsTab from "./components/tabs/InsightsTab";
 import ReportsTab from "./components/tabs/ReportsTab";
 import ReportsViewTab from "./components/tabs/ReportsViewTab";
 import DataInputTab from "./components/tabs/DataInputTab";
+import UserManagementTab from "./components/tabs/UserManagementTab";
 import { Outlet } from "react-router-dom"; // Needed for nested routes
 
 const queryClient = new QueryClient();
@@ -71,6 +72,7 @@ const App = () => (
               <Route path="reports" element={<ReportsTab />} />
               <Route path="reports-view" element={<ReportsViewTab />} />
               <Route path="data-input" element={<DataInputTab />} />
+              <Route path="user-management" element={<UserManagementTab />} />
               {/* It might be good to have an index route that explicitly shows the cards */}
               {/* <Route index element={<DashboardPageWithCards />} /> */}
             </Route>
