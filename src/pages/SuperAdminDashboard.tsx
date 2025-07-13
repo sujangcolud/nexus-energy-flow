@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
+import Chatbot from "@/components/Chatbot";
 
 interface DashboardStats {
   totalRevenue: number;
@@ -150,6 +151,9 @@ const SuperAdminDashboard = () => {
             </p>
           </CardContent>
         </Card>
+      </div>
+      <div className="mt-4">
+        <Chatbot />
       </div>
     </div>
   );
