@@ -23,6 +23,7 @@ interface Deposit {
   mode: string;
   deposited_by: string;
   deposit_date: string;
+  remarks: string;
 }
 
 const DepositsTab = () => {
@@ -31,7 +32,8 @@ const DepositsTab = () => {
   const [formData, setFormData] = useState({
     amount: '',
     mode: '',
-    depositedBy: ''
+    depositedBy: '',
+    remarks: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { user } = useAuth();
@@ -104,6 +106,7 @@ const DepositsTab = () => {
         mode: formData.mode,
         deposited_by: formData.depositedBy,
         deposit_date: new Date().toISOString().split('T')[0],
+        remarks: formData.remarks,
       };
 
       const { error } = await supabase.from('deposits').insert([depositData]);
@@ -116,7 +119,8 @@ const DepositsTab = () => {
       setFormData({
         amount: '',
         mode: '',
-        depositedBy: ''
+        depositedBy: '',
+        remarks: ''
       });
       fetchRecentDeposits(); // Re-fetch after successful submission
     } catch (error: any) {
@@ -176,6 +180,16 @@ const DepositsTab = () => {
                 value={formData.depositedBy}
                 onChange={(e) => updateFormData('depositedBy', e.target.value)}
                 required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="remarks">Remarks</Label>
+              <Input
+                id="remarks"
+                placeholder="Add any relevant remarks"
+                value={formData.remarks}
+                onChange={(e) => updateFormData('remarks', e.target.value)}
               />
             </div>
             
@@ -242,22 +256,23 @@ const DepositsTab = () => {
                   <TableHead>Date</TableHead>
                   <TableHead className="w-[200px]">Deposited By</TableHead>
                   <TableHead>Mode</TableHead>
+                  <TableHead>Remarks</TableHead>
                   <TableHead className="text-right">Amount</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center">Loading...</TableCell>
+                    <TableCell colSpan={5} className="text-center">Loading...</TableCell>
                   </TableRow>
                 ) : deposits.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center">No recent deposits found.</TableCell>
+                    <TableCell colSpan={5} className="text-center">No recent deposits found.</TableCell>
                   </TableRow>
                 ) : (
                   <>
                     <TableRow className="bg-gray-100 font-semibold">
-                      <TableCell colSpan={3} className="text-right font-bold">Total</TableCell>
+                      <TableCell colSpan={4} className="text-right font-bold">Total</TableCell>
                       <TableCell className="text-right font-bold">
                         Rs. {deposits.reduce((acc, deposit) => acc + Number(deposit.amount), 0).toFixed(2)}
                       </TableCell>
@@ -267,6 +282,7 @@ const DepositsTab = () => {
                         <TableCell>{new Date(deposit.deposit_date).toLocaleDateString()}</TableCell>
                         <TableCell className="font-medium whitespace-normal break-words w-[200px]">{deposit.deposited_by}</TableCell>
                         <TableCell>{deposit.mode}</TableCell>
+                        <TableCell>{deposit.remarks}</TableCell>
                         <TableCell className="text-right">Rs. {deposit.amount.toFixed(2)}</TableCell>
                       </TableRow>
                     ))}
