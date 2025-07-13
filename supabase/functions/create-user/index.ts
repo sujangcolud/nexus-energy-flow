@@ -68,13 +68,12 @@ serve(async (req) => {
     }
 
     // Assign the role to the new user
-    const { error: roleAssignError } = await supabaseAdmin.rpc('update_user_role', {
-      user_id_to_update: newUser.user.id,
-      new_role: role
-    })
+    const { error: roleAssignError } = await supabaseAdmin
+      .from('user_roles')
+      .insert({ user_id: newUser.user.id, role: role });
 
     if (roleAssignError) {
-      console.error('Failed to assign role:', roleAssignError)
+      console.error('Failed to assign role:', roleAssignError);
       // Don't throw here as user is already created, just log the error
     }
 

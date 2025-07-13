@@ -54,10 +54,6 @@ BEGIN
   -- Update or insert the role
   INSERT INTO public.user_roles (user_id, role)
   VALUES (user_id_to_update, new_role)
-  ON CONFLICT (user_id, role) DO NOTHING;
-
-  -- Remove old roles for this user (since we want one role per user)
-  DELETE FROM public.user_roles 
-  WHERE user_id = user_id_to_update AND role != new_role;
+  ON CONFLICT (user_id) DO UPDATE SET role = new_role;
 END;
 $$;
