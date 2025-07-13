@@ -193,7 +193,7 @@ BEGIN
   
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY INVOKER;
 
 -- Create trigger for new user registration
 CREATE OR REPLACE TRIGGER on_auth_user_created

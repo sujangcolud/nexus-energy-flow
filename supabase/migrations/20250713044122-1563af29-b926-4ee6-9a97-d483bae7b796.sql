@@ -18,7 +18,10 @@ $$;
 
 -- Create new policies using the security definer function
 CREATE POLICY "Super admins can manage all roles" ON public.user_roles
-  FOR ALL USING (public.is_super_admin());
+  FOR ALL USING (public.is_super_admin()) WITH CHECK (public.is_super_admin());
+
+CREATE POLICY "Users can view their own roles" ON public.user_roles
+  FOR SELECT USING (auth.uid() = user_id);
 
 -- Also update the get_all_users_with_roles function to use the new approach
 CREATE OR REPLACE FUNCTION public.get_all_users_with_roles()

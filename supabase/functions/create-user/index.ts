@@ -67,6 +67,19 @@ serve(async (req) => {
       throw new Error('User creation failed')
     }
 
+    // Create the profile for the new user
+    const { error: profileError } = await supabaseAdmin.from('profiles').insert({
+      id: newUser.user.id,
+      first_name: firstName,
+      last_name: lastName,
+      email: email,
+    });
+
+    if (profileError) {
+      console.error('Failed to create profile:', profileError);
+      // Don't throw here as user is already created, just log the error
+    }
+
     // Assign the role to the new user
     const { error: roleAssignError } = await supabaseAdmin
       .from('user_roles')
