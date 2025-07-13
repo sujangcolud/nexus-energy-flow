@@ -64,47 +64,24 @@ const ReportsViewTab = () => {
   const generateDailyCombinedReport = () => {
     const dailyData: { [key: string]: any } = {};
     
-    // Process orders
-    reportData.orders?.forEach((order: any) => {
-      const date = order.order_date;
-      if (!dailyData[date]) dailyData[date] = { date, orders: 0, charging: 0, expenses: 0, savings: 0, deposits: 0, withdrawals: 0 };
-      dailyData[date].orders += parseFloat(order.total);
-    });
+    // A helper to get the date part of a timestamp
+    const getDatePart = (isoString: string) => isoString.split('T')[0];
 
-    // Process charging
-    reportData.charging?.forEach((charge: any) => {
-      const date = charge.session_date;
-      if (!dailyData[date]) dailyData[date] = { date, orders: 0, charging: 0, expenses: 0, savings: 0, deposits: 0, withdrawals: 0 };
-      dailyData[date].charging += parseFloat(charge.total_amount);
-    });
+    // Process all data types using the consistent 'created_at' field
+    const processData = (items: any[], type: string) => {
+      items?.forEach((item: any) => {
+        const date = getDatePart(item.created_at);
+        if (!dailyData[date]) dailyData[date] = { date, orders: 0, charging: 0, expenses: 0, savings: 0, deposits: 0, withdrawals: 0 };
+        dailyData[date][type] += parseFloat(item.total || item.total_amount || item.amount || item.contribution_amount);
+      });
+    };
 
-    // Process expenses
-    reportData.expenses?.forEach((expense: any) => {
-      const date = expense.expense_date;
-      if (!dailyData[date]) dailyData[date] = { date, orders: 0, charging: 0, expenses: 0, savings: 0, deposits: 0, withdrawals: 0 };
-      dailyData[date].expenses += parseFloat(expense.amount);
-    });
-
-    // Process savings
-    reportData.savings?.forEach((saving: any) => {
-      const date = saving.contribution_date;
-      if (!dailyData[date]) dailyData[date] = { date, orders: 0, charging: 0, expenses: 0, savings: 0, deposits: 0, withdrawals: 0 };
-      dailyData[date].savings += parseFloat(saving.contribution_amount);
-    });
-
-    // Process deposits
-    reportData.deposits?.forEach((deposit: any) => {
-      const date = deposit.deposit_date;
-      if (!dailyData[date]) dailyData[date] = { date, orders: 0, charging: 0, expenses: 0, savings: 0, deposits: 0, withdrawals: 0 };
-      dailyData[date].deposits += parseFloat(deposit.amount);
-    });
-
-    // Process withdrawals
-    reportData.withdrawals?.forEach((withdrawal: any) => {
-      const date = withdrawal.withdrawal_date;
-      if (!dailyData[date]) dailyData[date] = { date, orders: 0, charging: 0, expenses: 0, savings: 0, deposits: 0, withdrawals: 0 };
-      dailyData[date].withdrawals += parseFloat(withdrawal.amount);
-    });
+    processData(reportData.orders, 'orders');
+    processData(reportData.charging, 'charging');
+    processData(reportData.expenses, 'expenses');
+    processData(reportData.savings, 'savings');
+    processData(reportData.deposits, 'deposits');
+    processData(reportData.withdrawals, 'withdrawals');
 
     // Calculate totals and balance
     const result = Object.values(dailyData).map((day: any) => ({
@@ -117,14 +94,16 @@ const ReportsViewTab = () => {
   };
 
   const handleRowClick = (date: string) => {
+    const filterByDate = (item: any) => item.created_at && item.created_at.startsWith(date);
+
     const details = {
       date,
-      orders: reportData.orders.filter((o: any) => o.order_date && o.order_date.startsWith(date)),
-      charging: reportData.charging.filter((c: any) => c.session_date && c.session_date.startsWith(date)),
-      expenses: reportData.expenses.filter((e: any) => e.expense_date && e.expense_date.startsWith(date)),
-      savings: reportData.savings.filter((s: any) => s.contribution_date && s.contribution_date.startsWith(date)),
-      deposits: reportData.deposits.filter((d: any) => d.deposit_date && d.deposit_date.startsWith(date)),
-      withdrawals: reportData.withdrawals.filter((w: any) => w.withdrawal_date && w.withdrawal_date.startsWith(date)),
+      orders: reportData.orders.filter(filterByDate),
+      charging: reportData.charging.filter(filterByDate),
+      expenses: reportData.expenses.filter(filterByDate),
+      savings: reportData.savings.filter(filterByDate),
+      deposits: reportData.deposits.filter(filterByDate),
+      withdrawals: reportData.withdrawals.filter(filterByDate),
     };
 
     setSelectedDayData(details);
@@ -438,14 +417,14 @@ const ReportsViewTab = () => {
 
       {/* Daily Detail Modal */}
       <Dialog open={isDetailModalOpen} onOpenChange={setIsDetailModalOpen}>
-        <DialogContent className="sm:max-w-4xl max-h-[90vh]">
+        <DialogContent className="sm:max-w-4xl h-[90vh] flex flex-col">
           <DialogHeader>
             <DialogTitle>Daily Transaction Details</DialogTitle>
             <DialogDescription>
               Detailed breakdown for {selectedDayData?.date}.
             </DialogDescription>
           </DialogHeader>
-          <div className="overflow-y-auto p-4 space-y-6">
+          <div className="overflow-y-auto flex-grow p-4 space-y-6">
             {selectedDayData && (
               <>
                 {/* Orders */}
