@@ -9,7 +9,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from 'sonner';
-import { TrendingDown } from 'lucide-react';
+import { TrendingDown, Calendar as CalendarIcon } from 'lucide-react';
+import { DateRange } from 'react-day-picker';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
+import useTableControls from '@/hooks/useTableControls';
 
 interface Withdrawal {
   id: string;
@@ -33,6 +39,13 @@ const WithdrawalsTab = () => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { user } = useAuth();
+  const {
+    page,
+    range,
+    onPageChange,
+    onRangeChange,
+    itemsPerPage,
+  } = useTableControls();
 
   const updateFormData = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -42,15 +55,21 @@ const WithdrawalsTab = () => {
     if (!user) return;
     setLoading(true);
     try {
-      const oneWeekAgo = new Date();
-      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-
-      const { data, error } = await supabase
+      let query = supabase
         .from('withdrawals')
-        .select('*')
-        .eq('user_id', user.id)
-        .gte('created_at', oneWeekAgo.toISOString())
-        .order('created_at', { ascending: false });
+        .select('*', { count: 'exact' })
+        .eq('user_id', user.id);
+
+      if (range?.from) {
+        query = query.gte('withdrawal_date', format(range.from, 'yyyy-MM-dd'));
+      }
+      if (range?.to) {
+        query = query.lte('withdrawal_date', format(range.to, 'yyyy-MM-dd'));
+      }
+
+      const { data, error, count } = await query
+        .order('created_at', { ascending: false })
+        .range((page - 1) * itemsPerPage, page * itemsPerPage - 1);
 
       if (error) throw error;
       setWithdrawals(data || []);
@@ -197,8 +216,46 @@ const WithdrawalsTab = () => {
 
       {/* Recent Withdrawals Table */}
       <Card className="mt-6">
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Recent Withdrawals</CardTitle>
+          <div className="flex items-center gap-2">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  id="date"
+                  variant={"outline"}
+                  className={cn(
+                    "w-[300px] justify-start text-left font-normal",
+                    !range && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {range?.from ? (
+                    range.to ? (
+                      <>
+                        {format(range.from, "LLL dd, y")} -{" "}
+                        {format(range.to, "LLL dd, y")}
+                      </>
+                    ) : (
+                      format(range.from, "LLL dd, y")
+                    )
+                  ) : (
+                    <span>Pick a date</span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="end">
+                <Calendar
+                  initialFocus
+                  mode="range"
+                  defaultMonth={range?.from}
+                  selected={range}
+                  onSelect={onRangeChange}
+                  numberOfMonths={2}
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
@@ -242,6 +299,27 @@ const WithdrawalsTab = () => {
             </Table>
           </div>
         </CardContent>
+          {withdrawals.length > 0 && (
+            <div className="flex justify-center p-4">
+              <Button
+                onClick={() => onPageChange(page - 1)}
+                disabled={page === 1}
+                variant="outline"
+              >
+                Previous
+              </Button>
+              <span className="p-2">
+                Page {page}
+              </span>
+              <Button
+                onClick={() => onPageChange(page + 1)}
+                disabled={withdrawals.length < itemsPerPage}
+                variant="outline"
+              >
+                Next
+              </Button>
+            </div>
+          )}
       </Card>
     </div>
   );
