@@ -24,6 +24,7 @@ import ReportsViewTab from "./components/tabs/ReportsViewTab";
 import DataInputTab from "./components/tabs/DataInputTab";
 import UserManagementTab from "./components/tabs/UserManagementTab";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
+import Settings from "./pages/Settings";
 import { Outlet } from "react-router-dom"; // Needed for nested routes
 
 const queryClient = new QueryClient();
