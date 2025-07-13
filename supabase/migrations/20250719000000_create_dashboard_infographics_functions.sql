@@ -11,8 +11,8 @@ BEGIN
   WITH months AS (
     SELECT TO_CHAR(d, 'YYYY-MM') AS month
     FROM GENERATE_SERIES(
-      DATE_TRUNC('month', NOW() - INTERVAL '11 months'),
-      DATE_TRUNC('month', NOW()),
+      '2025-01-01'::DATE,
+      '2025-12-31'::DATE,
       '1 month'
     ) AS d
   ),
@@ -92,8 +92,8 @@ BEGIN
   WITH months AS (
     SELECT TO_CHAR(d, 'YYYY-MM') AS month
     FROM GENERATE_SERIES(
-      DATE_TRUNC('month', NOW() - INTERVAL '11 months'),
-      DATE_TRUNC('month', NOW()),
+      '2025-01-01'::DATE,
+      '2025-12-31'::DATE,
       '1 month'
     ) AS d
   ),
@@ -134,8 +134,8 @@ BEGIN
   WITH months AS (
     SELECT TO_CHAR(d, 'YYYY-MM') AS month
     FROM GENERATE_SERIES(
-      DATE_TRUNC('month', NOW() - INTERVAL '11 months'),
-      DATE_TRUNC('month', NOW()),
+      '2025-01-01'::DATE,
+      '2025-12-31'::DATE,
       '1 month'
     ) AS d
   )
@@ -253,8 +253,8 @@ BEGIN
   WITH months AS (
     SELECT TO_CHAR(d, 'YYYY-MM') AS month
     FROM GENERATE_SERIES(
-      DATE_TRUNC('month', NOW() - INTERVAL '11 months'),
-      DATE_TRUNC('month', NOW()),
+      '2025-01-01'::DATE,
+      '2025-12-31'::DATE,
       '1 month'
     ) AS d
   )

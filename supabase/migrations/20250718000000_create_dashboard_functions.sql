@@ -1,6 +1,6 @@
 CREATE OR REPLACE FUNCTION public.get_total_revenue()
 RETURNS NUMERIC AS $$
--- v1.1
+-- v1.2
 DECLARE
   total_revenue NUMERIC;
 BEGIN
