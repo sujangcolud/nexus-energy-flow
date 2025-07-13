@@ -2,7 +2,7 @@ import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Outlet, useLocation, NavLink, Link, useNavigate } from 'react-router-dom'; // Import useNavigate
-import { LogOut, User, ShoppingCart, Zap, Receipt, CreditCard, Banknote, Users, BarChart3, FileText, UtensilsCrossed, Database, ArrowLeft } from 'lucide-react';
+import { LogOut, User, ShoppingCart, Zap, Receipt, CreditCard, Banknote, Users, BarChart3, FileText, UtensilsCrossed, Database, ArrowLeft, UserCog } from 'lucide-react';
 
 // Tab components are now rendered by routes, but their types/icons might be needed for nav items.
 import OrdersTab from '@/components/tabs/OrdersTab';
@@ -16,6 +16,7 @@ import ReportsTab from '@/components/tabs/ReportsTab';
 import ReportsViewTab from '@/components/tabs/ReportsViewTab';
 import MenuManagementTab from '@/components/tabs/MenuManagementTab';
 import DataInputTab from '@/components/tabs/DataInputTab';
+import UserManagementTab from '@/components/tabs/UserManagementTab';
 
 const Dashboard = () => {
   const { user, signOut, userRole } = useAuth();
@@ -33,31 +34,29 @@ const Dashboard = () => {
   // Define items for navigation cards. 'path' will be used for <Link>
   // The 'component' property is no longer used here for rendering, but kept for consistency or future use.
   const getNavItems = () => {
-    const baseItems = [
-      { id: 'orders', path: 'orders', label: 'Orders', icon: ShoppingCart, component: OrdersTab },
-      { id: 'charging', path: 'charging', label: 'Charging', icon: Zap, component: ChargingTab },
-      { id: 'expenses', path: 'expenses', label: 'Expenses', icon: Receipt, component: ExpensesTab },
-      { id: 'deposits', path: 'deposits', label: 'Deposits', icon: CreditCard, component: DepositsTab },
-      { id: 'withdrawals', path: 'withdrawals', label: 'Withdrawals', icon: Banknote, component: WithdrawalsTab },
-      { id: 'cooperative', path: 'cooperative', label: 'Savings', icon: Users, component: CooperativeSavingsTab },
+    const allItems = [
+      // Data Entry
+      { id: 'orders', path: 'orders', label: 'Orders', icon: ShoppingCart, component: OrdersTab, roles: ['user', 'admin', 'super_admin'] },
+      { id: 'charging', path: 'charging', label: 'Charging', icon: Zap, component: ChargingTab, roles: ['user', 'admin', 'super_admin'] },
+      { id: 'expenses', path: 'expenses', label: 'Expenses', icon: Receipt, component: ExpensesTab, roles: ['user', 'admin', 'super_admin'] },
+      { id: 'deposits', path: 'deposits', label: 'Deposits', icon: CreditCard, component: DepositsTab, roles: ['user', 'admin', 'super_admin'] },
+      { id: 'withdrawals', path: 'withdrawals', label: 'Withdrawals', icon: Banknote, component: WithdrawalsTab, roles: ['user', 'admin', 'super_admin'] },
+      { id: 'cooperative', path: 'cooperative', label: 'Savings', icon: Users, component: CooperativeSavingsTab, roles: ['user', 'admin', 'super_admin'] },
+      { id: 'data-input', path: 'data-input', label: 'Data Input', icon: Database, component: DataInputTab, roles: ['user', 'admin', 'super_admin'] },
+
+      // Admin
+      { id: 'reports', path: 'reports', label: 'Reports', icon: FileText, component: ReportsTab, roles: ['admin', 'super_admin'] },
+      { id: 'reports-view', path: 'reports-view', label: 'View Reports', icon: FileText, component: ReportsViewTab, roles: ['admin', 'super_admin'] },
+      { id: 'insights', path: 'insights', label: 'Analytics', icon: BarChart3, component: InsightsTab, roles: ['admin', 'super_admin'] },
+
+      // Super Admin
+      { id: 'menu', path: 'menu', label: 'Menu', icon: UtensilsCrossed, component: MenuManagementTab, roles: ['super_admin'] },
+      { id: 'user_management', path: 'user-management', label: 'User Management', icon: UserCog, component: UserManagementTab, roles: ['super_admin'] },
     ];
 
-    const adminItems = [
-      { id: 'menu', path: 'menu', label: 'Menu', icon: UtensilsCrossed, component: MenuManagementTab },
-    ];
+    if (!userRole) return [];
 
-    const analyticsItems = [
-      { id: 'insights', path: 'insights', label: 'Analytics', icon: BarChart3, component: InsightsTab },
-      { id: 'reports', path: 'reports', label: 'Reports', icon: FileText, component: ReportsTab },
-      { id: 'reports-view', path: 'reports-view', label: 'View Reports', icon: FileText, component: ReportsViewTab },
-      { id: 'data-input', path: 'data-input', label: 'Data Input', icon: Database, component: DataInputTab },
-    ];
-
-    let items = [...baseItems, ...analyticsItems];
-    if (userRole === 'super_admin') {
-      items = [...baseItems, ...adminItems, ...analyticsItems];
-    }
-    return items;
+    return allItems.filter(item => item.roles.includes(userRole));
   };
 
   const navItems = getNavItems();
@@ -74,7 +73,7 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* Header */}
-      <header className="bg-red-500 shadow-md border-b border-border sticky top-0 z-50">
+      <header className="bg-card shadow-md border-b border-border sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center gap-4">
