@@ -99,7 +99,7 @@ const SuperAdminDashboard = () => {
           supabase.rpc('get_monthly_deposits_withdrawals'),
           supabase.rpc('get_new_user_growth'),
           supabase.rpc('get_user_role_distribution'),
-          supabase.rpc('get_top_spenders'),
+          supabase.rpc('get_top_spenders', { limit_count: 5 }),
           supabase.rpc('get_popular_products'),
           supabase.rpc('get_sales_by_payment_mode'),
           supabase.rpc('get_cooperative_savings_trend'),
