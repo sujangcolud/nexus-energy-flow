@@ -487,7 +487,7 @@ const InsightsTab = () => {
             </div>
           </CardContent>
         </Card>
-
+        </div>
         <div className="lg:w-1/2 flex flex-col space-y-6">
           {/* NEW: Payment Method Analysis */}
           <Card className="flex-grow">
