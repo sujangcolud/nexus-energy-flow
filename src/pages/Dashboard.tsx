@@ -2,7 +2,7 @@ import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Outlet, useLocation, NavLink, Link, useNavigate } from 'react-router-dom';
-import { LogOut, User, ShoppingCart, Zap, Receipt, CreditCard, Banknote, Users, BarChart3, FileText, UtensilsCrossed, Database, ArrowLeft, UserCog, Upload } from 'lucide-react';
+import { LogOut, User, ShoppingCart, Zap, Receipt, CreditCard, Banknote, Users, BarChart3, FileText, UtensilsCrossed, Database, ArrowLeft, UserCog, Upload, LayoutDashboard } from 'lucide-react';
 
 // Tab components are now rendered by routes, but their types/icons might be needed for nav items.
 import OrdersTab from '@/components/tabs/OrdersTab';
@@ -49,6 +49,7 @@ const Dashboard = () => {
       { id: 'data-input', path: 'data-input', label: 'Bulk Data Import', icon: Upload, component: DataInputTab, roles: ['reports_viewer', 'super_admin'] },
 
       // Super Admin Only
+      { id: 'super_admin_dashboard', path: 'super-admin', label: 'Admin Dashboard', icon: LayoutDashboard, roles: ['super_admin'] },
       { id: 'menu', path: 'menu', label: 'Menu Management', icon: UtensilsCrossed, component: MenuManagementTab, roles: ['super_admin'] },
       { id: 'user_management', path: 'user-management', label: 'User Management', icon: UserCog, component: UserManagementTab, roles: ['super_admin'] },
     ];
