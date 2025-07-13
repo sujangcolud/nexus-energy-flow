@@ -690,9 +690,9 @@ const InsightsTab = () => {
           </CardContent>
         </Card>
         </div>
-        </div>
+      </div>
     </div>
-    );
-    };
+  );
+};
 
 export default InsightsTab;
