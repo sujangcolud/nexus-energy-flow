@@ -11,7 +11,13 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
-import { ShoppingCart, Plus, Minus, Trash2, Package, Filter } from 'lucide-react';
+import { ShoppingCart, Plus, Minus, Trash2, Package, Filter, Calendar as CalendarIcon } from 'lucide-react';
+import { DateRange } from 'react-day-picker';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
+import useTableControls from '@/hooks/useTableControls';
 
 interface Order {
   id: string;
@@ -50,6 +56,13 @@ const OrdersTab = () => {
   const [submitting, setSubmitting] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>('');
+  const {
+    page,
+    range,
+    onPageChange,
+    onRangeChange,
+    itemsPerPage,
+  } = useTableControls();
 
 
   const paymentModes = [
@@ -63,18 +76,24 @@ const OrdersTab = () => {
 
   const fetchOrders = async () => {
     if (!user) return;
-    
+
     setLoading(true);
     try {
-      const oneWeekAgo = new Date();
-      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-
-      const { data, error } = await supabase
+      let query = supabase
         .from('orders')
-        .select('*')
-        .eq('user_id', user.id)
-        .gte('created_at', oneWeekAgo.toISOString())
-        .order('created_at', { ascending: false });
+        .select('*', { count: 'exact' })
+        .eq('user_id', user.id);
+
+      if (range?.from) {
+        query = query.gte('order_date', format(range.from, 'yyyy-MM-dd'));
+      }
+      if (range?.to) {
+        query = query.lte('order_date', format(range.to, 'yyyy-MM-dd'));
+      }
+
+      const { data, error, count } = await query
+        .order('created_at', { ascending: false })
+        .range((page - 1) * itemsPerPage, page * itemsPerPage - 1);
 
       if (error) throw error;
       setOrders(data || []);
@@ -451,10 +470,48 @@ const OrdersTab = () => {
 
       {/* Order History */}
       <Card className="mt-8 shadow-sm hover:shadow-md transition-shadow">
-        <CardHeader className="border-b border-border/50"> {/* Added border to header */}
-          <CardTitle className="text-lg font-semibold">Order History</CardTitle> {/* Adjusted title styling */}
+        <CardHeader className="border-b border-border/50 flex flex-row items-center justify-between">
+          <CardTitle className="text-lg font-semibold">Order History</CardTitle>
+          <div className="flex items-center gap-2">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  id="date"
+                  variant={"outline"}
+                  className={cn(
+                    "w-[300px] justify-start text-left font-normal",
+                    !range && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {range?.from ? (
+                    range.to ? (
+                      <>
+                        {format(range.from, "LLL dd, y")} -{" "}
+                        {format(range.to, "LLL dd, y")}
+                      </>
+                    ) : (
+                      format(range.from, "LLL dd, y")
+                    )
+                  ) : (
+                    <span>Pick a date</span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="end">
+                <Calendar
+                  initialFocus
+                  mode="range"
+                  defaultMonth={range?.from}
+                  selected={range}
+                  onSelect={onRangeChange}
+                  numberOfMonths={2}
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
         </CardHeader>
-        <CardContent className="p-0"> {/* Removed padding for full-width table */}
+        <CardContent className="p-0">
           {loading ? (
             <div className="text-center py-10 text-muted-foreground">Loading orders...</div>
           ) : orders.length === 0 ? (
@@ -503,6 +560,27 @@ const OrdersTab = () => {
             </div>
           )}
         </CardContent>
+        {orders.length > 0 && (
+          <div className="flex justify-center p-4">
+            <Button
+              onClick={() => onPageChange(page - 1)}
+              disabled={page === 1}
+              variant="outline"
+            >
+              Previous
+            </Button>
+            <span className="p-2">
+              Page {page}
+            </span>
+            <Button
+              onClick={() => onPageChange(page + 1)}
+              disabled={orders.length < itemsPerPage}
+              variant="outline"
+            >
+              Next
+            </Button>
+          </div>
+        )}
       </Card>
     </div>
   );
