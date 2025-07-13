@@ -243,7 +243,38 @@ const ReportsTab = () => {
           const { data: orders } = await query;
           reportData = { data: orders };
           break;
-        // Add cases for other report types here
+        case 'charging_sessions':
+          query = supabase.from('charging_sessions').select('*');
+          if (startDate && endDate) query = query.gte('session_date', startDate).lte('session_date', endDate);
+          const { data: chargingSessions } = await query;
+          reportData = { data: chargingSessions };
+          break;
+        case 'savings':
+          query = supabase.from('cooperative_savings').select('*');
+          if (startDate && endDate) query = query.gte('contribution_date', startDate).lte('contribution_date', endDate);
+          const { data: savings } = await query;
+          reportData = { data: savings };
+          break;
+        case 'deposits':
+          query = supabase.from('deposits').select('*');
+          if (startDate && endDate) query = query.gte('deposit_date', startDate).lte('deposit_date', endDate);
+          const { data: deposits } = await query;
+          reportData = { data: deposits };
+          break;
+        case 'expenses':
+          query = supabase.from('expenses').select('*');
+          if (startDate && endDate) query = query.gte('expense_date', startDate).lte('expense_date', endDate);
+          const { data: expenses } = await query;
+          reportData = { data: expenses };
+          break;
+        case 'withdrawals':
+          query = supabase.from('withdrawals').select('*');
+          if (startDate && endDate) query = query.gte('withdrawal_date', startDate).lte('withdrawal_date', endDate);
+          const { data: withdrawals } = await query;
+          reportData = { data: withdrawals };
+          break;
+        default:
+          throw new Error(`Unsupported report type: ${reportType}`);
       }
       const { error } = await supabase.from('reports').insert({
         user_id: user.id,
