@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Message {
   text: string;
@@ -13,35 +13,34 @@ interface Message {
 const Chatbot = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (input.trim() === "") return;
 
     const newMessages: Message[] = [...messages, { text: input, sender: "user" }];
     setMessages(newMessages);
+    const question = input;
     setInput("");
+    setLoading(true);
 
-    setInput("");
-
-    const getBotResponse = async () => {
-      try {
-        const { data, error } = await supabase.functions.invoke("chatbot", {
-          body: JSON.stringify({ question: input }),
-        });
-        if (error) throw error;
-        setMessages([
-          ...newMessages,
-          { text: data.response, sender: "bot" },
-        ]);
-      } catch (err: any) {
-        setMessages([
-          ...newMessages,
-          { text: "Sorry, something went wrong.", sender: "bot" },
-        ]);
-      }
-    };
-
-    getBotResponse();
+    try {
+      const { data, error } = await supabase.functions.invoke("chatbot", {
+        body: JSON.stringify({ question }),
+      });
+      if (error) throw error;
+      setMessages([
+        ...newMessages,
+        { text: data.response, sender: "bot" },
+      ]);
+    } catch (err: any) {
+      setMessages([
+        ...newMessages,
+        { text: "Sorry, something went wrong.", sender: "bot" },
+      ]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -70,6 +69,11 @@ const Chatbot = () => {
                 </div>
               </div>
             ))}
+            {loading && (
+              <div className="flex justify-start">
+                <div className="p-2 rounded-lg bg-muted">...</div>
+              </div>
+            )}
           </div>
         </ScrollArea>
         <div className="flex gap-2 mt-4">
@@ -78,8 +82,11 @@ const Chatbot = () => {
             onChange={(e) => setInput(e.target.value)}
             placeholder="Ask a question..."
             onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
+            disabled={loading}
           />
-          <Button onClick={handleSendMessage}>Send</Button>
+          <Button onClick={handleSendMessage} disabled={loading}>
+            Send
+          </Button>
         </div>
       </CardContent>
     </Card>
