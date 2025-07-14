@@ -157,13 +157,16 @@ const SuperAdminDashboard = () => {
             <CardTitle>Revenue vs. Expenses (Last 12 Months)</CardTitle>
           </CardHeader>
           <CardContent>
-            <ChartContainer className="h-64" config={{}}>
+            <ChartContainer className="h-64" config={{
+              revenue: { label: "Revenue", color: "hsl(var(--chart-1))" },
+              expenses: { label: "Expenses", color: "hsl(var(--chart-2))" }
+            }}>
               <BarChart data={monthlyFinancialSummary}>
                 <CartesianGrid vertical={false} />
                 <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} />
                 <YAxis />
                 <ChartTooltip content={<ChartTooltipContent />} />
-                <ChartLegend />
+                <ChartLegend content={<ChartLegendContent />} />
                 <Bar dataKey="revenue" fill="var(--color-revenue)" radius={4} />
                 <Bar dataKey="expenses" fill="var(--color-expenses)" radius={4} />
               </BarChart>
@@ -176,13 +179,15 @@ const SuperAdminDashboard = () => {
             <CardTitle>Profitability Trend (Last 12 Months)</CardTitle>
           </CardHeader>
           <CardContent>
-            <ChartContainer className="h-64" config={{}}>
+            <ChartContainer className="h-64" config={{
+              profit: { label: "Profit", color: "hsl(var(--chart-3))" }
+            }}>
               <LineChart data={monthlyFinancialSummary}>
                 <CartesianGrid vertical={false} />
                 <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} />
                 <YAxis />
                 <ChartTooltip content={<ChartTooltipContent />} />
-                <ChartLegend />
+                <ChartLegend content={<ChartLegendContent />} />
                 <Line type="monotone" dataKey="profit" stroke="var(--color-profit)" />
               </LineChart>
             </ChartContainer>

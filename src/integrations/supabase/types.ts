@@ -118,6 +118,7 @@ export type Database = {
           deposited_by: string
           id: string
           mode: string
+          remarks: string | null
           user_id: string
         }
         Insert: {
@@ -127,6 +128,7 @@ export type Database = {
           deposited_by: string
           id?: string
           mode: string
+          remarks?: string | null
           user_id: string
         }
         Update: {
@@ -136,6 +138,7 @@ export type Database = {
           deposited_by?: string
           id?: string
           mode?: string
+          remarks?: string | null
           user_id?: string
         }
         Relationships: []
@@ -399,9 +402,89 @@ export type Database = {
           role: Database["public"]["Enums"]["app_role"]
         }[]
       }
+      get_cooperative_savings_trend: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          month: string
+          total_savings: number
+        }[]
+      }
       get_current_user_role: {
         Args: Record<PropertyKey, never>
         Returns: Database["public"]["Enums"]["app_role"]
+      }
+      get_expense_categorization: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          category: string
+          amount: number
+        }[]
+      }
+      get_income_breakdown: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          source: string
+          amount: number
+        }[]
+      }
+      get_menu_item_availability: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          status: string
+          item_count: number
+        }[]
+      }
+      get_monthly_deposits_withdrawals: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          month: string
+          deposits: number
+          withdrawals: number
+        }[]
+      }
+      get_monthly_financial_summary: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          month: string
+          revenue: number
+          expenses: number
+          profit: number
+        }[]
+      }
+      get_new_user_growth: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          month: string
+          new_users: number
+        }[]
+      }
+      get_popular_products: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          item_name: string
+          purchase_count: number
+        }[]
+      }
+      get_sales_by_payment_mode: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          payment_mode: string
+          total_sales: number
+        }[]
+      }
+      get_top_spenders: {
+        Args: { limit_count?: number }
+        Returns: {
+          email: string
+          total_spent: number
+        }[]
+      }
+      get_user_role_distribution: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          role: string
+          user_count: number
+        }[]
       }
       has_role: {
         Args: { _role: Database["public"]["Enums"]["app_role"] }

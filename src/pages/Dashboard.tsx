@@ -1,8 +1,10 @@
+import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Outlet, useLocation, NavLink, Link, useNavigate } from 'react-router-dom';
 import { LogOut, User, ShoppingCart, Zap, Receipt, CreditCard, Banknote, Users, BarChart3, FileText, UtensilsCrossed, Database, ArrowLeft, UserCog, Upload, LayoutDashboard, Settings as SettingsIcon } from 'lucide-react';
+import ChatBot from '@/components/ChatBot';
 
 // Tab components are now rendered by routes, but their types/icons might be needed for nav items.
 import OrdersTab from '@/components/tabs/OrdersTab';
@@ -22,6 +24,7 @@ const Dashboard = () => {
   const { user, signOut, userRole } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const [isChatBotOpen, setIsChatBotOpen] = useState(false);
 
   const handleSignOut = async () => {
     try {
@@ -229,6 +232,12 @@ const Dashboard = () => {
           <Outlet />
         )}
       </main>
+      
+      {/* ChatBot Component */}
+      <ChatBot 
+        isOpen={isChatBotOpen} 
+        onToggle={() => setIsChatBotOpen(!isChatBotOpen)} 
+      />
     </div>
   );
 };
