@@ -167,13 +167,26 @@ const WithdrawalsTab = () => {
 
     setIsSubmitting(true);
     try {
-      const { data: balanceData, error: balanceError } = await supabase
+      let { data: balanceData, error: balanceError } = await supabase
         .from("balances")
         .select("*")
         .eq("user_id", user.id)
         .single();
 
-      if (balanceError) throw balanceError;
+      if (balanceError && balanceError.code !== "PGRST116") {
+        throw balanceError;
+      }
+
+      if (!balanceData) {
+        // Create a new balance record if one doesn't exist
+        const { data: newBalanceData, error: newBalanceError } = await supabase
+          .from("balances")
+          .insert({ user_id: user.id })
+          .select()
+          .single();
+        if (newBalanceError) throw newBalanceError;
+        balanceData = newBalanceData;
+      }
 
       const newBalance = { ...balanceData };
       const amount = parseFloat(formData.amount);
