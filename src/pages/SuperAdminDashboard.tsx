@@ -588,7 +588,7 @@ const SuperAdminDashboard = () => {
                       </span>
                     </div>
                     <span className="font-bold text-orange-600">
-                      ${spender.total_spent}
+                      ${Number(spender.total_spent).toFixed(2)}
                     </span>
                   </div>
                 ))}
