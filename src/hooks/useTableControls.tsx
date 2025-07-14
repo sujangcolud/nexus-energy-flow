@@ -1,9 +1,13 @@
-import { useState } from 'react';
-import { DateRange } from 'react-day-picker';
+import { useState } from "react";
+import { DateRange } from "react-day-picker";
 
 const useTableControls = (itemsPerPage = 50) => {
   const [page, setPage] = useState(1);
-  const [range, setRange] = useState<DateRange | undefined>();
+  const today = new Date();
+  const [range, setRange] = useState<DateRange | undefined>({
+    from: today,
+    to: today,
+  });
 
   const onPageChange = (newPage: number) => {
     setPage(newPage);
