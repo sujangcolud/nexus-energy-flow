@@ -7,8 +7,8 @@ import { componentTagger } from "lovable-tagger";
 export default defineConfig(({ mode }) => ({
   base: "/poss/", // ✅ This makes all paths relative to /poss/
   server: {
-    host: "::",
-    port: 8080,
+    host: "127.0.0.1",
+    port: 3000,
     historyApiFallback: true,
   },
   plugins: [
