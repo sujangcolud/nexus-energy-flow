@@ -948,10 +948,10 @@ const ReportsViewTab = () => {
           </TabsContent>
         </Tabs>
 
-        {/* Day Detail Modal */}
+                {/* Day Detail Modal */}
         <Dialog open={isDetailModalOpen} onOpenChange={setIsDetailModalOpen}>
           <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto bg-gradient-to-br from-white to-blue-50">
-                        <DialogHeader>
+            <DialogHeader>
               <DialogTitle className="text-2xl bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
                 {selectedDayData && selectedDayData.date ? (
                   format(parseISO(selectedDayData.date), "EEEE, MMMM dd, yyyy")
@@ -963,7 +963,7 @@ const ReportsViewTab = () => {
                 Detailed breakdown of all transactions for this day
               </DialogDescription>
             </DialogHeader>
-                        {selectedDayData ? (
+            {selectedDayData ? (
               <div className="space-y-6">
                 {/* Day Summary */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
