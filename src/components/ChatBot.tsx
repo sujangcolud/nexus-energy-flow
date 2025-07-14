@@ -55,8 +55,7 @@ const ChatBot = ({ isOpen, onToggle }: ChatBotProps) => {
       // (Optional) You can add a business context string here
       const context = "";
 
-      // const botResponse = await fetchOpenAIAnswer(inputValue, context);
-      const botResponse = "Sorry, the AI assistant is temporarily unavailable.";
+      const botResponse = await fetchOpenAIAnswer(inputValue, context);
 
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
