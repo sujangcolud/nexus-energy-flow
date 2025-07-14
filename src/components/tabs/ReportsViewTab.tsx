@@ -948,16 +948,17 @@ const ReportsViewTab = () => {
           </TabsContent>
         </Tabs>
 
-                {/* Day Detail Modal */}
+        {/* Day Detail Modal */}
         <Dialog open={isDetailModalOpen} onOpenChange={setIsDetailModalOpen}>
           <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto bg-gradient-to-br from-white to-blue-50">
             <DialogHeader>
               <DialogTitle className="text-2xl bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                {selectedDayData && selectedDayData.date ? (
-                  format(parseISO(selectedDayData.date), "EEEE, MMMM dd, yyyy")
-                ) : (
-                  "Day Details"
-                )}
+                {selectedDayData && selectedDayData.date
+                  ? format(
+                      parseISO(selectedDayData.date),
+                      "EEEE, MMMM dd, yyyy",
+                    )
+                  : "Day Details"}
               </DialogTitle>
               <DialogDescription>
                 Detailed breakdown of all transactions for this day
@@ -1143,6 +1144,10 @@ const ReportsViewTab = () => {
                     )}
                   </TabsContent>
                 </Tabs>
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-gray-500">Loading details...</p>
               </div>
             )}
           </DialogContent>
