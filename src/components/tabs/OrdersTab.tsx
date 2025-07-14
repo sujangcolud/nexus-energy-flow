@@ -500,7 +500,7 @@ const OrdersTab = () => {
                                   </div>
                                 </div>
                                 <div className="flex items-center justify-between">
-                                  <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                                  <span className="text-xs text-gray-500 bg-gray-100 px-1 sm:px-2 py-1 rounded-full">
                                     {item.category}
                                   </span>
                                   <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
