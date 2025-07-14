@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -56,9 +57,12 @@ import {
 } from "date-fns";
 
 const ReportsViewTab = () => {
+  const [searchParams] = useSearchParams();
   const [dateRange, setDateRange] = useState({
-    startDate: new Date().toISOString().split("T")[0],
-    endDate: new Date().toISOString().split("T")[0],
+    startDate:
+      searchParams.get("startDate") || new Date().toISOString().split("T")[0],
+    endDate:
+      searchParams.get("endDate") || new Date().toISOString().split("T")[0],
   });
   const [reportData, setReportData] = useState<any>({});
   const [isLoading, setIsLoading] = useState(false);
@@ -89,37 +93,43 @@ const ReportsViewTab = () => {
           .select("*")
           .gte("order_date", startDate)
           .lte("order_date", endDate)
-          .eq("user_id", user.id),
+          .eq("user_id", user.id)
+          .order("order_date", { ascending: true }),
         supabase
           .from("charging_sessions")
           .select("*")
           .gte("session_date", startDate)
           .lte("session_date", endDate)
-          .eq("user_id", user.id),
+          .eq("user_id", user.id)
+          .order("session_date", { ascending: true }),
         supabase
           .from("expenses")
           .select("*")
           .gte("expense_date", startDate)
           .lte("expense_date", endDate)
-          .eq("user_id", user.id),
+          .eq("user_id", user.id)
+          .order("expense_date", { ascending: true }),
         supabase
           .from("cooperative_savings")
           .select("*")
           .gte("contribution_date", startDate)
           .lte("contribution_date", endDate)
-          .eq("user_id", user.id),
+          .eq("user_id", user.id)
+          .order("contribution_date", { ascending: true }),
         supabase
           .from("deposits")
           .select("*")
           .gte("deposit_date", startDate)
           .lte("deposit_date", endDate)
-          .eq("user_id", user.id),
+          .eq("user_id", user.id)
+          .order("deposit_date", { ascending: true }),
         supabase
           .from("withdrawals")
           .select("*")
           .gte("withdrawal_date", startDate)
           .lte("withdrawal_date", endDate)
-          .eq("user_id", user.id),
+          .eq("user_id", user.id)
+          .order("withdrawal_date", { ascending: true }),
       ]);
 
       setReportData({
@@ -214,12 +224,13 @@ const ReportsViewTab = () => {
       end: parseISO(dateRange.endDate),
     });
 
-    return days.map((day) => {
-      const dayStr = format(day, "yyyy-MM-dd");
+    return days
+      .map((day) => {
+        const dayStr = format(day, "yyyy-MM-dd");
 
-      const dayOrders = (reportData.orders || []).filter(
-        (order: any) => order.order_date === dayStr,
-      );
+        const dayOrders = (reportData.orders || []).filter(
+          (order: any) => order.order_date === dayStr,
+        );
       const dayCharging = (reportData.charging || []).filter(
         (session: any) => session.session_date === dayStr,
       );
@@ -265,6 +276,28 @@ const ReportsViewTab = () => {
       };
     });
   })();
+
+  const grandTotal = dailyBreakdown.reduce(
+    (acc, day) => {
+      acc.revenue += day.revenue;
+      acc.expenses += day.expenses;
+      acc.profit += day.profit;
+      acc.deposits += day.deposits;
+      acc.withdrawals += day.withdrawals;
+      acc.cashFlow += day.cashFlow;
+      acc.transactions += day.transactions;
+      return acc;
+    },
+    {
+      revenue: 0,
+      expenses: 0,
+      profit: 0,
+      deposits: 0,
+      withdrawals: 0,
+      cashFlow: 0,
+      transactions: 0,
+    },
+  );
 
   const openDayDetail = (dayData: any) => {
     const dayStr = dayData.date;
@@ -814,6 +847,21 @@ const ReportsViewTab = () => {
                           </TableRow>
                         ))}
                       </TableBody>
+                      <TableRow className="bg-gradient-to-r from-gray-100 to-blue-100 font-bold">
+                        <TableCell>Grand Total</TableCell>
+                        <TableCell>
+                          {formatCurrency(grandTotal.revenue)}
+                        </TableCell>
+                        <TableCell>
+                          {formatCurrency(grandTotal.expenses)}
+                        </TableCell>
+                        <TableCell>{formatCurrency(grandTotal.profit)}</TableCell>
+                        <TableCell>
+                          {formatCurrency(grandTotal.cashFlow)}
+                        </TableCell>
+                        <TableCell>{grandTotal.transactions}</TableCell>
+                        <TableCell />
+                      </TableRow>
                     </Table>
                   </div>
                 )}

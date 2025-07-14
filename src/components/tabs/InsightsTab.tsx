@@ -128,6 +128,7 @@ const InsightsTab = () => {
         depositsData,
         withdrawalsData,
         cooperativeData,
+        balancesData,
       ] = await Promise.all([
         supabase.from("orders").select("*").eq("user_id", user!.id),
         supabase.from("charging_sessions").select("*").eq("user_id", user!.id),
@@ -138,6 +139,7 @@ const InsightsTab = () => {
           .from("cooperative_savings")
           .select("*")
           .eq("user_id", user!.id),
+        supabase.from("balances").select("*").eq("user_id", user!.id).single(),
       ]);
 
       const orders = ordersData.data || [];
@@ -146,6 +148,7 @@ const InsightsTab = () => {
       const deposits = depositsData.data || [];
       const withdrawals = withdrawalsData.data || [];
       const cooperative = cooperativeData.data || [];
+      const balances = balancesData.data || {};
 
       // Calculate analytics
       const totalRevenue =
@@ -297,10 +300,10 @@ const InsightsTab = () => {
           revenue: 15.5,
           orders: 12.3,
         },
-        cashBalance: totalDeposits - totalWithdrawals,
-        esewaBalance: 0,
-        fonepayBalance: 0,
-        cooperativeBalance: cooperativeSavings,
+        cashBalance: balances.cash_in_hand,
+        esewaBalance: balances.esewa_balance,
+        fonepayBalance: balances.fonepay_balance,
+        cooperativeBalance: balances.cooperative_balance,
       };
 
       setAnalytics(analytics);
