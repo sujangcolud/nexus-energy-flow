@@ -888,7 +888,6 @@ const DepositsTab = () => {
                           </span>
                         </TableCell>
                         <TableCell>
-                        <TableCell>
                           {canEditTransactions && (
                             <div className="flex gap-2">
                               <Button
