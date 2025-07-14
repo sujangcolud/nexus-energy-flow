@@ -721,6 +721,14 @@ const DepositsTab = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
+                    <TableRow>
+                      <TableCell colSpan={1} className="font-bold">
+                        Total
+                      </TableCell>
+                      <TableCell colSpan={8} className="font-bold">
+                        NRs. {totalDeposits.toFixed(2)}
+                      </TableCell>
+                    </TableRow>
                     {deposits.map((deposit, index) => (
                       <TableRow
                         key={deposit.id}

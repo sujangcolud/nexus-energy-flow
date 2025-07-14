@@ -792,6 +792,23 @@ const ReportsViewTab = () => {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
+                        <TableRow className="bg-gradient-to-r from-gray-100 to-blue-100 font-bold">
+                          <TableCell>Grand Total</TableCell>
+                          <TableCell>
+                            {formatCurrency(grandTotal.revenue)}
+                          </TableCell>
+                          <TableCell>
+                            {formatCurrency(grandTotal.expenses)}
+                          </TableCell>
+                          <TableCell>
+                            {formatCurrency(grandTotal.profit)}
+                          </TableCell>
+                          <TableCell>
+                            {formatCurrency(grandTotal.cashFlow)}
+                          </TableCell>
+                          <TableCell>{grandTotal.transactions}</TableCell>
+                          <TableCell />
+                        </TableRow>
                         {dailyBreakdown.map((day, index) => (
                           <TableRow
                             key={day.date}
@@ -847,21 +864,6 @@ const ReportsViewTab = () => {
                           </TableRow>
                         ))}
                       </TableBody>
-                      <TableRow className="bg-gradient-to-r from-gray-100 to-blue-100 font-bold">
-                        <TableCell>Grand Total</TableCell>
-                        <TableCell>
-                          {formatCurrency(grandTotal.revenue)}
-                        </TableCell>
-                        <TableCell>
-                          {formatCurrency(grandTotal.expenses)}
-                        </TableCell>
-                        <TableCell>{formatCurrency(grandTotal.profit)}</TableCell>
-                        <TableCell>
-                          {formatCurrency(grandTotal.cashFlow)}
-                        </TableCell>
-                        <TableCell>{grandTotal.transactions}</TableCell>
-                        <TableCell />
-                      </TableRow>
                     </Table>
                   </div>
                 )}
