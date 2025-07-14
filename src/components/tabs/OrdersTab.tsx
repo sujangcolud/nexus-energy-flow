@@ -479,7 +479,7 @@ const OrdersTab = () => {
                               onClick={() => addToCart(item)}
                               style={{ animationDelay: `${index * 50}ms` }}
                             >
-                              <CardContent className="p-4">
+                              <CardContent className="p-2 sm:p-4">
                                 <div className="flex justify-between items-start mb-3">
                                   <div className="flex-1">
                                     <h4 className="font-bold text-lg text-gray-800 group-hover:text-orange-600 transition-colors mb-1">
