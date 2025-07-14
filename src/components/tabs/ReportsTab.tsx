@@ -123,6 +123,10 @@ const ReportsTab = () => {
     category: "",
     isRecurring: false,
   });
+  const [isReportDialogOpen, setIsReportDialogOpen] = useState(false);
+  const [selectedReport, setSelectedReport] = useState<ReportData | null>(
+    null,
+  );
 
   const itemsPerPage = 10;
   const reportTypes = [
@@ -515,10 +519,41 @@ const ReportsTab = () => {
 
   const downloadReport = (report: ReportData) => {
     const doc = new jsPDF() as jsPDFWithAutoTable;
-    const tableColumn = Object.keys(report.report_data.orders[0]);
-    const tableRows = report.report_data.orders.map((obj: any) =>
-      Object.values(obj),
-    );
+    const reportData = report.report_data;
+    let tableColumn: string[] = [];
+    let tableRows: any[][] = [];
+
+    switch (report.report_type) {
+      case "Order Report":
+        tableColumn = Object.keys(reportData.orders[0]);
+        tableRows = reportData.orders.map((obj: any) => Object.values(obj));
+        break;
+      case "Expense Report":
+        tableColumn = Object.keys(reportData.expenses[0]);
+        tableRows = reportData.expenses.map((obj: any) => Object.values(obj));
+        break;
+      case "Charging Report":
+        tableColumn = Object.keys(reportData.sessions[0]);
+        tableRows = reportData.sessions.map((obj: any) => Object.values(obj));
+        break;
+      case "Financial Summary":
+        tableColumn = ["Metric", "Value"];
+        tableRows = Object.entries(reportData.summary).map(([key, value]) => [
+          key,
+          JSON.stringify(value),
+        ]);
+        break;
+      case "Complete Business Report":
+        // For complete business report, we can export a summary
+        tableColumn = ["Metric", "Value"];
+        tableRows = Object.entries(reportData.financial.summary).map(
+          ([key, value]) => [key, JSON.stringify(value)],
+        );
+        break;
+      default:
+        toast.error("Export not implemented for this report type");
+        return;
+    }
 
     doc.autoTable({
       head: [tableColumn],
@@ -904,11 +939,10 @@ const ReportsTab = () => {
                                   variant="outline"
                                   size="sm"
                                   className="hover:bg-blue-50 hover:border-blue-300"
-                                  onClick={() =>
-                                    navigate(
-                                      `/dashboard/reports-view?startDate=${report.date_range_start}&endDate=${report.date_range_end}`,
-                                    )
-                                  }
+                                  onClick={() => {
+                                    setSelectedReport(report);
+                                    setIsReportDialogOpen(true);
+                                  }}
                                 >
                                   <Eye className="h-4 w-4 mr-1" />
                                   View
@@ -1169,6 +1203,18 @@ const ReportsTab = () => {
           </DialogContent>
         </Dialog>
       </div>
+      <Dialog open={isReportDialogOpen} onOpenChange={setIsReportDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{selectedReport?.report_type}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {selectedReport && (
+              <pre>{JSON.stringify(selectedReport.report_data, null, 2)}</pre>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
