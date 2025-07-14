@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Send, Bot, User, MessageCircle, X, Minimize2 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { fetchOpenAIAnswer } from '@/integrations/openai/client';
 import { toast } from '@/hooks/use-toast';
 
 interface Message {
@@ -53,44 +53,12 @@ const ChatBot = ({ isOpen, onToggle }: ChatBotProps) => {
     setIsLoading(true);
 
     try {
-      // Check if this is a business data query
-      const businessKeywords = ['sales', 'revenue', 'orders', 'expenses', 'analytics', 'report', 'data', 'profit', 'loss'];
-      const isBusinessQuery = businessKeywords.some(keyword => 
-        inputValue.toLowerCase().includes(keyword)
-      );
+      // We can optionally provide some context to the chatbot.
+      // For example, we can fetch some summary data from our database.
+      // This is just a placeholder for what you might want to include.
+      const businessContext = "The user is currently viewing their business dashboard.";
 
-      let botResponse = '';
-
-      if (isBusinessQuery) {
-        // Get some basic business data to provide context
-        const [ordersResult, expensesResult] = await Promise.all([
-          supabase.from('orders').select('total').gte('order_date', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]),
-          supabase.from('expenses').select('amount').gte('expense_date', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0])
-        ]);
-
-        const totalRevenue = ordersResult.data?.reduce((sum, order) => sum + order.total, 0) || 0;
-        const totalExpenses = expensesResult.data?.reduce((sum, expense) => sum + expense.amount, 0) || 0;
-        const profit = totalRevenue - totalExpenses;
-
-        if (inputValue.toLowerCase().includes('sales') || inputValue.toLowerCase().includes('revenue')) {
-          botResponse = `In the last 30 days, your total revenue from orders is NRs. ${totalRevenue.toLocaleString()}. You can view detailed sales analytics in the Analytics tab for more insights.`;
-        } else if (inputValue.toLowerCase().includes('expenses')) {
-          botResponse = `Your total expenses in the last 30 days amount to NRs. ${totalExpenses.toLocaleString()}. Check the Expenses tab to see category-wise breakdown.`;
-        } else if (inputValue.toLowerCase().includes('profit')) {
-          botResponse = `Based on the last 30 days data: Revenue: NRs. ${totalRevenue.toLocaleString()}, Expenses: NRs. ${totalExpenses.toLocaleString()}, Net Profit: NRs. ${profit.toLocaleString()}. ${profit > 0 ? 'Great job on maintaining profitability!' : 'Consider reviewing expenses to improve profitability.'}`;
-        } else {
-          botResponse = `I can see you're asking about business data. Here's a quick overview: Last 30 days - Revenue: NRs. ${totalRevenue.toLocaleString()}, Expenses: NRs. ${totalExpenses.toLocaleString()}. Visit the Analytics tab for detailed insights!`;
-        }
-      } else {
-        // General business assistance
-        const responses = [
-          "I'd be happy to help! For specific data queries, try asking about sales, revenue, expenses, or profits. I can also guide you to the right tabs in your dashboard.",
-          "You can find detailed analytics in the Analytics tab, create reports in the Reports section, or manage your data in the respective tabs. What specific information are you looking for?",
-          "Need help navigating the dashboard? You can access Orders, Charging sessions, Expenses, Deposits, and more from the main dashboard. Each section has detailed management capabilities.",
-          "For business insights, check out the Analytics tab which shows revenue trends, expense breakdowns, and key performance metrics. Is there something specific you'd like to know?"
-        ];
-        botResponse = responses[Math.floor(Math.random() * responses.length)];
-      }
+      const botResponse = await fetchOpenAIAnswer(inputValue, businessContext);
 
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
