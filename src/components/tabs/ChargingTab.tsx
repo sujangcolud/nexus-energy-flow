@@ -1,21 +1,48 @@
-
-import { useState, useEffect } from 'react';
-import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { toast } from 'sonner';
-import { Zap, Plus, Trash2, Calendar as CalendarIcon } from 'lucide-react';
-import { DateRange } from 'react-day-picker';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
-import { format } from 'date-fns';
-import { cn } from '@/lib/utils';
-import useTableControls from '@/hooks/useTableControls';
+import { useState, useEffect } from "react";
+import { useAuth } from "@/context/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { toast } from "sonner";
+import {
+  Zap,
+  Plus,
+  Trash2,
+  Calendar as CalendarIcon,
+  Battery,
+  BatteryCharging,
+  Lightning,
+  TrendingUp,
+  Activity,
+  Sparkles,
+} from "lucide-react";
+import { DateRange } from "react-day-picker";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
+import useTableControls from "@/hooks/useTableControls";
 
 interface ChargingSession {
   id: string;
@@ -35,21 +62,18 @@ const ChargingTab = () => {
   const [sessions, setSessions] = useState<ChargingSession[]>([]);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const {
-    page,
-    range,
-    onPageChange,
-    onRangeChange,
-    itemsPerPage,
-  } = useTableControls();
-  
+  const { page, range, onPageChange, onRangeChange, itemsPerPage } =
+    useTableControls();
+
   // Form state
   const [startPercentage, setStartPercentage] = useState(0);
   const [endPercentage, setEndPercentage] = useState(0);
   const [perPercentRate, setPerPercentRate] = useState(0);
   const [kcal, setKcal] = useState(0);
   const [perUnitRate, setPerUnitRate] = useState(0);
-  const [paymentMode, setPaymentMode] = useState('');
+  const [paymentMode, setPaymentMode] = useState("");
+
+  const paymentModes = ["Cash", "Esewa", "Fonepay", "Bank", "Cheque", "Credit"];
 
   const fetchSessions = async () => {
     if (!user) return;
@@ -57,26 +81,26 @@ const ChargingTab = () => {
     setLoading(true);
     try {
       let query = supabase
-        .from('charging_sessions')
-        .select('*', { count: 'exact' })
-        .eq('user_id', user.id);
+        .from("charging_sessions")
+        .select("*", { count: "exact" })
+        .eq("user_id", user.id);
 
       if (range?.from) {
-        query = query.gte('session_date', format(range.from, 'yyyy-MM-dd'));
+        query = query.gte("session_date", format(range.from, "yyyy-MM-dd"));
       }
       if (range?.to) {
-        query = query.lte('session_date', format(range.to, 'yyyy-MM-dd'));
+        query = query.lte("session_date", format(range.to, "yyyy-MM-dd"));
       }
 
       const { data, error, count } = await query
-        .order('created_at', { ascending: false })
+        .order("created_at", { ascending: false })
         .range((page - 1) * itemsPerPage, page * itemsPerPage - 1);
 
       if (error) throw error;
       setSessions(data || []);
     } catch (error) {
-      console.error('Error fetching charging sessions:', error);
-      toast.error('Failed to load charging sessions');
+      console.error("Error fetching charging sessions:", error);
+      toast.error("Failed to load charging sessions");
     } finally {
       setLoading(false);
     }
@@ -86,292 +110,617 @@ const ChargingTab = () => {
     fetchSessions();
   }, [user, page, range]);
 
-  const calculateTotal = () => {
-    let percentageAmount = 0;
-    let unitAmount = 0;
-    
-    if (endPercentage > startPercentage && perPercentRate > 0) {
-      percentageAmount = (endPercentage - startPercentage) * perPercentRate;
-    }
-    
-    if (kcal > 0 && perUnitRate > 0) {
-      unitAmount = kcal * perUnitRate;
-    }
-    
-    return percentageAmount + unitAmount;
+  const calculateChargedPercentage = () => {
+    return Math.max(0, endPercentage - startPercentage);
+  };
+
+  const calculatePercentageCost = () => {
+    return calculateChargedPercentage() * perPercentRate;
+  };
+
+  const calculateKcalCost = () => {
+    return kcal * perUnitRate;
+  };
+
+  const calculateTotalAmount = () => {
+    return calculatePercentageCost() + calculateKcalCost();
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !paymentMode) {
-      toast.error('Please fill all required fields');
+
+    if (!user) {
+      toast.error("User not authenticated");
       return;
     }
 
-    const totalAmount = calculateTotal();
-    if (totalAmount <= 0) {
-      toast.error('Please enter valid charging data');
+    if (endPercentage <= startPercentage) {
+      toast.error("End percentage must be greater than start percentage");
+      return;
+    }
+
+    if (!paymentMode) {
+      toast.error("Please select a payment mode");
       return;
     }
 
     setSubmitting(true);
     try {
-      const { error } = await supabase
-        .from('charging_sessions')
-        .insert({
-          user_id: user.id,
-          start_percentage: startPercentage || null,
-          end_percentage: endPercentage || null,
-          per_percent_rate: perPercentRate || null,
-          kcal: kcal || null,
-          per_unit_rate: perUnitRate || null,
-          total_amount: totalAmount,
-          payment_mode: paymentMode
-        });
+      const totalAmount = calculateTotalAmount();
+
+      const { error } = await supabase.from("charging_sessions").insert({
+        user_id: user.id,
+        start_percentage: startPercentage,
+        end_percentage: endPercentage,
+        per_percent_rate: perPercentRate,
+        kcal: kcal,
+        per_unit_rate: perUnitRate,
+        total_amount: totalAmount,
+        payment_mode: paymentMode,
+        session_date: new Date().toISOString().split("T")[0],
+      });
 
       if (error) throw error;
 
-      toast.success('Charging session submitted successfully!');
-      
+      toast.success("Charging session recorded successfully!");
+
       // Reset form
       setStartPercentage(0);
       setEndPercentage(0);
       setPerPercentRate(0);
       setKcal(0);
       setPerUnitRate(0);
-      setPaymentMode('');
-      
-      // Refresh sessions
+      setPaymentMode("");
+
       fetchSessions();
     } catch (error) {
-      console.error('Error submitting charging session:', error);
-      toast.error('Failed to submit charging session');
+      console.error("Error saving charging session:", error);
+      toast.error("Failed to save charging session");
     } finally {
       setSubmitting(false);
     }
   };
 
+  const totalSessionCost = sessions.reduce(
+    (sum, session) => sum + session.total_amount,
+    0,
+  );
+  const averageSessionCost =
+    sessions.length > 0 ? totalSessionCost / sessions.length : 0;
+  const totalKcal = sessions.reduce((sum, session) => sum + session.kcal, 0);
+
   return (
-    <div className="space-y-6"> {/* Removed top padding pt-4 md:pt-6 */}
-      <div className="flex items-center gap-2">
-        <Zap className="h-5 w-5 text-yellow-600" />
-        <h2 className="text-xl font-semibold text-gray-900">Charging Sessions</h2>
+    <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-orange-50 to-red-50 relative overflow-hidden">
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-20 left-20 w-64 h-64 bg-gradient-to-r from-yellow-400/20 to-orange-500/20 rounded-full blur-3xl animate-pulse"></div>
+        <div
+          className="absolute top-1/3 right-20 w-80 h-80 bg-gradient-to-r from-orange-400/20 to-red-500/20 rounded-full blur-3xl animate-pulse"
+          style={{ animationDelay: "1s" }}
+        ></div>
+        <div
+          className="absolute bottom-20 left-1/4 w-72 h-72 bg-gradient-to-r from-red-400/20 to-pink-500/20 rounded-full blur-3xl animate-pulse"
+          style={{ animationDelay: "2s" }}
+        ></div>
       </div>
 
-      {/* Charging Form */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Plus className="h-4 w-4" />
-            Add New Charging Session
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Start Percentage (%)</label>
-                <Input
-                  type="number"
-                  min="0"
-                  max="100"
-                  step="0.1"
-                  value={startPercentage}
-                  onChange={(e) => setStartPercentage(parseFloat(e.target.value) || 0)}
-                  placeholder="0"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-medium">End Percentage (%)</label>
-                <Input
-                  type="number"
-                  min="0"
-                  max="100"
-                  step="0.1"
-                  value={endPercentage}
-                  onChange={(e) => setEndPercentage(parseFloat(e.target.value) || 0)}
-                  placeholder="0"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Rate per % (Rs.)</label>
-                <Input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={perPercentRate}
-                  onChange={(e) => setPerPercentRate(parseFloat(e.target.value) || 0)}
-                  placeholder="0.00"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-medium">kCal</label>
-                <Input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={kcal}
-                  onChange={(e) => setKcal(parseFloat(e.target.value) || 0)}
-                  placeholder="0.00"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Rate per Unit (Rs.)</label>
-                <Input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={perUnitRate}
-                  onChange={(e) => setPerUnitRate(parseFloat(e.target.value) || 0)}
-                  placeholder="0.00"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Payment Mode</label>
-                <Select value={paymentMode} onValueChange={setPaymentMode} required>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select payment mode" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Cash">Cash</SelectItem>
-                    <SelectItem value="Esewa">Esewa</SelectItem>
-                    <SelectItem value="Fonepay">Fonepay</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+      <div className="relative z-10 space-y-8 p-6">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <div className="p-4 rounded-2xl bg-gradient-to-r from-yellow-500 to-orange-600 text-white shadow-xl animate-pulse">
+              <Zap className="h-8 w-8" />
             </div>
-            
-            <div className="flex items-center justify-between pt-4">
-              <div className="text-lg font-medium text-gray-900">
-                Total Amount: Rs. {calculateTotal().toFixed(2)}
-              </div>
-              <Button type="submit" disabled={submitting}>
-                {submitting ? 'Submitting...' : 'Submit Session'}
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-yellow-600 via-orange-600 to-red-600 bg-clip-text text-transparent">
+              Energy Charging Station
+            </h1>
+            <Lightning className="h-8 w-8 text-yellow-500 animate-bounce" />
+          </div>
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            Track your electric vehicle charging sessions with precision and
+            style
+          </p>
+        </div>
 
-      {/* Sessions List */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Recent Charging Sessions</CardTitle>
-          <div className="flex items-center gap-2">
-            <Popover>
-              <PopoverTrigger asChild>
+        {/* Quick Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <Card className="bg-gradient-to-br from-yellow-50 to-orange-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-yellow-600 font-medium">
+                    Total Sessions
+                  </p>
+                  <p className="text-2xl font-bold text-yellow-800">
+                    {sessions.length}
+                  </p>
+                </div>
+                <div className="p-3 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-xl text-white">
+                  <BatteryCharging className="h-6 w-6" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-orange-50 to-red-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-orange-600 font-medium">
+                    Total Cost
+                  </p>
+                  <p className="text-2xl font-bold text-orange-800">
+                    NRs. {totalSessionCost.toFixed(2)}
+                  </p>
+                </div>
+                <div className="p-3 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl text-white">
+                  <TrendingUp className="h-6 w-6" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-red-50 to-pink-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-red-600 font-medium">
+                    Average Cost
+                  </p>
+                  <p className="text-2xl font-bold text-red-800">
+                    NRs. {averageSessionCost.toFixed(2)}
+                  </p>
+                </div>
+                <div className="p-3 bg-gradient-to-r from-red-500 to-pink-500 rounded-xl text-white">
+                  <Activity className="h-6 w-6" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-pink-50 to-purple-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-pink-600 font-medium">
+                    Total Energy
+                  </p>
+                  <p className="text-2xl font-bold text-pink-800">
+                    {totalKcal} kCal
+                  </p>
+                </div>
+                <div className="p-3 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl text-white">
+                  <Battery className="h-6 w-6" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Charging Session Form */}
+          <Card className="bg-gradient-to-br from-white/90 to-yellow-50/90 backdrop-blur-sm border-0 shadow-2xl hover:shadow-3xl transition-all duration-300">
+            <CardHeader className="bg-gradient-to-r from-yellow-500 to-orange-600 text-white rounded-t-lg">
+              <CardTitle className="flex items-center gap-3 text-xl">
+                <div className="p-2 bg-white/20 rounded-lg">
+                  <Lightning className="h-6 w-6" />
+                </div>
+                New Charging Session
+                <Sparkles className="h-5 w-5 animate-pulse" />
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-6 space-y-6">
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Battery Percentage Section */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                      <Battery className="h-4 w-4 text-yellow-600" />
+                      Start Battery %
+                    </label>
+                    <Input
+                      type="number"
+                      value={startPercentage}
+                      onChange={(e) =>
+                        setStartPercentage(Number(e.target.value))
+                      }
+                      placeholder="0"
+                      min="0"
+                      max="100"
+                      required
+                      className="border-yellow-200 focus:border-yellow-500 focus:ring-yellow-500"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                      <BatteryCharging className="h-4 w-4 text-green-600" />
+                      End Battery %
+                    </label>
+                    <Input
+                      type="number"
+                      value={endPercentage}
+                      onChange={(e) => setEndPercentage(Number(e.target.value))}
+                      placeholder="0"
+                      min="0"
+                      max="100"
+                      required
+                      className="border-green-200 focus:border-green-500 focus:ring-green-500"
+                    />
+                  </div>
+                </div>
+
+                {/* Charging Progress Visualization */}
+                {startPercentage > 0 && endPercentage > startPercentage && (
+                  <div className="p-4 bg-gradient-to-r from-yellow-50 to-green-50 rounded-lg border border-yellow-200">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-gray-600">
+                        Charging Progress
+                      </span>
+                      <span className="text-lg font-bold bg-gradient-to-r from-yellow-600 to-green-600 bg-clip-text text-transparent">
+                        +{calculateChargedPercentage()}%
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-3">
+                      <div
+                        className="bg-gradient-to-r from-yellow-500 to-green-500 h-3 rounded-full transition-all duration-500"
+                        style={{ width: `${calculateChargedPercentage()}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Rates Section */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700">
+                      Rate per %
+                    </label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={perPercentRate}
+                      onChange={(e) =>
+                        setPerPercentRate(Number(e.target.value))
+                      }
+                      placeholder="0.00"
+                      min="0"
+                      required
+                      className="border-orange-200 focus:border-orange-500 focus:ring-orange-500"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700">
+                      kCal Consumed
+                    </label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={kcal}
+                      onChange={(e) => setKcal(Number(e.target.value))}
+                      placeholder="0.00"
+                      min="0"
+                      required
+                      className="border-red-200 focus:border-red-500 focus:ring-red-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700">
+                      Rate per kCal
+                    </label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={perUnitRate}
+                      onChange={(e) => setPerUnitRate(Number(e.target.value))}
+                      placeholder="0.00"
+                      min="0"
+                      required
+                      className="border-purple-200 focus:border-purple-500 focus:ring-purple-500"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700">
+                      Payment Mode
+                    </label>
+                    <Select
+                      value={paymentMode}
+                      onValueChange={setPaymentMode}
+                      required
+                    >
+                      <SelectTrigger className="border-blue-200 focus:border-blue-500 focus:ring-blue-500">
+                        <SelectValue placeholder="Select payment mode" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {paymentModes.map((mode) => (
+                          <SelectItem key={mode} value={mode}>
+                            {mode}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {/* Cost Calculation Display */}
+                {(startPercentage > 0 || kcal > 0) && (
+                  <div className="p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
+                    <h4 className="font-semibold text-gray-800 mb-3">
+                      Cost Breakdown
+                    </h4>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span>Percentage Cost:</span>
+                        <span className="font-medium">
+                          NRs. {calculatePercentageCost().toFixed(2)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>kCal Cost:</span>
+                        <span className="font-medium">
+                          NRs. {calculateKcalCost().toFixed(2)}
+                        </span>
+                      </div>
+                      <div className="border-t border-blue-200 pt-2 flex justify-between font-bold text-lg">
+                        <span>Total Amount:</span>
+                        <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                          NRs. {calculateTotalAmount().toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 <Button
-                  id="date"
-                  variant={"outline"}
-                  className={cn(
-                    "w-[300px] justify-start text-left font-normal",
-                    !range && "text-muted-foreground"
-                  )}
+                  type="submit"
+                  disabled={submitting}
+                  className="w-full h-12 bg-gradient-to-r from-yellow-500 via-orange-500 to-red-500 hover:from-yellow-600 hover:via-orange-600 hover:to-red-600 text-white font-semibold shadow-lg transition-all duration-300 transform hover:scale-105"
                 >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {range?.from ? (
-                    range.to ? (
-                      <>
-                        {format(range.from, "LLL dd, y")} -{" "}
-                        {format(range.to, "LLL dd, y")}
-                      </>
-                    ) : (
-                      format(range.from, "LLL dd, y")
-                    )
+                  {submitting ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                      Recording Session...
+                    </div>
                   ) : (
-                    <span>Pick a date</span>
+                    <div className="flex items-center gap-2">
+                      <Plus className="h-5 w-5" />
+                      Record Charging Session
+                    </div>
                   )}
                 </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="end">
-                <Calendar
-                  initialFocus
-                  mode="range"
-                  defaultMonth={range?.from}
-                  selected={range}
-                  onSelect={onRangeChange}
-                  numberOfMonths={2}
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <div className="text-center py-4">Loading sessions...</div>
-          ) : sessions.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              No charging sessions found. Create your first session above.
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Start %</TableHead>
-                    <TableHead>End %</TableHead>
-                    <TableHead>Rate/%</TableHead>
-                    <TableHead>kCal</TableHead>
-                    <TableHead>Rate/Unit</TableHead>
-                    <TableHead>Total</TableHead>
-                    <TableHead>Payment</TableHead>
-                    <TableHead>Date</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  <TableRow className="bg-gray-100 font-semibold">
-                    <TableCell colSpan={5} className="text-right font-bold">Total</TableCell>
-                    <TableCell className="font-bold">
-                      Rs. {sessions.reduce((acc, session) => acc + Number(session.total_amount), 0).toFixed(2)}
-                    </TableCell>
-                    <TableCell colSpan={2}></TableCell>
-                  </TableRow>
-                  {sessions.map((session) => (
-                    <TableRow key={session.id}>
-                      <TableCell>{session.start_percentage || '-'}</TableCell>
-                      <TableCell>{session.end_percentage || '-'}</TableCell>
-                      <TableCell>{session.per_percent_rate || '-'}</TableCell>
-                      <TableCell>{session.kcal || '-'}</TableCell>
-                      <TableCell>{session.per_unit_rate || '-'}</TableCell>
-                      <TableCell>Rs. {session.total_amount}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline">{session.payment_mode}</Badge>
-                      </TableCell>
-                      <TableCell>{new Date(session.session_date).toLocaleDateString()}</TableCell>
-                    </TableRow>
+              </form>
+            </CardContent>
+          </Card>
+
+          {/* Recent Sessions Preview */}
+          <Card className="bg-gradient-to-br from-white/90 to-blue-50/90 backdrop-blur-sm border-0 shadow-2xl hover:shadow-3xl transition-all duration-300">
+            <CardHeader className="bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-t-lg">
+              <CardTitle className="flex items-center gap-3 text-xl">
+                <div className="p-2 bg-white/20 rounded-lg">
+                  <Activity className="h-6 w-6" />
+                </div>
+                Recent Sessions
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-6">
+              {sessions.length === 0 ? (
+                <div className="text-center py-8">
+                  <BatteryCharging className="h-16 w-16 mx-auto text-gray-300 mb-4" />
+                  <p className="text-gray-500 text-lg font-medium">
+                    No charging sessions yet
+                  </p>
+                  <p className="text-gray-400">
+                    Record your first session to get started!
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3 max-h-96 overflow-y-auto">
+                  {sessions.slice(0, 5).map((session, index) => (
+                    <div
+                      key={session.id}
+                      className="p-4 bg-gradient-to-r from-white to-blue-50 rounded-lg border border-blue-100 hover:shadow-md transition-all duration-200"
+                      style={{ animationDelay: `${index * 100}ms` }}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg text-white">
+                            <Zap className="h-4 w-4" />
+                          </div>
+                          <div>
+                            <p className="font-medium text-gray-800">
+                              {session.start_percentage}% →{" "}
+                              {session.end_percentage}%
+                            </p>
+                            <p className="text-sm text-gray-500">
+                              {format(
+                                new Date(session.session_date),
+                                "MMM dd, yyyy",
+                              )}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-bold text-blue-600">
+                            NRs. {session.total_amount.toFixed(2)}
+                          </p>
+                          <Badge variant="outline" className="text-xs">
+                            {session.payment_mode}
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
                   ))}
-                </TableBody>
-              </Table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Charging History */}
+        <Card className="bg-gradient-to-br from-white/90 to-gray-50/90 backdrop-blur-sm border-0 shadow-2xl">
+          <CardHeader className="border-b border-gray-200/50 flex flex-row items-center justify-between">
+            <CardTitle className="text-2xl font-bold bg-gradient-to-r from-gray-700 to-gray-900 bg-clip-text text-transparent">
+              Charging History
+            </CardTitle>
+            <div className="flex items-center gap-2">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-[300px] justify-start text-left font-normal hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50",
+                      !range && "text-muted-foreground",
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {range?.from ? (
+                      range.to ? (
+                        <>
+                          {format(range.from, "LLL dd, y")} -{" "}
+                          {format(range.to, "LLL dd, y")}
+                        </>
+                      ) : (
+                        format(range.from, "LLL dd, y")
+                      )
+                    ) : (
+                      <span>Pick a date range</span>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="end">
+                  <Calendar
+                    initialFocus
+                    mode="range"
+                    defaultMonth={range?.from}
+                    selected={range}
+                    onSelect={onRangeChange}
+                    numberOfMonths={2}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+          </CardHeader>
+          <CardContent className="p-0">
+            {loading ? (
+              <div className="text-center py-10">
+                <div className="w-16 h-16 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full animate-spin mx-auto flex items-center justify-center mb-4">
+                  <Zap className="h-8 w-8 text-white" />
+                </div>
+                <p className="text-gray-600">Loading charging sessions...</p>
+              </div>
+            ) : sessions.length === 0 ? (
+              <div className="text-center py-12">
+                <BatteryCharging className="h-16 w-16 mx-auto text-gray-300 mb-4" />
+                <p className="text-xl font-semibold text-gray-700 mb-2">
+                  No sessions found
+                </p>
+                <p className="text-gray-500">
+                  Start recording your charging sessions to see them here.
+                </p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-gradient-to-r from-gray-50 to-blue-50">
+                      <TableHead className="font-semibold text-gray-700">
+                        Date
+                      </TableHead>
+                      <TableHead className="font-semibold text-gray-700">
+                        Battery Range
+                      </TableHead>
+                      <TableHead className="font-semibold text-gray-700">
+                        Energy (kCal)
+                      </TableHead>
+                      <TableHead className="font-semibold text-gray-700">
+                        Rates
+                      </TableHead>
+                      <TableHead className="font-semibold text-gray-700">
+                        Total Amount
+                      </TableHead>
+                      <TableHead className="font-semibold text-gray-700">
+                        Payment
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {sessions.map((session, index) => (
+                      <TableRow
+                        key={session.id}
+                        className="hover:bg-gradient-to-r hover:from-yellow-50 hover:to-orange-50 transition-all duration-200"
+                        style={{ animationDelay: `${index * 50}ms` }}
+                      >
+                        <TableCell className="font-medium">
+                          {format(
+                            new Date(session.session_date),
+                            "MMM dd, yyyy",
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Battery className="h-4 w-4 text-red-500" />
+                            <span>{session.start_percentage}%</span>
+                            <span className="text-gray-400">→</span>
+                            <BatteryCharging className="h-4 w-4 text-green-500" />
+                            <span>{session.end_percentage}%</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>{session.kcal} kCal</TableCell>
+                        <TableCell>
+                          <div className="text-sm">
+                            <div>Per %: NRs. {session.per_percent_rate}</div>
+                            <div>Per kCal: NRs. {session.per_unit_rate}</div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <span className="font-bold text-lg bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">
+                            NRs. {session.total_amount.toFixed(2)}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            variant="outline"
+                            className="bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200"
+                          >
+                            {session.payment_mode}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </CardContent>
+          {sessions.length > 0 && (
+            <div className="flex justify-center p-4 border-t border-gray-200">
+              <div className="flex items-center gap-4">
+                <Button
+                  onClick={() => onPageChange(page - 1)}
+                  disabled={page === 1}
+                  variant="outline"
+                  className="hover:bg-gradient-to-r hover:from-yellow-50 hover:to-orange-50"
+                >
+                  Previous
+                </Button>
+                <span className="px-4 py-2 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg font-medium">
+                  Page {page}
+                </span>
+                <Button
+                  onClick={() => onPageChange(page + 1)}
+                  disabled={sessions.length < itemsPerPage}
+                  variant="outline"
+                  className="hover:bg-gradient-to-r hover:from-yellow-50 hover:to-orange-50"
+                >
+                  Next
+                </Button>
+              </div>
             </div>
           )}
-        </CardContent>
-        {sessions.length > 0 && (
-          <div className="flex justify-center p-4">
-            <Button
-              onClick={() => onPageChange(page - 1)}
-              disabled={page === 1}
-              variant="outline"
-            >
-              Previous
-            </Button>
-            <span className="p-2">
-              Page {page}
-            </span>
-            <Button
-              onClick={() => onPageChange(page + 1)}
-              disabled={sessions.length < itemsPerPage}
-              variant="outline"
-            >
-              Next
-            </Button>
-          </div>
-        )}
-      </Card>
+        </Card>
+      </div>
     </div>
   );
 };
