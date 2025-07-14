@@ -36,6 +36,13 @@ import {
 } from "lucide-react";
 import { DateRange } from "react-day-picker";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
   Popover,
   PopoverContent,
   PopoverTrigger,
@@ -69,6 +76,9 @@ const ExpensesTab = () => {
   const { user } = useAuth();
   const { page, range, onPageChange, onRangeChange, itemsPerPage } =
     useTableControls();
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
+  const [canEditTransactions, setCanEditTransactions] = useState(false);
 
   const categories = [
     "Food & Beverages",
@@ -108,6 +118,10 @@ const ExpensesTab = () => {
 
   useEffect(() => {
     fetchExpenses();
+    const canEdit = localStorage.getItem("canEditTransactions");
+    if (canEdit) {
+      setCanEditTransactions(JSON.parse(canEdit));
+    }
   }, [user, page, range]);
 
   const fetchExpenses = async () => {
@@ -206,8 +220,108 @@ const ExpensesTab = () => {
     ([, a], [, b]) => b - a,
   )[0];
 
+  const handleUpdate = async () => {
+    if (!selectedExpense) return;
+
+    try {
+      const { error } = await supabase
+        .from("expenses")
+        .update(selectedExpense)
+        .eq("id", selectedExpense.id);
+
+      if (error) throw error;
+
+      toast.success("Expense updated successfully!");
+      setIsEditDialogOpen(false);
+      fetchExpenses();
+    } catch (error) {
+      console.error("Error updating expense:", error);
+      toast.error("Failed to update expense");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-50 via-pink-50 to-purple-50 relative overflow-hidden">
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Expense</DialogTitle>
+          </DialogHeader>
+          {selectedExpense && (
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="editDescription">Description</Label>
+                <Input
+                  id="editDescription"
+                  value={selectedExpense.description}
+                  onChange={(e) =>
+                    setSelectedExpense({
+                      ...selectedExpense,
+                      description: e.target.value,
+                    })
+                  }
+                />
+              </div>
+              <div>
+                <Label htmlFor="editAmount">Amount</Label>
+                <Input
+                  id="editAmount"
+                  type="number"
+                  value={selectedExpense.amount}
+                  onChange={(e) =>
+                    setSelectedExpense({
+                      ...selectedExpense,
+                      amount: parseFloat(e.target.value),
+                    })
+                  }
+                />
+              </div>
+              <div>
+                <Label htmlFor="editCategory">Category</Label>
+                <Input
+                  id="editCategory"
+                  value={selectedExpense.category}
+                  onChange={(e) =>
+                    setSelectedExpense({
+                      ...selectedExpense,
+                      category: e.target.value,
+                    })
+                  }
+                />
+              </div>
+              <div>
+                <Label htmlFor="editPaymentMode">Payment Mode</Label>
+                <Input
+                  id="editPaymentMode"
+                  value={selectedExpense.payment_mode}
+                  onChange={(e) =>
+                    setSelectedExpense({
+                      ...selectedExpense,
+                      payment_mode: e.target.value,
+                    })
+                  }
+                />
+              </div>
+              <div>
+                <Label htmlFor="editRemarks">Remarks</Label>
+                <Input
+                  id="editRemarks"
+                  value={selectedExpense.remarks || ""}
+                  onChange={(e) =>
+                    setSelectedExpense({
+                      ...selectedExpense,
+                      remarks: e.target.value,
+                    })
+                  }
+                />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button onClick={handleUpdate}>Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-20 w-64 h-64 bg-gradient-to-r from-red-400/20 to-pink-500/20 rounded-full blur-3xl animate-pulse"></div>
@@ -622,6 +736,9 @@ const ExpensesTab = () => {
                       <TableHead className="font-semibold text-gray-700">
                         Remarks
                       </TableHead>
+                      <TableHead className="font-semibold text-gray-700">
+                        Actions
+                      </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -680,6 +797,20 @@ const ExpensesTab = () => {
                           >
                             {expense.remarks || "-"}
                           </span>
+                        </TableCell>
+                        <TableCell>
+                          {canEditTransactions && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedExpense(expense);
+                                setIsEditDialogOpen(true);
+                              }}
+                            >
+                              Edit
+                            </Button>
+                          )}
                         </TableCell>
                       </TableRow>
                     ))}
