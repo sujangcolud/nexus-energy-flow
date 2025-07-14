@@ -213,7 +213,7 @@ const ChargingTab = () => {
             <h1 className="text-4xl font-bold bg-gradient-to-r from-yellow-600 via-orange-600 to-red-600 bg-clip-text text-transparent">
               Energy Charging Station
             </h1>
-            <Lightning className="h-8 w-8 text-yellow-500 animate-bounce" />
+            <Zap className="h-8 w-8 text-yellow-500 animate-bounce" />
           </div>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
             Track your electric vehicle charging sessions with precision and
