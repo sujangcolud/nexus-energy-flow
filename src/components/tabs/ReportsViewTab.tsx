@@ -311,12 +311,17 @@ const ReportsViewTab = () => {
     const dayExpenses = (reportData.expenses || []).filter(
       (expense: any) => expense.expense_date === dayStr,
     );
+    const totalExpenses = dayExpenses.reduce(
+      (sum: number, expense: any) => sum + expense.amount,
+      0,
+    );
 
     setSelectedDayData({
       ...dayData,
       orders: dayOrders,
       charging: dayCharging,
       expenses: dayExpenses,
+      totalExpenses,
     });
     setIsDetailModalOpen(true);
   };
@@ -1030,7 +1035,7 @@ const ReportsViewTab = () => {
                   <div className="p-3 bg-gradient-to-r from-red-50 to-pink-50 rounded-lg">
                     <p className="text-sm text-red-600 font-medium">Expenses</p>
                     <p className="text-lg font-bold text-red-800">
-                      {formatCurrency(selectedDayData.expenses)}
+                      {formatCurrency(selectedDayData.totalExpenses)}
                     </p>
                   </div>
                   <div className="p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg">
