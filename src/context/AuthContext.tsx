@@ -189,7 +189,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     const redirectUrl = `${window.location.origin}/dashboard`;
 
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -231,6 +231,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       }
 
       console.log("Signup successful");
+
+      // Create an initial balance record for the new user
+      if (data.user) {
+        const { error: balanceError } = await supabase
+          .from("balances")
+          .insert({ user_id: data.user.id });
+        if (balanceError) {
+          console.error("Error creating initial balance:", balanceError);
+        }
+      }
     } catch (error: any) {
       console.error("Signup error:", error);
       throw error;
