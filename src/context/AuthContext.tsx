@@ -184,37 +184,42 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 
   const logout = async () => {
     try {
-      // Check if there's an active session before trying to sign out
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      if (session) {
-        const { error } = await supabase.auth.signOut();
-        if (error) {
-          console.error("Error signing out:", error);
-          throw error;
-        }
-      }
-
-      // Always clear local state regardless of whether there was a session
+      // Always clear local state first
       setUser(null);
       setSession(null);
+
+      // Try to sign out from Supabase, but don't fail if there's no session
+      const { error } = await supabase.auth.signOut();
+
+      if (error) {
+        // If it's an auth session missing error, that's fine - we already cleared local state
+        if (
+          error.message?.includes("Auth session missing") ||
+          error.name === "AuthSessionMissingError"
+        ) {
+          console.log(
+            "No active session to sign out from, local state cleared",
+          );
+          return;
+        }
+
+        // For other errors, log them but don't throw to avoid breaking the UX
+        console.error("Error signing out:", error);
+      }
     } catch (error: any) {
-      // If the error is about missing session, just clear local state
+      // Catch any other errors and handle auth session missing gracefully
       if (
         error.message?.includes("Auth session missing") ||
         error.name === "AuthSessionMissingError"
       ) {
-        console.log("No active session to sign out from, clearing local state");
-        setUser(null);
-        setSession(null);
+        console.log(
+          "No active session to sign out from, local state already cleared",
+        );
         return;
       }
 
-      // For other errors, re-throw
-      console.error("Error signing out:", error);
-      throw error;
+      // For unexpected errors, log but don't throw to maintain good UX
+      console.error("Unexpected error during logout:", error);
     }
   };
 
