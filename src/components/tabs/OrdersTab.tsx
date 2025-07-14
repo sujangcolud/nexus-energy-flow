@@ -486,7 +486,7 @@ const OrdersTab = () => {
                                       {item.name}
                                     </h4>
                                     {item.description && (
-                                      <p className="text-sm text-gray-600 line-clamp-2 mb-2">
+                                      <p className="text-xs sm:text-sm text-gray-600 line-clamp-2 mb-2">
                                         {item.description}
                                       </p>
                                     )}
