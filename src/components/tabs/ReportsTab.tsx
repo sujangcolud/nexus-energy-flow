@@ -446,7 +446,7 @@ const ReportsTab = () => {
     dateFrom: string | null,
     dateTo: string | null,
   ) => {
-    const [financial, orders, expenses, charging] = await Promise.all([
+    const [financial, orders, expenseReport, charging] = await Promise.all([
       generateFinancialSummary(dateFrom, dateTo),
       generateOrderReport(dateFrom, dateTo),
       generateExpenseReport(dateFrom, dateTo),
@@ -456,7 +456,7 @@ const ReportsTab = () => {
     return {
       financial,
       orders,
-      expenses,
+      expenses: expenseReport.expenses,
       charging,
       period: { from: dateFrom, to: dateTo },
       generatedAt: new Date().toISOString(),
