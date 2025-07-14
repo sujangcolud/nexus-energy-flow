@@ -43,6 +43,13 @@ import {
 } from "lucide-react";
 import { DateRange } from "react-day-picker";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
   Popover,
   PopoverContent,
   PopoverTrigger,
@@ -91,6 +98,9 @@ const OrdersTab = () => {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const { page, range, onPageChange, onRangeChange, itemsPerPage } =
     useTableControls();
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [canEditTransactions, setCanEditTransactions] = useState(false);
 
   const paymentModes = ["Cash", "Esewa", "Fonepay", "Bank", "Cheque", "Credit"];
 
@@ -153,6 +163,10 @@ const OrdersTab = () => {
   useEffect(() => {
     fetchOrders();
     fetchMenuItems();
+    const canEdit = localStorage.getItem("canEditTransactions");
+    if (canEdit) {
+      setCanEditTransactions(JSON.parse(canEdit));
+    }
   }, [user, page, range]);
 
   const addToCart = (menuItem: MenuItem) => {
@@ -287,8 +301,110 @@ const OrdersTab = () => {
   const currentMenuItemsToDisplay = filteredMenuItems();
   const totalOrders = orders.reduce((sum, order) => sum + order.total, 0);
 
+  const handleUpdate = async () => {
+    if (!selectedOrder) return;
+
+    try {
+      const { error } = await supabase
+        .from("orders")
+        .update(selectedOrder)
+        .eq("id", selectedOrder.id);
+
+      if (error) throw error;
+
+      toast.success("Order updated successfully!");
+      setIsEditDialogOpen(false);
+      fetchOrders();
+    } catch (error) {
+      console.error("Error updating order:", error);
+      toast.error("Failed to update order");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-pink-50 to-red-50 relative overflow-hidden">
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Order</DialogTitle>
+          </DialogHeader>
+          {selectedOrder && (
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="editItemName">Item Name</Label>
+                <Input
+                  id="editItemName"
+                  value={selectedOrder.item_name}
+                  onChange={(e) =>
+                    setSelectedOrder({
+                      ...selectedOrder,
+                      item_name: e.target.value,
+                    })
+                  }
+                />
+              </div>
+              <div>
+                <Label htmlFor="editQuantity">Quantity</Label>
+                <Input
+                  id="editQuantity"
+                  type="number"
+                  value={selectedOrder.quantity}
+                  onChange={(e) =>
+                    setSelectedOrder({
+                      ...selectedOrder,
+                      quantity: parseInt(e.target.value),
+                    })
+                  }
+                />
+              </div>
+              <div>
+                <Label htmlFor="editRate">Rate</Label>
+                <Input
+                  id="editRate"
+                  type="number"
+                  value={selectedOrder.rate}
+                  onChange={(e) =>
+                    setSelectedOrder({
+                      ...selectedOrder,
+                      rate: parseFloat(e.target.value),
+                    })
+                  }
+                />
+              </div>
+              <div>
+                <Label htmlFor="editTotal">Total</Label>
+                <Input
+                  id="editTotal"
+                  type="number"
+                  value={selectedOrder.total}
+                  onChange={(e) =>
+                    setSelectedOrder({
+                      ...selectedOrder,
+                      total: parseFloat(e.target.value),
+                    })
+                  }
+                />
+              </div>
+              <div>
+                <Label htmlFor="editPaymentMode">Payment Mode</Label>
+                <Input
+                  id="editPaymentMode"
+                  value={selectedOrder.payment_mode}
+                  onChange={(e) =>
+                    setSelectedOrder({
+                      ...selectedOrder,
+                      payment_mode: e.target.value,
+                    })
+                  }
+                />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button onClick={handleUpdate}>Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-20 w-64 h-64 bg-gradient-to-r from-orange-400/20 to-red-500/20 rounded-full blur-3xl animate-pulse"></div>
@@ -770,6 +886,9 @@ const OrdersTab = () => {
                       <TableHead className="font-semibold text-gray-700">
                         Payment
                       </TableHead>
+                      <TableHead className="font-semibold text-gray-700">
+                        Actions
+                      </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -816,6 +935,20 @@ const OrdersTab = () => {
                           >
                             {order.payment_mode}
                           </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {canEditTransactions && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedOrder(order);
+                                setIsEditDialogOpen(true);
+                              }}
+                            >
+                              Edit
+                            </Button>
+                          )}
                         </TableCell>
                       </TableRow>
                     ))}

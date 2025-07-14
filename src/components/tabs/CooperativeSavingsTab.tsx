@@ -30,6 +30,13 @@ import {
 } from "lucide-react";
 import { DateRange } from "react-day-picker";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
   Popover,
   PopoverContent,
   PopoverTrigger,
@@ -60,6 +67,9 @@ const CooperativeSavingsTab = () => {
   const { user } = useAuth();
   const { page, range, onPageChange, onRangeChange, itemsPerPage } =
     useTableControls();
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [selectedSaving, setSelectedSaving] = useState<Saving | null>(null);
+  const [canEditTransactions, setCanEditTransactions] = useState(false);
 
   const cyclePeriods = [
     "Weekly",
@@ -83,6 +93,10 @@ const CooperativeSavingsTab = () => {
 
   useEffect(() => {
     fetchSavings();
+    const canEdit = localStorage.getItem("canEditTransactions");
+    if (canEdit) {
+      setCanEditTransactions(JSON.parse(canEdit));
+    }
   }, [user, page, range]);
 
   const fetchSavings = async () => {
@@ -187,8 +201,84 @@ const CooperativeSavingsTab = () => {
     savings.length > 0 ? totalSavings / savings.length : 0;
   const uniqueMembers = new Set(savings.map((s) => s.member_id)).size;
 
+  const handleUpdate = async () => {
+    if (!selectedSaving) return;
+
+    try {
+      const { error } = await supabase
+        .from("cooperative_savings")
+        .update(selectedSaving)
+        .eq("id", selectedSaving.id);
+
+      if (error) throw error;
+
+      toast.success("Saving updated successfully!");
+      setIsEditDialogOpen(false);
+      fetchSavings();
+    } catch (error) {
+      console.error("Error updating saving:", error);
+      toast.error("Failed to update saving");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-teal-50 via-cyan-50 to-blue-50 relative overflow-hidden">
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Saving</DialogTitle>
+          </DialogHeader>
+          {selectedSaving && (
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="editContributionAmount">
+                  Contribution Amount
+                </Label>
+                <Input
+                  id="editContributionAmount"
+                  type="number"
+                  value={selectedSaving.contribution_amount}
+                  onChange={(e) =>
+                    setSelectedSaving({
+                      ...selectedSaving,
+                      contribution_amount: parseFloat(e.target.value),
+                    })
+                  }
+                />
+              </div>
+              <div>
+                <Label htmlFor="editMemberId">Member ID</Label>
+                <Input
+                  id="editMemberId"
+                  value={selectedSaving.member_id}
+                  onChange={(e) =>
+                    setSelectedSaving({
+                      ...selectedSaving,
+                      member_id: e.target.value,
+                    })
+                  }
+                />
+              </div>
+              <div>
+                <Label htmlFor="editCyclePeriod">Cycle Period</Label>
+                <Input
+                  id="editCyclePeriod"
+                  value={selectedSaving.cycle_period || ""}
+                  onChange={(e) =>
+                    setSelectedSaving({
+                      ...selectedSaving,
+                      cycle_period: e.target.value,
+                    })
+                  }
+                />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button onClick={handleUpdate}>Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-20 w-64 h-64 bg-gradient-to-r from-teal-400/20 to-cyan-500/20 rounded-full blur-3xl animate-pulse"></div>
@@ -570,6 +660,9 @@ const CooperativeSavingsTab = () => {
                       <TableHead className="font-semibold text-gray-700">
                         Cycle Period
                       </TableHead>
+                      <TableHead className="font-semibold text-gray-700">
+                        Actions
+                      </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -612,6 +705,20 @@ const CooperativeSavingsTab = () => {
                           >
                             {saving.cycle_period || "Unknown"}
                           </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {canEditTransactions && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedSaving(saving);
+                                setIsEditDialogOpen(true);
+                              }}
+                            >
+                              Edit
+                            </Button>
+                          )}
                         </TableCell>
                       </TableRow>
                     ))}
