@@ -116,6 +116,11 @@ const Settings = () => {
       );
       setTabSettings(defaultSettings);
     }
+
+    const canEdit = localStorage.getItem("canEditTransactions");
+    if (canEdit) {
+      setCanEditTransactions(JSON.parse(canEdit));
+    }
   }, []);
 
   const handleToggle = (tabId: string) => {

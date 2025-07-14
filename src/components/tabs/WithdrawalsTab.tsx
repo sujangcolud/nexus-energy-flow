@@ -254,8 +254,107 @@ const WithdrawalsTab = () => {
   const averageWithdrawal =
     withdrawals.length > 0 ? totalWithdrawals / withdrawals.length : 0;
 
+  const handleUpdate = async () => {
+    if (!selectedWithdrawal) return;
+
+    try {
+      const { error } = await supabase
+        .from("withdrawals")
+        .update(selectedWithdrawal)
+        .eq("id", selectedWithdrawal.id);
+
+      if (error) throw error;
+
+      toast.success("Withdrawal updated successfully!");
+      setIsEditDialogOpen(false);
+      fetchWithdrawals();
+    } catch (error) {
+      console.error("Error updating withdrawal:", error);
+      toast.error("Failed to update withdrawal");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 relative overflow-hidden">
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Withdrawal</DialogTitle>
+          </DialogHeader>
+          {selectedWithdrawal && (
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="editAmount">Amount</Label>
+                <Input
+                  id="editAmount"
+                  value={selectedWithdrawal.amount}
+                  onChange={(e) =>
+                    setSelectedWithdrawal({
+                      ...selectedWithdrawal,
+                      amount: parseFloat(e.target.value),
+                    })
+                  }
+                />
+              </div>
+              <div>
+                <Label htmlFor="editPurpose">Purpose</Label>
+                <Input
+                  id="editPurpose"
+                  value={selectedWithdrawal.purpose}
+                  onChange={(e) =>
+                    setSelectedWithdrawal({
+                      ...selectedWithdrawal,
+                      purpose: e.target.value,
+                    })
+                  }
+                />
+              </div>
+              <div>
+                <Label htmlFor="editRecipient">Recipient</Label>
+                <Input
+                  id="editRecipient"
+                  value={selectedWithdrawal.recipient || ""}
+                  onChange={(e) =>
+                    setSelectedWithdrawal({
+                      ...selectedWithdrawal,
+                      recipient: e.target.value,
+                    })
+                  }
+                />
+              </div>
+              <div>
+                <Label htmlFor="editReferenceNumber">Reference Number</Label>
+                <Input
+                  id="editReferenceNumber"
+                  value={selectedWithdrawal.reference_number || ""}
+                  onChange={(e) =>
+                    setSelectedWithdrawal({
+                      ...selectedWithdrawal,
+                      reference_number: e.target.value,
+                    })
+                  }
+                />
+              </div>
+              <div>
+                <Label htmlFor="editRemarks">Remarks</Label>
+                <Input
+                  id="editRemarks"
+                  value={selectedWithdrawal.remarks || ""}
+                  onChange={(e) =>
+                    setSelectedWithdrawal({
+                      ...selectedWithdrawal,
+                      remarks: e.target.value,
+                    })
+                  }
+                />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button onClick={handleUpdate}>Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-20 w-64 h-64 bg-gradient-to-r from-blue-400/20 to-indigo-500/20 rounded-full blur-3xl animate-pulse"></div>
@@ -812,111 +911,6 @@ const WithdrawalsTab = () => {
           )}
         </Card>
       </div>
-    </div>
-  );
-
-  const handleUpdate = async () => {
-    if (!selectedWithdrawal) return;
-
-    try {
-      const { error } = await supabase
-        .from("withdrawals")
-        .update(selectedWithdrawal)
-        .eq("id", selectedWithdrawal.id);
-
-      if (error) throw error;
-
-      toast.success("Withdrawal updated successfully!");
-      setIsEditDialogOpen(false);
-      fetchWithdrawals();
-    } catch (error) {
-      console.error("Error updating withdrawal:", error);
-      toast.error("Failed to update withdrawal");
-    }
-  };
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 relative overflow-hidden">
-      {/* ... existing code ... */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit Withdrawal</DialogTitle>
-          </DialogHeader>
-          {selectedWithdrawal && (
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="editAmount">Amount</Label>
-                <Input
-                  id="editAmount"
-                  value={selectedWithdrawal.amount}
-                  onChange={(e) =>
-                    setSelectedWithdrawal({
-                      ...selectedWithdrawal,
-                      amount: parseFloat(e.target.value),
-                    })
-                  }
-                />
-              </div>
-              <div>
-                <Label htmlFor="editPurpose">Purpose</Label>
-                <Input
-                  id="editPurpose"
-                  value={selectedWithdrawal.purpose}
-                  onChange={(e) =>
-                    setSelectedWithdrawal({
-                      ...selectedWithdrawal,
-                      purpose: e.target.value,
-                    })
-                  }
-                />
-              </div>
-              <div>
-                <Label htmlFor="editRecipient">Recipient</Label>
-                <Input
-                  id="editRecipient"
-                  value={selectedWithdrawal.recipient || ""}
-                  onChange={(e) =>
-                    setSelectedWithdrawal({
-                      ...selectedWithdrawal,
-                      recipient: e.target.value,
-                    })
-                  }
-                />
-              </div>
-              <div>
-                <Label htmlFor="editReferenceNumber">Reference Number</Label>
-                <Input
-                  id="editReferenceNumber"
-                  value={selectedWithdrawal.reference_number || ""}
-                  onChange={(e) =>
-                    setSelectedWithdrawal({
-                      ...selectedWithdrawal,
-                      reference_number: e.target.value,
-                    })
-                  }
-                />
-              </div>
-              <div>
-                <Label htmlFor="editRemarks">Remarks</Label>
-                <Input
-                  id="editRemarks"
-                  value={selectedWithdrawal.remarks || ""}
-                  onChange={(e) =>
-                    setSelectedWithdrawal({
-                      ...selectedWithdrawal,
-                      remarks: e.target.value,
-                    })
-                  }
-                />
-              </div>
-            </div>
-          )}
-          <DialogFooter>
-            <Button onClick={handleUpdate}>Save</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };

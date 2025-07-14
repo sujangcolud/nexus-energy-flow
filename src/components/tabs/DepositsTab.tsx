@@ -249,8 +249,94 @@ const DepositsTab = () => {
   const averageDeposit =
     deposits.length > 0 ? totalDeposits / deposits.length : 0;
 
+  const handleUpdate = async () => {
+    if (!selectedDeposit) return;
+
+    try {
+      const { error } = await supabase
+        .from("deposits")
+        .update(selectedDeposit)
+        .eq("id", selectedDeposit.id);
+
+      if (error) throw error;
+
+      toast.success("Deposit updated successfully!");
+      setIsEditDialogOpen(false);
+      fetchDeposits();
+    } catch (error) {
+      console.error("Error updating deposit:", error);
+      toast.error("Failed to update deposit");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 relative overflow-hidden">
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Deposit</DialogTitle>
+          </DialogHeader>
+          {selectedDeposit && (
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="editAmount">Amount</Label>
+                <Input
+                  id="editAmount"
+                  value={selectedDeposit.amount}
+                  onChange={(e) =>
+                    setSelectedDeposit({
+                      ...selectedDeposit,
+                      amount: parseFloat(e.target.value),
+                    })
+                  }
+                />
+              </div>
+              <div>
+                <Label htmlFor="editMode">Mode</Label>
+                <Input
+                  id="editMode"
+                  value={selectedDeposit.mode}
+                  onChange={(e) =>
+                    setSelectedDeposit({
+                      ...selectedDeposit,
+                      mode: e.target.value,
+                    })
+                  }
+                />
+              </div>
+              <div>
+                <Label htmlFor="editDepositedBy">Deposited By</Label>
+                <Input
+                  id="editDepositedBy"
+                  value={selectedDeposit.deposited_by}
+                  onChange={(e) =>
+                    setSelectedDeposit({
+                      ...selectedDeposit,
+                      deposited_by: e.target.value,
+                    })
+                  }
+                />
+              </div>
+              <div>
+                <Label htmlFor="editRemarks">Remarks</Label>
+                <Input
+                  id="editRemarks"
+                  value={selectedDeposit.remarks}
+                  onChange={(e) =>
+                    setSelectedDeposit({
+                      ...selectedDeposit,
+                      remarks: e.target.value,
+                    })
+                  }
+                />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button onClick={handleUpdate}>Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-20 w-64 h-64 bg-gradient-to-r from-green-400/20 to-emerald-500/20 rounded-full blur-3xl animate-pulse"></div>
@@ -823,95 +909,6 @@ const DepositsTab = () => {
           )}
         </Card>
       </div>
-    </div>
-  );
-
-  const handleUpdate = async () => {
-    if (!selectedDeposit) return;
-
-    try {
-      const { error } = await supabase
-        .from("deposits")
-        .update(selectedDeposit)
-        .eq("id", selectedDeposit.id);
-
-      if (error) throw error;
-
-      toast.success("Deposit updated successfully!");
-      setIsEditDialogOpen(false);
-      fetchDeposits();
-    } catch (error) {
-      console.error("Error updating deposit:", error);
-      toast.error("Failed to update deposit");
-    }
-  };
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 relative overflow-hidden">
-      {/* ... existing code ... */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit Deposit</DialogTitle>
-          </DialogHeader>
-          {selectedDeposit && (
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="editAmount">Amount</Label>
-                <Input
-                  id="editAmount"
-                  value={selectedDeposit.amount}
-                  onChange={(e) =>
-                    setSelectedDeposit({
-                      ...selectedDeposit,
-                      amount: parseFloat(e.target.value),
-                    })
-                  }
-                />
-              </div>
-              <div>
-                <Label htmlFor="editMode">Mode</Label>
-                <Input
-                  id="editMode"
-                  value={selectedDeposit.mode}
-                  onChange={(e) =>
-                    setSelectedDeposit({ ...selectedDeposit, mode: e.target.value })
-                  }
-                />
-              </div>
-              <div>
-                <Label htmlFor="editDepositedBy">Deposited By</Label>
-                <Input
-                  id="editDepositedBy"
-                  value={selectedDeposit.deposited_by}
-                  onChange={(e) =>
-                    setSelectedDeposit({
-                      ...selectedDeposit,
-                      deposited_by: e.target.value,
-                    })
-                  }
-                />
-              </div>
-              <div>
-                <Label htmlFor="editRemarks">Remarks</Label>
-                <Input
-                  id="editRemarks"
-                  value={selectedDeposit.remarks}
-                  onChange={(e) =>
-                    setSelectedDeposit({
-                      ...selectedDeposit,
-                      remarks: e.target.value,
-                    })
-                  }
-                />
-              </div>
-            </div>
-          )}
-          <DialogFooter>
-            <Button onClick={handleUpdate}>Save</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
