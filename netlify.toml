@@ -2,7 +2,8 @@
 [[redirects]]
   from = "/poss/*"
   to = "https://possoft.netlify.app/:splat"
-  status = 200!
+  status = 200
+  force = true
 
 [[redirects]]
   from = "/*"
