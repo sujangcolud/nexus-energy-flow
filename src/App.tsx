@@ -1,4 +1,4 @@
-
+import React from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -47,13 +47,13 @@ const App = () => (
         <AuthProvider>
           <Routes>
             <Route path="/" element={<Index />} />
-            <Route 
+            <Route
               path="/dashboard"
               element={
                 <ProtectedRoute>
                   <Dashboard /> {/* Dashboard now acts as a layout component */}
                 </ProtectedRoute>
-              } 
+              }
             >
               {/* Index route for /dashboard to show cards or default content */}
               {/* For now, Dashboard component itself will decide to show cards or Outlet content */}
