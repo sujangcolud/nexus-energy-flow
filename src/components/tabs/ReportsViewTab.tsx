@@ -70,7 +70,8 @@ const ReportsViewTab = () => {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedDayData, setSelectedDayData] = useState<any>(null);
 
-  const formatCurrency = (amount: number) => `NRs. ${amount.toFixed(2)}`;
+  const formatCurrency = (amount: number) =>
+    `NRs. ${typeof amount === "number" ? amount.toFixed(2) : "0.00"}`;
 
   const fetchReportData = async () => {
     if (!user) return;
