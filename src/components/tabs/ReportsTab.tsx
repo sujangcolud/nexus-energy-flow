@@ -569,7 +569,7 @@ const ReportsTab = () => {
                   </p>
                 </div>
                 <div className="p-3 bg-gradient-to-r from-violet-500 to-purple-500 rounded-xl text-white">
-                  <DocumentText className="h-6 w-6" />
+                  <FileText className="h-6 w-6" />
                 </div>
               </div>
             </CardContent>
