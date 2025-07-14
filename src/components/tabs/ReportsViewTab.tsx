@@ -953,14 +953,18 @@ const ReportsViewTab = () => {
           <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto bg-gradient-to-br from-white to-blue-50">
             <DialogHeader>
               <DialogTitle className="text-2xl bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                {selectedDayData &&
-                  format(parseISO(selectedDayData.date), "EEEE, MMMM dd, yyyy")}
+                {selectedDayData && selectedDayData.date
+                  ? format(
+                      parseISO(selectedDayData.date),
+                      "EEEE, MMMM dd, yyyy",
+                    )
+                  : "Day Details"}
               </DialogTitle>
               <DialogDescription>
                 Detailed breakdown of all transactions for this day
               </DialogDescription>
             </DialogHeader>
-            {selectedDayData && (
+            {selectedDayData ? (
               <div className="space-y-6">
                 {/* Day Summary */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -1140,6 +1144,10 @@ const ReportsViewTab = () => {
                     )}
                   </TabsContent>
                 </Tabs>
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-gray-500">Loading details...</p>
               </div>
             )}
           </DialogContent>

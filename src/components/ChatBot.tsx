@@ -1,14 +1,14 @@
-import { useState, useRef, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Send, Bot, User, MessageCircle, X, Minimize2 } from 'lucide-react';
-import { fetchOpenAIAnswer } from "@/integrations/openai/api"; // NEW IMPORT
+import { useState, useRef, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Send, Bot, User, MessageCircle, X, Minimize2 } from "lucide-react";
+import { fetchOpenAIAnswer } from "@/integrations/supabase/openai/api";
 
 interface Message {
   id: string;
-  type: 'user' | 'bot';
+  type: "user" | "bot";
   content: string;
   timestamp: Date;
 }
@@ -21,13 +21,13 @@ interface ChatBotProps {
 const ChatBot = ({ isOpen, onToggle }: ChatBotProps) => {
   const [messages, setMessages] = useState<Message[]>([
     {
-      id: '1',
-      type: 'bot',
-      content: 'Hello! I\'m your business assistant. How can I help you today?',
-      timestamp: new Date()
-    }
+      id: "1",
+      type: "bot",
+      content: "Hello! I'm your business assistant. How can I help you today?",
+      timestamp: new Date(),
+    },
   ]);
-  const [inputValue, setInputValue] = useState('');
+  const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
@@ -79,7 +79,7 @@ const ChatBot = ({ isOpen, onToggle }: ChatBotProps) => {
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
     }
@@ -122,9 +122,9 @@ const ChatBot = ({ isOpen, onToggle }: ChatBotProps) => {
             {messages.map((message) => (
               <div
                 key={message.id}
-                className={`flex gap-3 ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
+                className={`flex gap-3 ${message.type === "user" ? "justify-end" : "justify-start"}`}
               >
-                {message.type === 'bot' && (
+                {message.type === "bot" && (
                   <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                     <Bot className="h-4 w-4 text-primary" />
                   </div>
@@ -132,15 +132,15 @@ const ChatBot = ({ isOpen, onToggle }: ChatBotProps) => {
 
                 <div
                   className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${
-                    message.type === 'user'
-                      ? 'bg-primary text-primary-foreground ml-auto'
-                      : 'bg-muted'
+                    message.type === "user"
+                      ? "bg-primary text-primary-foreground ml-auto"
+                      : "bg-muted"
                   }`}
                 >
                   {message.content}
                 </div>
 
-                {message.type === 'user' && (
+                {message.type === "user" && (
                   <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
                     <User className="h-4 w-4 text-primary-foreground" />
                   </div>
@@ -156,8 +156,14 @@ const ChatBot = ({ isOpen, onToggle }: ChatBotProps) => {
                 <div className="bg-muted rounded-lg px-3 py-2 text-sm">
                   <div className="flex gap-1">
                     <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                    <div
+                      className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                      style={{ animationDelay: "0.1s" }}
+                    ></div>
+                    <div
+                      className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                      style={{ animationDelay: "0.2s" }}
+                    ></div>
                   </div>
                 </div>
               </div>

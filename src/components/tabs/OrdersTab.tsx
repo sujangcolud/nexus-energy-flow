@@ -471,7 +471,7 @@ const OrdersTab = () => {
                             {category}
                           </h3>
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-3 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4">
                           {items.map((item, index) => (
                             <Card
                               key={item.id}
@@ -479,28 +479,28 @@ const OrdersTab = () => {
                               onClick={() => addToCart(item)}
                               style={{ animationDelay: `${index * 50}ms` }}
                             >
-                              <CardContent className="p-4">
+                              <CardContent className="p-2 sm:p-4">
                                 <div className="flex justify-between items-start mb-3">
                                   <div className="flex-1">
-                                    <h4 className="font-bold text-lg text-gray-800 group-hover:text-orange-600 transition-colors mb-1">
+                                    <h4 className="font-bold text-sm sm:text-lg text-gray-800 group-hover:text-orange-600 transition-colors mb-1">
                                       {item.name}
                                     </h4>
                                     {item.description && (
-                                      <p className="text-sm text-gray-600 line-clamp-2 mb-2">
+                                      <p className="text-xs sm:text-sm text-gray-600 line-clamp-2 mb-2">
                                         {item.description}
                                       </p>
                                     )}
                                   </div>
                                   <div className="ml-3">
                                     <Badge
-                                      className={`bg-gradient-to-r ${categoryColors[item.category as keyof typeof categoryColors] || "from-gray-500 to-slate-500"} text-white border-0 text-sm px-3 py-1`}
+                                      className={`bg-gradient-to-r ${categoryColors[item.category as keyof typeof categoryColors] || "from-gray-500 to-slate-500"} text-white border-0 text-xs sm:text-sm px-2 sm:px-3 py-1`}
                                     >
                                       NRs. {item.price}
                                     </Badge>
                                   </div>
                                 </div>
                                 <div className="flex items-center justify-between">
-                                  <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                                  <span className="text-xs text-gray-500 bg-gray-100 px-1 sm:px-2 py-1 rounded-full">
                                     {item.category}
                                   </span>
                                   <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
