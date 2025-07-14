@@ -82,6 +82,7 @@ const DepositsTab = () => {
     useTableControls();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedDeposit, setSelectedDeposit] = useState<Deposit | null>(null);
+  const [canEditTransactions, setCanEditTransactions] = useState(false);
 
   const depositModes = [
     "Cash",
@@ -109,6 +110,10 @@ const DepositsTab = () => {
 
   useEffect(() => {
     fetchDeposits();
+    const canEdit = localStorage.getItem("canEditTransactions");
+    if (canEdit) {
+      setCanEditTransactions(JSON.parse(canEdit));
+    }
   }, [user, page, range]);
 
   const fetchDeposits = async () => {
@@ -771,16 +776,18 @@ const DepositsTab = () => {
                           </span>
                         </TableCell>
                         <TableCell>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setSelectedDeposit(deposit);
-                              setIsEditDialogOpen(true);
-                            }}
-                          >
-                            Edit
-                          </Button>
+                          {canEditTransactions && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedDeposit(deposit);
+                                setIsEditDialogOpen(true);
+                              }}
+                            >
+                              Edit
+                            </Button>
+                          )}
                         </TableCell>
                       </TableRow>
                     ))}

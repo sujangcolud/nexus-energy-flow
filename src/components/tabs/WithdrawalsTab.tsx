@@ -82,6 +82,7 @@ const WithdrawalsTab = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedWithdrawal, setSelectedWithdrawal] =
     useState<Withdrawal | null>(null);
+  const [canEditTransactions, setCanEditTransactions] = useState(false);
 
   const commonPurposes = [
     "Salary Payment",
@@ -113,6 +114,10 @@ const WithdrawalsTab = () => {
 
   useEffect(() => {
     fetchWithdrawals();
+    const canEdit = localStorage.getItem("canEditTransactions");
+    if (canEdit) {
+      setCanEditTransactions(JSON.parse(canEdit));
+    }
   }, [user, page, range]);
 
   const fetchWithdrawals = async () => {
@@ -760,16 +765,18 @@ const WithdrawalsTab = () => {
                           </span>
                         </TableCell>
                         <TableCell>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setSelectedWithdrawal(withdrawal);
-                              setIsEditDialogOpen(true);
-                            }}
-                          >
-                            Edit
-                          </Button>
+                          {canEditTransactions && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedWithdrawal(withdrawal);
+                                setIsEditDialogOpen(true);
+                              }}
+                            >
+                              Edit
+                            </Button>
+                          )}
                         </TableCell>
                       </TableRow>
                     ))}

@@ -100,6 +100,7 @@ const Settings = () => {
   const { user } = useAuth();
   const [tabSettings, setTabSettings] = useState<Record<string, boolean>>({});
   const [showPasswordForm, setShowPasswordForm] = useState(false);
+  const [canEditTransactions, setCanEditTransactions] = useState(false);
 
   useEffect(() => {
     const storedSettings = localStorage.getItem("tabSettings");
@@ -122,6 +123,13 @@ const Settings = () => {
     setTabSettings(newSettings);
     localStorage.setItem("tabSettings", JSON.stringify(newSettings));
   };
+
+  useEffect(() => {
+    localStorage.setItem(
+      "canEditTransactions",
+      JSON.stringify(canEditTransactions),
+    );
+  }, [canEditTransactions]);
 
   const handleResetSettings = () => {
     const defaultSettings = allItems.reduce(
@@ -301,6 +309,22 @@ const Settings = () => {
             </Card>
           </div>
         </div>
+
+        <Card className="bg-gradient-to-br from-blue-50 to-cyan-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300">
+          <CardHeader>
+            <CardTitle>Transaction Settings</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="edit-transactions">Enable Transaction Editing</Label>
+              <Switch
+                id="edit-transactions"
+                checked={canEditTransactions}
+                onCheckedChange={setCanEditTransactions}
+              />
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
