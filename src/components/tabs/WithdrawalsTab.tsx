@@ -1,21 +1,43 @@
-
-import { useState, useEffect } from 'react';
-import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { toast } from 'sonner';
-import { TrendingDown, Calendar as CalendarIcon } from 'lucide-react';
-import { DateRange } from 'react-day-picker';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
-import { format } from 'date-fns';
-import { cn } from '@/lib/utils';
-import useTableControls from '@/hooks/useTableControls';
+import { useState, useEffect } from "react";
+import { useAuth } from "@/context/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
+import {
+  TrendingDown,
+  Calendar as CalendarIcon,
+  ArrowDownCircle,
+  Banknote,
+  DollarSign,
+  User,
+  FileText,
+  Sparkles,
+  Target,
+  Hash,
+} from "lucide-react";
+import { DateRange } from "react-day-picker";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
+import useTableControls from "@/hooks/useTableControls";
 
 interface Withdrawal {
   id: string;
@@ -31,296 +53,640 @@ const WithdrawalsTab = () => {
   const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
   const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
-    amount: '',
-    purpose: '',
-    recipient: '',
-    referenceNumber: '',
-    remarks: ''
+    amount: "",
+    purpose: "",
+    recipient: "",
+    referenceNumber: "",
+    remarks: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { user } = useAuth();
-  const {
-    page,
-    range,
-    onPageChange,
-    onRangeChange,
-    itemsPerPage,
-  } = useTableControls();
+  const { page, range, onPageChange, onRangeChange, itemsPerPage } =
+    useTableControls();
 
-  const updateFormData = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+  const commonPurposes = [
+    "Salary Payment",
+    "Vendor Payment",
+    "Utility Bills",
+    "Office Rent",
+    "Equipment Purchase",
+    "Marketing Expenses",
+    "Travel Expenses",
+    "Maintenance",
+    "Emergency Fund",
+    "Other",
+  ];
+
+  const purposeColors = {
+    "Salary Payment": "from-green-500 to-emerald-500",
+    "Vendor Payment": "from-blue-500 to-cyan-500",
+    "Utility Bills": "from-yellow-500 to-orange-500",
+    "Office Rent": "from-purple-500 to-pink-500",
+    "Equipment Purchase": "from-indigo-500 to-blue-500",
+    "Marketing Expenses": "from-red-500 to-pink-500",
+    "Travel Expenses": "from-teal-500 to-cyan-500",
+    Maintenance: "from-orange-500 to-red-500",
+    "Emergency Fund": "from-violet-500 to-purple-500",
+    Other: "from-gray-500 to-slate-500",
   };
 
-  const fetchRecentWithdrawals = async () => {
+  useEffect(() => {
+    fetchWithdrawals();
+  }, [user, page, range]);
+
+  const fetchWithdrawals = async () => {
     if (!user) return;
+
     setLoading(true);
     try {
       let query = supabase
-        .from('withdrawals')
-        .select('*', { count: 'exact' })
-        .eq('user_id', user.id);
+        .from("withdrawals")
+        .select("*")
+        .eq("user_id", user.id);
 
       if (range?.from) {
-        query = query.gte('withdrawal_date', format(range.from, 'yyyy-MM-dd'));
+        query = query.gte("withdrawal_date", format(range.from, "yyyy-MM-dd"));
       }
       if (range?.to) {
-        query = query.lte('withdrawal_date', format(range.to, 'yyyy-MM-dd'));
+        query = query.lte("withdrawal_date", format(range.to, "yyyy-MM-dd"));
       }
 
-      const { data, error, count } = await query
-        .order('created_at', { ascending: false })
+      const { data, error } = await query
+        .order("withdrawal_date", { ascending: false })
         .range((page - 1) * itemsPerPage, page * itemsPerPage - 1);
 
       if (error) throw error;
+
       setWithdrawals(data || []);
     } catch (error) {
-      console.error('Error fetching recent withdrawals:', error);
-      toast.error('Failed to load recent withdrawals.');
+      console.error("Error fetching withdrawals:", error);
+      toast.error("Failed to load withdrawals");
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchRecentWithdrawals();
-  }, [user, page, range]);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!formData.amount || !formData.purpose) {
-      toast.error('Please fill in all required fields');
+
+    if (!user) {
+      toast.error("Please log in to record withdrawals");
       return;
     }
 
-    if (!user) {
-      toast.error('You must be logged in to record a withdrawal.');
+    if (!formData.amount || !formData.purpose) {
+      toast.error("Please fill in all required fields");
       return;
     }
 
     setIsSubmitting(true);
     try {
-      const withdrawalData = {
-        user_id: user.id,
-        amount: parseFloat(formData.amount),
-        purpose: formData.purpose,
-        recipient: formData.recipient || null,
-        reference_number: formData.referenceNumber || null,
-        remarks: formData.remarks || null,
-        withdrawal_date: new Date().toISOString().split('T')[0],
-      };
+      const { error } = await supabase.from("withdrawals").insert([
+        {
+          user_id: user.id,
+          amount: parseFloat(formData.amount),
+          purpose: formData.purpose,
+          recipient: formData.recipient || null,
+          reference_number: formData.referenceNumber || null,
+          remarks: formData.remarks || null,
+          withdrawal_date: new Date().toISOString().split("T")[0],
+        },
+      ]);
 
-      const { error } = await supabase.from('withdrawals').insert([withdrawalData]);
+      if (error) throw error;
 
-      if (error) {
-        throw error;
-      }
-
-      toast.success('Withdrawal recorded successfully!');
+      toast.success("Withdrawal recorded successfully!");
       setFormData({
-        amount: '',
-        purpose: '',
-        recipient: '',
-        referenceNumber: '',
-        remarks: ''
+        amount: "",
+        purpose: "",
+        recipient: "",
+        referenceNumber: "",
+        remarks: "",
       });
-      fetchRecentWithdrawals(); // Re-fetch after successful submission
-    } catch (error: any) {
-      console.error('Error recording withdrawal:', error);
-      toast.error(error.message || 'Failed to record withdrawal. Please try again.');
+      fetchWithdrawals();
+    } catch (error) {
+      console.error("Error recording withdrawal:", error);
+      toast.error("Failed to record withdrawal");
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const totalWithdrawals = withdrawals.reduce(
+    (sum, withdrawal) => sum + withdrawal.amount,
+    0,
+  );
+  const purposeBreakdown = withdrawals.reduce(
+    (acc, withdrawal) => {
+      acc[withdrawal.purpose] =
+        (acc[withdrawal.purpose] || 0) + withdrawal.amount;
+      return acc;
+    },
+    {} as Record<string, number>,
+  );
+
+  const topPurpose = Object.entries(purposeBreakdown).sort(
+    ([, a], [, b]) => b - a,
+  )[0];
+  const averageWithdrawal =
+    withdrawals.length > 0 ? totalWithdrawals / withdrawals.length : 0;
+
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-3 mb-6">
-        <TrendingDown className="h-6 w-6 text-red-600" />
-        <h2 className="text-2xl font-bold text-gray-900">Withdrawals Management</h2>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 relative overflow-hidden">
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-20 left-20 w-64 h-64 bg-gradient-to-r from-blue-400/20 to-indigo-500/20 rounded-full blur-3xl animate-pulse"></div>
+        <div
+          className="absolute top-1/3 right-20 w-80 h-80 bg-gradient-to-r from-indigo-400/20 to-purple-500/20 rounded-full blur-3xl animate-pulse"
+          style={{ animationDelay: "1s" }}
+        ></div>
+        <div
+          className="absolute bottom-20 left-1/4 w-72 h-72 bg-gradient-to-r from-purple-400/20 to-pink-500/20 rounded-full blur-3xl animate-pulse"
+          style={{ animationDelay: "2s" }}
+        ></div>
       </div>
 
-      <Card className="max-w-2xl">
-        <CardHeader>
-          <CardTitle>Record New Withdrawal</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="amount">Withdrawal Amount (NRs.) *</Label>
-              <Input
-                id="amount"
-                type="number"
-                min="1"
-                step="0.01"
-                placeholder="Enter withdrawal amount"
-                value={formData.amount}
-                onChange={(e) => updateFormData('amount', e.target.value)}
-                required
-              />
+      <div className="relative z-10 space-y-8 p-6">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <div className="p-4 rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-xl animate-pulse">
+              <Banknote className="h-8 w-8" />
             </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="purpose">Purpose *</Label>
-              <Input
-                id="purpose"
-                placeholder="Purpose of withdrawal"
-                value={formData.purpose}
-                onChange={(e) => updateFormData('purpose', e.target.value)}
-                required
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="recipient">Recipient Name</Label>
-              <Input
-                id="recipient"
-                placeholder="Name of recipient"
-                value={formData.recipient}
-                onChange={(e) => updateFormData('recipient', e.target.value)}
-              />
-            </div>
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
+              Withdrawal Manager
+            </h1>
+            <Sparkles className="h-8 w-8 text-indigo-500 animate-bounce" />
+          </div>
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            Track and manage cash withdrawals with detailed purpose tracking and
+            analytics
+          </p>
+        </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="referenceNumber">Reference Number</Label>
-              <Input
-                id="referenceNumber"
-                placeholder="Transaction reference number"
-                value={formData.referenceNumber}
-                onChange={(e) => updateFormData('referenceNumber', e.target.value)}
-              />
-            </div>
+        {/* Quick Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-blue-600 font-medium">
+                    Total Withdrawals
+                  </p>
+                  <p className="text-2xl font-bold text-blue-800">
+                    NRs. {totalWithdrawals.toFixed(2)}
+                  </p>
+                </div>
+                <div className="p-3 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl text-white">
+                  <TrendingDown className="h-6 w-6" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
-            <div className="space-y-2">
-              <Label htmlFor="remarks">Remarks</Label>
-              <Textarea
-                id="remarks"
-                placeholder="Additional remarks"
-                value={formData.remarks}
-                onChange={(e) => updateFormData('remarks', e.target.value)}
-                rows={3}
-              />
-            </div>
-            
-            <Button 
-              type="submit" 
-              className="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 disabled:opacity-70"
-              size="lg"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? 'Recording...' : 'Record Withdrawal'}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+          <Card className="bg-gradient-to-br from-indigo-50 to-purple-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-indigo-600 font-medium">
+                    Total Entries
+                  </p>
+                  <p className="text-2xl font-bold text-indigo-800">
+                    {withdrawals.length}
+                  </p>
+                </div>
+                <div className="p-3 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-xl text-white">
+                  <ArrowDownCircle className="h-6 w-6" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
-      {/* Recent Withdrawals Table */}
-      <Card className="mt-6">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Recent Withdrawals</CardTitle>
-          <div className="flex items-center gap-2">
-            <Popover>
-              <PopoverTrigger asChild>
+          <Card className="bg-gradient-to-br from-purple-50 to-pink-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-purple-600 font-medium">
+                    Average Amount
+                  </p>
+                  <p className="text-2xl font-bold text-purple-800">
+                    NRs. {averageWithdrawal.toFixed(2)}
+                  </p>
+                </div>
+                <div className="p-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl text-white">
+                  <DollarSign className="h-6 w-6" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-pink-50 to-red-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-pink-600 font-medium">
+                    Top Purpose
+                  </p>
+                  <p className="text-lg font-bold text-pink-800 truncate">
+                    {topPurpose ? topPurpose[0] : "None"}
+                  </p>
+                </div>
+                <div className="p-3 bg-gradient-to-r from-pink-500 to-red-500 rounded-xl text-white">
+                  <Target className="h-6 w-6" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Add Withdrawal Form */}
+          <Card className="bg-gradient-to-br from-white/90 to-blue-50/90 backdrop-blur-sm border-0 shadow-2xl hover:shadow-3xl transition-all duration-300">
+            <CardHeader className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-t-lg">
+              <CardTitle className="flex items-center gap-3 text-xl">
+                <div className="p-2 bg-white/20 rounded-lg">
+                  <ArrowDownCircle className="h-6 w-6" />
+                </div>
+                Record New Withdrawal
+                <Sparkles className="h-5 w-5 animate-pulse" />
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-6">
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="amount"
+                    className="text-sm font-medium text-gray-700 flex items-center gap-2"
+                  >
+                    <DollarSign className="h-4 w-4 text-blue-600" />
+                    Amount (NRs.) *
+                  </Label>
+                  <Input
+                    id="amount"
+                    type="number"
+                    step="0.01"
+                    value={formData.amount}
+                    onChange={(e) =>
+                      setFormData({ ...formData, amount: e.target.value })
+                    }
+                    placeholder="0.00"
+                    required
+                    className="border-blue-200 focus:border-blue-500 focus:ring-blue-500 h-12 text-lg"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="purpose"
+                    className="text-sm font-medium text-gray-700 flex items-center gap-2"
+                  >
+                    <Target className="h-4 w-4 text-purple-600" />
+                    Purpose *
+                  </Label>
+                  <Input
+                    id="purpose"
+                    value={formData.purpose}
+                    onChange={(e) =>
+                      setFormData({ ...formData, purpose: e.target.value })
+                    }
+                    placeholder="Enter withdrawal purpose"
+                    required
+                    className="border-purple-200 focus:border-purple-500 focus:ring-purple-500 h-12"
+                    list="purpose-suggestions"
+                  />
+                  <datalist id="purpose-suggestions">
+                    {commonPurposes.map((purpose) => (
+                      <option key={purpose} value={purpose} />
+                    ))}
+                  </datalist>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="recipient"
+                      className="text-sm font-medium text-gray-700 flex items-center gap-2"
+                    >
+                      <User className="h-4 w-4 text-green-600" />
+                      Recipient (Optional)
+                    </Label>
+                    <Input
+                      id="recipient"
+                      value={formData.recipient}
+                      onChange={(e) =>
+                        setFormData({ ...formData, recipient: e.target.value })
+                      }
+                      placeholder="Enter recipient name"
+                      className="border-green-200 focus:border-green-500 focus:ring-green-500 h-12"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="referenceNumber"
+                      className="text-sm font-medium text-gray-700 flex items-center gap-2"
+                    >
+                      <Hash className="h-4 w-4 text-orange-600" />
+                      Reference No. (Optional)
+                    </Label>
+                    <Input
+                      id="referenceNumber"
+                      value={formData.referenceNumber}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          referenceNumber: e.target.value,
+                        })
+                      }
+                      placeholder="Enter reference number"
+                      className="border-orange-200 focus:border-orange-500 focus:ring-orange-500 h-12"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="remarks"
+                    className="text-sm font-medium text-gray-700 flex items-center gap-2"
+                  >
+                    <FileText className="h-4 w-4 text-gray-600" />
+                    Remarks (Optional)
+                  </Label>
+                  <Textarea
+                    id="remarks"
+                    value={formData.remarks}
+                    onChange={(e) =>
+                      setFormData({ ...formData, remarks: e.target.value })
+                    }
+                    placeholder="Additional notes or details"
+                    rows={3}
+                    className="border-gray-200 focus:border-gray-500 focus:ring-gray-500"
+                  />
+                </div>
+
                 <Button
-                  id="date"
-                  variant={"outline"}
-                  className={cn(
-                    "w-[300px] justify-start text-left font-normal",
-                    !range && "text-muted-foreground"
-                  )}
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full h-12 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 hover:from-blue-600 hover:via-indigo-600 hover:to-purple-600 text-white font-semibold shadow-lg transition-all duration-300 transform hover:scale-105"
                 >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {range?.from ? (
-                    range.to ? (
-                      <>
-                        {format(range.from, "LLL dd, y")} -{" "}
-                        {format(range.to, "LLL dd, y")}
-                      </>
-                    ) : (
-                      format(range.from, "LLL dd, y")
-                    )
+                  {isSubmitting ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                      Recording Withdrawal...
+                    </div>
                   ) : (
-                    <span>Pick a date</span>
+                    <div className="flex items-center gap-2">
+                      <ArrowDownCircle className="h-5 w-5" />
+                      Record Withdrawal
+                    </div>
                   )}
                 </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="end">
-                <Calendar
-                  initialFocus
-                  mode="range"
-                  defaultMonth={range?.from}
-                  selected={range}
-                  onSelect={onRangeChange}
-                  numberOfMonths={2}
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead className="w-[200px]">Purpose</TableHead>
-                  <TableHead>Recipient</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {loading ? (
-                  <TableRow>
-                    <TableCell colSpan={4} className="text-center">Loading...</TableCell>
-                  </TableRow>
-                ) : withdrawals.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={4} className="text-center">No recent withdrawals found.</TableCell>
-                  </TableRow>
-                ) : (
-                  <>
-                    <TableRow className="bg-gray-100 font-semibold">
-                      <TableCell colSpan={3} className="text-right font-bold">Total</TableCell>
-                      <TableCell className="text-right font-bold">
-                        Rs. {withdrawals.reduce((acc, w) => acc + Number(w.amount), 0).toFixed(2)}
-                      </TableCell>
+              </form>
+            </CardContent>
+          </Card>
+
+          {/* Purpose Breakdown */}
+          <Card className="bg-gradient-to-br from-white/90 to-purple-50/90 backdrop-blur-sm border-0 shadow-2xl hover:shadow-3xl transition-all duration-300">
+            <CardHeader className="bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-t-lg">
+              <CardTitle className="flex items-center gap-3 text-xl">
+                <div className="p-2 bg-white/20 rounded-lg">
+                  <Target className="h-6 w-6" />
+                </div>
+                Purpose Breakdown
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-6">
+              {Object.keys(purposeBreakdown).length === 0 ? (
+                <div className="text-center py-8">
+                  <Target className="h-16 w-16 mx-auto text-gray-300 mb-4" />
+                  <p className="text-gray-500 text-lg font-medium">
+                    No withdrawals yet
+                  </p>
+                  <p className="text-gray-400">
+                    Record your first withdrawal to see purpose breakdown!
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {Object.entries(purposeBreakdown)
+                    .sort(([, a], [, b]) => b - a)
+                    .map(([purpose, amount], index) => {
+                      const percentage = (amount / totalWithdrawals) * 100;
+                      return (
+                        <div
+                          key={purpose}
+                          className="p-4 bg-gradient-to-r from-white to-purple-50 rounded-lg border border-purple-100 hover:shadow-md transition-all duration-200"
+                          style={{ animationDelay: `${index * 100}ms` }}
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-3">
+                              <div
+                                className={`w-4 h-4 rounded-full bg-gradient-to-r ${purposeColors[purpose as keyof typeof purposeColors] || "from-gray-500 to-slate-500"}`}
+                              ></div>
+                              <span className="font-medium text-gray-800">
+                                {purpose}
+                              </span>
+                            </div>
+                            <div className="text-right">
+                              <span className="font-bold text-purple-600">
+                                NRs. {amount.toFixed(2)}
+                              </span>
+                              <div className="text-sm text-gray-500">
+                                {percentage.toFixed(1)}%
+                              </div>
+                            </div>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div
+                              className={`bg-gradient-to-r ${purposeColors[purpose as keyof typeof purposeColors] || "from-gray-500 to-slate-500"} h-2 rounded-full transition-all duration-500`}
+                              style={{ width: `${percentage}%` }}
+                            ></div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Withdrawal History */}
+        <Card className="bg-gradient-to-br from-white/90 to-gray-50/90 backdrop-blur-sm border-0 shadow-2xl">
+          <CardHeader className="border-b border-gray-200/50 flex flex-row items-center justify-between">
+            <CardTitle className="text-2xl font-bold bg-gradient-to-r from-gray-700 to-gray-900 bg-clip-text text-transparent">
+              Withdrawal History
+            </CardTitle>
+            <div className="flex items-center gap-2">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-[300px] justify-start text-left font-normal hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50",
+                      !range && "text-muted-foreground",
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {range?.from ? (
+                      range.to ? (
+                        <>
+                          {format(range.from, "LLL dd, y")} -{" "}
+                          {format(range.to, "LLL dd, y")}
+                        </>
+                      ) : (
+                        format(range.from, "LLL dd, y")
+                      )
+                    ) : (
+                      <span>Pick a date range</span>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="end">
+                  <Calendar
+                    initialFocus
+                    mode="range"
+                    defaultMonth={range?.from}
+                    selected={range}
+                    onSelect={onRangeChange}
+                    numberOfMonths={2}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+          </CardHeader>
+          <CardContent className="p-0">
+            {loading ? (
+              <div className="text-center py-10">
+                <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full animate-spin mx-auto flex items-center justify-center mb-4">
+                  <Banknote className="h-8 w-8 text-white" />
+                </div>
+                <p className="text-gray-600">Loading withdrawals...</p>
+              </div>
+            ) : withdrawals.length === 0 ? (
+              <div className="text-center py-12">
+                <Banknote className="h-16 w-16 mx-auto text-gray-300 mb-4" />
+                <p className="text-xl font-semibold text-gray-700 mb-2">
+                  No withdrawals found
+                </p>
+                <p className="text-gray-500">
+                  Start recording your withdrawals to see them here.
+                </p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-gradient-to-r from-gray-50 to-purple-50">
+                      <TableHead className="font-semibold text-gray-700">
+                        Date
+                      </TableHead>
+                      <TableHead className="font-semibold text-gray-700">
+                        Amount
+                      </TableHead>
+                      <TableHead className="font-semibold text-gray-700">
+                        Purpose
+                      </TableHead>
+                      <TableHead className="font-semibold text-gray-700">
+                        Recipient
+                      </TableHead>
+                      <TableHead className="font-semibold text-gray-700">
+                        Reference
+                      </TableHead>
+                      <TableHead className="font-semibold text-gray-700">
+                        Remarks
+                      </TableHead>
                     </TableRow>
-                    {withdrawals.map((withdrawal) => (
-                      <TableRow key={withdrawal.id}>
-                        <TableCell>{new Date(withdrawal.withdrawal_date).toLocaleDateString()}</TableCell>
-                        <TableCell className="font-medium whitespace-normal break-words w-[200px]">{withdrawal.purpose}</TableCell>
-                        <TableCell>{withdrawal.recipient || '-'}</TableCell>
-                        <TableCell className="text-right">Rs. {withdrawal.amount.toFixed(2)}</TableCell>
+                  </TableHeader>
+                  <TableBody>
+                    {withdrawals.map((withdrawal, index) => (
+                      <TableRow
+                        key={withdrawal.id}
+                        className="hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-200"
+                        style={{ animationDelay: `${index * 50}ms` }}
+                      >
+                        <TableCell className="font-medium">
+                          {format(
+                            new Date(withdrawal.withdrawal_date),
+                            "MMM dd, yyyy",
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <span className="font-bold text-xl bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                            NRs. {withdrawal.amount.toFixed(2)}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            className={`bg-gradient-to-r ${purposeColors[withdrawal.purpose as keyof typeof purposeColors] || "from-gray-500 to-slate-500"} text-white border-0`}
+                          >
+                            {withdrawal.purpose}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="font-medium text-gray-800">
+                          {withdrawal.recipient ? (
+                            <div className="flex items-center gap-2">
+                              <User className="h-4 w-4 text-gray-500" />
+                              {withdrawal.recipient}
+                            </div>
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="font-mono text-sm">
+                          {withdrawal.reference_number ? (
+                            <Badge
+                              variant="outline"
+                              className="bg-gradient-to-r from-orange-50 to-yellow-50 border-orange-200"
+                            >
+                              {withdrawal.reference_number}
+                            </Badge>
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="max-w-xs">
+                          <span
+                            className="text-sm text-gray-600 truncate"
+                            title={withdrawal.remarks || ""}
+                          >
+                            {withdrawal.remarks || "-"}
+                          </span>
+                        </TableCell>
                       </TableRow>
                     ))}
-                  </>
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </CardContent>
           {withdrawals.length > 0 && (
-            <div className="flex justify-center p-4">
-              <Button
-                onClick={() => onPageChange(page - 1)}
-                disabled={page === 1}
-                variant="outline"
-              >
-                Previous
-              </Button>
-              <span className="p-2">
-                Page {page}
-              </span>
-              <Button
-                onClick={() => onPageChange(page + 1)}
-                disabled={withdrawals.length < itemsPerPage}
-                variant="outline"
-              >
-                Next
-              </Button>
+            <div className="flex justify-center p-4 border-t border-gray-200">
+              <div className="flex items-center gap-4">
+                <Button
+                  onClick={() => onPageChange(page - 1)}
+                  disabled={page === 1}
+                  variant="outline"
+                  className="hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50"
+                >
+                  Previous
+                </Button>
+                <span className="px-4 py-2 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg font-medium">
+                  Page {page}
+                </span>
+                <Button
+                  onClick={() => onPageChange(page + 1)}
+                  disabled={withdrawals.length < itemsPerPage}
+                  variant="outline"
+                  className="hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50"
+                >
+                  Next
+                </Button>
+              </div>
             </div>
           )}
-      </Card>
+        </Card>
+      </div>
     </div>
   );
 };
