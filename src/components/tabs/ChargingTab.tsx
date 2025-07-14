@@ -302,7 +302,7 @@ const ChargingTab = () => {
             <CardHeader className="bg-gradient-to-r from-yellow-500 to-orange-600 text-white rounded-t-lg">
               <CardTitle className="flex items-center gap-3 text-xl">
                 <div className="p-2 bg-white/20 rounded-lg">
-                  <Lightning className="h-6 w-6" />
+                  <Zap className="h-6 w-6" />
                 </div>
                 New Charging Session
                 <Sparkles className="h-5 w-5 animate-pulse" />
