@@ -493,7 +493,7 @@ const OrdersTab = () => {
                                   </div>
                                   <div className="ml-3">
                                     <Badge
-                                      className={`bg-gradient-to-r ${categoryColors[item.category as keyof typeof categoryColors] || "from-gray-500 to-slate-500"} text-white border-0 text-sm px-3 py-1`}
+                                      className={`bg-gradient-to-r ${categoryColors[item.category as keyof typeof categoryColors] || "from-gray-500 to-slate-500"} text-white border-0 text-xs sm:text-sm px-2 sm:px-3 py-1`}
                                     >
                                       NRs. {item.price}
                                     </Badge>
