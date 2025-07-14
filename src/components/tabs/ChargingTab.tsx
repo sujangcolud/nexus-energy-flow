@@ -214,6 +214,21 @@ const ChargingTab = () => {
     sessions.length > 0 ? totalSessionCost / sessions.length : 0;
   const totalKcal = sessions.reduce((sum, session) => sum + session.kcal, 0);
 
+  const logAction = async (
+    action: string,
+    record_id: string,
+    details: any,
+  ) => {
+    if (!user) return;
+    await supabase.from("logs").insert({
+      user_id: user.id,
+      action,
+      table_name: "charging_sessions",
+      record_id,
+      details,
+    });
+  };
+
   const handleDelete = async (id: string) => {
     try {
       const { error } = await supabase
@@ -224,6 +239,7 @@ const ChargingTab = () => {
       if (error) throw error;
 
       toast.success("Session deleted successfully!");
+      logAction("delete", id, { id });
       fetchSessions();
     } catch (error) {
       console.error("Error deleting session:", error);
@@ -243,6 +259,7 @@ const ChargingTab = () => {
       if (error) throw error;
 
       toast.success("Session updated successfully!");
+      logAction("update", selectedSession.id, selectedSession);
       setIsEditDialogOpen(false);
       fetchSessions();
     } catch (error) {
