@@ -28,7 +28,6 @@ import {
   Calendar as CalendarIcon,
   Battery,
   BatteryCharging,
-  Lightning,
   TrendingUp,
   Activity,
   Sparkles,
