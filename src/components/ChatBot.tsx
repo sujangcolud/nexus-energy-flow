@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Send, Bot, User, MessageCircle, X, Minimize2 } from "lucide-react";
-import { fetchOpenAIAnswer } from "@/integrations/supabase/openai/api";
+// import { fetchOpenAIAnswer } from "@/integrations/supabase/openai/api";
 
 interface Message {
   id: string;
