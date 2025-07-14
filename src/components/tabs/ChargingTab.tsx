@@ -42,6 +42,13 @@ import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import useTableControls from "@/hooks/useTableControls";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 interface ChargingSession {
   id: string;
@@ -63,6 +70,10 @@ const ChargingTab = () => {
   const [submitting, setSubmitting] = useState(false);
   const { page, range, onPageChange, onRangeChange, itemsPerPage } =
     useTableControls();
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [selectedSession, setSelectedSession] =
+    useState<ChargingSession | null>(null);
+  const [canEditTransactions, setCanEditTransactions] = useState(false);
 
   // Form state
   const [startPercentage, setStartPercentage] = useState(0);
@@ -107,6 +118,10 @@ const ChargingTab = () => {
 
   useEffect(() => {
     fetchSessions();
+    const canEdit = localStorage.getItem("canEditTransactions");
+    if (canEdit) {
+      setCanEditTransactions(JSON.parse(canEdit));
+    }
   }, [user, page, range]);
 
   const calculateChargedPercentage = () => {
@@ -188,8 +203,157 @@ const ChargingTab = () => {
     sessions.length > 0 ? totalSessionCost / sessions.length : 0;
   const totalKcal = sessions.reduce((sum, session) => sum + session.kcal, 0);
 
+  const handleUpdate = async () => {
+    if (!selectedSession || !user) return;
+
+    try {
+      // Fetch the original record
+      const { data: originalSession, error: fetchError } = await supabase
+        .from("charging_sessions")
+        .select("*")
+        .eq("id", selectedSession.id)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      const { error } = await supabase
+        .from("charging_sessions")
+        .update(selectedSession)
+        .eq("id", selectedSession.id);
+
+      if (error) throw error;
+
+      // Log the change
+      await supabase.from("edit_logs").insert({
+        user_id: user.id,
+        transaction_type: "charging_session",
+        transaction_id: selectedSession.id,
+        previous_data: originalSession,
+        new_data: selectedSession,
+      });
+
+      toast.success("Charging session updated successfully!");
+      setIsEditDialogOpen(false);
+      fetchSessions();
+    } catch (error) {
+      console.error("Error updating charging session:", error);
+      toast.error("Failed to update charging session");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-orange-50 to-red-50 relative overflow-hidden">
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Charging Session</DialogTitle>
+          </DialogHeader>
+          {selectedSession && (
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="editStartPercentage">Start Percentage</Label>
+                <Input
+                  id="editStartPercentage"
+                  type="number"
+                  value={selectedSession.start_percentage}
+                  onChange={(e) =>
+                    setSelectedSession({
+                      ...selectedSession,
+                      start_percentage: parseInt(e.target.value),
+                    })
+                  }
+                />
+              </div>
+              <div>
+                <Label htmlFor="editEndPercentage">End Percentage</Label>
+                <Input
+                  id="editEndPercentage"
+                  type="number"
+                  value={selectedSession.end_percentage}
+                  onChange={(e) =>
+                    setSelectedSession({
+                      ...selectedSession,
+                      end_percentage: parseInt(e.target.value),
+                    })
+                  }
+                />
+              </div>
+              <div>
+                <Label htmlFor="editPerPercentRate">Rate per %</Label>
+                <Input
+                  id="editPerPercentRate"
+                  type="number"
+                  value={selectedSession.per_percent_rate}
+                  onChange={(e) =>
+                    setSelectedSession({
+                      ...selectedSession,
+                      per_percent_rate: parseFloat(e.target.value),
+                    })
+                  }
+                />
+              </div>
+              <div>
+                <Label htmlFor="editKcal">kCal Consumed</Label>
+                <Input
+                  id="editKcal"
+                  type="number"
+                  value={selectedSession.kcal}
+                  onChange={(e) =>
+                    setSelectedSession({
+                      ...selectedSession,
+                      kcal: parseFloat(e.target.value),
+                    })
+                  }
+                />
+              </div>
+              <div>
+                <Label htmlFor="editPerUnitRate">Rate per kCal</Label>
+                <Input
+                  id="editPerUnitRate"
+                  type="number"
+                  value={selectedSession.per_unit_rate}
+                  onChange={(e) =>
+                    setSelectedSession({
+                      ...selectedSession,
+                      per_unit_rate: parseFloat(e.target.value),
+                    })
+                  }
+                />
+              </div>
+              <div>
+                <Label htmlFor="editTotalAmount">Total Amount</Label>
+                <Input
+                  id="editTotalAmount"
+                  type="number"
+                  value={selectedSession.total_amount}
+                  onChange={(e) =>
+                    setSelectedSession({
+                      ...selectedSession,
+                      total_amount: parseFloat(e.target.value),
+                    })
+                  }
+                />
+              </div>
+              <div>
+                <Label htmlFor="editPaymentMode">Payment Mode</Label>
+                <Input
+                  id="editPaymentMode"
+                  value={selectedSession.payment_mode}
+                  onChange={(e) =>
+                    setSelectedSession({
+                      ...selectedSession,
+                      payment_mode: e.target.value,
+                    })
+                  }
+                />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button onClick={handleUpdate}>Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-20 w-64 h-64 bg-gradient-to-r from-yellow-400/20 to-orange-500/20 rounded-full blur-3xl animate-pulse"></div>
@@ -642,6 +806,9 @@ const ChargingTab = () => {
                       <TableHead className="font-semibold text-gray-700">
                         Payment
                       </TableHead>
+                      <TableHead className="font-semibold text-gray-700">
+                        Actions
+                      </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -693,6 +860,20 @@ const ChargingTab = () => {
                           >
                             {session.payment_mode}
                           </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {canEditTransactions && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedSession(session);
+                                setIsEditDialogOpen(true);
+                              }}
+                            >
+                              Edit
+                            </Button>
+                          )}
                         </TableCell>
                       </TableRow>
                     ))}

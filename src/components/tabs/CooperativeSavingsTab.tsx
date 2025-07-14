@@ -38,6 +38,13 @@ import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import useTableControls from "@/hooks/useTableControls";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 interface Saving {
   id: string;
@@ -60,6 +67,9 @@ const CooperativeSavingsTab = () => {
   const { user } = useAuth();
   const { page, range, onPageChange, onRangeChange, itemsPerPage } =
     useTableControls();
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [selectedSaving, setSelectedSaving] = useState<Saving | null>(null);
+  const [canEditTransactions, setCanEditTransactions] = useState(false);
 
   const cyclePeriods = [
     "Weekly",
@@ -83,6 +93,10 @@ const CooperativeSavingsTab = () => {
 
   useEffect(() => {
     fetchSavings();
+    const canEdit = localStorage.getItem("canEditTransactions");
+    if (canEdit) {
+      setCanEditTransactions(JSON.parse(canEdit));
+    }
   }, [user, page, range]);
 
   const fetchSavings = async () => {
@@ -187,8 +201,102 @@ const CooperativeSavingsTab = () => {
     savings.length > 0 ? totalSavings / savings.length : 0;
   const uniqueMembers = new Set(savings.map((s) => s.member_id)).size;
 
+  const handleUpdate = async () => {
+    if (!selectedSaving || !user) return;
+
+    try {
+      // Fetch the original record
+      const { data: originalSaving, error: fetchError } = await supabase
+        .from("cooperative_savings")
+        .select("*")
+        .eq("id", selectedSaving.id)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      const { error } = await supabase
+        .from("cooperative_savings")
+        .update(selectedSaving)
+        .eq("id", selectedSaving.id);
+
+      if (error) throw error;
+
+      // Log the change
+      await supabase.from("edit_logs").insert({
+        user_id: user.id,
+        transaction_type: "cooperative_saving",
+        transaction_id: selectedSaving.id,
+        previous_data: originalSaving,
+        new_data: selectedSaving,
+      });
+
+      toast.success("Cooperative saving updated successfully!");
+      setIsEditDialogOpen(false);
+      fetchSavings();
+    } catch (error) {
+      console.error("Error updating cooperative saving:", error);
+      toast.error("Failed to update cooperative saving");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-teal-50 via-cyan-50 to-blue-50 relative overflow-hidden">
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Cooperative Saving</DialogTitle>
+          </DialogHeader>
+          {selectedSaving && (
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="editContributionAmount">
+                  Contribution Amount
+                </Label>
+                <Input
+                  id="editContributionAmount"
+                  type="number"
+                  value={selectedSaving.contribution_amount}
+                  onChange={(e) =>
+                    setSelectedSaving({
+                      ...selectedSaving,
+                      contribution_amount: parseFloat(e.target.value),
+                    })
+                  }
+                />
+              </div>
+              <div>
+                <Label htmlFor="editMemberId">Member ID</Label>
+                <Input
+                  id="editMemberId"
+                  value={selectedSaving.member_id}
+                  onChange={(e) =>
+                    setSelectedSaving({
+                      ...selectedSaving,
+                      member_id: e.target.value,
+                    })
+                  }
+                />
+              </div>
+              <div>
+                <Label htmlFor="editCyclePeriod">Cycle Period</Label>
+                <Input
+                  id="editCyclePeriod"
+                  value={selectedSaving.cycle_period || ""}
+                  onChange={(e) =>
+                    setSelectedSaving({
+                      ...selectedSaving,
+                      cycle_period: e.target.value,
+                    })
+                  }
+                />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button onClick={handleUpdate}>Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-20 w-64 h-64 bg-gradient-to-r from-teal-400/20 to-cyan-500/20 rounded-full blur-3xl animate-pulse"></div>
@@ -570,6 +678,9 @@ const CooperativeSavingsTab = () => {
                       <TableHead className="font-semibold text-gray-700">
                         Cycle Period
                       </TableHead>
+                      <TableHead className="font-semibold text-gray-700">
+                        Actions
+                      </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -612,6 +723,20 @@ const CooperativeSavingsTab = () => {
                           >
                             {saving.cycle_period || "Unknown"}
                           </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {canEditTransactions && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedSaving(saving);
+                                setIsEditDialogOpen(true);
+                              }}
+                            >
+                              Edit
+                            </Button>
+                          )}
                         </TableCell>
                       </TableRow>
                     ))}
