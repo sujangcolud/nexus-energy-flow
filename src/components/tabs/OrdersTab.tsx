@@ -642,8 +642,6 @@ const OrdersTab = () => {
           ) : (
             <div className="overflow-x-auto simple-scrollbar">
               <Table className="min-w-full">
-                {" "}
-                {/* Ensured table takes min-w-full for scrolling */}
                 <TableHeader>
                   <TableRow className="bg-muted/50 dark:bg-muted/30">
                     <TableHead className="py-2.5 px-4 text-xs font-medium text-muted-foreground whitespace-nowrap">
