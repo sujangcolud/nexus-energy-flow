@@ -27,8 +27,20 @@ import {
   Target,
   Clock,
   Coins,
+  Trash2,
 } from "lucide-react";
 import { DateRange } from "react-day-picker";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import {
   Dialog,
   DialogContent,
@@ -200,6 +212,23 @@ const CooperativeSavingsTab = () => {
   const averageContribution =
     savings.length > 0 ? totalSavings / savings.length : 0;
   const uniqueMembers = new Set(savings.map((s) => s.member_id)).size;
+
+  const handleDelete = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from("cooperative_savings")
+        .delete()
+        .eq("id", id);
+
+      if (error) throw error;
+
+      toast.success("Saving deleted successfully!");
+      fetchSavings();
+    } catch (error) {
+      console.error("Error deleting saving:", error);
+      toast.error("Failed to delete saving");
+    }
+  };
 
   const handleUpdate = async () => {
     if (!selectedSaving) return;
@@ -708,16 +737,48 @@ const CooperativeSavingsTab = () => {
                         </TableCell>
                         <TableCell>
                           {canEditTransactions && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                setSelectedSaving(saving);
-                                setIsEditDialogOpen(true);
-                              }}
-                            >
-                              Edit
-                            </Button>
+                            <div className="flex gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedSaving(saving);
+                                  setIsEditDialogOpen(true);
+                                }}
+                              >
+                                Edit
+                              </Button>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>
+                                      Are you sure?
+                                    </AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      This action cannot be undone. This will
+                                      permanently delete the saving.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction
+                                      onClick={() => handleDelete(saving.id)}
+                                    >
+                                      Continue
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </div>
                           )}
                         </TableCell>
                       </TableRow>

@@ -33,8 +33,20 @@ import {
   Sparkles,
   AlertCircle,
   PlusCircle,
+  Trash2,
 } from "lucide-react";
 import { DateRange } from "react-day-picker";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import {
   Dialog,
   DialogContent,
@@ -219,6 +231,20 @@ const ExpensesTab = () => {
   const topCategory = Object.entries(categoryBreakdown).sort(
     ([, a], [, b]) => b - a,
   )[0];
+
+  const handleDelete = async (id: string) => {
+    try {
+      const { error } = await supabase.from("expenses").delete().eq("id", id);
+
+      if (error) throw error;
+
+      toast.success("Expense deleted successfully!");
+      fetchExpenses();
+    } catch (error) {
+      console.error("Error deleting expense:", error);
+      toast.error("Failed to delete expense");
+    }
+  };
 
   const handleUpdate = async () => {
     if (!selectedExpense) return;
@@ -800,16 +826,48 @@ const ExpensesTab = () => {
                         </TableCell>
                         <TableCell>
                           {canEditTransactions && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                setSelectedExpense(expense);
-                                setIsEditDialogOpen(true);
-                              }}
-                            >
-                              Edit
-                            </Button>
+                            <div className="flex gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedExpense(expense);
+                                  setIsEditDialogOpen(true);
+                                }}
+                              >
+                                Edit
+                              </Button>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>
+                                      Are you sure?
+                                    </AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      This action cannot be undone. This will
+                                      permanently delete the expense.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction
+                                      onClick={() => handleDelete(expense.id)}
+                                    >
+                                      Continue
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </div>
                           )}
                         </TableCell>
                       </TableRow>

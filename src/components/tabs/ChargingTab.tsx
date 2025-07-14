@@ -34,6 +34,17 @@ import {
 } from "lucide-react";
 import { DateRange } from "react-day-picker";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -202,6 +213,23 @@ const ChargingTab = () => {
   const averageSessionCost =
     sessions.length > 0 ? totalSessionCost / sessions.length : 0;
   const totalKcal = sessions.reduce((sum, session) => sum + session.kcal, 0);
+
+  const handleDelete = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from("charging_sessions")
+        .delete()
+        .eq("id", id);
+
+      if (error) throw error;
+
+      toast.success("Session deleted successfully!");
+      fetchSessions();
+    } catch (error) {
+      console.error("Error deleting session:", error);
+      toast.error("Failed to delete session");
+    }
+  };
 
   const handleUpdate = async () => {
     if (!selectedSession) return;
@@ -845,16 +873,48 @@ const ChargingTab = () => {
                         </TableCell>
                         <TableCell>
                           {canEditTransactions && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                setSelectedSession(session);
-                                setIsEditDialogOpen(true);
-                              }}
-                            >
-                              Edit
-                            </Button>
+                            <div className="flex gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedSession(session);
+                                  setIsEditDialogOpen(true);
+                                }}
+                              >
+                                Edit
+                              </Button>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>
+                                      Are you sure?
+                                    </AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      This action cannot be undone. This will
+                                      permanently delete the session.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction
+                                      onClick={() => handleDelete(session.id)}
+                                    >
+                                      Continue
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </div>
                           )}
                         </TableCell>
                       </TableRow>
