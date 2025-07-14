@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import jsPDF from "jspdf";
+import "jspdf-autotable";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -74,6 +77,11 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { UserOptions } from "jspdf-autotable";
+
+interface jsPDFWithAutoTable extends jsPDF {
+  autoTable: (options: UserOptions) => jsPDF;
+}
 
 interface ReportData {
   id: string;
@@ -95,6 +103,7 @@ interface StaticExpense {
 
 const ReportsTab = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [reports, setReports] = useState<ReportData[]>([]);
   const [staticExpenses, setStaticExpenses] = useState<StaticExpense[]>([]);
   const [loading, setLoading] = useState(false);
@@ -504,6 +513,20 @@ const ReportsTab = () => {
     }
   };
 
+  const downloadReport = (report: ReportData) => {
+    const doc = new jsPDF() as jsPDFWithAutoTable;
+    const tableColumn = Object.keys(report.report_data.orders[0]);
+    const tableRows = report.report_data.orders.map((obj: any) =>
+      Object.values(obj),
+    );
+
+    doc.autoTable({
+      head: [tableColumn],
+      body: tableRows,
+    });
+    doc.save(`${report.report_type}.pdf`);
+  };
+
   const deleteReport = async (id: string) => {
     try {
       const { error } = await supabase.from("reports").delete().eq("id", id);
@@ -881,6 +904,11 @@ const ReportsTab = () => {
                                   variant="outline"
                                   size="sm"
                                   className="hover:bg-blue-50 hover:border-blue-300"
+                                  onClick={() =>
+                                    navigate(
+                                      `/dashboard/reports-view?startDate=${report.date_range_start}&endDate=${report.date_range_end}`,
+                                    )
+                                  }
                                 >
                                   <Eye className="h-4 w-4 mr-1" />
                                   View
@@ -889,6 +917,7 @@ const ReportsTab = () => {
                                   variant="outline"
                                   size="sm"
                                   className="hover:bg-green-50 hover:border-green-300"
+                                  onClick={() => downloadReport(report)}
                                 >
                                   <Download className="h-4 w-4 mr-1" />
                                   Export

@@ -17,6 +17,13 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   TrendingDown,
   Calendar as CalendarIcon,
   ArrowDownCircle,
@@ -29,6 +36,13 @@ import {
   Hash,
 } from "lucide-react";
 import { DateRange } from "react-day-picker";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import {
   Popover,
   PopoverContent,
@@ -47,6 +61,7 @@ interface Withdrawal {
   reference_number: string | null;
   remarks: string | null;
   withdrawal_date: string;
+  payment_mode: string;
 }
 
 const WithdrawalsTab = () => {
@@ -58,11 +73,15 @@ const WithdrawalsTab = () => {
     recipient: "",
     referenceNumber: "",
     remarks: "",
+    payment_mode: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { user } = useAuth();
   const { page, range, onPageChange, onRangeChange, itemsPerPage } =
     useTableControls();
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [selectedWithdrawal, setSelectedWithdrawal] =
+    useState<Withdrawal | null>(null);
 
   const commonPurposes = [
     "Salary Payment",
@@ -76,6 +95,8 @@ const WithdrawalsTab = () => {
     "Emergency Fund",
     "Other",
   ];
+
+  const paymentModes = ["Cash", "Esewa", "Fonepay", "Bank"];
 
   const purposeColors = {
     "Salary Payment": "from-green-500 to-emerald-500",
@@ -134,13 +155,48 @@ const WithdrawalsTab = () => {
       return;
     }
 
-    if (!formData.amount || !formData.purpose) {
+    if (!formData.amount || !formData.purpose || !formData.payment_mode) {
       toast.error("Please fill in all required fields");
       return;
     }
 
     setIsSubmitting(true);
     try {
+      const { data: balanceData, error: balanceError } = await supabase
+        .from("balances")
+        .select("*")
+        .eq("user_id", user.id)
+        .single();
+
+      if (balanceError) throw balanceError;
+
+      const newBalance = { ...balanceData };
+      const amount = parseFloat(formData.amount);
+
+      switch (formData.payment_mode) {
+        case "Cash":
+          newBalance.cash_in_hand -= amount;
+          break;
+        case "Esewa":
+          newBalance.esewa_balance -= amount;
+          break;
+        case "Fonepay":
+          newBalance.fonepay_balance -= amount;
+          break;
+        case "Bank":
+          newBalance.bank_balance -= amount;
+          break;
+        default:
+          break;
+      }
+
+      const { error: updateBalanceError } = await supabase
+        .from("balances")
+        .update(newBalance)
+        .eq("id", balanceData.id);
+
+      if (updateBalanceError) throw updateBalanceError;
+
       const { error } = await supabase.from("withdrawals").insert([
         {
           user_id: user.id,
@@ -150,6 +206,7 @@ const WithdrawalsTab = () => {
           reference_number: formData.referenceNumber || null,
           remarks: formData.remarks || null,
           withdrawal_date: new Date().toISOString().split("T")[0],
+          payment_mode: formData.payment_mode,
         },
       ]);
 
@@ -162,6 +219,7 @@ const WithdrawalsTab = () => {
         recipient: "",
         referenceNumber: "",
         remarks: "",
+        payment_mode: "",
       });
       fetchWithdrawals();
     } catch (error) {
@@ -359,6 +417,33 @@ const WithdrawalsTab = () => {
                       <option key={purpose} value={purpose} />
                     ))}
                   </datalist>
+                </div>
+
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="payment_mode"
+                    className="text-sm font-medium text-gray-700"
+                  >
+                    Payment Mode *
+                  </Label>
+                  <Select
+                    value={formData.payment_mode}
+                    onValueChange={(value) =>
+                      setFormData({ ...formData, payment_mode: value })
+                    }
+                    required
+                  >
+                    <SelectTrigger className="h-12">
+                      <SelectValue placeholder="Select payment mode" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {paymentModes.map((mode) => (
+                        <SelectItem key={mode} value={mode}>
+                          {mode}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
@@ -588,6 +673,9 @@ const WithdrawalsTab = () => {
                         Purpose
                       </TableHead>
                       <TableHead className="font-semibold text-gray-700">
+                        Payment Mode
+                      </TableHead>
+                      <TableHead className="font-semibold text-gray-700">
                         Recipient
                       </TableHead>
                       <TableHead className="font-semibold text-gray-700">
@@ -595,6 +683,9 @@ const WithdrawalsTab = () => {
                       </TableHead>
                       <TableHead className="font-semibold text-gray-700">
                         Remarks
+                      </TableHead>
+                      <TableHead className="font-semibold text-gray-700">
+                        Actions
                       </TableHead>
                     </TableRow>
                   </TableHeader>
@@ -621,6 +712,13 @@ const WithdrawalsTab = () => {
                             className={`bg-gradient-to-r ${purposeColors[withdrawal.purpose as keyof typeof purposeColors] || "from-gray-500 to-slate-500"} text-white border-0`}
                           >
                             {withdrawal.purpose}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            className={`bg-gradient-to-r ${purposeColors[withdrawal.payment_mode as keyof typeof purposeColors] || "from-gray-500 to-slate-500"} text-white border-0`}
+                          >
+                            {withdrawal.payment_mode}
                           </Badge>
                         </TableCell>
                         <TableCell className="font-medium text-gray-800">
@@ -652,6 +750,18 @@ const WithdrawalsTab = () => {
                           >
                             {withdrawal.remarks || "-"}
                           </span>
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedWithdrawal(withdrawal);
+                              setIsEditDialogOpen(true);
+                            }}
+                          >
+                            Edit
+                          </Button>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -687,6 +797,111 @@ const WithdrawalsTab = () => {
           )}
         </Card>
       </div>
+    </div>
+  );
+
+  const handleUpdate = async () => {
+    if (!selectedWithdrawal) return;
+
+    try {
+      const { error } = await supabase
+        .from("withdrawals")
+        .update(selectedWithdrawal)
+        .eq("id", selectedWithdrawal.id);
+
+      if (error) throw error;
+
+      toast.success("Withdrawal updated successfully!");
+      setIsEditDialogOpen(false);
+      fetchWithdrawals();
+    } catch (error) {
+      console.error("Error updating withdrawal:", error);
+      toast.error("Failed to update withdrawal");
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 relative overflow-hidden">
+      {/* ... existing code ... */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Withdrawal</DialogTitle>
+          </DialogHeader>
+          {selectedWithdrawal && (
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="editAmount">Amount</Label>
+                <Input
+                  id="editAmount"
+                  value={selectedWithdrawal.amount}
+                  onChange={(e) =>
+                    setSelectedWithdrawal({
+                      ...selectedWithdrawal,
+                      amount: parseFloat(e.target.value),
+                    })
+                  }
+                />
+              </div>
+              <div>
+                <Label htmlFor="editPurpose">Purpose</Label>
+                <Input
+                  id="editPurpose"
+                  value={selectedWithdrawal.purpose}
+                  onChange={(e) =>
+                    setSelectedWithdrawal({
+                      ...selectedWithdrawal,
+                      purpose: e.target.value,
+                    })
+                  }
+                />
+              </div>
+              <div>
+                <Label htmlFor="editRecipient">Recipient</Label>
+                <Input
+                  id="editRecipient"
+                  value={selectedWithdrawal.recipient || ""}
+                  onChange={(e) =>
+                    setSelectedWithdrawal({
+                      ...selectedWithdrawal,
+                      recipient: e.target.value,
+                    })
+                  }
+                />
+              </div>
+              <div>
+                <Label htmlFor="editReferenceNumber">Reference Number</Label>
+                <Input
+                  id="editReferenceNumber"
+                  value={selectedWithdrawal.reference_number || ""}
+                  onChange={(e) =>
+                    setSelectedWithdrawal({
+                      ...selectedWithdrawal,
+                      reference_number: e.target.value,
+                    })
+                  }
+                />
+              </div>
+              <div>
+                <Label htmlFor="editRemarks">Remarks</Label>
+                <Input
+                  id="editRemarks"
+                  value={selectedWithdrawal.remarks || ""}
+                  onChange={(e) =>
+                    setSelectedWithdrawal({
+                      ...selectedWithdrawal,
+                      remarks: e.target.value,
+                    })
+                  }
+                />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button onClick={handleUpdate}>Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
