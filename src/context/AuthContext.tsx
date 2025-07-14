@@ -142,16 +142,41 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 
   const login = async (email: string, password: string) => {
     console.log("Attempting login for:", email);
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
 
-    if (error) {
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        console.error("Login error:", error);
+
+        // Provide more user-friendly error messages
+        if (
+          error.message?.includes("Failed to fetch") ||
+          error.name === "AuthRetryableFetchError"
+        ) {
+          throw new Error(
+            "Unable to connect to the server. Please check your internet connection and try again.",
+          );
+        }
+
+        if (error.message?.includes("Invalid login credentials")) {
+          throw new Error(
+            "Invalid email or password. Please check your credentials and try again.",
+          );
+        }
+
+        // For other errors, provide a generic message
+        throw new Error(error.message || "Login failed. Please try again.");
+      }
+
+      console.log("Login successful");
+    } catch (error: any) {
       console.error("Login error:", error);
       throw error;
     }
-    console.log("Login successful");
   };
 
   const signup = async (
