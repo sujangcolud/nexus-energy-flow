@@ -14,6 +14,8 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import PasswordChangeForm from "@/components/PasswordChangeForm";
+import EditLogsTab from "@/components/tabs/EditLogsTab";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const allItems = [
   {
@@ -183,137 +185,148 @@ const Settings = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* User Profile Card */}
-          <div className="lg:col-span-1">
-            <Card className="bg-gradient-to-br from-blue-50 to-cyan-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300">
-              <CardHeader className="text-center pb-4">
-                <div className="mx-auto w-20 h-20 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full flex items-center justify-center text-white text-2xl font-bold mb-4">
-                  {user?.name?.charAt(0)?.toUpperCase() ||
-                    user?.email?.charAt(0)?.toUpperCase() ||
-                    "U"}
-                </div>
-                <CardTitle className="text-xl bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
-                  {user?.name || "User Profile"}
-                </CardTitle>
-                <p className="text-sm text-gray-600">{user?.email}</p>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="text-center">
-                  <Button
-                    onClick={() => setShowPasswordForm(!showPasswordForm)}
-                    className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white transition-all duration-200 transform hover:scale-105"
-                  >
-                    {showPasswordForm ? (
-                      <>
-                        <EyeOff className="h-4 w-4 mr-2" />
-                        Hide Password Form
-                      </>
-                    ) : (
-                      <>
-                        <Eye className="h-4 w-4 mr-2" />
-                        Change Password
-                      </>
+        <Tabs defaultValue="general">
+          <TabsList>
+            <TabsTrigger value="general">General</TabsTrigger>
+            <TabsTrigger value="edit-logs">Edit Logs</TabsTrigger>
+          </TabsList>
+          <TabsContent value="general">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              {/* User Profile Card */}
+              <div className="lg:col-span-1">
+                <Card className="bg-gradient-to-br from-blue-50 to-cyan-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300">
+                  <CardHeader className="text-center pb-4">
+                    <div className="mx-auto w-20 h-20 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full flex items-center justify-center text-white text-2xl font-bold mb-4">
+                      {user?.name?.charAt(0)?.toUpperCase() ||
+                        user?.email?.charAt(0)?.toUpperCase() ||
+                        "U"}
+                    </div>
+                    <CardTitle className="text-xl bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
+                      {user?.name || "User Profile"}
+                    </CardTitle>
+                    <p className="text-sm text-gray-600">{user?.email}</p>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="text-center">
+                      <Button
+                        onClick={() => setShowPasswordForm(!showPasswordForm)}
+                        className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white transition-all duration-200 transform hover:scale-105"
+                      >
+                        {showPasswordForm ? (
+                          <>
+                            <EyeOff className="h-4 w-4 mr-2" />
+                            Hide Password Form
+                          </>
+                        ) : (
+                          <>
+                            <Eye className="h-4 w-4 mr-2" />
+                            Change Password
+                          </>
+                        )}
+                      </Button>
+                    </div>
+
+                    {showPasswordForm && (
+                      <div className="mt-6">
+                        <PasswordChangeForm />
+                      </div>
                     )}
-                  </Button>
-                </div>
+                  </CardContent>
+                </Card>
+              </div>
 
-                {showPasswordForm && (
-                  <div className="mt-6">
-                    <PasswordChangeForm />
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Dashboard Customization */}
-          <div className="lg:col-span-2">
-            <Card className="bg-gradient-to-br from-purple-50 to-pink-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white">
-                      <Palette className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-2xl bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                        Dashboard Modules
-                      </CardTitle>
-                      <p className="text-sm text-gray-600">
-                        Toggle modules to show/hide on your dashboard
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-lg font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
-                      {enabledCount}/{totalCount}
-                    </div>
-                    <p className="text-xs text-gray-500">Enabled</p>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                  {allItems.map((item, index) => (
-                    <div
-                      key={item.id}
-                      className={`p-4 rounded-xl border-2 transition-all duration-300 hover:scale-105 ${
-                        tabSettings[item.id]
-                          ? "bg-gradient-to-r from-green-50 to-emerald-50 border-green-200 shadow-lg"
-                          : "bg-gradient-to-r from-gray-50 to-slate-50 border-gray-200 shadow-sm opacity-60"
-                      }`}
-                      style={{ animationDelay: `${index * 50}ms` }}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <span className="text-2xl">{item.icon}</span>
-                          <div>
-                            <Label
-                              htmlFor={item.id}
-                              className={`font-medium cursor-pointer ${
-                                tabSettings[item.id]
-                                  ? "text-gray-800"
-                                  : "text-gray-500"
-                              }`}
-                            >
-                              {item.label}
-                            </Label>
-                            <p className="text-xs text-gray-500 mt-1">
-                              {item.description}
-                            </p>
-                          </div>
+              {/* Dashboard Customization */}
+              <div className="lg:col-span-2">
+                <Card className="bg-gradient-to-br from-purple-50 to-pink-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300">
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white">
+                          <Palette className="h-5 w-5" />
                         </div>
-                        <Switch
-                          id={item.id}
-                          checked={tabSettings[item.id] ?? true}
-                          onCheckedChange={() => handleToggle(item.id)}
-                          className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-green-500 data-[state=checked]:to-emerald-500"
-                        />
+                        <div>
+                          <CardTitle className="text-2xl bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                            Dashboard Modules
+                          </CardTitle>
+                          <p className="text-sm text-gray-600">
+                            Toggle modules to show/hide on your dashboard
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-lg font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+                          {enabledCount}/{totalCount}
+                        </div>
+                        <p className="text-xs text-gray-500">Enabled</p>
                       </div>
                     </div>
-                  ))}
-                </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                      {allItems.map((item, index) => (
+                        <div
+                          key={item.id}
+                          className={`p-4 rounded-xl border-2 transition-all duration-300 hover:scale-105 ${
+                            tabSettings[item.id]
+                              ? "bg-gradient-to-r from-green-50 to-emerald-50 border-green-200 shadow-lg"
+                              : "bg-gradient-to-r from-gray-50 to-slate-50 border-gray-200 shadow-sm opacity-60"
+                          }`}
+                          style={{ animationDelay: `${index * 50}ms` }}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <span className="text-2xl">{item.icon}</span>
+                              <div>
+                                <Label
+                                  htmlFor={item.id}
+                                  className={`font-medium cursor-pointer ${
+                                    tabSettings[item.id]
+                                      ? "text-gray-800"
+                                      : "text-gray-500"
+                                  }`}
+                                >
+                                  {item.label}
+                                </Label>
+                                <p className="text-xs text-gray-500 mt-1">
+                                  {item.description}
+                                </p>
+                              </div>
+                            </div>
+                            <Switch
+                              id={item.id}
+                              checked={tabSettings[item.id] ?? true}
+                              onCheckedChange={() => handleToggle(item.id)}
+                              className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-green-500 data-[state=checked]:to-emerald-500"
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
 
-                <div className="flex gap-4 justify-center">
-                  <Button
-                    onClick={handleResetSettings}
-                    variant="outline"
-                    className="flex items-center gap-2 hover:bg-gradient-to-r hover:from-orange-50 hover:to-red-50 hover:border-orange-300 transition-all duration-200 transform hover:scale-105"
-                  >
-                    <RotateCcw className="h-4 w-4" />
-                    Reset to Defaults
-                  </Button>
+                    <div className="flex gap-4 justify-center">
+                      <Button
+                        onClick={handleResetSettings}
+                        variant="outline"
+                        className="flex items-center gap-2 hover:bg-gradient-to-r hover:from-orange-50 hover:to-red-50 hover:border-orange-300 transition-all duration-200 transform hover:scale-105"
+                      >
+                        <RotateCcw className="h-4 w-4" />
+                        Reset to Defaults
+                      </Button>
 
-                  <Button className="flex items-center gap-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white transition-all duration-200 transform hover:scale-105">
-                    <Save className="h-4 w-4" />
-                    Settings Saved
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
+                      <Button className="flex items-center gap-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white transition-all duration-200 transform hover:scale-105">
+                        <Save className="h-4 w-4" />
+                        Settings Saved
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </TabsContent>
+          <TabsContent value="edit-logs">
+            <EditLogsTab />
+          </TabsContent>
+        </Tabs>
 
         <Card className="bg-gradient-to-br from-blue-50 to-cyan-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300">
           <CardHeader>

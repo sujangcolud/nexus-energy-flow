@@ -268,15 +268,33 @@ const WithdrawalsTab = () => {
     withdrawals.length > 0 ? totalWithdrawals / withdrawals.length : 0;
 
   const handleUpdate = async () => {
-    if (!selectedWithdrawal) return;
+    if (!selectedWithdrawal || !user) return;
 
     try {
+      // Fetch the original record
+      const { data: originalWithdrawal, error: fetchError } = await supabase
+        .from("withdrawals")
+        .select("*")
+        .eq("id", selectedWithdrawal.id)
+        .single();
+
+      if (fetchError) throw fetchError;
+
       const { error } = await supabase
         .from("withdrawals")
         .update(selectedWithdrawal)
         .eq("id", selectedWithdrawal.id);
 
       if (error) throw error;
+
+      // Log the change
+      await supabase.from("edit_logs").insert({
+        user_id: user.id,
+        transaction_type: "withdrawal",
+        transaction_id: selectedWithdrawal.id,
+        previous_data: originalWithdrawal,
+        new_data: selectedWithdrawal,
+      });
 
       toast.success("Withdrawal updated successfully!");
       setIsEditDialogOpen(false);

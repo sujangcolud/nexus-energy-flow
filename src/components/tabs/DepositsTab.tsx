@@ -263,15 +263,33 @@ const DepositsTab = () => {
     deposits.length > 0 ? totalDeposits / deposits.length : 0;
 
   const handleUpdate = async () => {
-    if (!selectedDeposit) return;
+    if (!selectedDeposit || !user) return;
 
     try {
+      // Fetch the original record
+      const { data: originalDeposit, error: fetchError } = await supabase
+        .from("deposits")
+        .select("*")
+        .eq("id", selectedDeposit.id)
+        .single();
+
+      if (fetchError) throw fetchError;
+
       const { error } = await supabase
         .from("deposits")
         .update(selectedDeposit)
         .eq("id", selectedDeposit.id);
 
       if (error) throw error;
+
+      // Log the change
+      await supabase.from("edit_logs").insert({
+        user_id: user.id,
+        transaction_type: "deposit",
+        transaction_id: selectedDeposit.id,
+        previous_data: originalDeposit,
+        new_data: selectedDeposit,
+      });
 
       toast.success("Deposit updated successfully!");
       setIsEditDialogOpen(false);
