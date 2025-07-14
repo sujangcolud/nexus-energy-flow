@@ -182,12 +182,12 @@ const Dashboard = () => {
       {
         id: "super_admin_dashboard",
         path: "super-admin",
-        label: "Admin Panel",
+        label: "Infographics",
         icon: LayoutDashboard,
         roles: ["super_admin"],
         gradient: "from-rose-500 via-pink-500 to-fuchsia-600",
         bgGradient: "from-rose-50 to-pink-50",
-        description: "Administrator dashboard",
+        description: "Visual analytics dashboard",
       },
       {
         id: "menu",
