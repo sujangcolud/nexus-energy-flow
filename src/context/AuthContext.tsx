@@ -188,23 +188,53 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     console.log("Attempting signup for:", email);
     const redirectUrl = `${window.location.origin}/dashboard`;
 
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: redirectUrl,
-        data: {
-          first_name: firstName,
-          last_name: lastName,
+    try {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: redirectUrl,
+          data: {
+            first_name: firstName,
+            last_name: lastName,
+          },
         },
-      },
-    });
+      });
 
-    if (error) {
+      if (error) {
+        console.error("Signup error:", error);
+
+        // Provide more user-friendly error messages
+        if (
+          error.message?.includes("Failed to fetch") ||
+          error.name === "AuthRetryableFetchError"
+        ) {
+          throw new Error(
+            "Unable to connect to the server. Please check your internet connection and try again.",
+          );
+        }
+
+        if (error.message?.includes("already registered")) {
+          throw new Error(
+            "An account with this email already exists. Please try signing in instead.",
+          );
+        }
+
+        if (error.message?.includes("Password should be")) {
+          throw new Error(
+            "Password is too weak. Please use at least 6 characters with a mix of letters and numbers.",
+          );
+        }
+
+        // For other errors, provide a generic message
+        throw new Error(error.message || "Signup failed. Please try again.");
+      }
+
+      console.log("Signup successful");
+    } catch (error: any) {
       console.error("Signup error:", error);
       throw error;
     }
-    console.log("Signup successful");
   };
 
   const logout = async () => {
