@@ -645,6 +645,14 @@ const ChargingTab = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
+                    <TableRow>
+                      <TableCell colSpan={4} className="font-bold">
+                        Total
+                      </TableCell>
+                      <TableCell colSpan={2} className="font-bold text-right">
+                        NRs. {totalSessionCost.toFixed(2)}
+                      </TableCell>
+                    </TableRow>
                     {sessions.map((session, index) => (
                       <TableRow
                         key={session.id}

@@ -625,6 +625,14 @@ const ExpensesTab = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
+                    <TableRow>
+                      <TableCell colSpan={3} className="font-bold">
+                        Total
+                      </TableCell>
+                      <TableCell colSpan={3} className="font-bold text-right">
+                        NRs. {totalExpenses.toFixed(2)}
+                      </TableCell>
+                    </TableRow>
                     {expenses.map((expense, index) => (
                       <TableRow
                         key={expense.id}

@@ -690,6 +690,14 @@ const WithdrawalsTab = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
+                    <TableRow>
+                      <TableCell colSpan={1} className="font-bold">
+                        Total
+                      </TableCell>
+                      <TableCell colSpan={7} className="font-bold">
+                        NRs. {totalWithdrawals.toFixed(2)}
+                      </TableCell>
+                    </TableRow>
                     {withdrawals.map((withdrawal, index) => (
                       <TableRow
                         key={withdrawal.id}

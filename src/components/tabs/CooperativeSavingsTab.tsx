@@ -573,6 +573,14 @@ const CooperativeSavingsTab = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
+                    <TableRow>
+                      <TableCell colSpan={2} className="font-bold">
+                        Total
+                      </TableCell>
+                      <TableCell colSpan={2} className="font-bold text-right">
+                        NRs. {totalSavings.toFixed(2)}
+                      </TableCell>
+                    </TableRow>
                     {savings.map((saving, index) => (
                       <TableRow
                         key={saving.id}

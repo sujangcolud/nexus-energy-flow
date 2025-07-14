@@ -773,6 +773,14 @@ const OrdersTab = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
+                    <TableRow>
+                      <TableCell colSpan={4} className="font-bold">
+                        Total
+                      </TableCell>
+                      <TableCell colSpan={2} className="font-bold text-right">
+                        NRs. {totalOrders.toFixed(2)}
+                      </TableCell>
+                    </TableRow>
                     {orders.map((order, index) => (
                       <TableRow
                         key={order.id}
