@@ -9,6 +9,11 @@ const openai = new OpenAI({
 
 export async function fetchOpenAIAnswer(prompt: string, context?: string) {
   try {
+    // Check if API key is available
+    if (!import.meta.env.VITE_OPENAI_API_KEY && !openai.apiKey) {
+      return "OpenAI API key not configured. Please add VITE_OPENAI_API_KEY to your environment variables.";
+    }
+
     const systemPrompt =
       "You are a helpful business assistant chatbot. Be detailed, accurate, and friendly. Use business context if provided.";
     const messages = [
@@ -26,7 +31,11 @@ export async function fetchOpenAIAnswer(prompt: string, context?: string) {
       completion.choices[0]?.message?.content ||
       "Sorry, I couldn't generate a response."
     );
-  } catch (err) {
+  } catch (err: any) {
+    console.error("OpenAI API error:", err);
+    if (err?.status === 401) {
+      return "Invalid OpenAI API key. Please check your configuration.";
+    }
     return "Sorry, there was a problem contacting OpenAI.";
   }
 }
