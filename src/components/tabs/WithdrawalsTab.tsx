@@ -279,6 +279,21 @@ const WithdrawalsTab = () => {
   const averageWithdrawal =
     withdrawals.length > 0 ? totalWithdrawals / withdrawals.length : 0;
 
+  const logAction = async (
+    action: string,
+    record_id: string,
+    details: any,
+  ) => {
+    if (!user) return;
+    await supabase.from("logs").insert({
+      user_id: user.id,
+      action,
+      table_name: "withdrawals",
+      record_id,
+      details,
+    });
+  };
+
   const handleDelete = async (id: string) => {
     try {
       const { error } = await supabase
@@ -289,6 +304,7 @@ const WithdrawalsTab = () => {
       if (error) throw error;
 
       toast.success("Withdrawal deleted successfully!");
+      logAction("delete", id, { id });
       fetchWithdrawals();
     } catch (error) {
       console.error("Error deleting withdrawal:", error);
@@ -308,6 +324,7 @@ const WithdrawalsTab = () => {
       if (error) throw error;
 
       toast.success("Withdrawal updated successfully!");
+      logAction("update", selectedWithdrawal.id, selectedWithdrawal);
       setIsEditDialogOpen(false);
       fetchWithdrawals();
     } catch (error) {

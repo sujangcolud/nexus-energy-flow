@@ -312,6 +312,21 @@ const OrdersTab = () => {
   const currentMenuItemsToDisplay = filteredMenuItems();
   const totalOrders = orders.reduce((sum, order) => sum + order.total, 0);
 
+  const logAction = async (
+    action: string,
+    record_id: string,
+    details: any,
+  ) => {
+    if (!user) return;
+    await supabase.from("logs").insert({
+      user_id: user.id,
+      action,
+      table_name: "orders",
+      record_id,
+      details,
+    });
+  };
+
   const handleDelete = async (id: string) => {
     try {
       const { error } = await supabase.from("orders").delete().eq("id", id);
@@ -319,6 +334,7 @@ const OrdersTab = () => {
       if (error) throw error;
 
       toast.success("Order deleted successfully!");
+      logAction("delete", id, { id });
       fetchOrders();
     } catch (error) {
       console.error("Error deleting order:", error);
@@ -338,6 +354,7 @@ const OrdersTab = () => {
       if (error) throw error;
 
       toast.success("Order updated successfully!");
+      logAction("update", selectedOrder.id, selectedOrder);
       setIsEditDialogOpen(false);
       fetchOrders();
     } catch (error) {

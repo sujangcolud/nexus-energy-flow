@@ -274,6 +274,21 @@ const DepositsTab = () => {
   const averageDeposit =
     deposits.length > 0 ? totalDeposits / deposits.length : 0;
 
+  const logAction = async (
+    action: string,
+    record_id: string,
+    details: any,
+  ) => {
+    if (!user) return;
+    await supabase.from("logs").insert({
+      user_id: user.id,
+      action,
+      table_name: "deposits",
+      record_id,
+      details,
+    });
+  };
+
   const handleDelete = async (id: string) => {
     try {
       const { error } = await supabase.from("deposits").delete().eq("id", id);
@@ -281,6 +296,7 @@ const DepositsTab = () => {
       if (error) throw error;
 
       toast.success("Deposit deleted successfully!");
+      logAction("delete", id, { id });
       fetchDeposits();
     } catch (error) {
       console.error("Error deleting deposit:", error);
@@ -300,6 +316,7 @@ const DepositsTab = () => {
       if (error) throw error;
 
       toast.success("Deposit updated successfully!");
+      logAction("update", selectedDeposit.id, selectedDeposit);
       setIsEditDialogOpen(false);
       fetchDeposits();
     } catch (error) {

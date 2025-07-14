@@ -232,6 +232,21 @@ const ExpensesTab = () => {
     ([, a], [, b]) => b - a,
   )[0];
 
+  const logAction = async (
+    action: string,
+    record_id: string,
+    details: any,
+  ) => {
+    if (!user) return;
+    await supabase.from("logs").insert({
+      user_id: user.id,
+      action,
+      table_name: "expenses",
+      record_id,
+      details,
+    });
+  };
+
   const handleDelete = async (id: string) => {
     try {
       const { error } = await supabase.from("expenses").delete().eq("id", id);
@@ -239,6 +254,7 @@ const ExpensesTab = () => {
       if (error) throw error;
 
       toast.success("Expense deleted successfully!");
+      logAction("delete", id, { id });
       fetchExpenses();
     } catch (error) {
       console.error("Error deleting expense:", error);
@@ -258,6 +274,7 @@ const ExpensesTab = () => {
       if (error) throw error;
 
       toast.success("Expense updated successfully!");
+      logAction("update", selectedExpense.id, selectedExpense);
       setIsEditDialogOpen(false);
       fetchExpenses();
     } catch (error) {

@@ -213,6 +213,21 @@ const CooperativeSavingsTab = () => {
     savings.length > 0 ? totalSavings / savings.length : 0;
   const uniqueMembers = new Set(savings.map((s) => s.member_id)).size;
 
+  const logAction = async (
+    action: string,
+    record_id: string,
+    details: any,
+  ) => {
+    if (!user) return;
+    await supabase.from("logs").insert({
+      user_id: user.id,
+      action,
+      table_name: "cooperative_savings",
+      record_id,
+      details,
+    });
+  };
+
   const handleDelete = async (id: string) => {
     try {
       const { error } = await supabase
@@ -223,6 +238,7 @@ const CooperativeSavingsTab = () => {
       if (error) throw error;
 
       toast.success("Saving deleted successfully!");
+      logAction("delete", id, { id });
       fetchSavings();
     } catch (error) {
       console.error("Error deleting saving:", error);
@@ -242,6 +258,7 @@ const CooperativeSavingsTab = () => {
       if (error) throw error;
 
       toast.success("Saving updated successfully!");
+      logAction("update", selectedSaving.id, selectedSaving);
       setIsEditDialogOpen(false);
       fetchSavings();
     } catch (error) {
