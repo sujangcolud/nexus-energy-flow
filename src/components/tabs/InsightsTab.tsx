@@ -148,7 +148,12 @@ const InsightsTab = () => {
       const deposits = depositsData.data || [];
       const withdrawals = withdrawalsData.data || [];
       const cooperative = cooperativeData.data || [];
-      const balances = balancesData.data || {};
+      const balances = balancesData.data || {
+        cash_in_hand: 0,
+        esewa_balance: 0,
+        fonepay_balance: 0,
+        cooperative_balance: 0,
+      };
 
       // Calculate analytics
       const totalRevenue =
