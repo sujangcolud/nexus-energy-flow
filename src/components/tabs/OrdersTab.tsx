@@ -697,6 +697,18 @@ const OrdersTab = () => {
                       </TableCell>
                     </TableRow>
                   ))}
+                  <TableRow className="bg-gray-100 font-semibold">
+                    <TableCell colSpan={4} className="text-right font-bold">
+                      Total
+                    </TableCell>
+                    <TableCell className="text-right font-bold">
+                      NRs.{" "}
+                      {orders
+                        .reduce((acc, order) => acc + Number(order.total), 0)
+                        .toFixed(2)}
+                    </TableCell>
+                    <TableCell></TableCell>
+                  </TableRow>
                 </TableBody>
               </Table>
             </div>
