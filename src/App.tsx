@@ -10,6 +10,7 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Dashboard from "./pages/Dashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
+import TestComponent from "./components/TestComponent";
 
 // Import Tab Components for Routing
 import OrdersTab from "./components/tabs/OrdersTab";
