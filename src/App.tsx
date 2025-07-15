@@ -11,6 +11,7 @@ import NotFound from "./pages/NotFound";
 import Dashboard from "./pages/Dashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
 import TestComponent from "./components/TestComponent";
+import SimpleLogin from "./components/SimpleLogin";
 
 // Import Tab Components for Routing
 import OrdersTab from "./components/tabs/OrdersTab";
