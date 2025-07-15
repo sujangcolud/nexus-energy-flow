@@ -44,7 +44,6 @@ import {
   Clock,
   AlertTriangle,
   CheckCircle,
-  TrendingUp,
 } from "lucide-react";
 
 interface AnalyticsData {
