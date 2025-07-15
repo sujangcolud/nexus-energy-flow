@@ -31,13 +31,8 @@ import {
   Package,
   Filter,
   Calendar as CalendarIcon,
-  Sparkles,
   ChefHat,
   DollarSign,
-  TrendingUp,
-  Star,
-  Utensils,
-  Heart,
   Clock,
   CheckCircle,
 } from "lucide-react";
@@ -94,15 +89,6 @@ const OrdersTab = () => {
 
   const paymentModes = ["Cash", "Esewa", "Fonepay", "Bank", "Cheque", "Credit"];
 
-  const categoryColors = {
-    Appetizers: "from-orange-500 to-red-500",
-    "Main Course": "from-blue-500 to-indigo-600",
-    Desserts: "from-pink-500 to-purple-600",
-    Beverages: "from-green-500 to-teal-600",
-    Snacks: "from-yellow-500 to-orange-500",
-    Specials: "from-purple-500 to-pink-500",
-  };
-
   const fetchOrders = async () => {
     if (!user) return;
 
@@ -151,59 +137,56 @@ const OrdersTab = () => {
   };
 
   useEffect(() => {
-    fetchOrders();
-    fetchMenuItems();
+    if (user) {
+      fetchOrders();
+      fetchMenuItems();
+    }
   }, [user, page, range]);
 
-  const addToCart = (menuItem: MenuItem) => {
+  const addToCart = (item: MenuItem) => {
     setCart((prevCart) => {
-      const existingItem = prevCart.find((item) => item.id === menuItem.id);
+      const existingItem = prevCart.find((cartItem) => cartItem.id === item.id);
       if (existingItem) {
-        return prevCart.map((item) =>
-          item.id === menuItem.id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item,
+        return prevCart.map((cartItem) =>
+          cartItem.id === item.id
+            ? { ...cartItem, quantity: cartItem.quantity + 1 }
+            : cartItem,
         );
       } else {
         return [
           ...prevCart,
-          {
-            id: menuItem.id,
-            name: menuItem.name,
-            price: menuItem.price,
-            quantity: 1,
-          },
+          { id: item.id, name: item.name, price: item.price, quantity: 1 },
         ];
       }
     });
-    toast.success(`${menuItem.name} added to cart! 🛒`);
+    toast.success(`${item.name} added to cart!`);
   };
 
-  const updateCartQuantity = (id: string, quantity: number) => {
-    if (quantity <= 0) {
-      removeFromCart(id);
-      return;
+  const updateCartQuantity = (id: string, newQuantity: number) => {
+    if (newQuantity <= 0) {
+      setCart((prevCart) => prevCart.filter((item) => item.id !== id));
+    } else {
+      setCart((prevCart) =>
+        prevCart.map((item) =>
+          item.id === id ? { ...item, quantity: newQuantity } : item,
+        ),
+      );
     }
-    setCart((prevCart) =>
-      prevCart.map((item) => (item.id === id ? { ...item, quantity } : item)),
-    );
-  };
-
-  const removeFromCart = (id: string) => {
-    setCart((prevCart) => prevCart.filter((item) => item.id !== id));
   };
 
   const clearCart = () => {
     setCart([]);
-  };
-
-  const getCartTotal = () => {
-    return cart.reduce((total, item) => total + item.price * item.quantity, 0);
+    toast.success("Cart cleared!");
   };
 
   const submitOrder = async () => {
-    if (!user || cart.length === 0 || !paymentMode) {
-      toast.error("Please add items to cart and select payment mode");
+    if (cart.length === 0) {
+      toast.error("Cart is empty!");
+      return;
+    }
+
+    if (!paymentMode) {
+      toast.error("Please select a payment method!");
       return;
     }
 
@@ -211,7 +194,7 @@ const OrdersTab = () => {
     try {
       const orderPromises = cart.map((item) =>
         supabase.from("orders").insert({
-          user_id: user.id,
+          user_id: user!.id,
           item_name: item.name,
           quantity: item.quantity,
           rate: item.price,
@@ -221,14 +204,10 @@ const OrdersTab = () => {
         }),
       );
 
-      const results = await Promise.all(orderPromises);
+      await Promise.all(orderPromises);
 
-      // Check if any insert failed
-      const failed = results.find((result) => result.error);
-      if (failed) throw failed.error;
-
-      toast.success("Order placed successfully! 🎉");
-      clearCart();
+      toast.success("Order placed successfully!");
+      setCart([]);
       setPaymentMode("");
       fetchOrders();
     } catch (error) {
@@ -239,465 +218,73 @@ const OrdersTab = () => {
     }
   };
 
-  const groupedMenuItems = menuItems.reduce(
+  const totalAmount = cart.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0,
+  );
+
+  const productCategories = [
+    ...new Set(menuItems.map((item) => item.category)),
+  ];
+
+  const filteredMenuItems = menuItems.filter((item) => {
+    const matchesSearch = item.name
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
+    const matchesCategory =
+      selectedCategory === null || item.category === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
+
+  const groupedMenuItems = filteredMenuItems.reduce(
     (acc, item) => {
-      if (!acc[item.category]) {
-        acc[item.category] = [];
+      const category = item.category;
+      if (!acc[category]) {
+        acc[category] = [];
       }
-      acc[item.category].push(item);
+      acc[category].push(item);
       return acc;
     },
     {} as Record<string, MenuItem[]>,
   );
 
-  const productCategories = Object.keys(groupedMenuItems);
-
-  useEffect(() => {
-    if (productCategories.length > 0 && !selectedCategory) {
-      setSelectedCategory(productCategories[0]);
-    }
-  }, [productCategories, selectedCategory]);
-
-  const filteredMenuItems = () => {
-    let itemsToDisplay = groupedMenuItems;
-
-    if (selectedCategory) {
-      itemsToDisplay = {
-        [selectedCategory]: groupedMenuItems[selectedCategory] || [],
-      };
-    }
-
-    if (searchTerm) {
-      const lowerSearchTerm = searchTerm.toLowerCase();
-      const result: Record<string, MenuItem[]> = {};
-      for (const category in itemsToDisplay) {
-        result[category] = itemsToDisplay[category].filter(
-          (item) =>
-            item.name.toLowerCase().includes(lowerSearchTerm) ||
-            item.category.toLowerCase().includes(lowerSearchTerm) ||
-            (item.description &&
-              item.description.toLowerCase().includes(lowerSearchTerm)),
-        );
+  const currentMenuItemsToDisplay = Object.keys(groupedMenuItems).reduce(
+    (acc, category) => {
+      if (groupedMenuItems[category].length > 0) {
+        acc[category] = groupedMenuItems[category];
       }
-      itemsToDisplay = result;
-    }
-    return itemsToDisplay;
-  };
-
-  const currentMenuItemsToDisplay = filteredMenuItems();
-  const totalOrders = orders.reduce((sum, order) => sum + order.total, 0);
+      return acc;
+    },
+    {} as Record<string, MenuItem[]>,
+  );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-pink-50 to-red-50 relative overflow-hidden">
-      {/* Animated Background Elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-20 w-64 h-64 bg-gradient-to-r from-orange-400/20 to-red-500/20 rounded-full blur-3xl animate-pulse"></div>
-        <div
-          className="absolute top-1/3 right-20 w-80 h-80 bg-gradient-to-r from-pink-400/20 to-purple-500/20 rounded-full blur-3xl animate-pulse"
-          style={{ animationDelay: "1s" }}
-        ></div>
-        <div
-          className="absolute bottom-20 left-1/4 w-72 h-72 bg-gradient-to-r from-red-400/20 to-pink-500/20 rounded-full blur-3xl animate-pulse"
-          style={{ animationDelay: "2s" }}
-        ></div>
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="flex items-center gap-3 mb-8">
+        <div className="p-3 bg-primary rounded-xl">
+          <ShoppingCart className="h-6 w-6 text-black" />
+        </div>
+        <div>
+          <h1 className="text-2xl font-bold text-black">Order Management</h1>
+          <p className="text-gray-600">Browse menu and place orders</p>
+        </div>
       </div>
 
-      <div className="relative z-10 space-y-8 p-6">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="p-4 rounded-2xl bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-xl animate-pulse">
-              <ChefHat className="h-8 w-8" />
-            </div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-orange-600 via-red-600 to-pink-600 bg-clip-text text-transparent">
-              Restaurant Orders
-            </h1>
-            <Sparkles className="h-8 w-8 text-pink-500 animate-bounce" />
-          </div>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Browse our delicious menu and place your orders with ease
-          </p>
-        </div>
-
-        {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card className="bg-gradient-to-br from-orange-50 to-red-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-orange-600 font-medium">
-                    Cart Items
-                  </p>
-                  <p className="text-2xl font-bold text-orange-800">
-                    {cart.length}
-                  </p>
-                </div>
-                <div className="p-3 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl text-white">
-                  <ShoppingCart className="h-6 w-6" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-pink-50 to-purple-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-pink-600 font-medium">
-                    Cart Total
-                  </p>
-                  <p className="text-2xl font-bold text-pink-800">
-                    NRs. {getCartTotal().toFixed(2)}
-                  </p>
-                </div>
-                <div className="p-3 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl text-white">
-                  <DollarSign className="h-6 w-6" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-purple-50 to-indigo-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-purple-600 font-medium">
-                    Total Orders
-                  </p>
-                  <p className="text-2xl font-bold text-purple-800">
-                    {orders.length}
-                  </p>
-                </div>
-                <div className="p-3 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-xl text-white">
-                  <Package className="h-6 w-6" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-indigo-50 to-blue-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-indigo-600 font-medium">
-                    Total Spent
-                  </p>
-                  <p className="text-2xl font-bold text-indigo-800">
-                    NRs. {totalOrders.toFixed(2)}
-                  </p>
-                </div>
-                <div className="p-3 bg-gradient-to-r from-indigo-500 to-blue-500 rounded-xl text-white">
-                  <TrendingUp className="h-6 w-6" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Menu Items Section */}
-          <div className="lg:col-span-2 space-y-6">
-            <Card className="bg-gradient-to-br from-white/90 to-orange-50/90 backdrop-blur-sm border-0 shadow-2xl">
-              <CardHeader className="bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-t-lg">
-                <CardTitle className="flex items-center gap-3 text-xl">
-                  <div className="p-2 bg-white/20 rounded-lg">
-                    <Utensils className="h-6 w-6" />
-                  </div>
-                  Our Delicious Menu
-                  <Star className="h-5 w-5 animate-pulse text-yellow-300" />
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-6 space-y-6">
-                {/* Search and Filters */}
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <div className="flex-grow">
-                    <Input
-                      placeholder="Search delicious items... 🔍"
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="border-orange-200 focus:border-orange-500 focus:ring-orange-500 h-12"
-                    />
-                  </div>
-                </div>
-
-                {/* Category Filters */}
-                <div className="flex items-center gap-2 flex-wrap pb-2">
-                  <Filter className="h-5 w-5 text-gray-600" />
-                  <Button
-                    key="all-categories"
-                    onClick={() => setSelectedCategory(null)}
-                    variant={selectedCategory === null ? "default" : "outline"}
-                    size="sm"
-                    className={`transition-all duration-150 ${selectedCategory === null ? "bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-md" : "hover:bg-orange-50"}`}
-                  >
-                    All Categories
-                  </Button>
-                  {productCategories.map((category) => (
-                    <Button
-                      key={category}
-                      onClick={() => setSelectedCategory(category)}
-                      variant={
-                        selectedCategory === category ? "default" : "outline"
-                      }
-                      size="sm"
-                      className={`transition-all duration-150 ${selectedCategory === category ? `bg-gradient-to-r ${categoryColors[category as keyof typeof categoryColors] || "from-gray-500 to-slate-500"} text-white shadow-md` : "hover:bg-orange-50"}`}
-                    >
-                      {category}
-                    </Button>
-                  ))}
-                </div>
-
-                {/* Menu Items Display */}
-                {Object.keys(currentMenuItemsToDisplay).length === 0 &&
-                  searchTerm && (
-                    <div className="text-center py-8">
-                      <Package className="h-16 w-16 mx-auto text-gray-300 mb-4" />
-                      <p className="text-gray-500 text-lg">
-                        No items match your search for "{searchTerm}"
-                      </p>
-                    </div>
-                  )}
-
-                {Object.entries(currentMenuItemsToDisplay).map(
-                  ([category, items]) => {
-                    if (items.length === 0) return null;
-                    return (
-                      <div key={category} className="space-y-4">
-                        <div className="flex items-center gap-3 mb-4">
-                          <div
-                            className={`w-4 h-4 rounded-full bg-gradient-to-r ${categoryColors[category as keyof typeof categoryColors] || "from-gray-500 to-slate-500"}`}
-                          ></div>
-                          <h3 className="text-xl font-bold text-gray-800">
-                            {category}
-                          </h3>
-                        </div>
-                        <div className="grid grid-cols-3 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4">
-                          {items.map((item, index) => (
-                            <Card
-                              key={item.id}
-                              className="group bg-gradient-to-br from-white to-orange-50/50 hover:from-orange-50 hover:to-red-50 transition-all duration-300 hover:shadow-xl hover:scale-105 cursor-pointer border border-orange-100 hover:border-orange-300"
-                              onClick={() => addToCart(item)}
-                              style={{ animationDelay: `${index * 50}ms` }}
-                            >
-                              <CardContent className="p-2 sm:p-4">
-                                <div className="flex justify-between items-start mb-3">
-                                  <div className="flex-1">
-                                    <h4 className="font-bold text-sm sm:text-lg text-gray-800 group-hover:text-orange-600 transition-colors mb-1">
-                                      {item.name}
-                                    </h4>
-                                    {item.description && (
-                                      <p className="text-xs sm:text-sm text-gray-600 line-clamp-2 mb-2">
-                                        {item.description}
-                                      </p>
-                                    )}
-                                  </div>
-                                  <div className="ml-3">
-                                    <Badge
-                                      className={`bg-gradient-to-r ${categoryColors[item.category as keyof typeof categoryColors] || "from-gray-500 to-slate-500"} text-white border-0 text-xs sm:text-sm px-2 sm:px-3 py-1`}
-                                    >
-                                      NRs. {item.price}
-                                    </Badge>
-                                  </div>
-                                </div>
-                                <div className="flex items-center justify-between">
-                                  <span className="text-xs text-gray-500 bg-gray-100 px-1 sm:px-2 py-1 rounded-full">
-                                    {item.category}
-                                  </span>
-                                  <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                                    <Plus className="h-5 w-5 text-orange-600" />
-                                  </div>
-                                </div>
-                              </CardContent>
-                            </Card>
-                          ))}
-                        </div>
-                      </div>
-                    );
-                  },
-                )}
-
-                {menuItems.length === 0 && !searchTerm && (
-                  <div className="text-center py-12">
-                    <ChefHat className="h-16 w-16 mx-auto text-gray-300 mb-4" />
-                    <p className="text-xl font-semibold text-gray-700 mb-2">
-                      No menu items available
-                    </p>
-                    <p className="text-gray-500">
-                      Check back later for delicious options!
-                    </p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Shopping Cart */}
-          <div className="space-y-6">
-            <Card className="bg-gradient-to-br from-white/90 to-pink-50/90 backdrop-blur-sm border-0 shadow-2xl sticky top-6">
-              <CardHeader className="bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-t-lg">
-                <CardTitle className="flex items-center justify-between text-lg">
-                  <span className="flex items-center gap-2">
-                    <div className="p-2 bg-white/20 rounded-lg">
-                      <ShoppingCart className="h-5 w-5" />
-                    </div>
-                    Your Cart ({cart.length})
-                  </span>
-                  {cart.length > 0 && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={clearCart}
-                      className="text-white hover:bg-white/20 hover:text-white"
-                    >
-                      <Trash2 className="h-4 w-4 mr-1" /> Clear
-                    </Button>
-                  )}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-4 space-y-4">
-                {cart.length === 0 ? (
-                  <div className="text-center py-8">
-                    <ShoppingCart className="h-16 w-16 mx-auto text-gray-300 mb-4" />
-                    <p className="font-semibold text-lg mb-1 text-gray-700">
-                      Your cart is empty
-                    </p>
-                    <p className="text-sm text-gray-500">
-                      Add some delicious items!
-                    </p>
-                  </div>
-                ) : (
-                  <>
-                    <div className="space-y-3 max-h-64 overflow-y-auto">
-                      {cart.map((item, index) => (
-                        <div
-                          key={item.id}
-                          className="flex items-center justify-between p-3 bg-gradient-to-r from-white to-pink-50 rounded-lg border border-pink-100"
-                          style={{ animationDelay: `${index * 100}ms` }}
-                        >
-                          <div className="flex-1 min-w-0 mr-2">
-                            <h4
-                              className="font-medium text-sm truncate"
-                              title={item.name}
-                            >
-                              {item.name}
-                            </h4>
-                            <p className="text-xs text-gray-500">
-                              NRs. {item.price} each
-                            </p>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              onClick={() =>
-                                updateCartQuantity(item.id, item.quantity - 1)
-                              }
-                              className="h-6 w-6 hover:bg-red-50 hover:border-red-300"
-                            >
-                              <Minus className="h-3 w-3" />
-                            </Button>
-                            <span className="text-sm font-semibold w-8 text-center">
-                              {item.quantity}
-                            </span>
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              onClick={() =>
-                                updateCartQuantity(item.id, item.quantity + 1)
-                              }
-                              className="h-6 w-6 hover:bg-green-50 hover:border-green-300"
-                            >
-                              <Plus className="h-3 w-3" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => removeFromCart(item.id)}
-                              className="h-6 w-6 text-red-500 hover:text-red-700 hover:bg-red-50"
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-
-                    <Separator className="my-4" />
-
-                    <div className="space-y-4">
-                      <div className="flex justify-between items-center font-bold text-lg">
-                        <span>Total:</span>
-                        <span className="bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
-                          NRs. {getCartTotal().toFixed(2)}
-                        </span>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label
-                          htmlFor="payment-mode"
-                          className="text-sm font-medium"
-                        >
-                          Payment Mode
-                        </Label>
-                        <Select
-                          value={paymentMode}
-                          onValueChange={setPaymentMode}
-                          disabled={submitting || cart.length === 0}
-                        >
-                          <SelectTrigger className="border-pink-200 focus:border-pink-500 focus:ring-pink-500">
-                            <SelectValue placeholder="Choose payment method" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {paymentModes.map((mode) => (
-                              <SelectItem key={mode} value={mode}>
-                                {mode}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <Button
-                        onClick={submitOrder}
-                        disabled={
-                          submitting || !paymentMode || cart.length === 0
-                        }
-                        className="w-full h-12 bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 hover:from-pink-600 hover:via-purple-600 hover:to-indigo-600 text-white font-semibold shadow-lg transition-all duration-300 transform hover:scale-105"
-                      >
-                        {submitting ? (
-                          <div className="flex items-center gap-2">
-                            <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                            Placing Order...
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-2">
-                            <CheckCircle className="h-5 w-5" />
-                            Place Order (NRs. {getCartTotal().toFixed(2)})
-                          </div>
-                        )}
-                      </Button>
-                    </div>
-                  </>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-
-        {/* Order History */}
-        <Card className="bg-gradient-to-br from-white/90 to-gray-50/90 backdrop-blur-sm border-0 shadow-2xl">
-          <CardHeader className="border-b border-gray-200/50 flex flex-row items-center justify-between">
-            <CardTitle className="text-2xl font-bold bg-gradient-to-r from-gray-700 to-gray-900 bg-clip-text text-transparent flex items-center gap-2">
-              <Clock className="h-6 w-6 text-gray-600" />
-              Order History
-            </CardTitle>
-            <div className="flex items-center gap-2">
+      {/* Date Range Filter */}
+      <Card className="border border-gray-200">
+        <CardHeader className="bg-brand-50 border-b border-gray-200">
+          <CardTitle className="text-black">Filter Orders</CardTitle>
+        </CardHeader>
+        <CardContent className="p-6">
+          <div className="flex items-center gap-4">
+            <div className="grid gap-2">
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
                     className={cn(
-                      "w-[300px] justify-start text-left font-normal hover:bg-gradient-to-r hover:from-orange-50 hover:to-pink-50",
+                      "w-[300px] justify-start text-left font-normal",
                       !range && "text-muted-foreground",
                     )}
                   >
@@ -716,7 +303,7 @@ const OrdersTab = () => {
                     )}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="end">
+                <PopoverContent className="w-auto p-0" align="start">
                   <Calendar
                     initialFocus
                     mode="range"
@@ -728,136 +315,352 @@ const OrdersTab = () => {
                 </PopoverContent>
               </Popover>
             </div>
-          </CardHeader>
-          <CardContent className="p-0">
-            {loading ? (
-              <div className="text-center py-10">
-                <div className="w-16 h-16 bg-gradient-to-r from-orange-500 to-red-500 rounded-full animate-spin mx-auto flex items-center justify-center mb-4">
-                  <Package className="h-8 w-8 text-white" />
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Menu Items */}
+        <div className="lg:col-span-2">
+          <Card className="border border-gray-200">
+            <CardHeader className="bg-brand-50 border-b border-gray-200">
+              <CardTitle className="flex items-center gap-3 text-black">
+                <div className="p-2 bg-primary rounded-lg">
+                  <ChefHat className="h-5 w-5 text-black" />
                 </div>
-                <p className="text-gray-600">Loading orders...</p>
+                Menu Items
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-6 space-y-6">
+              {/* Search and Filters */}
+              <div className="flex flex-col sm:flex-row gap-4">
+                <div className="flex-grow">
+                  <Input
+                    placeholder="Search menu items..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="h-12 focus:ring-primary focus:border-primary"
+                  />
+                </div>
               </div>
-            ) : orders.length === 0 ? (
-              <div className="text-center py-12">
-                <Package className="h-16 w-16 mx-auto text-gray-300 mb-4" />
-                <p className="text-xl font-semibold text-gray-700 mb-2">
-                  No orders found
-                </p>
-                <p className="text-gray-500">
-                  Your order history will appear here.
-                </p>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-gradient-to-r from-gray-50 to-orange-50">
-                      <TableHead className="font-semibold text-gray-700">
-                        Date
-                      </TableHead>
-                      <TableHead className="font-semibold text-gray-700">
-                        Item
-                      </TableHead>
-                      <TableHead className="font-semibold text-gray-700 text-center">
-                        Quantity
-                      </TableHead>
-                      <TableHead className="font-semibold text-gray-700 text-right">
-                        Rate
-                      </TableHead>
-                      <TableHead className="font-semibold text-gray-700 text-right">
-                        Total
-                      </TableHead>
-                      <TableHead className="font-semibold text-gray-700">
-                        Payment
-                      </TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {orders.map((order, index) => (
-                      <TableRow
-                        key={order.id}
-                        className="hover:bg-gradient-to-r hover:from-orange-50 hover:to-pink-50 transition-all duration-200"
-                        style={{ animationDelay: `${index * 50}ms` }}
-                      >
-                        <TableCell className="font-medium">
-                          {format(new Date(order.order_date), "MMM dd, yyyy")}
-                        </TableCell>
-                        <TableCell className="font-medium">
-                          {order.item_name}
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <Badge
-                            variant="outline"
-                            className="bg-blue-50 border-blue-200"
-                          >
-                            {order.quantity}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          NRs. {Number(order.rate).toFixed(2)}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <span className="font-bold text-lg bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
-                            NRs. {Number(order.total).toFixed(2)}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          <Badge
-                            variant="outline"
-                            className="bg-green-50 border-green-200"
-                          >
-                            {order.payment_mode}
-                          </Badge>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                    <TableRow className="bg-gradient-to-r from-orange-100 to-red-100 font-bold">
-                      <TableCell
-                        colSpan={4}
-                        className="text-right font-bold text-lg"
-                      >
-                        Grand Total:
-                      </TableCell>
-                      <TableCell className="text-right font-bold text-xl bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
-                        NRs.{" "}
-                        {orders
-                          .reduce((acc, order) => acc + Number(order.total), 0)
-                          .toFixed(2)}
-                      </TableCell>
-                      <TableCell></TableCell>
-                    </TableRow>
-                  </TableBody>
-                </Table>
-              </div>
-            )}
-          </CardContent>
-          {orders.length > 0 && (
-            <div className="flex justify-center p-4 border-t border-gray-200">
-              <div className="flex items-center gap-4">
+
+              {/* Category Filters */}
+              <div className="flex items-center gap-2 flex-wrap pb-2">
+                <Filter className="h-5 w-5 text-gray-600" />
                 <Button
-                  onClick={() => onPageChange(page - 1)}
-                  disabled={page === 1}
-                  variant="outline"
-                  className="hover:bg-gradient-to-r hover:from-orange-50 hover:to-red-50"
+                  onClick={() => setSelectedCategory(null)}
+                  variant={selectedCategory === null ? "default" : "outline"}
+                  size="sm"
+                  className={
+                    selectedCategory === null
+                      ? "bg-primary hover:bg-brand-400 text-black"
+                      : "hover:bg-brand-50"
+                  }
                 >
-                  Previous
+                  All Categories
                 </Button>
-                <span className="px-4 py-2 bg-gradient-to-r from-orange-50 to-red-50 rounded-lg font-medium">
-                  Page {page}
+                {productCategories.map((category) => (
+                  <Button
+                    key={category}
+                    onClick={() => setSelectedCategory(category)}
+                    variant={
+                      selectedCategory === category ? "default" : "outline"
+                    }
+                    size="sm"
+                    className={
+                      selectedCategory === category
+                        ? "bg-primary hover:bg-brand-400 text-black"
+                        : "hover:bg-brand-50"
+                    }
+                  >
+                    {category}
+                  </Button>
+                ))}
+              </div>
+
+              {/* Menu Items Display */}
+              {Object.keys(currentMenuItemsToDisplay).length === 0 &&
+                searchTerm && (
+                  <div className="text-center py-8">
+                    <Package className="h-16 w-16 mx-auto text-gray-300 mb-4" />
+                    <p className="text-gray-500 text-lg">
+                      No items match your search for "{searchTerm}"
+                    </p>
+                  </div>
+                )}
+
+              {Object.entries(currentMenuItemsToDisplay).map(
+                ([category, items]) => {
+                  if (items.length === 0) return null;
+                  return (
+                    <div key={category} className="space-y-4">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-4 h-4 rounded-full bg-primary"></div>
+                        <h3 className="text-xl font-bold text-black">
+                          {category}
+                        </h3>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {items.map((item) => (
+                          <Card
+                            key={item.id}
+                            className="group bg-white hover:bg-brand-50 transition-all duration-300 hover:shadow-lg cursor-pointer border border-gray-200 hover:border-primary"
+                            onClick={() => addToCart(item)}
+                          >
+                            <CardContent className="p-4">
+                              <div className="flex justify-between items-start mb-3">
+                                <div className="flex-1">
+                                  <h4 className="font-semibold text-black group-hover:text-gray-700 transition-colors mb-1">
+                                    {item.name}
+                                  </h4>
+                                  {item.description && (
+                                    <p className="text-sm text-gray-600 line-clamp-2 mb-2">
+                                      {item.description}
+                                    </p>
+                                  )}
+                                </div>
+                                <div className="ml-3">
+                                  <Badge className="bg-primary text-black border-0">
+                                    NRs. {item.price}
+                                  </Badge>
+                                </div>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                                  {item.category}
+                                </span>
+                                <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                  <Plus className="h-5 w-5 text-primary" />
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                },
+              )}
+
+              {menuItems.length === 0 && !searchTerm && (
+                <div className="text-center py-12">
+                  <ChefHat className="h-16 w-16 mx-auto text-gray-300 mb-4" />
+                  <p className="text-xl font-semibold text-gray-700 mb-2">
+                    No menu items available
+                  </p>
+                  <p className="text-gray-500">
+                    Check back later for available options!
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Shopping Cart */}
+        <div className="space-y-6">
+          <Card className="border border-gray-200 sticky top-6">
+            <CardHeader className="bg-brand-50 border-b border-gray-200">
+              <CardTitle className="flex items-center justify-between text-black">
+                <span className="flex items-center gap-2">
+                  <div className="p-2 bg-primary rounded-lg">
+                    <ShoppingCart className="h-4 w-4 text-black" />
+                  </div>
+                  Cart ({cart.length})
                 </span>
-                <Button
-                  onClick={() => onPageChange(page + 1)}
-                  disabled={orders.length < itemsPerPage}
-                  variant="outline"
-                  className="hover:bg-gradient-to-r hover:from-orange-50 hover:to-red-50"
-                >
-                  Next
-                </Button>
-              </div>
+                {cart.length > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={clearCart}
+                    className="hover:bg-brand-100"
+                  >
+                    <Trash2 className="h-4 w-4 mr-1" /> Clear
+                  </Button>
+                )}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 space-y-4">
+              {cart.length === 0 ? (
+                <div className="text-center py-8">
+                  <ShoppingCart className="h-16 w-16 mx-auto text-gray-300 mb-4" />
+                  <p className="font-semibold text-lg mb-1 text-black">
+                    Your cart is empty
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    Add items from the menu!
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <div className="space-y-3 max-h-64 overflow-y-auto">
+                    {cart.map((item) => (
+                      <div
+                        key={item.id}
+                        className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100"
+                      >
+                        <div className="flex-1 min-w-0 mr-2">
+                          <h4
+                            className="font-medium text-sm truncate text-black"
+                            title={item.name}
+                          >
+                            {item.name}
+                          </h4>
+                          <p className="text-xs text-gray-500">
+                            NRs. {item.price} each
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() =>
+                              updateCartQuantity(item.id, item.quantity - 1)
+                            }
+                            className="h-6 w-6 hover:bg-brand-50"
+                          >
+                            <Minus className="h-3 w-3" />
+                          </Button>
+                          <span className="text-sm font-semibold w-8 text-center text-black">
+                            {item.quantity}
+                          </span>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() =>
+                              updateCartQuantity(item.id, item.quantity + 1)
+                            }
+                            className="h-6 w-6 hover:bg-brand-50"
+                          >
+                            <Plus className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <Separator />
+
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center text-lg font-bold">
+                      <span className="text-black">Total:</span>
+                      <span className="text-black">
+                        NRs. {totalAmount.toLocaleString()}
+                      </span>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label
+                        htmlFor="payment-mode"
+                        className="text-black font-medium"
+                      >
+                        Payment Method
+                      </Label>
+                      <Select
+                        value={paymentMode}
+                        onValueChange={setPaymentMode}
+                      >
+                        <SelectTrigger className="focus:ring-primary focus:border-primary">
+                          <SelectValue placeholder="Select payment method" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {paymentModes.map((mode) => (
+                            <SelectItem key={mode} value={mode}>
+                              {mode}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <Button
+                      onClick={submitOrder}
+                      disabled={submitting}
+                      className="w-full bg-primary hover:bg-brand-400 text-black"
+                    >
+                      {submitting ? "Placing Order..." : "Place Order"}
+                    </Button>
+                  </div>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      {/* Orders History */}
+      <Card className="border border-gray-200">
+        <CardHeader className="bg-brand-50 border-b border-gray-200">
+          <CardTitle className="flex items-center gap-3 text-black">
+            <div className="p-2 bg-primary rounded-lg">
+              <Clock className="h-5 w-5 text-black" />
+            </div>
+            Order History
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-6">
+          {loading ? (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+              <p className="mt-2 text-gray-600">Loading orders...</p>
+            </div>
+          ) : orders.length === 0 ? (
+            <div className="text-center py-8">
+              <Package className="h-16 w-16 mx-auto text-gray-300 mb-4" />
+              <p className="text-xl font-semibold text-gray-700 mb-2">
+                No orders found
+              </p>
+              <p className="text-gray-500">
+                Place your first order to see it here!
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="text-black">Item</TableHead>
+                    <TableHead className="text-black">Quantity</TableHead>
+                    <TableHead className="text-black">Rate</TableHead>
+                    <TableHead className="text-black">Total</TableHead>
+                    <TableHead className="text-black">Payment</TableHead>
+                    <TableHead className="text-black">Date</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {orders.map((order) => (
+                    <TableRow key={order.id}>
+                      <TableCell className="font-medium text-black">
+                        {order.item_name}
+                      </TableCell>
+                      <TableCell className="text-black">
+                        {order.quantity}
+                      </TableCell>
+                      <TableCell className="text-black">
+                        NRs. {order.rate}
+                      </TableCell>
+                      <TableCell className="text-black">
+                        NRs. {order.total}
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant="outline"
+                          className="border-primary text-primary"
+                        >
+                          {order.payment_mode}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-black">
+                        {format(new Date(order.order_date), "MMM dd, yyyy")}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </div>
           )}
-        </Card>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
