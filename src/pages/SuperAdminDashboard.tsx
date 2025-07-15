@@ -44,6 +44,7 @@ import {
   Clock,
   AlertTriangle,
   CheckCircle,
+  Receipt,
 } from "lucide-react";
 
 interface AnalyticsData {
