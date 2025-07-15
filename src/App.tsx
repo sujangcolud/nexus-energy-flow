@@ -44,6 +44,7 @@ const App = () => {
         <BrowserRouter basename="/poss">
           <AuthProvider>
             <Routes>
+              <Route path="/test" element={<TestComponent />} />
               <Route path="/" element={<Index />} />
               <Route
                 path="/dashboard"
