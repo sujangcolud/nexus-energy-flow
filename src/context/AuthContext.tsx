@@ -125,7 +125,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     const timeoutId = setTimeout(() => {
       console.log("Auth loading timeout reached, setting loading to false");
       setLoading(false);
-    }, 10000); // 10 second timeout
+    }, 5000); // 5 second timeout
 
     // Set up auth state listener
     const {
