@@ -30,11 +30,35 @@ import {
   TrendingUp,
   DollarSign,
   Target,
+<<<<<<< HEAD
   Plus,
   Trash2,
   HandCoins,
+=======
+  Clock,
+  Coins,
+  Trash2,
+>>>>>>> origin/main
 } from "lucide-react";
 import { DateRange } from "react-day-picker";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import {
   Popover,
   PopoverContent,
@@ -69,6 +93,9 @@ const CooperativeSavingsTab = () => {
   const { user } = useAuth();
   const { page, range, onPageChange, onRangeChange, itemsPerPage } =
     useTableControls();
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [selectedSaving, setSelectedSaving] = useState<Saving | null>(null);
+  const [canEditTransactions, setCanEditTransactions] = useState(false);
 
   const contributionTypes = [
     "Monthly Contribution",
@@ -79,6 +106,7 @@ const CooperativeSavingsTab = () => {
     "Other",
   ];
 
+<<<<<<< HEAD
   const paymentModes = [
     "Cash",
     "Esewa",
@@ -88,6 +116,25 @@ const CooperativeSavingsTab = () => {
     "Mobile Banking",
     "Other",
   ];
+=======
+  const periodColors = {
+    Weekly: "from-green-500 to-emerald-500",
+    "Bi-weekly": "from-blue-500 to-cyan-500",
+    Monthly: "from-purple-500 to-pink-500",
+    Quarterly: "from-orange-500 to-red-500",
+    "Semi-Annual": "from-indigo-500 to-blue-500",
+    Annual: "from-violet-500 to-purple-500",
+    "One-time": "from-gray-500 to-slate-500",
+  };
+
+  useEffect(() => {
+    fetchSavings();
+    const canEdit = localStorage.getItem("canEditTransactions");
+    if (canEdit) {
+      setCanEditTransactions(JSON.parse(canEdit));
+    }
+  }, [user, page, range]);
+>>>>>>> origin/main
 
   const fetchSavings = async () => {
     if (!user) return;
@@ -209,6 +256,7 @@ const CooperativeSavingsTab = () => {
     {} as Record<string, number>,
   );
 
+<<<<<<< HEAD
   return (
     <div className="space-y-8">
       {/* Header */}
@@ -220,6 +268,155 @@ const CooperativeSavingsTab = () => {
           <h1 className="text-2xl font-bold text-black">Cooperative Savings</h1>
           <p className="text-gray-600">
             Manage member savings and contributions
+=======
+  const topPeriod = Object.entries(periodBreakdown).sort(
+    ([, a], [, b]) => b - a,
+  )[0];
+  const averageContribution =
+    savings.length > 0 ? totalSavings / savings.length : 0;
+  const uniqueMembers = new Set(savings.map((s) => s.member_id)).size;
+
+  const logAction = async (
+    action: string,
+    record_id: string,
+    details: any,
+  ) => {
+    if (!user) return;
+    await supabase.from("logs").insert({
+      user_id: user.id,
+      action,
+      table_name: "cooperative_savings",
+      record_id,
+      details,
+    });
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from("cooperative_savings")
+        .delete()
+        .eq("id", id);
+
+      if (error) throw error;
+
+      toast.success("Saving deleted successfully!");
+      logAction("delete", id, { id });
+      fetchSavings();
+    } catch (error) {
+      console.error("Error deleting saving:", error);
+      toast.error("Failed to delete saving");
+    }
+  };
+
+  const handleUpdate = async () => {
+    if (!selectedSaving) return;
+
+    try {
+      const { error } = await supabase
+        .from("cooperative_savings")
+        .update(selectedSaving)
+        .eq("id", selectedSaving.id);
+
+      if (error) throw error;
+
+      toast.success("Saving updated successfully!");
+      logAction("update", selectedSaving.id, selectedSaving);
+      setIsEditDialogOpen(false);
+      fetchSavings();
+    } catch (error) {
+      console.error("Error updating saving:", error);
+      toast.error("Failed to update saving");
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-teal-50 via-cyan-50 to-blue-50 relative overflow-hidden">
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Saving</DialogTitle>
+          </DialogHeader>
+          {selectedSaving && (
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="editContributionAmount">
+                  Contribution Amount
+                </Label>
+                <Input
+                  id="editContributionAmount"
+                  type="number"
+                  value={selectedSaving.contribution_amount}
+                  onChange={(e) =>
+                    setSelectedSaving({
+                      ...selectedSaving,
+                      contribution_amount: parseFloat(e.target.value),
+                    })
+                  }
+                />
+              </div>
+              <div>
+                <Label htmlFor="editMemberId">Member ID</Label>
+                <Input
+                  id="editMemberId"
+                  value={selectedSaving.member_id}
+                  onChange={(e) =>
+                    setSelectedSaving({
+                      ...selectedSaving,
+                      member_id: e.target.value,
+                    })
+                  }
+                />
+              </div>
+              <div>
+                <Label htmlFor="editCyclePeriod">Cycle Period</Label>
+                <Input
+                  id="editCyclePeriod"
+                  value={selectedSaving.cycle_period || ""}
+                  onChange={(e) =>
+                    setSelectedSaving({
+                      ...selectedSaving,
+                      cycle_period: e.target.value,
+                    })
+                  }
+                />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button onClick={handleUpdate}>Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-20 left-20 w-64 h-64 bg-gradient-to-r from-teal-400/20 to-cyan-500/20 rounded-full blur-3xl animate-pulse"></div>
+        <div
+          className="absolute top-1/3 right-20 w-80 h-80 bg-gradient-to-r from-cyan-400/20 to-blue-500/20 rounded-full blur-3xl animate-pulse"
+          style={{ animationDelay: "1s" }}
+        ></div>
+        <div
+          className="absolute bottom-20 left-1/4 w-72 h-72 bg-gradient-to-r from-blue-400/20 to-indigo-500/20 rounded-full blur-3xl animate-pulse"
+          style={{ animationDelay: "2s" }}
+        ></div>
+      </div>
+
+      <div className="relative z-10 space-y-8 p-6">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <div className="p-4 rounded-2xl bg-gradient-to-r from-teal-500 to-cyan-600 text-white shadow-xl animate-pulse">
+              <PiggyBank className="h-8 w-8" />
+            </div>
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-teal-600 via-cyan-600 to-blue-600 bg-clip-text text-transparent">
+              Cooperative Savings
+            </h1>
+            <Sparkles className="h-8 w-8 text-cyan-500 animate-bounce" />
+          </div>
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            Manage community savings contributions with comprehensive member
+            tracking
+>>>>>>> origin/main
           </p>
         </div>
       </div>
@@ -542,6 +739,7 @@ const CooperativeSavingsTab = () => {
             <div className="p-2 bg-primary rounded-lg">
               <PiggyBank className="h-5 w-5 text-black" />
             </div>
+<<<<<<< HEAD
             Contribution History
           </CardTitle>
         </CardHeader>
@@ -618,6 +816,166 @@ const CooperativeSavingsTab = () => {
                   ))}
                 </TableBody>
               </Table>
+=======
+          </CardHeader>
+          <CardContent className="p-0">
+            {loading ? (
+              <div className="text-center py-10">
+                <div className="w-16 h-16 bg-gradient-to-r from-teal-500 to-cyan-500 rounded-full animate-spin mx-auto flex items-center justify-center mb-4">
+                  <PiggyBank className="h-8 w-8 text-white" />
+                </div>
+                <p className="text-gray-600">Loading cooperative savings...</p>
+              </div>
+            ) : savings.length === 0 ? (
+              <div className="text-center py-12">
+                <PiggyBank className="h-16 w-16 mx-auto text-gray-300 mb-4" />
+                <p className="text-xl font-semibold text-gray-700 mb-2">
+                  No savings found
+                </p>
+                <p className="text-gray-500">
+                  Start recording contributions to see them here.
+                </p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-gradient-to-r from-gray-50 to-blue-50">
+                      <TableHead className="font-semibold text-gray-700">
+                        Date
+                      </TableHead>
+                      <TableHead className="font-semibold text-gray-700">
+                        Member ID
+                      </TableHead>
+                      <TableHead className="font-semibold text-gray-700">
+                        Amount
+                      </TableHead>
+                      <TableHead className="font-semibold text-gray-700">
+                        Cycle Period
+                      </TableHead>
+                      <TableHead className="font-semibold text-gray-700">
+                        Actions
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    <TableRow>
+                      <TableCell colSpan={2} className="font-bold">
+                        Total
+                      </TableCell>
+                      <TableCell colSpan={2} className="font-bold text-right">
+                        NRs. {totalSavings.toFixed(2)}
+                      </TableCell>
+                    </TableRow>
+                    {savings.map((saving, index) => (
+                      <TableRow
+                        key={saving.id}
+                        className="hover:bg-gradient-to-r hover:from-teal-50 hover:to-cyan-50 transition-all duration-200"
+                        style={{ animationDelay: `${index * 50}ms` }}
+                      >
+                        <TableCell className="font-medium">
+                          {format(
+                            new Date(saving.contribution_date),
+                            "MMM dd, yyyy",
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Users className="h-4 w-4 text-gray-500" />
+                            <span className="font-medium text-gray-800">
+                              {saving.member_id}
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <span className="font-bold text-xl bg-gradient-to-r from-teal-600 to-cyan-600 bg-clip-text text-transparent">
+                            NRs. {saving.contribution_amount.toFixed(2)}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            className={`bg-gradient-to-r ${periodColors[saving.cycle_period as keyof typeof periodColors] || "from-gray-500 to-slate-500"} text-white border-0`}
+                          >
+                            {saving.cycle_period || "Unknown"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {canEditTransactions && (
+                            <div className="flex gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedSaving(saving);
+                                  setIsEditDialogOpen(true);
+                                }}
+                              >
+                                Edit
+                              </Button>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>
+                                      Are you sure?
+                                    </AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      This action cannot be undone. This will
+                                      permanently delete the saving.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction
+                                      onClick={() => handleDelete(saving.id)}
+                                    >
+                                      Continue
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </div>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </CardContent>
+          {savings.length > 0 && (
+            <div className="flex justify-center p-4 border-t border-gray-200">
+              <div className="flex items-center gap-4">
+                <Button
+                  onClick={() => onPageChange(page - 1)}
+                  disabled={page === 1}
+                  variant="outline"
+                  className="hover:bg-gradient-to-r hover:from-teal-50 hover:to-cyan-50"
+                >
+                  Previous
+                </Button>
+                <span className="px-4 py-2 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-lg font-medium">
+                  Page {page}
+                </span>
+                <Button
+                  onClick={() => onPageChange(page + 1)}
+                  disabled={savings.length < itemsPerPage}
+                  variant="outline"
+                  className="hover:bg-gradient-to-r hover:from-teal-50 hover:to-cyan-50"
+                >
+                  Next
+                </Button>
+              </div>
+>>>>>>> origin/main
             </div>
           )}
         </CardContent>

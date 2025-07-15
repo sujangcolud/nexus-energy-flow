@@ -32,10 +32,31 @@ import {
   User,
   ArrowUpCircle,
   Wallet,
+<<<<<<< HEAD
   Plus,
+=======
+>>>>>>> origin/main
   Trash2,
 } from "lucide-react";
 import { DateRange } from "react-day-picker";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import {
   Popover,
   PopoverContent,
@@ -53,6 +74,9 @@ interface Deposit {
   deposited_by: string;
   deposit_date: string;
   remarks: string;
+  sender_name: string;
+  receiver_name: string;
+  deposited_to: string;
 }
 
 const DepositsTab = () => {
@@ -63,11 +87,17 @@ const DepositsTab = () => {
     mode: "",
     depositedBy: "",
     remarks: "",
+    sender_name: "",
+    receiver_name: "",
+    deposited_to: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { user } = useAuth();
   const { page, range, onPageChange, onRangeChange, itemsPerPage } =
     useTableControls();
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [selectedDeposit, setSelectedDeposit] = useState<Deposit | null>(null);
+  const [canEditTransactions, setCanEditTransactions] = useState(false);
 
   const depositModes = [
     "Cash",
@@ -80,6 +110,30 @@ const DepositsTab = () => {
     "Other",
   ];
 
+<<<<<<< HEAD
+=======
+  const depositedTo = ["Cash", "Esewa", "Fonepay", "Bank"];
+
+  const modeColors = {
+    Cash: "from-green-500 to-emerald-500",
+    Esewa: "from-blue-500 to-cyan-500",
+    Fonepay: "from-purple-500 to-pink-500",
+    "Bank Transfer": "from-indigo-500 to-blue-500",
+    Cheque: "from-orange-500 to-red-500",
+    "Credit Card": "from-violet-500 to-purple-500",
+    "Mobile Banking": "from-teal-500 to-cyan-500",
+    Other: "from-gray-500 to-slate-500",
+  };
+
+  useEffect(() => {
+    fetchDeposits();
+    const canEdit = localStorage.getItem("canEditTransactions");
+    if (canEdit) {
+      setCanEditTransactions(JSON.parse(canEdit));
+    }
+  }, [user, page, range]);
+
+>>>>>>> origin/main
   const fetchDeposits = async () => {
     if (!user) return;
 
@@ -127,6 +181,7 @@ const DepositsTab = () => {
 
     setIsSubmitting(true);
     try {
+<<<<<<< HEAD
       const { error } = await supabase.from("deposits").insert({
         user_id: user!.id,
         amount: parseFloat(formData.amount),
@@ -135,6 +190,70 @@ const DepositsTab = () => {
         remarks: formData.remarks,
         deposit_date: new Date().toISOString().split("T")[0],
       });
+=======
+      let { data: balanceData, error: balanceError } = await supabase
+        .from("balances")
+        .select("*")
+        .eq("user_id", user.id)
+        .single();
+
+      if (balanceError && balanceError.code !== "PGRST116") {
+        throw balanceError;
+      }
+
+      if (!balanceData) {
+        // Create a new balance record if one doesn't exist
+        const { data: newBalanceData, error: newBalanceError } = await supabase
+          .from("balances")
+          .insert({ user_id: user.id })
+          .select()
+          .single();
+        if (newBalanceError) throw newBalanceError;
+        balanceData = newBalanceData;
+      }
+
+      const newBalance = { ...balanceData };
+      const amount = parseFloat(formData.amount);
+
+      switch (formData.mode) {
+        case "Cash":
+          newBalance.cash_in_hand += amount;
+          break;
+        case "Esewa":
+          newBalance.esewa_balance += amount;
+          break;
+        case "Fonepay":
+          newBalance.fonepay_balance += amount;
+          break;
+        case "Bank":
+          newBalance.bank_balance += amount;
+          break;
+        default:
+          break;
+      }
+
+      const { error: updateBalanceError } = await supabase
+        .from("balances")
+        .update(newBalance)
+        .eq("id", balanceData.id);
+
+      if (updateBalanceError) throw updateBalanceError;
+
+      const { error } = await supabase.from("deposits").insert([
+        {
+          user_id: user.id,
+          amount: parseFloat(formData.amount),
+          mode: formData.mode,
+          deposited_by: formData.depositedBy,
+          remarks: formData.remarks || "",
+          deposit_date: new Date().toISOString().split("T")[0],
+          sender_name: formData.sender_name,
+          receiver_name: formData.receiver_name,
+          payment_mode: formData.mode,
+          deposited_to: formData.deposited_to,
+        },
+      ]);
+>>>>>>> origin/main
 
       if (error) throw error;
 
@@ -144,6 +263,9 @@ const DepositsTab = () => {
         mode: "",
         depositedBy: "",
         remarks: "",
+        sender_name: "",
+        receiver_name: "",
+        deposited_to: "",
       });
       fetchDeposits();
     } catch (error) {
@@ -178,6 +300,7 @@ const DepositsTab = () => {
     {} as Record<string, number>,
   );
 
+<<<<<<< HEAD
   return (
     <div className="space-y-8">
       {/* Header */}
@@ -189,6 +312,144 @@ const DepositsTab = () => {
           <h1 className="text-2xl font-bold text-black">Deposit Management</h1>
           <p className="text-gray-600">Track incoming funds and deposits</p>
         </div>
+=======
+  const topMode = Object.entries(modeBreakdown).sort(
+    ([, a], [, b]) => b - a,
+  )[0];
+  const averageDeposit =
+    deposits.length > 0 ? totalDeposits / deposits.length : 0;
+
+  const logAction = async (
+    action: string,
+    record_id: string,
+    details: any,
+  ) => {
+    if (!user) return;
+    await supabase.from("logs").insert({
+      user_id: user.id,
+      action,
+      table_name: "deposits",
+      record_id,
+      details,
+    });
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      const { error } = await supabase.from("deposits").delete().eq("id", id);
+
+      if (error) throw error;
+
+      toast.success("Deposit deleted successfully!");
+      logAction("delete", id, { id });
+      fetchDeposits();
+    } catch (error) {
+      console.error("Error deleting deposit:", error);
+      toast.error("Failed to delete deposit");
+    }
+  };
+
+  const handleUpdate = async () => {
+    if (!selectedDeposit) return;
+
+    try {
+      const { error } = await supabase
+        .from("deposits")
+        .update(selectedDeposit)
+        .eq("id", selectedDeposit.id);
+
+      if (error) throw error;
+
+      toast.success("Deposit updated successfully!");
+      logAction("update", selectedDeposit.id, selectedDeposit);
+      setIsEditDialogOpen(false);
+      fetchDeposits();
+    } catch (error) {
+      console.error("Error updating deposit:", error);
+      toast.error("Failed to update deposit");
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 relative overflow-hidden">
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Deposit</DialogTitle>
+          </DialogHeader>
+          {selectedDeposit && (
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="editAmount">Amount</Label>
+                <Input
+                  id="editAmount"
+                  value={selectedDeposit.amount}
+                  onChange={(e) =>
+                    setSelectedDeposit({
+                      ...selectedDeposit,
+                      amount: parseFloat(e.target.value),
+                    })
+                  }
+                />
+              </div>
+              <div>
+                <Label htmlFor="editMode">Mode</Label>
+                <Input
+                  id="editMode"
+                  value={selectedDeposit.mode}
+                  onChange={(e) =>
+                    setSelectedDeposit({
+                      ...selectedDeposit,
+                      mode: e.target.value,
+                    })
+                  }
+                />
+              </div>
+              <div>
+                <Label htmlFor="editDepositedBy">Deposited By</Label>
+                <Input
+                  id="editDepositedBy"
+                  value={selectedDeposit.deposited_by}
+                  onChange={(e) =>
+                    setSelectedDeposit({
+                      ...selectedDeposit,
+                      deposited_by: e.target.value,
+                    })
+                  }
+                />
+              </div>
+              <div>
+                <Label htmlFor="editRemarks">Remarks</Label>
+                <Input
+                  id="editRemarks"
+                  value={selectedDeposit.remarks}
+                  onChange={(e) =>
+                    setSelectedDeposit({
+                      ...selectedDeposit,
+                      remarks: e.target.value,
+                    })
+                  }
+                />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button onClick={handleUpdate}>Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-20 left-20 w-64 h-64 bg-gradient-to-r from-green-400/20 to-emerald-500/20 rounded-full blur-3xl animate-pulse"></div>
+        <div
+          className="absolute top-1/3 right-20 w-80 h-80 bg-gradient-to-r from-emerald-400/20 to-teal-500/20 rounded-full blur-3xl animate-pulse"
+          style={{ animationDelay: "1s" }}
+        ></div>
+        <div
+          className="absolute bottom-20 left-1/4 w-72 h-72 bg-gradient-to-r from-teal-400/20 to-cyan-500/20 rounded-full blur-3xl animate-pulse"
+          style={{ animationDelay: "2s" }}
+        ></div>
+>>>>>>> origin/main
       </div>
 
       {/* Quick Stats */}
@@ -283,6 +544,7 @@ const DepositsTab = () => {
                 />
               </div>
 
+<<<<<<< HEAD
               <div className="space-y-2">
                 <Label htmlFor="mode" className="text-black font-medium">
                   Deposit Method *
@@ -292,6 +554,161 @@ const DepositsTab = () => {
                   onValueChange={(value) =>
                     setFormData({ ...formData, mode: value })
                   }
+=======
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="mode"
+                      className="text-sm font-medium text-gray-700 flex items-center gap-2"
+                    >
+                      <CreditCard className="h-4 w-4 text-blue-600" />
+                      Deposit Mode *
+                    </Label>
+                    <Select
+                      value={formData.mode}
+                      onValueChange={(value) =>
+                        setFormData({ ...formData, mode: value })
+                      }
+                      required
+                    >
+                      <SelectTrigger className="border-blue-200 focus:border-blue-500 focus:ring-blue-500 h-12">
+                        <SelectValue placeholder="Select mode" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {depositModes.map((mode) => (
+                          <SelectItem key={mode} value={mode}>
+                            <div className="flex items-center gap-2">
+                              <div
+                                className={`w-3 h-3 rounded-full bg-gradient-to-r ${modeColors[mode as keyof typeof modeColors]}`}
+                              ></div>
+                              {mode}
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="depositedBy"
+                      className="text-sm font-medium text-gray-700 flex items-center gap-2"
+                    >
+                      <User className="h-4 w-4 text-purple-600" />
+                      Deposited By *
+                    </Label>
+                    <Input
+                      id="depositedBy"
+                      value={formData.depositedBy}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          depositedBy: e.target.value,
+                        })
+                      }
+                      placeholder="Enter depositor name"
+                      required
+                      className="border-purple-200 focus:border-purple-500 focus:ring-purple-500 h-12"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="deposited_to"
+                    className="text-sm font-medium text-gray-700"
+                  >
+                    Deposited To *
+                  </Label>
+                  <Select
+                    value={formData.deposited_to}
+                    onValueChange={(value) =>
+                      setFormData({ ...formData, deposited_to: value })
+                    }
+                    required
+                  >
+                    <SelectTrigger className="h-12">
+                      <SelectValue placeholder="Select where to deposit" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {depositedTo.map((mode) => (
+                        <SelectItem key={mode} value={mode}>
+                          {mode}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {formData.mode === "Esewa" && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label
+                        htmlFor="senderName"
+                        className="text-sm font-medium text-gray-700"
+                      >
+                        Sender Name
+                      </Label>
+                      <Input
+                        id="senderName"
+                        value={formData.sender_name}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            sender_name: e.target.value,
+                          })
+                        }
+                        placeholder="Enter sender name"
+                        className="border-gray-200 focus:border-gray-500 focus:ring-gray-500 h-12"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label
+                        htmlFor="receiverName"
+                        className="text-sm font-medium text-gray-700"
+                      >
+                        Receiver Name
+                      </Label>
+                      <Input
+                        id="receiverName"
+                        value={formData.receiver_name}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            receiver_name: e.target.value,
+                          })
+                        }
+                        placeholder="Enter receiver name"
+                        className="border-gray-200 focus:border-gray-500 focus:ring-gray-500 h-12"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="remarks"
+                    className="text-sm font-medium text-gray-700"
+                  >
+                    Remarks (Optional)
+                  </Label>
+                  <Textarea
+                    id="remarks"
+                    value={formData.remarks}
+                    onChange={(e) =>
+                      setFormData({ ...formData, remarks: e.target.value })
+                    }
+                    placeholder="Additional notes or reference information"
+                    rows={3}
+                    className="border-gray-200 focus:border-gray-500 focus:ring-gray-500"
+                  />
+                </div>
+
+                <Button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full h-12 bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 hover:from-green-600 hover:via-emerald-600 hover:to-teal-600 text-white font-semibold shadow-lg transition-all duration-300 transform hover:scale-105"
+>>>>>>> origin/main
                 >
                   <SelectTrigger className="focus:ring-primary focus:border-primary">
                     <SelectValue placeholder="Select deposit method" />
@@ -456,6 +873,7 @@ const DepositsTab = () => {
             <div className="p-2 bg-primary rounded-lg">
               <ArrowUpCircle className="h-5 w-5 text-black" />
             </div>
+<<<<<<< HEAD
             Deposit History
           </CardTitle>
         </CardHeader>
@@ -525,6 +943,187 @@ const DepositsTab = () => {
                   ))}
                 </TableBody>
               </Table>
+=======
+          </CardHeader>
+          <CardContent className="p-0">
+            {loading ? (
+              <div className="text-center py-10">
+                <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full animate-spin mx-auto flex items-center justify-center mb-4">
+                  <PiggyBank className="h-8 w-8 text-white" />
+                </div>
+                <p className="text-gray-600">Loading deposits...</p>
+              </div>
+            ) : deposits.length === 0 ? (
+              <div className="text-center py-12">
+                <PiggyBank className="h-16 w-16 mx-auto text-gray-300 mb-4" />
+                <p className="text-xl font-semibold text-gray-700 mb-2">
+                  No deposits found
+                </p>
+                <p className="text-gray-500">
+                  Start recording your deposits to see them here.
+                </p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-gradient-to-r from-gray-50 to-teal-50">
+                      <TableHead className="font-semibold text-gray-700">
+                        Date
+                      </TableHead>
+                      <TableHead className="font-semibold text-gray-700">
+                        Amount
+                      </TableHead>
+                      <TableHead className="font-semibold text-gray-700">
+                        Mode
+                      </TableHead>
+                      <TableHead className="font-semibold text-gray-700">
+                        Deposited By
+                      </TableHead>
+                      <TableHead className="font-semibold text-gray-700">
+                        Sender
+                      </TableHead>
+                      <TableHead className="font-semibold text-gray-700">
+                        Receiver
+                      </TableHead>
+                      <TableHead className="font-semibold text-gray-700">
+                        Deposited To
+                      </TableHead>
+                      <TableHead className="font-semibold text-gray-700">
+                        Remarks
+                      </TableHead>
+                      <TableHead className="font-semibold text-gray-700">
+                        Actions
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    <TableRow>
+                      <TableCell colSpan={1} className="font-bold">
+                        Total
+                      </TableCell>
+                      <TableCell colSpan={8} className="font-bold">
+                        NRs. {totalDeposits.toFixed(2)}
+                      </TableCell>
+                    </TableRow>
+                    {deposits.map((deposit, index) => (
+                      <TableRow
+                        key={deposit.id}
+                        className="hover:bg-gradient-to-r hover:from-green-50 hover:to-emerald-50 transition-all duration-200"
+                        style={{ animationDelay: `${index * 50}ms` }}
+                      >
+                        <TableCell className="font-medium">
+                          {format(
+                            new Date(deposit.deposit_date),
+                            "MMM dd, yyyy",
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <span className="font-bold text-xl bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+                            NRs. {deposit.amount.toFixed(2)}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            className={`bg-gradient-to-r ${modeColors[deposit.mode as keyof typeof modeColors]} text-white border-0`}
+                          >
+                            {deposit.mode}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="font-medium text-gray-800">
+                          <div className="flex items-center gap-2">
+                            <User className="h-4 w-4 text-gray-500" />
+                            {deposit.deposited_by}
+                          </div>
+                        </TableCell>
+                        <TableCell>{deposit.sender_name || "-"}</TableCell>
+                        <TableCell>{deposit.receiver_name || "-"}</TableCell>
+                        <TableCell>{deposit.deposited_to || "-"}</TableCell>
+                        <TableCell className="max-w-xs">
+                          <span
+                            className="text-sm text-gray-600 truncate"
+                            title={deposit.remarks}
+                          >
+                            {deposit.remarks || "-"}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          {canEditTransactions && (
+                            <div className="flex gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedDeposit(deposit);
+                                  setIsEditDialogOpen(true);
+                                }}
+                              >
+                                Edit
+                              </Button>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>
+                                      Are you sure?
+                                    </AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      This action cannot be undone. This will
+                                      permanently delete the deposit.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction
+                                      onClick={() => handleDelete(deposit.id)}
+                                    >
+                                      Continue
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </div>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </CardContent>
+          {deposits.length > 0 && (
+            <div className="flex justify-center p-4 border-t border-gray-200">
+              <div className="flex items-center gap-4">
+                <Button
+                  onClick={() => onPageChange(page - 1)}
+                  disabled={page === 1}
+                  variant="outline"
+                  className="hover:bg-gradient-to-r hover:from-green-50 hover:to-emerald-50"
+                >
+                  Previous
+                </Button>
+                <span className="px-4 py-2 bg-gradient-to-r from-teal-50 to-emerald-50 rounded-lg font-medium">
+                  Page {page}
+                </span>
+                <Button
+                  onClick={() => onPageChange(page + 1)}
+                  disabled={deposits.length < itemsPerPage}
+                  variant="outline"
+                  className="hover:bg-gradient-to-r hover:from-green-50 hover:to-emerald-50"
+                >
+                  Next
+                </Button>
+              </div>
+>>>>>>> origin/main
             </div>
           )}
         </CardContent>

@@ -1,4 +1,9 @@
+<<<<<<< HEAD
 import { useState, useEffect } from "react";
+=======
+import React, { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
+>>>>>>> origin/main
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -148,6 +153,18 @@ interface BusinessMetrics {
 }
 
 const ReportsViewTab = () => {
+<<<<<<< HEAD
+=======
+  const [searchParams] = useSearchParams();
+  const [dateRange, setDateRange] = useState({
+    startDate:
+      searchParams.get("startDate") || new Date().toISOString().split("T")[0],
+    endDate:
+      searchParams.get("endDate") || new Date().toISOString().split("T")[0],
+  });
+  const [reportData, setReportData] = useState<any>({});
+  const [isLoading, setIsLoading] = useState(false);
+>>>>>>> origin/main
   const { user } = useAuth();
   const [metrics, setMetrics] = useState<BusinessMetrics | null>(null);
   const [loading, setLoading] = useState(false);
@@ -164,8 +181,18 @@ const ReportsViewTab = () => {
     to: new Date(),
   });
 
+<<<<<<< HEAD
   const fetchBusinessMetrics = async () => {
     setLoading(true);
+=======
+  const formatCurrency = (amount: number) =>
+    `NRs. ${typeof amount === "number" ? amount.toFixed(2) : "0.00"}`;
+
+  const fetchReportData = async () => {
+    if (!user) return;
+
+    setIsLoading(true);
+>>>>>>> origin/main
     try {
       // Calculate date range based on selected period
       const endDate = new Date();
@@ -201,6 +228,7 @@ const ReportsViewTab = () => {
         supabase
           .from("orders")
           .select("*")
+<<<<<<< HEAD
           .eq("user_id", user!.id)
           .gte("order_date", startDateStr)
           .lte("order_date", endDateStr),
@@ -234,6 +262,47 @@ const ReportsViewTab = () => {
           .eq("user_id", user!.id)
           .gte("contribution_date", startDateStr)
           .lte("contribution_date", endDateStr),
+=======
+          .gte("order_date", startDate)
+          .lte("order_date", endDate)
+          .eq("user_id", user.id)
+          .order("order_date", { ascending: true }),
+        supabase
+          .from("charging_sessions")
+          .select("*")
+          .gte("session_date", startDate)
+          .lte("session_date", endDate)
+          .eq("user_id", user.id)
+          .order("session_date", { ascending: true }),
+        supabase
+          .from("expenses")
+          .select("*")
+          .gte("expense_date", startDate)
+          .lte("expense_date", endDate)
+          .eq("user_id", user.id)
+          .order("expense_date", { ascending: true }),
+        supabase
+          .from("cooperative_savings")
+          .select("*")
+          .gte("contribution_date", startDate)
+          .lte("contribution_date", endDate)
+          .eq("user_id", user.id)
+          .order("contribution_date", { ascending: true }),
+        supabase
+          .from("deposits")
+          .select("*")
+          .gte("deposit_date", startDate)
+          .lte("deposit_date", endDate)
+          .eq("user_id", user.id)
+          .order("deposit_date", { ascending: true }),
+        supabase
+          .from("withdrawals")
+          .select("*")
+          .gte("withdrawal_date", startDate)
+          .lte("withdrawal_date", endDate)
+          .eq("user_id", user.id)
+          .order("withdrawal_date", { ascending: true }),
+>>>>>>> origin/main
       ]);
 
       const orders = ordersData.data || [];
@@ -507,8 +576,211 @@ const ReportsViewTab = () => {
   };
 
   useEffect(() => {
+<<<<<<< HEAD
     if (user) {
       fetchBusinessMetrics();
+=======
+    fetchReportData();
+  }, [user, dateRange]);
+
+  // Calculate totals
+  const totals = {
+    revenue:
+      (reportData.orders || []).reduce(
+        (sum: number, order: any) => sum + order.total,
+        0,
+      ) +
+      (reportData.charging || []).reduce(
+        (sum: number, session: any) => sum + session.total_amount,
+        0,
+      ),
+    expenses: (reportData.expenses || []).reduce(
+      (sum: number, expense: any) => sum + expense.amount,
+      0,
+    ),
+    deposits: (reportData.deposits || []).reduce(
+      (sum: number, deposit: any) => sum + deposit.amount,
+      0,
+    ),
+    withdrawals: (reportData.withdrawals || []).reduce(
+      (sum: number, withdrawal: any) => sum + withdrawal.amount,
+      0,
+    ),
+    savings: (reportData.savings || []).reduce(
+      (sum: number, saving: any) => sum + saving.contribution_amount,
+      0,
+    ),
+  };
+
+  const netProfit = totals.revenue - totals.expenses;
+  const cashFlow = totals.deposits - totals.withdrawals;
+
+  // Payment method analysis
+  const paymentAnalysis = (() => {
+    const methods: Record<string, number> = {};
+
+    [...(reportData.orders || []), ...(reportData.charging || [])].forEach(
+      (item: any) => {
+        const method = item.payment_mode;
+        methods[method] =
+          (methods[method] || 0) + (item.total || item.total_amount);
+      },
+    );
+
+    return Object.entries(methods)
+      .map(([method, amount]) => ({ method, amount }))
+      .sort((a, b) => b.amount - a.amount);
+  })();
+
+  // Category breakdown for expenses
+  const expenseCategories = (() => {
+    const categories: Record<string, number> = {};
+
+    (reportData.expenses || []).forEach((expense: any) => {
+      categories[expense.category] =
+        (categories[expense.category] || 0) + expense.amount;
+    });
+
+    return Object.entries(categories)
+      .map(([category, amount]) => ({ category, amount }))
+      .sort((a, b) => b.amount - a.amount);
+  })();
+
+  // Daily breakdown
+  const dailyBreakdown = (() => {
+    if (!dateRange.startDate || !dateRange.endDate) return [];
+
+    const days = eachDayOfInterval({
+      start: parseISO(dateRange.startDate),
+      end: parseISO(dateRange.endDate),
+    });
+
+    return days
+      .map((day) => {
+        const dayStr = format(day, "yyyy-MM-dd");
+
+        const dayOrders = (reportData.orders || []).filter(
+          (order: any) => order.order_date === dayStr,
+        );
+      const dayCharging = (reportData.charging || []).filter(
+        (session: any) => session.session_date === dayStr,
+      );
+      const dayExpenses = (reportData.expenses || []).filter(
+        (expense: any) => expense.expense_date === dayStr,
+      );
+      const dayDeposits = (reportData.deposits || []).filter(
+        (deposit: any) => deposit.deposit_date === dayStr,
+      );
+      const dayWithdrawals = (reportData.withdrawals || []).filter(
+        (withdrawal: any) => withdrawal.withdrawal_date === dayStr,
+      );
+
+      const revenue =
+        dayOrders.reduce((sum: number, order: any) => sum + order.total, 0) +
+        dayCharging.reduce(
+          (sum: number, session: any) => sum + session.total_amount,
+          0,
+        );
+      const expenses = dayExpenses.reduce(
+        (sum: number, expense: any) => sum + expense.amount,
+        0,
+      );
+      const deposits = dayDeposits.reduce(
+        (sum: number, deposit: any) => sum + deposit.amount,
+        0,
+      );
+      const withdrawals = dayWithdrawals.reduce(
+        (sum: number, withdrawal: any) => sum + withdrawal.amount,
+        0,
+      );
+
+      return {
+        date: dayStr,
+        revenue,
+        expenses,
+        profit: revenue - expenses,
+        deposits,
+        withdrawals,
+        cashFlow: deposits - withdrawals,
+        transactions:
+          dayOrders.length + dayCharging.length + dayExpenses.length,
+      };
+    });
+  })();
+
+  const grandTotal = dailyBreakdown.reduce(
+    (acc, day) => {
+      acc.revenue += day.revenue;
+      acc.expenses += day.expenses;
+      acc.profit += day.profit;
+      acc.deposits += day.deposits;
+      acc.withdrawals += day.withdrawals;
+      acc.cashFlow += day.cashFlow;
+      acc.transactions += day.transactions;
+      return acc;
+    },
+    {
+      revenue: 0,
+      expenses: 0,
+      profit: 0,
+      deposits: 0,
+      withdrawals: 0,
+      cashFlow: 0,
+      transactions: 0,
+    },
+  );
+
+  const openDayDetail = (dayData: any) => {
+    const dayStr = dayData.date;
+    const dayOrders = (reportData.orders || []).filter(
+      (order: any) => order.order_date === dayStr,
+    );
+    const dayCharging = (reportData.charging || []).filter(
+      (session: any) => session.session_date === dayStr,
+    );
+    const dayExpenses = (reportData.expenses || []).filter(
+      (expense: any) => expense.expense_date === dayStr,
+    );
+    const totalExpenses = dayExpenses.reduce(
+      (sum: number, expense: any) => sum + expense.amount,
+      0,
+    );
+
+    setSelectedDayData({
+      ...dayData,
+      orders: dayOrders,
+      charging: dayCharging,
+      expenses: dayExpenses,
+      totalExpenses,
+    });
+    setIsDetailModalOpen(true);
+  };
+
+  const setQuickDateRange = (type: string) => {
+    const today = new Date();
+    let startDate = "";
+    let endDate = format(today, "yyyy-MM-dd");
+
+    switch (type) {
+      case "today":
+        startDate = endDate;
+        break;
+      case "week":
+        startDate = format(
+          new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000),
+          "yyyy-MM-dd",
+        );
+        break;
+      case "month":
+        startDate = format(startOfMonth(today), "yyyy-MM-dd");
+        endDate = format(endOfMonth(today), "yyyy-MM-dd");
+        break;
+      case "lastMonth":
+        const lastMonth = addMonths(today, -1);
+        startDate = format(startOfMonth(lastMonth), "yyyy-MM-dd");
+        endDate = format(endOfMonth(lastMonth), "yyyy-MM-dd");
+        break;
+>>>>>>> origin/main
     }
   }, [user, selectedPeriod]);
 
@@ -687,6 +959,7 @@ const ReportsViewTab = () => {
           </CardContent>
         </Card>
 
+<<<<<<< HEAD
         <Card className="border border-gray-200">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -710,6 +983,137 @@ const ReportsViewTab = () => {
             </div>
           </CardContent>
         </Card>
+=======
+          {/* Daily View Tab */}
+          <TabsContent value="daily">
+            <Card className="bg-gradient-to-br from-white/90 to-blue-50/90 backdrop-blur-sm border-0 shadow-2xl">
+              <CardHeader className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-t-lg">
+                <CardTitle className="flex items-center gap-3 text-xl">
+                  <div className="p-2 bg-white/20 rounded-lg">
+                    <Calendar className="h-6 w-6" />
+                  </div>
+                  Daily Performance Analysis
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                {dailyBreakdown.length === 0 ? (
+                  <div className="text-center py-12">
+                    <Calendar className="h-16 w-16 mx-auto text-gray-300 mb-4" />
+                    <p className="text-xl font-semibold text-gray-700 mb-2">
+                      No data for selected period
+                    </p>
+                    <p className="text-gray-500">
+                      Try selecting a different date range.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="bg-gradient-to-r from-gray-50 to-blue-50">
+                          <TableHead className="font-semibold text-gray-700">
+                            Date
+                          </TableHead>
+                          <TableHead className="font-semibold text-gray-700">
+                            Revenue
+                          </TableHead>
+                          <TableHead className="font-semibold text-gray-700">
+                            Expenses
+                          </TableHead>
+                          <TableHead className="font-semibold text-gray-700">
+                            Profit
+                          </TableHead>
+                          <TableHead className="font-semibold text-gray-700">
+                            Cash Flow
+                          </TableHead>
+                          <TableHead className="font-semibold text-gray-700">
+                            Transactions
+                          </TableHead>
+                          <TableHead className="font-semibold text-gray-700">
+                            Actions
+                          </TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        <TableRow className="bg-gradient-to-r from-gray-100 to-blue-100 font-bold">
+                          <TableCell>Grand Total</TableCell>
+                          <TableCell>
+                            {formatCurrency(grandTotal.revenue)}
+                          </TableCell>
+                          <TableCell>
+                            {formatCurrency(grandTotal.expenses)}
+                          </TableCell>
+                          <TableCell>
+                            {formatCurrency(grandTotal.profit)}
+                          </TableCell>
+                          <TableCell>
+                            {formatCurrency(grandTotal.cashFlow)}
+                          </TableCell>
+                          <TableCell>{grandTotal.transactions}</TableCell>
+                          <TableCell />
+                        </TableRow>
+                        {dailyBreakdown.map((day, index) => (
+                          <TableRow
+                            key={day.date}
+                            className="hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-200"
+                            style={{ animationDelay: `${index * 50}ms` }}
+                          >
+                            <TableCell className="font-medium">
+                              {format(parseISO(day.date), "MMM dd, yyyy")}
+                            </TableCell>
+                            <TableCell>
+                              <span className="font-bold text-green-600">
+                                {formatCurrency(day.revenue)}
+                              </span>
+                            </TableCell>
+                            <TableCell>
+                              <span className="font-bold text-red-600">
+                                {formatCurrency(day.expenses)}
+                              </span>
+                            </TableCell>
+                            <TableCell>
+                              <span
+                                className={`font-bold ${day.profit >= 0 ? "text-blue-600" : "text-orange-600"}`}
+                              >
+                                {formatCurrency(day.profit)}
+                              </span>
+                            </TableCell>
+                            <TableCell>
+                              <span
+                                className={`font-bold ${day.cashFlow >= 0 ? "text-purple-600" : "text-red-600"}`}
+                              >
+                                {formatCurrency(day.cashFlow)}
+                              </span>
+                            </TableCell>
+                            <TableCell>
+                              <Badge
+                                variant="outline"
+                                className="bg-blue-50 border-blue-200"
+                              >
+                                {day.transactions}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => openDayDetail(day)}
+                                className="hover:bg-blue-50 hover:border-blue-300"
+                              >
+                                <Eye className="h-4 w-4 mr-1" />
+                                Details
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+>>>>>>> origin/main
 
         <Card className="border border-gray-200">
           <CardContent className="p-6">
@@ -1109,9 +1513,34 @@ const ReportsViewTab = () => {
                       </p>
                     </div>
                   </div>
+<<<<<<< HEAD
                   <div className="text-right">
                     <p className="font-bold text-black">
                       NRs. {product.revenue.toLocaleString()}
+=======
+                  <div className="p-3 bg-gradient-to-r from-red-50 to-pink-50 rounded-lg">
+                    <p className="text-sm text-red-600 font-medium">Expenses</p>
+                    <p className="text-lg font-bold text-red-800">
+                      {formatCurrency(selectedDayData.totalExpenses)}
+                    </p>
+                  </div>
+                  <div className="p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg">
+                    <p className="text-sm text-blue-600 font-medium">Profit</p>
+                    <p
+                      className={`text-lg font-bold ${selectedDayData.profit >= 0 ? "text-blue-800" : "text-orange-800"}`}
+                    >
+                      {formatCurrency(selectedDayData.profit)}
+                    </p>
+                  </div>
+                  <div className="p-3 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg">
+                    <p className="text-sm text-purple-600 font-medium">
+                      Cash Flow
+                    </p>
+                    <p
+                      className={`text-lg font-bold ${selectedDayData.cashFlow >= 0 ? "text-purple-800" : "text-red-800"}`}
+                    >
+                      {formatCurrency(selectedDayData.cashFlow)}
+>>>>>>> origin/main
                     </p>
                     <Badge variant="outline" className="text-xs">
                       {product.category}

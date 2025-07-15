@@ -99,6 +99,7 @@ const InsightsTab = () => {
         depositsData,
         withdrawalsData,
         cooperativeData,
+        balancesData,
       ] = await Promise.all([
         supabase.from("orders").select("*").eq("user_id", user!.id),
         supabase.from("charging_sessions").select("*").eq("user_id", user!.id),
@@ -109,6 +110,7 @@ const InsightsTab = () => {
           .from("cooperative_savings")
           .select("*")
           .eq("user_id", user!.id),
+        supabase.from("balances").select("*").eq("user_id", user!.id).single(),
       ]);
 
       const orders = ordersData.data || [];
@@ -117,6 +119,12 @@ const InsightsTab = () => {
       const deposits = depositsData.data || [];
       const withdrawals = withdrawalsData.data || [];
       const cooperative = cooperativeData.data || [];
+      const balances = balancesData.data || {
+        cash_in_hand: 0,
+        esewa_balance: 0,
+        fonepay_balance: 0,
+        cooperative_balance: 0,
+      };
 
       // Calculate analytics
       const totalRevenue =
@@ -237,11 +245,21 @@ const InsightsTab = () => {
           revenue: 0,
           orders: 0,
         },
+<<<<<<< HEAD
         cashBalance,
         esewaBalance: 0,
         fonepayBalance: 0,
         cooperativeBalance: cooperativeSavings,
       });
+=======
+        cashBalance: balances.cash_in_hand,
+        esewaBalance: balances.esewa_balance,
+        fonepayBalance: balances.fonepay_balance,
+        cooperativeBalance: balances.cooperative_balance,
+      };
+
+      setAnalytics(analytics);
+>>>>>>> origin/main
     } catch (error) {
       console.error("Error fetching analytics:", error);
     } finally {

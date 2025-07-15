@@ -97,6 +97,7 @@ const allItems = [
 const Settings = () => {
   const { userRole } = useAuth();
   const [tabSettings, setTabSettings] = useState<Record<string, boolean>>({});
+<<<<<<< HEAD
   const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
@@ -113,6 +114,30 @@ const Settings = () => {
     );
 
     setTabSettings(initialSettings);
+=======
+  const [showPasswordForm, setShowPasswordForm] = useState(false);
+  const [canEditTransactions, setCanEditTransactions] = useState(false);
+
+  useEffect(() => {
+    const storedSettings = localStorage.getItem("tabSettings");
+    if (storedSettings) {
+      setTabSettings(JSON.parse(storedSettings));
+    } else {
+      const defaultSettings = allItems.reduce(
+        (acc, item) => {
+          acc[item.id] = true;
+          return acc;
+        },
+        {} as Record<string, boolean>,
+      );
+      setTabSettings(defaultSettings);
+    }
+
+    const canEdit = localStorage.getItem("canEditTransactions");
+    if (canEdit) {
+      setCanEditTransactions(JSON.parse(canEdit));
+    }
+>>>>>>> origin/main
   }, []);
 
   const saveSettings = () => {
@@ -120,7 +145,18 @@ const Settings = () => {
     window.location.reload();
   };
 
+<<<<<<< HEAD
   const resetSettings = () => {
+=======
+  useEffect(() => {
+    localStorage.setItem(
+      "canEditTransactions",
+      JSON.stringify(canEditTransactions),
+    );
+  }, [canEditTransactions]);
+
+  const handleResetSettings = () => {
+>>>>>>> origin/main
     const defaultSettings = allItems.reduce(
       (acc, item) => {
         acc[item.id] = true;
@@ -254,6 +290,7 @@ const Settings = () => {
           </CardContent>
         </Card>
 
+<<<<<<< HEAD
         {/* Password Change */}
         <Card className="border border-gray-200">
           <CardHeader className="bg-brand-50 border-b border-gray-200">
@@ -263,6 +300,90 @@ const Settings = () => {
             <PasswordChangeForm />
           </CardContent>
         </Card>
+=======
+                  <Button className="flex items-center gap-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white transition-all duration-200 transform hover:scale-105">
+                    <Save className="h-4 w-4" />
+                    Settings Saved
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        <Card className="bg-gradient-to-br from-blue-50 to-cyan-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300">
+          <CardHeader>
+            <CardTitle>Transaction Settings</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="edit-transactions">Enable Transaction Editing</Label>
+              <Switch
+                id="edit-transactions"
+                checked={canEditTransactions}
+                onCheckedChange={setCanEditTransactions}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Quick Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+          <Card className="bg-gradient-to-br from-orange-50 to-red-50 border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-orange-600 font-medium">
+                    Active Modules
+                  </p>
+                  <p className="text-2xl font-bold text-orange-800">
+                    {enabledCount}
+                  </p>
+                </div>
+                <div className="p-3 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl text-white">
+                  <Eye className="h-6 w-6" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-green-600 font-medium">
+                    Total Available
+                  </p>
+                  <p className="text-2xl font-bold text-green-800">
+                    {totalCount}
+                  </p>
+                </div>
+                <div className="p-3 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl text-white">
+                  <SettingsIcon className="h-6 w-6" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-purple-50 to-pink-50 border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-purple-600 font-medium">
+                    Customization
+                  </p>
+                  <p className="text-2xl font-bold text-purple-800">
+                    {Math.round((enabledCount / totalCount) * 100)}%
+                  </p>
+                </div>
+                <div className="p-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl text-white">
+                  <Palette className="h-6 w-6" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+>>>>>>> origin/main
       </div>
 
       {/* Additional Settings */}

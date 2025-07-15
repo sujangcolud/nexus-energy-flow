@@ -36,6 +36,24 @@ import {
 } from "lucide-react";
 import { DateRange } from "react-day-picker";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
   Popover,
   PopoverContent,
   PopoverTrigger,
@@ -69,6 +87,9 @@ const ExpensesTab = () => {
   const { user } = useAuth();
   const { page, range, onPageChange, onRangeChange, itemsPerPage } =
     useTableControls();
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
+  const [canEditTransactions, setCanEditTransactions] = useState(false);
 
   const categories = [
     "Food & Beverages",
@@ -93,6 +114,30 @@ const ExpensesTab = () => {
     "Other",
   ];
 
+<<<<<<< HEAD
+=======
+  const categoryColors = {
+    "Food & Beverages": "from-orange-500 to-red-500",
+    Transportation: "from-blue-500 to-cyan-500",
+    Utilities: "from-yellow-500 to-orange-500",
+    "Office Supplies": "from-green-500 to-emerald-500",
+    Marketing: "from-purple-500 to-pink-500",
+    Equipment: "from-gray-500 to-slate-500",
+    Maintenance: "from-red-500 to-pink-500",
+    Insurance: "from-indigo-500 to-blue-500",
+    "Legal & Professional": "from-violet-500 to-purple-500",
+    Other: "from-teal-500 to-cyan-500",
+  };
+
+  useEffect(() => {
+    fetchExpenses();
+    const canEdit = localStorage.getItem("canEditTransactions");
+    if (canEdit) {
+      setCanEditTransactions(JSON.parse(canEdit));
+    }
+  }, [user, page, range]);
+
+>>>>>>> origin/main
   const fetchExpenses = async () => {
     if (!user) return;
 
@@ -198,6 +243,7 @@ const ExpensesTab = () => {
     {} as Record<string, number>,
   );
 
+<<<<<<< HEAD
   return (
     <div className="space-y-8">
       {/* Header */}
@@ -209,6 +255,156 @@ const ExpensesTab = () => {
           <h1 className="text-2xl font-bold text-black">Expense Management</h1>
           <p className="text-gray-600">Track and manage business expenses</p>
         </div>
+=======
+  const topCategory = Object.entries(categoryBreakdown).sort(
+    ([, a], [, b]) => b - a,
+  )[0];
+
+  const logAction = async (
+    action: string,
+    record_id: string,
+    details: any,
+  ) => {
+    if (!user) return;
+    await supabase.from("logs").insert({
+      user_id: user.id,
+      action,
+      table_name: "expenses",
+      record_id,
+      details,
+    });
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      const { error } = await supabase.from("expenses").delete().eq("id", id);
+
+      if (error) throw error;
+
+      toast.success("Expense deleted successfully!");
+      logAction("delete", id, { id });
+      fetchExpenses();
+    } catch (error) {
+      console.error("Error deleting expense:", error);
+      toast.error("Failed to delete expense");
+    }
+  };
+
+  const handleUpdate = async () => {
+    if (!selectedExpense) return;
+
+    try {
+      const { error } = await supabase
+        .from("expenses")
+        .update(selectedExpense)
+        .eq("id", selectedExpense.id);
+
+      if (error) throw error;
+
+      toast.success("Expense updated successfully!");
+      logAction("update", selectedExpense.id, selectedExpense);
+      setIsEditDialogOpen(false);
+      fetchExpenses();
+    } catch (error) {
+      console.error("Error updating expense:", error);
+      toast.error("Failed to update expense");
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-red-50 via-pink-50 to-purple-50 relative overflow-hidden">
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Expense</DialogTitle>
+          </DialogHeader>
+          {selectedExpense && (
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="editDescription">Description</Label>
+                <Input
+                  id="editDescription"
+                  value={selectedExpense.description}
+                  onChange={(e) =>
+                    setSelectedExpense({
+                      ...selectedExpense,
+                      description: e.target.value,
+                    })
+                  }
+                />
+              </div>
+              <div>
+                <Label htmlFor="editAmount">Amount</Label>
+                <Input
+                  id="editAmount"
+                  type="number"
+                  value={selectedExpense.amount}
+                  onChange={(e) =>
+                    setSelectedExpense({
+                      ...selectedExpense,
+                      amount: parseFloat(e.target.value),
+                    })
+                  }
+                />
+              </div>
+              <div>
+                <Label htmlFor="editCategory">Category</Label>
+                <Input
+                  id="editCategory"
+                  value={selectedExpense.category}
+                  onChange={(e) =>
+                    setSelectedExpense({
+                      ...selectedExpense,
+                      category: e.target.value,
+                    })
+                  }
+                />
+              </div>
+              <div>
+                <Label htmlFor="editPaymentMode">Payment Mode</Label>
+                <Input
+                  id="editPaymentMode"
+                  value={selectedExpense.payment_mode}
+                  onChange={(e) =>
+                    setSelectedExpense({
+                      ...selectedExpense,
+                      payment_mode: e.target.value,
+                    })
+                  }
+                />
+              </div>
+              <div>
+                <Label htmlFor="editRemarks">Remarks</Label>
+                <Input
+                  id="editRemarks"
+                  value={selectedExpense.remarks || ""}
+                  onChange={(e) =>
+                    setSelectedExpense({
+                      ...selectedExpense,
+                      remarks: e.target.value,
+                    })
+                  }
+                />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button onClick={handleUpdate}>Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-20 left-20 w-64 h-64 bg-gradient-to-r from-red-400/20 to-pink-500/20 rounded-full blur-3xl animate-pulse"></div>
+        <div
+          className="absolute top-1/3 right-20 w-80 h-80 bg-gradient-to-r from-pink-400/20 to-purple-500/20 rounded-full blur-3xl animate-pulse"
+          style={{ animationDelay: "1s" }}
+        ></div>
+        <div
+          className="absolute bottom-20 left-1/4 w-72 h-72 bg-gradient-to-r from-purple-400/20 to-indigo-500/20 rounded-full blur-3xl animate-pulse"
+          style={{ animationDelay: "2s" }}
+        ></div>
+>>>>>>> origin/main
       </div>
 
       {/* Quick Stats */}
@@ -501,6 +697,7 @@ const ExpensesTab = () => {
             <div className="p-2 bg-primary rounded-lg">
               <FileText className="h-5 w-5 text-black" />
             </div>
+<<<<<<< HEAD
             Expense History
           </CardTitle>
         </CardHeader>
@@ -574,6 +771,188 @@ const ExpensesTab = () => {
                   ))}
                 </TableBody>
               </Table>
+=======
+          </CardHeader>
+          <CardContent className="p-0">
+            {loading ? (
+              <div className="text-center py-10">
+                <div className="w-16 h-16 bg-gradient-to-r from-red-500 to-pink-500 rounded-full animate-spin mx-auto flex items-center justify-center mb-4">
+                  <Receipt className="h-8 w-8 text-white" />
+                </div>
+                <p className="text-gray-600">Loading expenses...</p>
+              </div>
+            ) : expenses.length === 0 ? (
+              <div className="text-center py-12">
+                <Receipt className="h-16 w-16 mx-auto text-gray-300 mb-4" />
+                <p className="text-xl font-semibold text-gray-700 mb-2">
+                  No expenses found
+                </p>
+                <p className="text-gray-500">
+                  Start tracking your expenses to see them here.
+                </p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-gradient-to-r from-gray-50 to-purple-50">
+                      <TableHead className="font-semibold text-gray-700">
+                        Date
+                      </TableHead>
+                      <TableHead className="font-semibold text-gray-700">
+                        Description
+                      </TableHead>
+                      <TableHead className="font-semibold text-gray-700">
+                        Category
+                      </TableHead>
+                      <TableHead className="font-semibold text-gray-700">
+                        Amount
+                      </TableHead>
+                      <TableHead className="font-semibold text-gray-700">
+                        Payment
+                      </TableHead>
+                      <TableHead className="font-semibold text-gray-700">
+                        Remarks
+                      </TableHead>
+                      <TableHead className="font-semibold text-gray-700">
+                        Actions
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    <TableRow>
+                      <TableCell colSpan={3} className="font-bold">
+                        Total
+                      </TableCell>
+                      <TableCell colSpan={3} className="font-bold text-right">
+                        NRs. {totalExpenses.toFixed(2)}
+                      </TableCell>
+                    </TableRow>
+                    {expenses.map((expense, index) => (
+                      <TableRow
+                        key={expense.id}
+                        className="hover:bg-gradient-to-r hover:from-red-50 hover:to-pink-50 transition-all duration-200"
+                        style={{ animationDelay: `${index * 50}ms` }}
+                      >
+                        <TableCell className="font-medium">
+                          {format(
+                            new Date(expense.expense_date),
+                            "MMM dd, yyyy",
+                          )}
+                        </TableCell>
+                        <TableCell className="max-w-xs">
+                          <div
+                            className="font-medium text-gray-800 truncate"
+                            title={expense.description}
+                          >
+                            {expense.description}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            className={`bg-gradient-to-r ${categoryColors[expense.category as keyof typeof categoryColors]} text-white border-0`}
+                          >
+                            {expense.category}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <span className="font-bold text-lg bg-gradient-to-r from-red-600 to-pink-600 bg-clip-text text-transparent">
+                            NRs. {expense.amount.toFixed(2)}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            variant="outline"
+                            className="bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200"
+                          >
+                            {expense.payment_mode}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="max-w-xs">
+                          <span
+                            className="text-sm text-gray-600 truncate"
+                            title={expense.remarks || ""}
+                          >
+                            {expense.remarks || "-"}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          {canEditTransactions && (
+                            <div className="flex gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedExpense(expense);
+                                  setIsEditDialogOpen(true);
+                                }}
+                              >
+                                Edit
+                              </Button>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>
+                                      Are you sure?
+                                    </AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      This action cannot be undone. This will
+                                      permanently delete the expense.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction
+                                      onClick={() => handleDelete(expense.id)}
+                                    >
+                                      Continue
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </div>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </CardContent>
+          {expenses.length > 0 && (
+            <div className="flex justify-center p-4 border-t border-gray-200">
+              <div className="flex items-center gap-4">
+                <Button
+                  onClick={() => onPageChange(page - 1)}
+                  disabled={page === 1}
+                  variant="outline"
+                  className="hover:bg-gradient-to-r hover:from-red-50 hover:to-pink-50"
+                >
+                  Previous
+                </Button>
+                <span className="px-4 py-2 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg font-medium">
+                  Page {page}
+                </span>
+                <Button
+                  onClick={() => onPageChange(page + 1)}
+                  disabled={expenses.length < itemsPerPage}
+                  variant="outline"
+                  className="hover:bg-gradient-to-r hover:from-red-50 hover:to-pink-50"
+                >
+                  Next
+                </Button>
+              </div>
+>>>>>>> origin/main
             </div>
           )}
         </CardContent>

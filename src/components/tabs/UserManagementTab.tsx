@@ -32,7 +32,23 @@ import {
   Trash2,
 } from "lucide-react";
 
+<<<<<<< HEAD
 type AppRole = "user" | "data_entry" | "reports_viewer" | "super_admin";
+=======
+import { useState, useEffect } from 'react';
+import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { toast } from 'sonner';
+import { Users, UserPlus, Shield, Database, BarChart3, UserCheck, Eye, EyeOff, FileText } from 'lucide-react';
+
+type AppRole = 'user' | 'data_entry' | 'reports_viewer' | 'super_admin';
+>>>>>>> origin/main
 
 interface UserWithRole {
   id: string;
@@ -54,7 +70,12 @@ const UserManagementTab = () => {
   const [loading, setLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+<<<<<<< HEAD
 
+=======
+  const [logs, setLogs] = useState<any[]>([]);
+  
+>>>>>>> origin/main
   const [newUser, setNewUser] = useState<NewUserData>({
     email: "",
     password: "",
@@ -115,7 +136,22 @@ const UserManagementTab = () => {
 
   useEffect(() => {
     fetchUsersAndRoles();
+    fetchLogs();
   }, []);
+
+  const fetchLogs = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("logs")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      setLogs(data || []);
+    } catch (error) {
+      console.error("Error fetching logs:", error);
+      toast.error("Failed to load logs.");
+    }
+  };
 
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -551,6 +587,41 @@ const UserManagementTab = () => {
               </Table>
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FileText className="h-5 w-5" />
+            Activity Logs
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>User</TableHead>
+                <TableHead>Action</TableHead>
+                <TableHead>Table</TableHead>
+                <TableHead>Record ID</TableHead>
+                <TableHead>Timestamp</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {logs.map((log) => (
+                <TableRow key={log.id}>
+                  <TableCell>{log.user_id}</TableCell>
+                  <TableCell>{log.action}</TableCell>
+                  <TableCell>{log.table_name}</TableCell>
+                  <TableCell>{log.record_id}</TableCell>
+                  <TableCell>
+                    {new Date(log.created_at).toLocaleString()}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
     </div>

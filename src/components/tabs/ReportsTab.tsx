@@ -1,6 +1,13 @@
+<<<<<<< HEAD
 import { useState, useEffect } from "react";
+=======
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+>>>>>>> origin/main
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import jsPDF from "jspdf";
+import "jspdf-autotable";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -40,7 +47,43 @@ import {
   CheckCircle,
   Clock,
 } from "lucide-react";
+<<<<<<< HEAD
 import { toast } from "sonner";
+=======
+import { format } from "date-fns";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { UserOptions } from "jspdf-autotable";
+
+interface jsPDFWithAutoTable extends jsPDF {
+  autoTable: (options: UserOptions) => jsPDF;
+}
+>>>>>>> origin/main
 
 interface ReportData {
   period: string;
@@ -79,6 +122,7 @@ interface ReportData {
 
 const ReportsTab = () => {
   const { user } = useAuth();
+<<<<<<< HEAD
   const [reportData, setReportData] = useState<ReportData | null>(null);
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
@@ -86,6 +130,113 @@ const ReportsTab = () => {
   const [reportType, setReportType] = useState<
     "weekly" | "monthly" | "quarterly" | "custom"
   >("monthly");
+=======
+  const navigate = useNavigate();
+  const [reports, setReports] = useState<ReportData[]>([]);
+  const [staticExpenses, setStaticExpenses] = useState<StaticExpense[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [generating, setGenerating] = useState(false);
+  const [reportType, setReportType] = useState("");
+  const [selectedDateFrom, setSelectedDateFrom] = useState<Date | undefined>(
+    undefined,
+  );
+  const [selectedDateTo, setSelectedDateTo] = useState<Date | undefined>(
+    undefined,
+  );
+  const [currentPage, setCurrentPage] = useState(1);
+  const [showStaticExpenseDialog, setShowStaticExpenseDialog] = useState(false);
+  const [staticExpenseForm, setStaticExpenseForm] = useState({
+    description: "",
+    amount: "",
+    category: "",
+    isRecurring: false,
+  });
+  const [isReportDialogOpen, setIsReportDialogOpen] = useState(false);
+  const [selectedReport, setSelectedReport] = useState<ReportData | null>(
+    null,
+  );
+
+  const itemsPerPage = 10;
+  const reportTypes = [
+    "Financial Summary",
+    "Order Report",
+    "Expense Report",
+    "Charging Report",
+    "Deposit Report",
+    "Withdrawal Report",
+    "Cooperative Savings Report",
+    "Complete Business Report",
+  ];
+
+  const expenseCategories = [
+    "Office Rent",
+    "Utilities",
+    "Insurance",
+    "Software Subscriptions",
+    "Equipment Lease",
+    "Legal & Professional",
+    "Marketing",
+    "Other",
+  ];
+
+  const reportTypeColors = {
+    "Financial Summary": "from-green-500 to-emerald-500",
+    "Order Report": "from-orange-500 to-red-500",
+    "Expense Report": "from-red-500 to-pink-500",
+    "Charging Report": "from-yellow-500 to-orange-500",
+    "Deposit Report": "from-blue-500 to-cyan-500",
+    "Withdrawal Report": "from-purple-500 to-indigo-500",
+    "Cooperative Savings Report": "from-teal-500 to-cyan-500",
+    "Complete Business Report": "from-violet-500 to-purple-500",
+  };
+
+  useEffect(() => {
+    fetchReports();
+    fetchStaticExpenses();
+  }, [user, currentPage]);
+
+  const fetchReports = async () => {
+    if (!user) return;
+
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("reports")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .range(
+          (currentPage - 1) * itemsPerPage,
+          currentPage * itemsPerPage - 1,
+        );
+
+      if (error) throw error;
+      setReports(data || []);
+    } catch (error) {
+      console.error("Error fetching reports:", error);
+      toast.error("Failed to load reports");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchStaticExpenses = async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from("static_expenses")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      setStaticExpenses(data || []);
+    } catch (error) {
+      console.error("Error fetching static expenses:", error);
+    }
+  };
+>>>>>>> origin/main
 
   const generateReport = async () => {
     if (!user) return;
@@ -370,6 +521,244 @@ ${reportData.topSellingItems.map((item, i) => `${i + 1}. ${item.name}: ${item.qu
     toast.success("Report exported successfully!");
   };
 
+<<<<<<< HEAD
+=======
+  const generateOrderReport = async (
+    dateFrom: string | null,
+    dateTo: string | null,
+  ) => {
+    let query = supabase.from("orders").select("*").eq("user_id", user!.id);
+
+    if (dateFrom) query = query.gte("order_date", dateFrom);
+    if (dateTo) query = query.lte("order_date", dateTo);
+
+    const { data: orders } = await query.order("order_date", {
+      ascending: false,
+    });
+
+    return {
+      orders: orders || [],
+      summary: {
+        totalOrders: orders?.length || 0,
+        totalRevenue: (orders || []).reduce(
+          (sum, order) => sum + order.total,
+          0,
+        ),
+        averageOrderValue: orders?.length
+          ? orders.reduce((sum, order) => sum + order.total, 0) / orders.length
+          : 0,
+      },
+      period: { from: dateFrom, to: dateTo },
+    };
+  };
+
+  const generateExpenseReport = async (
+    dateFrom: string | null,
+    dateTo: string | null,
+  ) => {
+    let query = supabase.from("expenses").select("*").eq("user_id", user!.id);
+
+    if (dateFrom) query = query.gte("expense_date", dateFrom);
+    if (dateTo) query = query.lte("expense_date", dateTo);
+
+    const { data: expenses } = await query.order("expense_date", {
+      ascending: false,
+    });
+
+    return {
+      expenses: expenses || [],
+      summary: {
+        totalExpenses: (expenses || []).reduce(
+          (sum, expense) => sum + expense.amount,
+          0,
+        ),
+        expenseCount: expenses?.length || 0,
+        categoryBreakdown: (expenses || []).reduce(
+          (acc, expense) => {
+            acc[expense.category] =
+              (acc[expense.category] || 0) + expense.amount;
+            return acc;
+          },
+          {} as Record<string, number>,
+        ),
+      },
+      period: { from: dateFrom, to: dateTo },
+    };
+  };
+
+  const generateChargingReport = async (
+    dateFrom: string | null,
+    dateTo: string | null,
+  ) => {
+    let query = supabase
+      .from("charging_sessions")
+      .select("*")
+      .eq("user_id", user!.id);
+
+    if (dateFrom) query = query.gte("session_date", dateFrom);
+    if (dateTo) query = query.lte("session_date", dateTo);
+
+    const { data: sessions } = await query.order("session_date", {
+      ascending: false,
+    });
+
+    return {
+      sessions: sessions || [],
+      summary: {
+        totalSessions: sessions?.length || 0,
+        totalRevenue: (sessions || []).reduce(
+          (sum, session) => sum + session.total_amount,
+          0,
+        ),
+        totalEnergyConsumed: (sessions || []).reduce(
+          (sum, session) => sum + session.kcal,
+          0,
+        ),
+      },
+      period: { from: dateFrom, to: dateTo },
+    };
+  };
+
+  const generateCompleteReport = async (
+    dateFrom: string | null,
+    dateTo: string | null,
+  ) => {
+    const [financial, orders, expenseReport, charging] = await Promise.all([
+      generateFinancialSummary(dateFrom, dateTo),
+      generateOrderReport(dateFrom, dateTo),
+      generateExpenseReport(dateFrom, dateTo),
+      generateChargingReport(dateFrom, dateTo),
+    ]);
+
+    return {
+      financial,
+      orders,
+      expenses: expenseReport.expenses,
+      charging,
+      period: { from: dateFrom, to: dateTo },
+      generatedAt: new Date().toISOString(),
+    };
+  };
+
+  const addStaticExpense = async () => {
+    if (
+      !user ||
+      !staticExpenseForm.description ||
+      !staticExpenseForm.amount ||
+      !staticExpenseForm.category
+    ) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+
+    try {
+      const { error } = await supabase.from("static_expenses").insert({
+        user_id: user.id,
+        description: staticExpenseForm.description,
+        amount: parseFloat(staticExpenseForm.amount),
+        category: staticExpenseForm.category,
+        is_recurring: staticExpenseForm.isRecurring,
+      });
+
+      if (error) throw error;
+
+      toast.success("Static expense added successfully!");
+      setShowStaticExpenseDialog(false);
+      setStaticExpenseForm({
+        description: "",
+        amount: "",
+        category: "",
+        isRecurring: false,
+      });
+      fetchStaticExpenses();
+    } catch (error) {
+      console.error("Error adding static expense:", error);
+      toast.error("Failed to add static expense");
+    }
+  };
+
+  const deleteStaticExpense = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from("static_expenses")
+        .delete()
+        .eq("id", id);
+
+      if (error) throw error;
+
+      toast.success("Static expense deleted successfully!");
+      fetchStaticExpenses();
+    } catch (error) {
+      console.error("Error deleting static expense:", error);
+      toast.error("Failed to delete static expense");
+    }
+  };
+
+  const downloadReport = (report: ReportData) => {
+    const doc = new jsPDF() as jsPDFWithAutoTable;
+    const reportData = report.report_data;
+    let tableColumn: string[] = [];
+    let tableRows: any[][] = [];
+
+    switch (report.report_type) {
+      case "Order Report":
+        tableColumn = Object.keys(reportData.orders[0]);
+        tableRows = reportData.orders.map((obj: any) => Object.values(obj));
+        break;
+      case "Expense Report":
+        tableColumn = Object.keys(reportData.expenses[0]);
+        tableRows = reportData.expenses.map((obj: any) => Object.values(obj));
+        break;
+      case "Charging Report":
+        tableColumn = Object.keys(reportData.sessions[0]);
+        tableRows = reportData.sessions.map((obj: any) => Object.values(obj));
+        break;
+      case "Financial Summary":
+        tableColumn = ["Metric", "Value"];
+        tableRows = Object.entries(reportData.summary).map(([key, value]) => [
+          key,
+          JSON.stringify(value),
+        ]);
+        break;
+      case "Complete Business Report":
+        // For complete business report, we can export a summary
+        tableColumn = ["Metric", "Value"];
+        tableRows = Object.entries(reportData.financial.summary).map(
+          ([key, value]) => [key, JSON.stringify(value)],
+        );
+        break;
+      default:
+        toast.error("Export not implemented for this report type");
+        return;
+    }
+
+    doc.autoTable({
+      head: [tableColumn],
+      body: tableRows,
+    });
+    doc.save(`${report.report_type}.pdf`);
+  };
+
+  const deleteReport = async (id: string) => {
+    try {
+      const { error } = await supabase.from("reports").delete().eq("id", id);
+
+      if (error) throw error;
+
+      toast.success("Report deleted successfully!");
+      fetchReports();
+    } catch (error) {
+      console.error("Error deleting report:", error);
+      toast.error("Failed to delete report");
+    }
+  };
+
+  const totalStaticExpenses = staticExpenses.reduce(
+    (sum, expense) => sum + expense.amount,
+    0,
+  );
+
+>>>>>>> origin/main
   return (
     <div className="space-y-8">
       {/* Header */}
@@ -480,7 +869,194 @@ ${reportData.topSellingItems.map((item, i) => `${i + 1}. ${item.name}: ${item.qu
                     </>
                   )}
                 </Button>
+<<<<<<< HEAD
                 {reportData && (
+=======
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* View Reports Tab */}
+          <TabsContent value="view">
+            <Card className="bg-gradient-to-br from-white/90 to-blue-50/90 backdrop-blur-sm border-0 shadow-2xl">
+              <CardHeader className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-t-lg">
+                <CardTitle className="flex items-center gap-3 text-xl">
+                  <div className="p-2 bg-white/20 rounded-lg">
+                    <Eye className="h-6 w-6" />
+                  </div>
+                  Generated Reports
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                {loading ? (
+                  <div className="text-center py-10">
+                    <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full animate-spin mx-auto flex items-center justify-center mb-4">
+                      <FileText className="h-8 w-8 text-white" />
+                    </div>
+                    <p className="text-gray-600">Loading reports...</p>
+                  </div>
+                ) : reports.length === 0 ? (
+                  <div className="text-center py-12">
+                    <FileText className="h-16 w-16 mx-auto text-gray-300 mb-4" />
+                    <p className="text-xl font-semibold text-gray-700 mb-2">
+                      No reports generated yet
+                    </p>
+                    <p className="text-gray-500">
+                      Create your first report to see it here.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="bg-gradient-to-r from-gray-50 to-blue-50">
+                          <TableHead className="font-semibold text-gray-700">
+                            Report Type
+                          </TableHead>
+                          <TableHead className="font-semibold text-gray-700">
+                            Date Range
+                          </TableHead>
+                          <TableHead className="font-semibold text-gray-700">
+                            Generated
+                          </TableHead>
+                          <TableHead className="font-semibold text-gray-700">
+                            Actions
+                          </TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {reports.map((report, index) => (
+                          <TableRow
+                            key={report.id}
+                            className="hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-200"
+                            style={{ animationDelay: `${index * 50}ms` }}
+                          >
+                            <TableCell>
+                              <Badge
+                                className={`bg-gradient-to-r ${reportTypeColors[report.report_type as keyof typeof reportTypeColors] || "from-gray-500 to-slate-500"} text-white border-0`}
+                              >
+                                {report.report_type}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-sm">
+                              {report.date_range_start &&
+                              report.date_range_end ? (
+                                <>
+                                  {format(
+                                    new Date(report.date_range_start),
+                                    "MMM dd",
+                                  )}{" "}
+                                  -{" "}
+                                  {format(
+                                    new Date(report.date_range_end),
+                                    "MMM dd, yyyy",
+                                  )}
+                                </>
+                              ) : report.date_range_start ? (
+                                <>
+                                  From{" "}
+                                  {format(
+                                    new Date(report.date_range_start),
+                                    "MMM dd, yyyy",
+                                  )}
+                                </>
+                              ) : report.date_range_end ? (
+                                <>
+                                  Until{" "}
+                                  {format(
+                                    new Date(report.date_range_end),
+                                    "MMM dd, yyyy",
+                                  )}
+                                </>
+                              ) : (
+                                "All time"
+                              )}
+                            </TableCell>
+                            <TableCell className="text-sm">
+                              {format(
+                                new Date(report.created_at),
+                                "MMM dd, yyyy HH:mm",
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="hover:bg-blue-50 hover:border-blue-300"
+                                  onClick={() => {
+                                    setSelectedReport(report);
+                                    setIsReportDialogOpen(true);
+                                  }}
+                                >
+                                  <Eye className="h-4 w-4 mr-1" />
+                                  View
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="hover:bg-green-50 hover:border-green-300"
+                                  onClick={() => downloadReport(report)}
+                                >
+                                  <Download className="h-4 w-4 mr-1" />
+                                  Export
+                                </Button>
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="hover:bg-red-50 hover:border-red-300 text-red-600"
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>
+                                        Delete Report
+                                      </AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        Are you sure you want to delete this
+                                        report? This action cannot be undone.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>
+                                        Cancel
+                                      </AlertDialogCancel>
+                                      <AlertDialogAction
+                                        onClick={() => deleteReport(report.id)}
+                                      >
+                                        Delete
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Static Expenses Tab */}
+          <TabsContent value="static">
+            <Card className="bg-gradient-to-br from-white/90 to-indigo-50/90 backdrop-blur-sm border-0 shadow-2xl">
+              <CardHeader className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-t-lg">
+                <CardTitle className="flex items-center justify-between">
+                  <div className="flex items-center gap-3 text-xl">
+                    <div className="p-2 bg-white/20 rounded-lg">
+                      <Settings className="h-6 w-6" />
+                    </div>
+                    Static Expenses Management
+                  </div>
+>>>>>>> origin/main
                   <Button
                     onClick={exportReport}
                     variant="outline"
@@ -875,10 +1451,58 @@ ${reportData.topSellingItems.map((item, i) => `${i + 1}. ${item.name}: ${item.qu
                   </p>
                 </div>
               </div>
+<<<<<<< HEAD
             </CardContent>
           </Card>
         </>
       )}
+=======
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="isRecurring"
+                  checked={staticExpenseForm.isRecurring}
+                  onChange={(e) =>
+                    setStaticExpenseForm({
+                      ...staticExpenseForm,
+                      isRecurring: e.target.checked,
+                    })
+                  }
+                  className="rounded border-gray-300"
+                />
+                <Label htmlFor="isRecurring">Recurring expense</Label>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setShowStaticExpenseDialog(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={addStaticExpense}
+                className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600"
+              >
+                Add Expense
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
+      <Dialog open={isReportDialogOpen} onOpenChange={setIsReportDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{selectedReport?.report_type}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {selectedReport && (
+              <pre>{JSON.stringify(selectedReport.report_data, null, 2)}</pre>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+>>>>>>> origin/main
     </div>
   );
 };
