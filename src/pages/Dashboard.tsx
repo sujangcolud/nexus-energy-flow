@@ -42,8 +42,6 @@ import CombinedReportsTab from "@/components/tabs/CombinedReportsTab";
 import MenuManagementTab from "@/components/tabs/MenuManagementTab";
 import DataInputTab from "@/components/tabs/DataInputTab";
 import UserManagementTab from "@/components/tabs/UserManagementTab";
-import ShareInvestmentsTab from "@/components/tabs/ShareInvestmentsTab";
-import OpeningBalanceTab from "@/components/tabs/OpeningBalanceTab";
 
 const Dashboard = () => {
   const { user, signOut, userRole } = useAuth();
@@ -116,26 +114,6 @@ const Dashboard = () => {
         component: CooperativeSavingsTab,
         roles: ["data_entry", "super_admin"],
         description: "Cooperative savings management",
-      },
-
-      // Financial Management
-      {
-        id: "share_investments",
-        path: "share-investments",
-        label: "Share Investments",
-        icon: TrendingUp,
-        component: ShareInvestmentsTab,
-        roles: ["data_entry", "super_admin"],
-        description: "Manage shareholder contributions and equity",
-      },
-      {
-        id: "opening_balance",
-        path: "opening-balance",
-        label: "Opening Balance",
-        icon: Calendar,
-        component: OpeningBalanceTab,
-        roles: ["data_entry", "super_admin"],
-        description: "Set cutoff date and opening balance",
       },
 
       // Reports and Analytics - accessible to reports_viewer, super_admin

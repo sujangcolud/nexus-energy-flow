@@ -305,39 +305,6 @@ export type Database = {
         }
         Relationships: []
       }
-      share_investments: {
-        Row: {
-          contribution_amount: number
-          created_at: string | null
-          id: string
-          investment_date: string
-          payment_mode: string
-          shareholder_name: string
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          contribution_amount: number
-          created_at?: string | null
-          id?: string
-          investment_date?: string
-          payment_mode: string
-          shareholder_name: string
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          contribution_amount?: number
-          created_at?: string | null
-          id?: string
-          investment_date?: string
-          payment_mode?: string
-          shareholder_name?: string
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
       static_expenses: {
         Row: {
           amount: number
@@ -510,17 +477,6 @@ export type Database = {
         Returns: {
           email: string
           total_spent: number
-        }[]
-      }
-      get_user_profiles_with_roles: {
-        Args: Record<PropertyKey, never>
-        Returns: {
-          id: string
-          email: string
-          first_name: string
-          last_name: string
-          role: string
-          created_at: string
         }[]
       }
       get_user_role_distribution: {

@@ -1,5 +1,4 @@
-import React, { useState } from "react";
-import ChatBot from "@/components/ChatBot";
+import React from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -8,7 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
-import Dashboard from "./pages/Dashboard";
+import Dashboard from "./pages/Dashboard"; // Will serve as layout
 import ProtectedRoute from "./components/ProtectedRoute";
 
 // Import Tab Components for Routing
@@ -18,73 +17,80 @@ import ExpensesTab from "./components/tabs/ExpensesTab";
 import DepositsTab from "./components/tabs/DepositsTab";
 import WithdrawalsTab from "./components/tabs/WithdrawalsTab";
 import CooperativeSavingsTab from "./components/tabs/CooperativeSavingsTab";
-import MenuManagementTab from "./components/tabs/MenuManagementTab";
+import MenuManagementTab from "./components/tabs/MenuManagementTab"; // Consider admin roles for this route
 import InsightsTab from "./components/tabs/InsightsTab";
 import CombinedReportsTab from "./components/tabs/CombinedReportsTab";
 import DataInputTab from "./components/tabs/DataInputTab";
 import UserManagementTab from "./components/tabs/UserManagementTab";
-import ShareInvestmentsTab from "./components/tabs/ShareInvestmentsTab";
-import OpeningBalanceTab from "./components/tabs/OpeningBalanceTab";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import Settings from "./pages/Settings";
+import { Outlet } from "react-router-dom"; // Needed for nested routes
 
 const queryClient = new QueryClient();
 
-const App = () => {
-  const [isChatBotOpen, setChatBotOpen] = useState(false);
+// Define a DashboardLayout component that includes the Outlet for nested routes
+// This might be similar to the current Dashboard component but will now include <Outlet />
+// For now, we assume Dashboard.tsx itself will be modified to include <Outlet />
+// and the main content of Dashboard (the cards) will be on an index route or part of the layout.
 
-  const handleToggleChatBot = () => {
-    setChatBotOpen((prev) => !prev);
-  };
+// A component to represent the main dashboard view with cards, if we make it an index route.
+// For simplicity, Dashboard.tsx will handle its own content (cards) + Outlet for now.
+// const DashboardHomePage = () => <div>Dashboard Home - Cards Here</div>;
 
-  return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter basename="/poss">
-          <AuthProvider>
-            <Routes>
-              <Route path="/" element={<Index />} />
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <TooltipProvider>
+      <Toaster />
+      <Sonner />
+      <BrowserRouter>
+        <AuthProvider>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <Dashboard /> {/* Dashboard now acts as a layout component */}
+                </ProtectedRoute>
+              }
+            >
+              {/* Index route for /dashboard to show cards or default content */}
+              {/* For now, Dashboard component itself will decide to show cards or Outlet content */}
+              {/* If cards are always visible WITH page content, Dashboard handles that. */}
+              {/* If cards are ONLY on /dashboard and specific content on /dashboard/subpath, then an index route is better. */}
+              {/* Let's assume Dashboard will render cards if no child route matches, or always render cards above <Outlet /> */}
+
+              {/* Child routes for dashboard sections */}
+              <Route path="orders" element={<OrdersTab />} />
+              <Route path="charging" element={<ChargingTab />} />
+              <Route path="expenses" element={<ExpensesTab />} />
+              <Route path="deposits" element={<DepositsTab />} />
+              <Route path="withdrawals" element={<WithdrawalsTab />} />
+              <Route path="cooperative" element={<CooperativeSavingsTab />} />
+              {/* TODO: Add role-based protection for menu if needed at route level, or handle in MenuManagementTab */}
+              <Route path="menu" element={<MenuManagementTab />} />
+              <Route path="insights" element={<InsightsTab />} />
+              <Route path="reports" element={<CombinedReportsTab />} />
+              <Route path="data-input" element={<DataInputTab />} />
+              <Route path="user-management" element={<UserManagementTab />} />
               <Route
-                path="/dashboard"
+                path="super-admin"
                 element={
-                  <ProtectedRoute>
-                    <Dashboard />
+                  <ProtectedRoute allowedRoles={["super_admin"]}>
+                    <SuperAdminDashboard />
                   </ProtectedRoute>
                 }
-              >
-                <Route path="orders" element={<OrdersTab />} />
-                <Route path="charging" element={<ChargingTab />} />
-                <Route path="expenses" element={<ExpensesTab />} />
-                <Route path="deposits" element={<DepositsTab />} />
-                <Route path="withdrawals" element={<WithdrawalsTab />} />
-                <Route path="cooperative" element={<CooperativeSavingsTab />} />
-                <Route path="share-investments" element={<ShareInvestmentsTab />} />
-                <Route path="opening-balance" element={<OpeningBalanceTab />} />
-                <Route path="menu" element={<MenuManagementTab />} />
-                <Route path="insights" element={<InsightsTab />} />
-                <Route path="reports" element={<CombinedReportsTab />} />
-                <Route path="data-input" element={<DataInputTab />} />
-                <Route path="user-management" element={<UserManagementTab />} />
-                <Route
-                  path="super-admin"
-                  element={
-                    <ProtectedRoute allowedRoles={["super_admin"]}>
-                      <SuperAdminDashboard />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route path="settings" element={<Settings />} />
-              </Route>
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </AuthProvider>
-        </BrowserRouter>
-        <ChatBot isOpen={isChatBotOpen} onToggle={handleToggleChatBot} />
-      </TooltipProvider>
-    </QueryClientProvider>
-  );
-};
+              />
+              <Route path="settings" element={<Settings />} />
+              {/* It might be good to have an index route that explicitly shows the cards */}
+              {/* <Route index element={<DashboardPageWithCards />} /> */}
+            </Route>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </AuthProvider>
+      </BrowserRouter>
+    </TooltipProvider>
+  </QueryClientProvider>
+);
 
 export default App;

@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Send, Bot, User, MessageCircle, X, Minimize2 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { fetchOpenAIAnswer } from "@/integrations/supabase/openai/api";
 
 interface Message {
   id: string;
@@ -52,18 +52,13 @@ const ChatBot = ({ isOpen, onToggle }: ChatBotProps) => {
     setIsLoading(true);
 
     try {
-      const { data, error } = await supabase.functions.invoke("chatbot", {
-        body: { question: inputValue },
-      });
-
-      if (error) {
-        throw new Error(error.message);
-      }
+      const context = "";
+      const botResponse = await fetchOpenAIAnswer(inputValue, context);
 
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
         type: "bot",
-        content: data.answer,
+        content: botResponse,
         timestamp: new Date(),
       };
 
