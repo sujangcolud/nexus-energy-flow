@@ -41,21 +41,6 @@ const queryClient = new QueryClient();
 const App = () => {
   const [isChatBotOpen, setChatBotOpen] = useState(false);
 
-<<<<<<< HEAD
-              {/* Child routes for dashboard sections */}
-              <Route path="orders" element={<OrdersTab />} />
-              <Route path="charging" element={<ChargingTab />} />
-              <Route path="expenses" element={<ExpensesTab />} />
-              <Route path="deposits" element={<DepositsTab />} />
-              <Route path="withdrawals" element={<WithdrawalsTab />} />
-              <Route path="cooperative" element={<CooperativeSavingsTab />} />
-              {/* TODO: Add role-based protection for menu if needed at route level, or handle in MenuManagementTab */}
-              <Route path="menu" element={<MenuManagementTab />} />
-              <Route path="insights" element={<InsightsTab />} />
-              <Route path="reports" element={<CombinedReportsTab />} />
-              <Route path="data-input" element={<DataInputTab />} />
-              <Route path="user-management" element={<UserManagementTab />} />
-=======
   const handleToggleChatBot = () => {
     setChatBotOpen((prev) => !prev);
   };
@@ -69,7 +54,6 @@ const App = () => {
           <AuthProvider>
             <Routes>
               <Route path="/" element={<Index />} />
->>>>>>> origin/main
               <Route
                 path="/dashboard"
                 element={
@@ -91,15 +75,11 @@ const App = () => {
                 <Route path="expenses" element={<ExpensesTab />} />
                 <Route path="deposits" element={<DepositsTab />} />
                 <Route path="withdrawals" element={<WithdrawalsTab />} />
-                <Route
-                  path="cooperative"
-                  element={<CooperativeSavingsTab />}
-                />
+                <Route path="cooperative" element={<CooperativeSavingsTab />} />
                 {/* TODO: Add role-based protection for menu if needed at route level, or handle in MenuManagementTab */}
                 <Route path="menu" element={<MenuManagementTab />} />
                 <Route path="insights" element={<InsightsTab />} />
-                <Route path="reports" element={<ReportsTab />} />
-                <Route path="reports-view" element={<ReportsViewTab />} />
+                <Route path="reports" element={<CombinedReportsTab />} />
                 <Route path="data-input" element={<DataInputTab />} />
                 <Route path="user-management" element={<UserManagementTab />} />
                 <Route
