@@ -28,11 +28,22 @@ const Index = () => {
 
   // Redirect if already logged in
   useEffect(() => {
+    console.log("Index useEffect - user:", !!user, "authLoading:", authLoading);
     if (user && !authLoading) {
       console.log("User is logged in, redirecting to dashboard");
       navigate("/dashboard");
     }
   }, [user, authLoading, navigate]);
+
+  // Debug logging
+  useEffect(() => {
+    console.log(
+      "Index component mounted - authLoading:",
+      authLoading,
+      "user:",
+      !!user,
+    );
+  }, []);
 
   // Don't render the login form if user is already authenticated
   if (user && !authLoading) {
