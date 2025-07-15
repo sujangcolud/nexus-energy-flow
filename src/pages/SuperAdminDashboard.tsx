@@ -44,7 +44,7 @@ import {
   Clock,
   AlertTriangle,
   CheckCircle,
-  TrendingRight,
+  TrendingUp,
 } from "lucide-react";
 
 interface AnalyticsData {
@@ -471,7 +471,7 @@ const SuperAdminDashboard = () => {
                 </div>
               </div>
               <div className="p-3 bg-brand-100 rounded-xl">
-                <TrendingRight className="h-8 w-8 text-black" />
+                <TrendingUp className="h-8 w-8 text-black" />
               </div>
             </div>
           </CardContent>
