@@ -52,9 +52,7 @@ const ChatBot = ({ isOpen, onToggle }: ChatBotProps) => {
     setIsLoading(true);
 
     try {
-      // (Optional) You can add a business context string here
       const context = "";
-
       const botResponse = await fetchOpenAIAnswer(inputValue, context);
 
       const botMessage: Message = {
@@ -89,7 +87,7 @@ const ChatBot = ({ isOpen, onToggle }: ChatBotProps) => {
     return (
       <Button
         onClick={onToggle}
-        className="fixed bottom-4 right-4 rounded-full w-14 h-14 shadow-lg z-50"
+        className="fixed bottom-4 right-4 rounded-full w-14 h-14 shadow-lg z-50 bg-primary hover:bg-brand-400 text-black border border-gray-200"
         size="icon"
       >
         <MessageCircle className="h-6 w-6" />
@@ -98,18 +96,32 @@ const ChatBot = ({ isOpen, onToggle }: ChatBotProps) => {
   }
 
   return (
-    <Card className="fixed bottom-4 right-4 w-96 h-[500px] shadow-xl z-50 flex flex-col">
-      <CardHeader className="pb-3">
+    <Card className="fixed bottom-4 right-4 w-96 h-[500px] shadow-xl z-50 flex flex-col border border-gray-200">
+      <CardHeader className="pb-3 bg-brand-50 border-b border-gray-200">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Bot className="h-5 w-5 text-primary" />
-            <CardTitle className="text-lg">Business Assistant</CardTitle>
+            <div className="p-2 bg-primary rounded-lg">
+              <Bot className="h-4 w-4 text-black" />
+            </div>
+            <CardTitle className="text-lg text-black">
+              Business Assistant
+            </CardTitle>
           </div>
           <div className="flex gap-1">
-            <Button variant="ghost" size="icon" onClick={onToggle}>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onToggle}
+              className="hover:bg-brand-100"
+            >
               <Minimize2 className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="icon" onClick={onToggle}>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onToggle}
+              className="hover:bg-brand-100"
+            >
               <X className="h-4 w-4" />
             </Button>
           </div>
@@ -118,31 +130,31 @@ const ChatBot = ({ isOpen, onToggle }: ChatBotProps) => {
 
       <CardContent className="flex-1 flex flex-col p-4 pt-0">
         <ScrollArea className="flex-1 pr-3" ref={scrollAreaRef}>
-          <div className="space-y-4">
+          <div className="space-y-4 pt-4">
             {messages.map((message) => (
               <div
                 key={message.id}
                 className={`flex gap-3 ${message.type === "user" ? "justify-end" : "justify-start"}`}
               >
                 {message.type === "bot" && (
-                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <Bot className="h-4 w-4 text-primary" />
+                  <div className="w-8 h-8 rounded-full bg-brand-100 flex items-center justify-center flex-shrink-0">
+                    <Bot className="h-4 w-4 text-black" />
                   </div>
                 )}
 
                 <div
                   className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${
                     message.type === "user"
-                      ? "bg-primary text-primary-foreground ml-auto"
-                      : "bg-muted"
+                      ? "bg-primary text-black ml-auto"
+                      : "bg-gray-100 text-black"
                   }`}
                 >
                   {message.content}
                 </div>
 
                 {message.type === "user" && (
-                  <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
-                    <User className="h-4 w-4 text-primary-foreground" />
+                  <div className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center flex-shrink-0">
+                    <User className="h-4 w-4 text-white" />
                   </div>
                 )}
               </div>
@@ -150,18 +162,18 @@ const ChatBot = ({ isOpen, onToggle }: ChatBotProps) => {
 
             {isLoading && (
               <div className="flex gap-3 justify-start">
-                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                  <Bot className="h-4 w-4 text-primary" />
+                <div className="w-8 h-8 rounded-full bg-brand-100 flex items-center justify-center flex-shrink-0">
+                  <Bot className="h-4 w-4 text-black" />
                 </div>
-                <div className="bg-muted rounded-lg px-3 py-2 text-sm">
+                <div className="bg-gray-100 rounded-lg px-3 py-2 text-sm">
                   <div className="flex gap-1">
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                    <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce"></div>
                     <div
-                      className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                      className="w-2 h-2 bg-gray-500 rounded-full animate-bounce"
                       style={{ animationDelay: "0.1s" }}
                     ></div>
                     <div
-                      className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                      className="w-2 h-2 bg-gray-500 rounded-full animate-bounce"
                       style={{ animationDelay: "0.2s" }}
                     ></div>
                   </div>
@@ -171,19 +183,20 @@ const ChatBot = ({ isOpen, onToggle }: ChatBotProps) => {
           </div>
         </ScrollArea>
 
-        <div className="flex gap-2 mt-4">
+        <div className="flex gap-2 mt-4 pt-4 border-t border-gray-200">
           <Input
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyPress={handleKeyPress}
-            placeholder="Ask anything in natural language..."
+            placeholder="Ask anything..."
             disabled={isLoading}
-            className="flex-1"
+            className="flex-1 focus:ring-primary focus:border-primary"
           />
           <Button
             onClick={handleSendMessage}
             disabled={!inputValue.trim() || isLoading}
             size="icon"
+            className="bg-primary hover:bg-brand-400 text-black"
           >
             <Send className="h-4 w-4" />
           </Button>
