@@ -12,6 +12,7 @@ import Dashboard from "./pages/Dashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
 import TestComponent from "./components/TestComponent";
 import SimpleLogin from "./components/SimpleLogin";
+import BasicTest from "./components/BasicTest";
 
 // Import Tab Components for Routing
 import OrdersTab from "./components/tabs/OrdersTab";
