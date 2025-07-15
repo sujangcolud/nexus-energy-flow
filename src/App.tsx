@@ -38,6 +38,10 @@ const App = () => {
     setChatBotOpen((prev) => !prev);
   };
 
+  // Debug logging
+  console.log("App component rendering", new Date().toISOString());
+  console.log("Current location:", window.location.href);
+
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
