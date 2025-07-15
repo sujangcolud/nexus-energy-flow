@@ -16,7 +16,7 @@ import { UserCog, Users, Shield } from "lucide-react";
 
 const UserManagementTab = () => {
   const { user, userRole } = useAuth();
-  const [users, setUsers] = useState([]);
+  const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [canEditTransactions, setCanEditTransactions] = useState(false);
 
@@ -33,13 +33,11 @@ const UserManagementTab = () => {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from("user_profiles")
-        .select("*")
-        .order("created_at", { ascending: false });
-
+      // Use the new function to get user profiles with roles
+      const { data: users, error } = await supabase.rpc('get_user_profiles_with_roles');
+      
       if (error) throw error;
-      setUsers(data || []);
+      setUsers(users || []);
     } catch (error) {
       console.error("Error fetching users:", error);
       toast.error("Failed to load users");
@@ -118,30 +116,30 @@ const UserManagementTab = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {users.map((userItem) => (
+                {users.map((userItem: any) => (
                   <TableRow key={userItem.id}>
                     <TableCell className="font-medium">
                       {userItem.email}
                     </TableCell>
                     <TableCell>
-                      {userItem.first_name && userItem.last_name
-                        ? `${userItem.first_name} ${userItem.last_name}`
-                        : userItem.email}
+                      {userItem.first_name || userItem.last_name
+                        ? `${userItem.first_name || ''} ${userItem.last_name || ''}`.trim()
+                        : 'N/A'}
                     </TableCell>
                     <TableCell>
                       <Badge
                         variant={
-                          userItem.role === "super_admin"
+                          userItem.role === 'super_admin'
                             ? "default"
                             : "outline"
                         }
                         className={
-                          userItem.role === "super_admin"
+                          userItem.role === 'super_admin'
                             ? "bg-primary text-black"
                             : ""
                         }
                       >
-                        {userItem.role || "user"}
+                        {userItem.role?.replace('_', ' ') || 'user'}
                       </Badge>
                     </TableCell>
                     <TableCell>

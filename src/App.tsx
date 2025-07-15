@@ -23,6 +23,8 @@ import InsightsTab from "./components/tabs/InsightsTab";
 import CombinedReportsTab from "./components/tabs/CombinedReportsTab";
 import DataInputTab from "./components/tabs/DataInputTab";
 import UserManagementTab from "./components/tabs/UserManagementTab";
+import ShareInvestmentsTab from "./components/tabs/ShareInvestmentsTab";
+import OpeningBalanceTab from "./components/tabs/OpeningBalanceTab";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import Settings from "./pages/Settings";
 
@@ -58,6 +60,8 @@ const App = () => {
                 <Route path="deposits" element={<DepositsTab />} />
                 <Route path="withdrawals" element={<WithdrawalsTab />} />
                 <Route path="cooperative" element={<CooperativeSavingsTab />} />
+                <Route path="share-investments" element={<ShareInvestmentsTab />} />
+                <Route path="opening-balance" element={<OpeningBalanceTab />} />
                 <Route path="menu" element={<MenuManagementTab />} />
                 <Route path="insights" element={<InsightsTab />} />
                 <Route path="reports" element={<CombinedReportsTab />} />
