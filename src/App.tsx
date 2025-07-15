@@ -19,7 +19,8 @@ import WithdrawalsTab from "./components/tabs/WithdrawalsTab";
 import CooperativeSavingsTab from "./components/tabs/CooperativeSavingsTab";
 import MenuManagementTab from "./components/tabs/MenuManagementTab"; // Consider admin roles for this route
 import InsightsTab from "./components/tabs/InsightsTab";
-import CombinedReportsTab from "./components/tabs/CombinedReportsTab";
+import ReportsTab from "./components/tabs/ReportsTab";
+import ReportsViewTab from "./components/tabs/ReportsViewTab";
 import DataInputTab from "./components/tabs/DataInputTab";
 import UserManagementTab from "./components/tabs/UserManagementTab";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
@@ -70,7 +71,8 @@ const App = () => (
               {/* TODO: Add role-based protection for menu if needed at route level, or handle in MenuManagementTab */}
               <Route path="menu" element={<MenuManagementTab />} />
               <Route path="insights" element={<InsightsTab />} />
-              <Route path="reports" element={<CombinedReportsTab />} />
+              <Route path="reports" element={<ReportsTab />} />
+              <Route path="reports-view" element={<ReportsViewTab />} />
               <Route path="data-input" element={<DataInputTab />} />
               <Route path="user-management" element={<UserManagementTab />} />
               <Route

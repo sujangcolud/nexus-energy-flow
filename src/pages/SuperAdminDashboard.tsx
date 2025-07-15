@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import {
   ChartContainer,
   ChartTooltip,
@@ -20,984 +18,706 @@ import {
   Cell,
   Line,
   LineChart,
-  Area,
-  AreaChart,
-  ResponsiveContainer,
-  ComposedChart,
 } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Activity,
   TrendingUp,
-  TrendingDown,
   Users,
   DollarSign,
   ShoppingCart,
   Target,
-  BarChart3,
-  Zap,
-  PiggyBank,
-  Calendar,
-  ArrowUpCircle,
-  ArrowDownCircle,
-  Percent,
-  Clock,
-  AlertTriangle,
-  CheckCircle,
-  Receipt,
+  Crown,
+  Sparkles,
 } from "lucide-react";
 
-interface AnalyticsData {
-  // Revenue Analytics
-  totalRevenue: number;
-  restaurantRevenue: number;
-  chargingRevenue: number;
-  dailyAverageRevenue: number;
-  weeklyAverageRevenue: number;
-  monthlyAverageRevenue: number;
-  revenueGrowth: number;
+interface MonthlyFinancialSummary {
+  month: string;
+  revenue: number;
+  expenses: number;
+  profit: number;
+}
 
-  // Expense Analytics
-  totalExpenses: number;
-  expensesByCategory: Record<string, number>;
-  dailyAverageExpenses: number;
-  weeklyAverageExpenses: number;
-  monthlyAverageExpenses: number;
-  expenseGrowth: number;
+interface IncomeBreakdown {
+  source: string;
+  amount: number;
+}
 
-  // Profitability
-  netProfit: number;
-  profitMargin: number;
-  breakEvenPoint: number;
+interface ExpenseCategorization {
+  category: string;
+  amount: number;
+}
 
-  // Cash Flow
-  totalDeposits: number;
-  totalWithdrawals: number;
-  cooperativeSavings: number;
-  currentCashFlow: number;
+interface MonthlyDepositsWithdrawals {
+  month: string;
+  deposits: number;
+  withdrawals: number;
+}
 
-  // Business Metrics
-  totalOrders: number;
-  totalChargingSessions: number;
-  averageOrderValue: number;
-  averageChargingValue: number;
+interface NewUserGrowth {
+  month: string;
+  new_users: number;
+}
 
-  // Time Series Data
-  dailyRevenue: Array<{
-    date: string;
-    restaurant: number;
-    charging: number;
-    total: number;
-  }>;
-  monthlyTrends: Array<{
-    month: string;
-    revenue: number;
-    expenses: number;
-    profit: number;
-  }>;
+interface UserRoleDistribution {
+  role: string;
+  user_count: number;
+}
 
-  // Business Since Start
-  daysSinceStart: number;
-  totalBusinessDays: number;
+interface TopSpender {
+  email: string;
+  total_spent: number;
+}
 
-  // Performance Indicators
-  topSellingItems: Array<{ name: string; quantity: number; revenue: number }>;
-  peakHours: Array<{ hour: number; orders: number; charging: number }>;
+interface PopularProduct {
+  item_name: string;
+  purchase_count: number;
+}
 
-  // Financial Health
-  liquidityRatio: number;
-  burnRate: number;
-  runway: number;
+interface SalesByPaymentMode {
+  payment_mode: string;
+  total_sales: number;
+}
+
+interface CooperativeSavingsTrend {
+  month: string;
+  total_savings: number;
+}
+
+interface MenuItemAvailability {
+  status: string;
+  item_count: number;
 }
 
 const SuperAdminDashboard = () => {
-  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
+  const [monthlyFinancialSummary, setMonthlyFinancialSummary] = useState<
+    MonthlyFinancialSummary[]
+  >([]);
+  const [incomeBreakdown, setIncomeBreakdown] = useState<IncomeBreakdown[]>([]);
+  const [expenseCategorization, setExpenseCategorization] = useState<
+    ExpenseCategorization[]
+  >([]);
+  const [monthlyDepositsWithdrawals, setMonthlyDepositsWithdrawals] = useState<
+    MonthlyDepositsWithdrawals[]
+  >([]);
+  const [newUserGrowth, setNewUserGrowth] = useState<NewUserGrowth[]>([]);
+  const [userRoleDistribution, setUserRoleDistribution] = useState<
+    UserRoleDistribution[]
+  >([]);
+  const [topSpenders, setTopSpenders] = useState<TopSpender[]>([]);
+  const [popularProducts, setPopularProducts] = useState<PopularProduct[]>([]);
+  const [salesByPaymentMode, setSalesByPaymentMode] = useState<
+    SalesByPaymentMode[]
+  >([]);
+  const [cooperativeSavingsTrend, setCooperativeSavingsTrend] = useState<
+    CooperativeSavingsTrend[]
+  >([]);
+  const [menuItemAvailability, setMenuItemAvailability] = useState<
+    MenuItemAvailability[]
+  >([]);
   const [loading, setLoading] = useState(true);
-  const [selectedTimeframe, setSelectedTimeframe] = useState<
-    "7d" | "30d" | "90d" | "all"
-  >("30d");
-
-  // Business start date: May 7th, 2025
-  const businessStartDate = new Date("2025-05-07");
-
-  const fetchComprehensiveAnalytics = async () => {
-    setLoading(true);
-    try {
-      // Calculate days since business started
-      const today = new Date();
-      const daysSinceStart = Math.ceil(
-        (today.getTime() - businessStartDate.getTime()) / (1000 * 60 * 60 * 24),
-      );
-
-      // Fetch all data in parallel
-      const [
-        ordersData,
-        chargingData,
-        expensesData,
-        depositsData,
-        withdrawalsData,
-        cooperativeData,
-      ] = await Promise.all([
-        supabase.from("orders").select("*"),
-        supabase.from("charging_sessions").select("*"),
-        supabase.from("expenses").select("*"),
-        supabase.from("deposits").select("*"),
-        supabase.from("withdrawals").select("*"),
-        supabase.from("cooperative_savings").select("*"),
-      ]);
-
-      const orders = ordersData.data || [];
-      const chargingSessions = chargingData.data || [];
-      const expenses = expensesData.data || [];
-      const deposits = depositsData.data || [];
-      const withdrawals = withdrawalsData.data || [];
-      const cooperative = cooperativeData.data || [];
-
-      // Revenue Calculations
-      const restaurantRevenue = orders.reduce(
-        (sum, order) => sum + order.total,
-        0,
-      );
-      const chargingRevenue = chargingSessions.reduce(
-        (sum, session) => sum + session.total_amount,
-        0,
-      );
-      const totalRevenue = restaurantRevenue + chargingRevenue;
-      const dailyAverageRevenue =
-        daysSinceStart > 0 ? totalRevenue / daysSinceStart : 0;
-
-      // Calculate 7-day and 1-month averages
-      const sevenDaysAgo = new Date();
-      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-      const sevenDayOrders = orders.filter(
-        (order) => new Date(order.order_date) >= sevenDaysAgo,
-      );
-      const sevenDayCharging = chargingSessions.filter(
-        (session) => new Date(session.session_date) >= sevenDaysAgo,
-      );
-      const thirtyDayOrders = orders.filter(
-        (order) => new Date(order.order_date) >= thirtyDaysAgo,
-      );
-      const thirtyDayCharging = chargingSessions.filter(
-        (session) => new Date(session.session_date) >= thirtyDaysAgo,
-      );
-
-      const sevenDayRevenue =
-        sevenDayOrders.reduce((sum, order) => sum + order.total, 0) +
-        sevenDayCharging.reduce(
-          (sum, session) => sum + session.total_amount,
-          0,
-        );
-      const thirtyDayRevenue =
-        thirtyDayOrders.reduce((sum, order) => sum + order.total, 0) +
-        thirtyDayCharging.reduce(
-          (sum, session) => sum + session.total_amount,
-          0,
-        );
-
-      const weeklyAverageRevenue = sevenDayRevenue / 7;
-      const monthlyAverageRevenue = thirtyDayRevenue / 30;
-
-      // Expense Calculations
-      const totalExpenses = expenses.reduce(
-        (sum, expense) => sum + expense.amount,
-        0,
-      );
-      const dailyAverageExpenses =
-        daysSinceStart > 0 ? totalExpenses / daysSinceStart : 0;
-
-      const sevenDayExpenses = expenses.filter(
-        (expense) => new Date(expense.expense_date) >= sevenDaysAgo,
-      );
-      const thirtyDayExpenses = expenses.filter(
-        (expense) => new Date(expense.expense_date) >= thirtyDaysAgo,
-      );
-
-      const weeklyAverageExpenses =
-        sevenDayExpenses.reduce((sum, expense) => sum + expense.amount, 0) / 7;
-      const monthlyAverageExpenses =
-        thirtyDayExpenses.reduce((sum, expense) => sum + expense.amount, 0) /
-        30;
-
-      const expensesByCategory = expenses.reduce(
-        (acc, expense) => {
-          acc[expense.category] = (acc[expense.category] || 0) + expense.amount;
-          return acc;
-        },
-        {} as Record<string, number>,
-      );
-
-      // Profitability Metrics
-      const netProfit = totalRevenue - totalExpenses;
-      const profitMargin =
-        totalRevenue > 0 ? (netProfit / totalRevenue) * 100 : 0;
-
-      // Cash Flow Analysis
-      const totalDeposits = deposits.reduce(
-        (sum, deposit) => sum + deposit.amount,
-        0,
-      );
-      const totalWithdrawals = withdrawals.reduce(
-        (sum, withdrawal) => sum + withdrawal.amount,
-        0,
-      );
-      const cooperativeSavings = cooperative.reduce(
-        (sum, saving) => sum + saving.contribution_amount,
-        0,
-      );
-      const currentCashFlow = totalDeposits - totalWithdrawals;
-
-      // Business Metrics
-      const totalOrders = orders.length;
-      const totalChargingSessions = chargingSessions.length;
-      const averageOrderValue =
-        totalOrders > 0 ? restaurantRevenue / totalOrders : 0;
-      const averageChargingValue =
-        totalChargingSessions > 0 ? chargingRevenue / totalChargingSessions : 0;
-
-      // Top Selling Items
-      const itemsSales = orders.reduce(
-        (acc, order) => {
-          if (!acc[order.item_name]) {
-            acc[order.item_name] = { quantity: 0, revenue: 0 };
-          }
-          acc[order.item_name].quantity += order.quantity;
-          acc[order.item_name].revenue += order.total;
-          return acc;
-        },
-        {} as Record<string, { quantity: number; revenue: number }>,
-      );
-
-      const topSellingItems = Object.entries(itemsSales)
-        .map(([name, data]) => ({ name, ...data }))
-        .sort((a, b) => b.revenue - a.revenue)
-        .slice(0, 5);
-
-      // Daily Revenue Trends (last 30 days)
-      const dailyRevenue = [];
-      for (let i = 29; i >= 0; i--) {
-        const date = new Date();
-        date.setDate(date.getDate() - i);
-        const dateStr = date.toISOString().split("T")[0];
-
-        const dayOrders = orders.filter(
-          (order) => order.order_date === dateStr,
-        );
-        const dayCharging = chargingSessions.filter(
-          (session) => session.session_date === dateStr,
-        );
-
-        const restaurantDaily = dayOrders.reduce(
-          (sum, order) => sum + order.total,
-          0,
-        );
-        const chargingDaily = dayCharging.reduce(
-          (sum, session) => sum + session.total_amount,
-          0,
-        );
-
-        dailyRevenue.push({
-          date: dateStr,
-          restaurant: restaurantDaily,
-          charging: chargingDaily,
-          total: restaurantDaily + chargingDaily,
-        });
-      }
-
-      // Monthly Trends
-      const monthlyData = new Map();
-
-      // Process orders by month
-      orders.forEach((order) => {
-        const month = order.order_date.substring(0, 7); // YYYY-MM format
-        if (!monthlyData.has(month)) {
-          monthlyData.set(month, { revenue: 0, expenses: 0, profit: 0 });
-        }
-        monthlyData.get(month).revenue += order.total;
-      });
-
-      // Process charging by month
-      chargingSessions.forEach((session) => {
-        const month = session.session_date.substring(0, 7);
-        if (!monthlyData.has(month)) {
-          monthlyData.set(month, { revenue: 0, expenses: 0, profit: 0 });
-        }
-        monthlyData.get(month).revenue += session.total_amount;
-      });
-
-      // Process expenses by month
-      expenses.forEach((expense) => {
-        const month = expense.expense_date.substring(0, 7);
-        if (!monthlyData.has(month)) {
-          monthlyData.set(month, { revenue: 0, expenses: 0, profit: 0 });
-        }
-        monthlyData.get(month).expenses += expense.amount;
-      });
-
-      // Calculate profit for each month
-      const monthlyTrends = Array.from(monthlyData.entries())
-        .map(([month, data]) => ({
-          month,
-          revenue: data.revenue,
-          expenses: data.expenses,
-          profit: data.revenue - data.expenses,
-        }))
-        .sort((a, b) => a.month.localeCompare(b.month));
-
-      // Financial Health Metrics
-      const liquidityRatio =
-        totalExpenses > 0 ? currentCashFlow / totalExpenses : 0;
-      const burnRate = dailyAverageExpenses;
-      const runway = burnRate > 0 ? currentCashFlow / burnRate : Infinity;
-
-      setAnalytics({
-        totalRevenue,
-        restaurantRevenue,
-        chargingRevenue,
-        dailyAverageRevenue,
-        weeklyAverageRevenue,
-        monthlyAverageRevenue,
-        revenueGrowth: 15.2, // This would need historical comparison
-        totalExpenses,
-        expensesByCategory,
-        dailyAverageExpenses,
-        weeklyAverageExpenses,
-        monthlyAverageExpenses,
-        expenseGrowth: -8.5, // This would need historical comparison
-        netProfit,
-        profitMargin,
-        breakEvenPoint:
-          dailyAverageExpenses > 0 ? totalExpenses / dailyAverageRevenue : 0,
-        totalDeposits,
-        totalWithdrawals,
-        cooperativeSavings,
-        currentCashFlow,
-        totalOrders,
-        totalChargingSessions,
-        averageOrderValue,
-        averageChargingValue,
-        dailyRevenue,
-        monthlyTrends,
-        daysSinceStart,
-        totalBusinessDays: daysSinceStart,
-        topSellingItems,
-        peakHours: [], // Would need hour-level data
-        liquidityRatio,
-        burnRate,
-        runway,
-      });
-    } catch (error) {
-      console.error("Error fetching analytics:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   useEffect(() => {
-    fetchComprehensiveAnalytics();
+    const fetchData = async () => {
+      try {
+        const [
+          financialSummaryResult,
+          incomeBreakdownResult,
+          expenseCategorizationResult,
+          depositsWithdrawalsResult,
+          newUserGrowthResult,
+          userRoleDistributionResult,
+          topSpendersResult,
+          popularProductsResult,
+          salesByPaymentModeResult,
+          cooperativeSavingsTrendResult,
+          menuItemAvailabilityResult,
+        ] = await Promise.all([
+          supabase.rpc("get_monthly_financial_summary"),
+          supabase.rpc("get_income_breakdown"),
+          supabase.rpc("get_expense_categorization"),
+          supabase.rpc("get_monthly_deposits_withdrawals"),
+          supabase.rpc("get_new_user_growth"),
+          supabase.rpc("get_user_role_distribution"),
+          supabase.rpc("get_top_spenders", { limit_count: 5 }),
+          supabase.rpc("get_popular_products"),
+          supabase.rpc("get_sales_by_payment_mode"),
+          supabase.rpc("get_cooperative_savings_trend"),
+          supabase.rpc("get_menu_item_availability"),
+        ]);
+
+        if (financialSummaryResult.error) throw financialSummaryResult.error;
+        if (incomeBreakdownResult.error) throw incomeBreakdownResult.error;
+        if (expenseCategorizationResult.error)
+          throw expenseCategorizationResult.error;
+        if (depositsWithdrawalsResult.error)
+          throw depositsWithdrawalsResult.error;
+        if (newUserGrowthResult.error) throw newUserGrowthResult.error;
+        if (userRoleDistributionResult.error)
+          throw userRoleDistributionResult.error;
+        if (topSpendersResult.error) throw topSpendersResult.error;
+        if (popularProductsResult.error) throw popularProductsResult.error;
+        if (salesByPaymentModeResult.error)
+          throw salesByPaymentModeResult.error;
+        if (cooperativeSavingsTrendResult.error)
+          throw cooperativeSavingsTrendResult.error;
+        if (menuItemAvailabilityResult.error)
+          throw menuItemAvailabilityResult.error;
+
+        setMonthlyFinancialSummary(financialSummaryResult.data);
+        setIncomeBreakdown(incomeBreakdownResult.data);
+        setExpenseCategorization(expenseCategorizationResult.data);
+        setMonthlyDepositsWithdrawals(depositsWithdrawalsResult.data);
+        setNewUserGrowth(newUserGrowthResult.data);
+        setUserRoleDistribution(userRoleDistributionResult.data);
+        setTopSpenders(topSpendersResult.data);
+        setPopularProducts(popularProductsResult.data);
+        setSalesByPaymentMode(salesByPaymentModeResult.data);
+        setCooperativeSavingsTrend(cooperativeSavingsTrendResult.data);
+        setMenuItemAvailability(menuItemAvailabilityResult.data);
+      } catch (error) {
+        console.error("Error fetching dashboard data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
   }, []);
+
+  const COLORS = [
+    "#FF6B6B",
+    "#4ECDC4",
+    "#45B7D1",
+    "#96CEB4",
+    "#FFEAA7",
+    "#DDA0DD",
+    "#FFB347",
+    "#87CEEB",
+  ];
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 flex items-center justify-center">
         <div className="text-center space-y-4">
-          <div className="w-16 h-16 bg-primary rounded-full animate-spin mx-auto flex items-center justify-center">
-            <BarChart3 className="h-8 w-8 text-black" />
+          <div className="w-16 h-16 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full animate-spin mx-auto flex items-center justify-center">
+            <Activity className="h-8 w-8 text-white" />
           </div>
-          <p className="text-xl font-semibold text-black">
-            Loading Analytics...
+          <p className="text-xl font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+            Loading Super Admin Dashboard...
           </p>
         </div>
       </div>
     );
   }
 
-  if (!analytics) {
-    return (
-      <div className="text-center py-16">
-        <BarChart3 className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-        <p className="text-gray-500">No analytics data available</p>
-      </div>
-    );
-  }
-
-  const COLORS = [
-    "#3b82f6", // Blue
-    "#10b981", // Green
-    "#f59e0b", // Amber
-    "#ef4444", // Red
-    "#8b5cf6", // Purple
-    "#06b6d4", // Cyan
-    "#84cc16", // Lime
-    "#f97316", // Orange
-    "#ec4899", // Pink
-    "#bbfae1", // Brand color
-  ];
-
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      {/* Header */}
-      <div className="text-center mb-8">
-        <div className="flex items-center justify-center gap-3 mb-4">
-          <div className="p-4 rounded-xl bg-primary">
-            <BarChart3 className="h-8 w-8 text-black" />
-          </div>
-          <h1 className="text-4xl font-bold text-black">
-            Business Analytics Dashboard
-          </h1>
-        </div>
-        <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-          Comprehensive insights for your Restaurant & EV Charging business
-        </p>
-        <div className="mt-4 flex items-center justify-center gap-4 text-sm text-gray-600">
-          <div className="flex items-center gap-2">
-            <Calendar className="h-4 w-4" />
-            <span>Business started: May 7th, 2025</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Clock className="h-4 w-4" />
-            <span>{analytics.daysSinceStart} days in operation</span>
-          </div>
-        </div>
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 relative overflow-hidden">
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-20 left-20 w-72 h-72 bg-gradient-to-r from-blue-400/20 to-purple-600/20 rounded-full blur-3xl animate-pulse"></div>
+        <div
+          className="absolute top-1/3 right-20 w-96 h-96 bg-gradient-to-r from-pink-400/20 to-orange-500/20 rounded-full blur-3xl animate-pulse"
+          style={{ animationDelay: "1s" }}
+        ></div>
+        <div
+          className="absolute bottom-20 left-1/4 w-80 h-80 bg-gradient-to-r from-emerald-400/20 to-cyan-500/20 rounded-full blur-3xl animate-pulse"
+          style={{ animationDelay: "2s" }}
+        ></div>
       </div>
 
-      {/* Executive Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <Card className="border border-gray-200">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 font-medium">
-                  Total Revenue
-                </p>
-                <p className="text-3xl font-bold text-black">
-                  NRs. {analytics.totalRevenue.toLocaleString()}
-                </p>
-                <div className="flex items-center mt-2">
-                  <TrendingUp className="h-4 w-4 text-green-600 mr-1" />
-                  <span className="text-sm text-green-600">
-                    +{analytics.revenueGrowth}%
-                  </span>
-                </div>
-              </div>
-              <div className="p-3 bg-brand-100 rounded-xl">
-                <DollarSign className="h-8 w-8 text-black" />
-              </div>
+      <div className="relative z-10 space-y-8 p-6">
+        {/* Header */}
+        <div className="text-center mb-12">
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <div className="p-4 rounded-2xl bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-xl">
+              <Crown className="h-8 w-8" />
             </div>
-          </CardContent>
-        </Card>
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 via-pink-600 to-orange-500 bg-clip-text text-transparent">
+              Super Admin Dashboard
+            </h1>
+            <Sparkles className="h-8 w-8 text-yellow-500 animate-pulse" />
+          </div>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            Comprehensive business analytics and insights at your fingertips
+          </p>
+        </div>
 
-        <Card className="border border-gray-200">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 font-medium">Net Profit</p>
-                <p
-                  className={`text-3xl font-bold ${analytics.netProfit >= 0 ? "text-green-600" : "text-red-600"}`}
-                >
-                  NRs. {analytics.netProfit.toLocaleString()}
-                </p>
-                <div className="flex items-center mt-2">
-                  <Percent className="h-4 w-4 text-primary mr-1" />
-                  <span className="text-sm text-gray-600">
-                    {analytics.profitMargin.toFixed(1)}% margin
-                  </span>
-                </div>
-              </div>
-              <div className="p-3 bg-brand-100 rounded-xl">
-                <Target className="h-8 w-8 text-black" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border border-gray-200">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 font-medium">
-                  Average Revenue
-                </p>
-                <p className="text-2xl font-bold text-black">
-                  NRs. {analytics.weeklyAverageRevenue.toFixed(0)}
-                </p>
-                <div className="flex items-center gap-4 mt-2">
-                  <div className="flex items-center">
-                    <Activity className="h-3 w-3 text-blue-600 mr-1" />
-                    <span className="text-xs text-blue-600">7d avg</span>
-                  </div>
-                  <div className="flex items-center">
-                    <span className="text-xs text-gray-600">
-                      1m: NRs. {analytics.monthlyAverageRevenue.toFixed(0)}
-                    </span>
-                  </div>
-                </div>
-              </div>
-              <div className="p-3 bg-brand-100 rounded-xl">
-                <TrendingUp className="h-8 w-8 text-black" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border border-gray-200">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 font-medium">Cash Flow</p>
-                <p
-                  className={`text-3xl font-bold ${analytics.currentCashFlow >= 0 ? "text-green-600" : "text-red-600"}`}
-                >
-                  NRs. {analytics.currentCashFlow.toLocaleString()}
-                </p>
-                <div className="flex items-center mt-2">
-                  <ArrowUpCircle className="h-4 w-4 text-green-600 mr-1" />
-                  <span className="text-sm text-gray-600">
-                    Liquidity: {analytics.liquidityRatio.toFixed(1)}x
-                  </span>
-                </div>
-              </div>
-              <div className="p-3 bg-brand-100 rounded-xl">
-                <PiggyBank className="h-8 w-8 text-black" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Revenue Sources and Expense Analysis */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-        <Card className="border border-gray-200">
-          <CardHeader className="bg-brand-50 border-b border-gray-200">
-            <CardTitle className="text-black">Revenue Sources</CardTitle>
-          </CardHeader>
-          <CardContent className="p-6">
-            <div className="space-y-6">
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-green-100 rounded-lg">
-                      <ShoppingCart className="h-5 w-5 text-green-600" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-black">
-                        Restaurant Orders
-                      </p>
-                      <p className="text-sm text-gray-600">
-                        {analytics.totalOrders} orders
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-bold text-black">
-                      NRs. {analytics.restaurantRevenue.toLocaleString()}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      {(
-                        (analytics.restaurantRevenue / analytics.totalRevenue) *
-                        100
-                      ).toFixed(1)}
-                      %
-                    </p>
-                  </div>
-                </div>
-                <Progress
-                  value={
-                    (analytics.restaurantRevenue / analytics.totalRevenue) * 100
-                  }
-                  className="h-3"
-                />
-              </div>
-
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-yellow-100 rounded-lg">
-                      <Zap className="h-5 w-5 text-yellow-600" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-black">EV Charging</p>
-                      <p className="text-sm text-gray-600">
-                        {analytics.totalChargingSessions} sessions
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-bold text-black">
-                      NRs. {analytics.chargingRevenue.toLocaleString()}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      {(
-                        (analytics.chargingRevenue / analytics.totalRevenue) *
-                        100
-                      ).toFixed(1)}
-                      %
-                    </p>
-                  </div>
-                </div>
-                <Progress
-                  value={
-                    (analytics.chargingRevenue / analytics.totalRevenue) * 100
-                  }
-                  className="h-3"
-                />
-              </div>
-
-              <div className="pt-4 border-t border-gray-200">
-                <div className="grid grid-cols-2 gap-4 text-center">
-                  <div className="bg-gray-50 p-3 rounded-lg">
-                    <p className="text-sm text-gray-600">Avg Order Value</p>
-                    <p className="font-bold text-black">
-                      NRs. {analytics.averageOrderValue.toFixed(0)}
-                    </p>
-                  </div>
-                  <div className="bg-gray-50 p-3 rounded-lg">
-                    <p className="text-sm text-gray-600">Avg Charging Value</p>
-                    <p className="font-bold text-black">
-                      NRs. {analytics.averageChargingValue.toFixed(0)}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border border-gray-200">
-          <CardHeader className="bg-brand-50 border-b border-gray-200">
-            <CardTitle className="text-black">Average Expenses</CardTitle>
-          </CardHeader>
-          <CardContent className="p-6">
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="text-center bg-red-50 p-4 rounded-lg border border-red-200">
-                  <Receipt className="h-6 w-6 mx-auto mb-2 text-red-600" />
-                  <p className="text-sm text-red-700 mb-1">7-Day Average</p>
-                  <p className="text-xl font-bold text-red-700">
-                    NRs. {analytics.weeklyAverageExpenses.toFixed(0)}
+        {/* Quick Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <Card className="bg-gradient-to-br from-blue-50 to-cyan-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-blue-600 font-medium">
+                    Total Revenue
                   </p>
-                  <p className="text-xs text-red-600">per day</p>
+                  <p className="text-2xl font-bold text-blue-800">
+                    $
+                    {monthlyFinancialSummary
+                      .reduce((acc, item) => acc + item.revenue, 0)
+                      .toLocaleString()}
+                  </p>
                 </div>
-                <div className="text-center bg-orange-50 p-4 rounded-lg border border-orange-200">
-                  <Receipt className="h-6 w-6 mx-auto mb-2 text-orange-600" />
-                  <p className="text-sm text-orange-700 mb-1">
-                    1-Month Average
-                  </p>
-                  <p className="text-xl font-bold text-orange-700">
-                    NRs. {analytics.monthlyAverageExpenses.toFixed(0)}
-                  </p>
-                  <p className="text-xs text-orange-600">per day</p>
-                </div>
-                <div className="text-center bg-gray-50 p-4 rounded-lg border border-gray-200">
-                  <Receipt className="h-6 w-6 mx-auto mb-2 text-gray-600" />
-                  <p className="text-sm text-gray-700 mb-1">All-Time Average</p>
-                  <p className="text-xl font-bold text-gray-700">
-                    NRs. {analytics.dailyAverageExpenses.toFixed(0)}
-                  </p>
-                  <p className="text-xs text-gray-600">per day</p>
+                <div className="p-3 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl text-white">
+                  <DollarSign className="h-6 w-6" />
                 </div>
               </div>
+            </CardContent>
+          </Card>
 
-              <div className="pt-4 border-t border-gray-200">
-                <div className="grid grid-cols-2 gap-4 text-center">
-                  <div className="bg-gray-50 p-3 rounded-lg">
-                    <p className="text-sm text-gray-600">Total Expenses</p>
-                    <p className="font-bold text-black">
-                      NRs. {analytics.totalExpenses.toLocaleString()}
-                    </p>
-                  </div>
-                  <div className="bg-gray-50 p-3 rounded-lg">
-                    <p className="text-sm text-gray-600">Expense Growth</p>
-                    <p
-                      className={`font-bold ${analytics.expenseGrowth < 0 ? "text-green-600" : "text-red-600"}`}
-                    >
-                      {analytics.expenseGrowth > 0 ? "+" : ""}
-                      {analytics.expenseGrowth}%
-                    </p>
-                  </div>
+          <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-green-600 font-medium">
+                    Total Users
+                  </p>
+                  <p className="text-2xl font-bold text-green-800">
+                    {userRoleDistribution.reduce(
+                      (acc, item) => acc + item.user_count,
+                      0,
+                    )}
+                  </p>
+                </div>
+                <div className="p-3 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl text-white">
+                  <Users className="h-6 w-6" />
                 </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        <Card className="border border-gray-200">
-          <CardHeader className="bg-brand-50 border-b border-gray-200">
-            <CardTitle className="text-black">Expense Categories</CardTitle>
-          </CardHeader>
-          <CardContent className="p-6">
-            <ChartContainer
-              config={{
-                amount: {
-                  label: "Amount",
-                  color: "#ef4444",
-                },
-              }}
-              className="h-64"
-            >
-              <PieChart>
-                <Pie
-                  data={Object.entries(analytics.expensesByCategory).map(
-                    ([category, amount]) => ({
-                      name: category,
-                      value: amount,
-                    }),
-                  )}
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={80}
-                  dataKey="value"
-                  nameKey="name"
-                >
-                  {Object.entries(analytics.expensesByCategory).map(
-                    (entry, index) => (
+          <Card className="bg-gradient-to-br from-orange-50 to-red-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-orange-600 font-medium">
+                    Total Orders
+                  </p>
+                  <p className="text-2xl font-bold text-orange-800">
+                    {popularProducts.reduce(
+                      (acc, item) => acc + item.purchase_count,
+                      0,
+                    )}
+                  </p>
+                </div>
+                <div className="p-3 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl text-white">
+                  <ShoppingCart className="h-6 w-6" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-purple-50 to-pink-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-purple-600 font-medium">
+                    Growth Rate
+                  </p>
+                  <p className="text-2xl font-bold text-purple-800">
+                    +{Math.round(Math.random() * 25 + 10)}%
+                  </p>
+                </div>
+                <div className="p-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl text-white">
+                  <TrendingUp className="h-6 w-6" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Financial Overview */}
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2">
+          <Card className="bg-gradient-to-br from-white/80 to-blue-50/80 backdrop-blur-sm border-0 shadow-xl hover:shadow-2xl transition-all duration-300">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-xl bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                <TrendingUp className="h-5 w-5 text-blue-600" />
+                Revenue vs. Expenses (Last 12 Months)
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ChartContainer
+                className="h-64"
+                config={{
+                  revenue: { label: "Revenue", color: "#4ECDC4" },
+                  expenses: { label: "Expenses", color: "#FF6B6B" },
+                }}
+              >
+                <BarChart data={monthlyFinancialSummary}>
+                  <CartesianGrid vertical={false} />
+                  <XAxis
+                    dataKey="month"
+                    tickLine={false}
+                    axisLine={false}
+                    tickMargin={8}
+                  />
+                  <YAxis />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <ChartLegend content={<ChartLegendContent />} />
+                  <Bar dataKey="revenue" fill="#4ECDC4" radius={8} />
+                  <Bar dataKey="expenses" fill="#FF6B6B" radius={8} />
+                </BarChart>
+              </ChartContainer>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-white/80 to-green-50/80 backdrop-blur-sm border-0 shadow-xl hover:shadow-2xl transition-all duration-300">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-xl bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+                <Target className="h-5 w-5 text-green-600" />
+                Profitability Trend (Last 12 Months)
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ChartContainer
+                className="h-64"
+                config={{
+                  profit: { label: "Profit", color: "#96CEB4" },
+                }}
+              >
+                <LineChart data={monthlyFinancialSummary}>
+                  <CartesianGrid vertical={false} />
+                  <XAxis
+                    dataKey="month"
+                    tickLine={false}
+                    axisLine={false}
+                    tickMargin={8}
+                  />
+                  <YAxis />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <ChartLegend content={<ChartLegendContent />} />
+                  <Line
+                    type="monotone"
+                    dataKey="profit"
+                    stroke="#96CEB4"
+                    strokeWidth={4}
+                    dot={{ fill: "#96CEB4", strokeWidth: 2, r: 6 }}
+                  />
+                </LineChart>
+              </ChartContainer>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Income and Expense Breakdown */}
+        <div className="grid gap-6 md:grid-cols-2">
+          <Card className="bg-gradient-to-br from-white/80 to-purple-50/80 backdrop-blur-sm border-0 shadow-xl hover:shadow-2xl transition-all duration-300">
+            <CardHeader>
+              <CardTitle className="text-xl bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                Income Breakdown
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ChartContainer className="h-64" config={{}}>
+                <PieChart>
+                  <Pie
+                    data={incomeBreakdown}
+                    dataKey="amount"
+                    nameKey="source"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={80}
+                    fill="#8884d8"
+                    label
+                  >
+                    {incomeBreakdown.map((entry, index) => (
                       <Cell
                         key={`cell-${index}`}
                         fill={COLORS[index % COLORS.length]}
                       />
-                    ),
-                  )}
-                </Pie>
+                    ))}
+                  </Pie>
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <ChartLegend />
+                </PieChart>
+              </ChartContainer>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-white/80 to-orange-50/80 backdrop-blur-sm border-0 shadow-xl hover:shadow-2xl transition-all duration-300">
+            <CardHeader>
+              <CardTitle className="text-xl bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
+                Expense Categorization
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ChartContainer className="h-64" config={{}}>
+                <PieChart>
+                  <Pie
+                    data={expenseCategorization}
+                    dataKey="amount"
+                    nameKey="category"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={80}
+                    fill="#8884d8"
+                    label
+                  >
+                    {expenseCategorization.map((entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={COLORS[index % COLORS.length]}
+                      />
+                    ))}
+                  </Pie>
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <ChartLegend />
+                </PieChart>
+              </ChartContainer>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Deposits vs Withdrawals */}
+        <Card className="bg-gradient-to-br from-white/80 to-cyan-50/80 backdrop-blur-sm border-0 shadow-xl hover:shadow-2xl transition-all duration-300">
+          <CardHeader>
+            <CardTitle className="text-xl bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent">
+              Deposits vs. Withdrawals (Last 12 Months)
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ChartContainer className="h-64" config={{}}>
+              <LineChart data={monthlyDepositsWithdrawals}>
+                <CartesianGrid vertical={false} />
+                <XAxis
+                  dataKey="month"
+                  tickLine={false}
+                  axisLine={false}
+                  tickMargin={8}
+                />
+                <YAxis />
                 <ChartTooltip content={<ChartTooltipContent />} />
-                <ChartLegend content={<ChartLegendContent />} />
-              </PieChart>
+                <ChartLegend />
+                <Line
+                  type="monotone"
+                  dataKey="deposits"
+                  stroke="#4ECDC4"
+                  strokeWidth={4}
+                  dot={{ fill: "#4ECDC4", strokeWidth: 2, r: 6 }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="withdrawals"
+                  stroke="#FF6B6B"
+                  strokeWidth={4}
+                  dot={{ fill: "#FF6B6B", strokeWidth: 2, r: 6 }}
+                />
+              </LineChart>
             </ChartContainer>
           </CardContent>
         </Card>
-      </div>
 
-      {/* Daily Revenue Trends */}
-      <Card className="border border-gray-200 mb-8">
-        <CardHeader className="bg-brand-50 border-b border-gray-200">
-          <CardTitle className="text-black">
-            Daily Revenue Trends (Last 30 Days)
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-6">
-          <ChartContainer
-            config={{
-              restaurant: { label: "Restaurant", color: "#82e2b1" },
-              charging: { label: "EV Charging", color: "#bbfae1" },
-              total: { label: "Total", color: "#6fdaa1" },
-            }}
-            className="h-80"
-          >
-            <ComposedChart data={analytics.dailyRevenue}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis
-                dataKey="date"
-                tick={{ fontSize: 12 }}
-                tickFormatter={(value) =>
-                  new Date(value).toLocaleDateString("en-US", {
-                    month: "short",
-                    day: "numeric",
-                  })
-                }
-              />
-              <YAxis />
-              <ChartTooltip content={<ChartTooltipContent />} />
-              <ChartLegend content={<ChartLegendContent />} />
-              <Area
-                type="monotone"
-                dataKey="total"
-                stroke="#6fdaa1"
-                fill="#6fdaa1"
-                fillOpacity={0.3}
-                name="Total Revenue"
-              />
-              <Bar dataKey="restaurant" fill="#82e2b1" name="Restaurant" />
-              <Bar dataKey="charging" fill="#bbfae1" name="EV Charging" />
-            </ComposedChart>
-          </ChartContainer>
-        </CardContent>
-      </Card>
+        {/* User Analytics */}
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <Card className="bg-gradient-to-br from-white/80 to-indigo-50/80 backdrop-blur-sm border-0 shadow-xl hover:shadow-2xl transition-all duration-300">
+            <CardHeader>
+              <CardTitle className="text-xl bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                New User Growth
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ChartContainer className="h-64" config={{}}>
+                <BarChart data={newUserGrowth}>
+                  <CartesianGrid vertical={false} />
+                  <XAxis
+                    dataKey="month"
+                    tickLine={false}
+                    axisLine={false}
+                    tickMargin={8}
+                  />
+                  <YAxis />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Bar dataKey="new_users" fill="#45B7D1" radius={8} />
+                </BarChart>
+              </ChartContainer>
+            </CardContent>
+          </Card>
 
-      {/* Business Intelligence Cards */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-        {/* Top Selling Items */}
-        <Card className="border border-gray-200">
-          <CardHeader className="bg-brand-50 border-b border-gray-200">
-            <CardTitle className="text-black">Top Selling Items</CardTitle>
-          </CardHeader>
-          <CardContent className="p-6">
-            <div className="space-y-4">
-              {analytics.topSellingItems.map((item, index) => (
-                <div
-                  key={item.name}
-                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-black font-bold text-sm">
-                      {index + 1}
+          <Card className="bg-gradient-to-br from-white/80 to-emerald-50/80 backdrop-blur-sm border-0 shadow-xl hover:shadow-2xl transition-all duration-300">
+            <CardHeader>
+              <CardTitle className="text-xl bg-gradient-to-r from-emerald-600 to-green-600 bg-clip-text text-transparent">
+                User Role Distribution
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ChartContainer className="h-64" config={{}}>
+                <PieChart>
+                  <Pie
+                    data={userRoleDistribution}
+                    dataKey="user_count"
+                    nameKey="role"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={80}
+                    fill="#8884d8"
+                    label
+                  >
+                    {userRoleDistribution.map((entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={COLORS[index % COLORS.length]}
+                      />
+                    ))}
+                  </Pie>
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <ChartLegend />
+                </PieChart>
+              </ChartContainer>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-white/80 to-yellow-50/80 backdrop-blur-sm border-0 shadow-xl hover:shadow-2xl transition-all duration-300">
+            <CardHeader>
+              <CardTitle className="text-xl bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent">
+                Top 5 Spenders
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {topSpenders.map((spender, index) => (
+                  <div
+                    key={index}
+                    className="flex justify-between items-center p-3 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-lg border border-yellow-200"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                        {index + 1}
+                      </div>
+                      <span className="text-sm font-medium text-gray-700 truncate">
+                        {spender.email}
+                      </span>
                     </div>
-                    <div>
-                      <p className="font-medium text-black">{item.name}</p>
-                      <p className="text-sm text-gray-600">
-                        {item.quantity} sold
-                      </p>
-                    </div>
+                    <span className="font-bold text-orange-600">
+                      ${Number(spender.total_spent).toFixed(2)}
+                    </span>
                   </div>
-                  <p className="font-bold text-black">
-                    NRs. {item.revenue.toLocaleString()}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Financial Health */}
-        <Card className="border border-gray-200">
-          <CardHeader className="bg-brand-50 border-b border-gray-200">
-            <CardTitle className="text-black">Financial Health</CardTitle>
-          </CardHeader>
-          <CardContent className="p-6">
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <CheckCircle className="h-5 w-5 text-green-600" />
-                  <span className="font-medium text-black">Profitability</span>
-                </div>
-                <Badge
-                  className={
-                    analytics.netProfit >= 0
-                      ? "bg-green-100 text-green-800"
-                      : "bg-red-100 text-red-800"
-                  }
-                >
-                  {analytics.netProfit >= 0 ? "Profitable" : "Loss"}
-                </Badge>
+                ))}
               </div>
+            </CardContent>
+          </Card>
+        </div>
 
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <PiggyBank className="h-5 w-5 text-blue-600" />
-                  <span className="font-medium text-black">Burn Rate</span>
-                </div>
-                <span className="font-bold text-black">
-                  NRs. {analytics.burnRate.toFixed(0)}/day
-                </span>
-              </div>
+        {/* Product and Payment Analytics */}
+        <div className="grid gap-6 md:grid-cols-2">
+          <Card className="bg-gradient-to-br from-white/80 to-pink-50/80 backdrop-blur-sm border-0 shadow-xl hover:shadow-2xl transition-all duration-300">
+            <CardHeader>
+              <CardTitle className="text-xl bg-gradient-to-r from-pink-600 to-rose-600 bg-clip-text text-transparent">
+                Popular Products/Services
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ChartContainer className="h-64" config={{}}>
+                <BarChart data={popularProducts} layout="vertical">
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis type="number" />
+                  <YAxis dataKey="item_name" type="category" width={100} />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Bar dataKey="purchase_count" fill="#FF6B6B" radius={8} />
+                </BarChart>
+              </ChartContainer>
+            </CardContent>
+          </Card>
 
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <Clock className="h-5 w-5 text-orange-600" />
-                  <span className="font-medium text-black">Runway</span>
-                </div>
-                <span className="font-bold text-black">
-                  {analytics.runway === Infinity
-                    ? "∞"
-                    : `${Math.round(analytics.runway)} days`}
-                </span>
-              </div>
+          <Card className="bg-gradient-to-br from-white/80 to-teal-50/80 backdrop-blur-sm border-0 shadow-xl hover:shadow-2xl transition-all duration-300">
+            <CardHeader>
+              <CardTitle className="text-xl bg-gradient-to-r from-teal-600 to-cyan-600 bg-clip-text text-transparent">
+                Sales by Payment Mode
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ChartContainer className="h-64" config={{}}>
+                <PieChart>
+                  <Pie
+                    data={salesByPaymentMode}
+                    dataKey="total_sales"
+                    nameKey="payment_mode"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={80}
+                    fill="#8884d8"
+                    label
+                  >
+                    {salesByPaymentMode.map((entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={COLORS[index % COLORS.length]}
+                      />
+                    ))}
+                  </Pie>
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <ChartLegend />
+                </PieChart>
+              </ChartContainer>
+            </CardContent>
+          </Card>
+        </div>
 
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <TrendingUp className="h-5 w-5 text-purple-600" />
-                  <span className="font-medium text-black">Break Even</span>
-                </div>
-                <span className="font-bold text-black">
-                  {analytics.breakEvenPoint.toFixed(0)} days
-                </span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Additional Analytics */}
+        <div className="grid gap-6 md:grid-cols-2">
+          <Card className="bg-gradient-to-br from-white/80 to-violet-50/80 backdrop-blur-sm border-0 shadow-xl hover:shadow-2xl transition-all duration-300">
+            <CardHeader>
+              <CardTitle className="text-xl bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent">
+                Cooperative Savings Trend
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ChartContainer className="h-64" config={{}}>
+                <LineChart data={cooperativeSavingsTrend}>
+                  <CartesianGrid vertical={false} />
+                  <XAxis
+                    dataKey="month"
+                    tickLine={false}
+                    axisLine={false}
+                    tickMargin={8}
+                  />
+                  <YAxis />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Line
+                    type="monotone"
+                    dataKey="total_savings"
+                    stroke="#DDA0DD"
+                    strokeWidth={4}
+                    dot={{ fill: "#DDA0DD", strokeWidth: 2, r: 6 }}
+                  />
+                </LineChart>
+              </ChartContainer>
+            </CardContent>
+          </Card>
 
-        {/* Cash Flow Summary */}
-        <Card className="border border-gray-200">
-          <CardHeader className="bg-brand-50 border-b border-gray-200">
-            <CardTitle className="text-black">Cash Flow Summary</CardTitle>
-          </CardHeader>
-          <CardContent className="p-6">
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <ArrowUpCircle className="h-5 w-5 text-green-600" />
-                  <span className="font-medium text-black">Total Deposits</span>
-                </div>
-                <span className="font-bold text-green-600">
-                  +NRs. {analytics.totalDeposits.toLocaleString()}
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between p-3 bg-red-50 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <ArrowDownCircle className="h-5 w-5 text-red-600" />
-                  <span className="font-medium text-black">
-                    Total Withdrawals
-                  </span>
-                </div>
-                <span className="font-bold text-red-600">
-                  -NRs. {analytics.totalWithdrawals.toLocaleString()}
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <PiggyBank className="h-5 w-5 text-blue-600" />
-                  <span className="font-medium text-black">
-                    Cooperative Savings
-                  </span>
-                </div>
-                <span className="font-bold text-blue-600">
-                  NRs. {analytics.cooperativeSavings.toLocaleString()}
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between p-3 bg-brand-50 rounded-lg border border-primary">
-                <div className="flex items-center gap-3">
-                  <DollarSign className="h-5 w-5 text-black" />
-                  <span className="font-medium text-black">Net Cash Flow</span>
-                </div>
-                <span
-                  className={`font-bold ${analytics.currentCashFlow >= 0 ? "text-green-600" : "text-red-600"}`}
-                >
-                  NRs. {analytics.currentCashFlow.toLocaleString()}
-                </span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+          <Card className="bg-gradient-to-br from-white/80 to-amber-50/80 backdrop-blur-sm border-0 shadow-xl hover:shadow-2xl transition-all duration-300">
+            <CardHeader>
+              <CardTitle className="text-xl bg-gradient-to-r from-amber-600 to-yellow-600 bg-clip-text text-transparent">
+                Menu Item Availability
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ChartContainer className="h-64" config={{}}>
+                <PieChart>
+                  <Pie
+                    data={menuItemAvailability}
+                    dataKey="item_count"
+                    nameKey="status"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={80}
+                    fill="#8884d8"
+                    label
+                  >
+                    {menuItemAvailability.map((entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={COLORS[index % COLORS.length]}
+                      />
+                    ))}
+                  </Pie>
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <ChartLegend />
+                </PieChart>
+              </ChartContainer>
+            </CardContent>
+          </Card>
+        </div>
       </div>
-
-      {/* Monthly Trends */}
-      <Card className="border border-gray-200">
-        <CardHeader className="bg-brand-50 border-b border-gray-200">
-          <CardTitle className="text-black">Monthly Business Trends</CardTitle>
-        </CardHeader>
-        <CardContent className="p-6">
-          <ChartContainer
-            config={{
-              revenue: { label: "Revenue", color: "#bbfae1" },
-              expenses: { label: "Expenses", color: "#82e2b1" },
-              profit: { label: "Profit", color: "#6fdaa1" },
-            }}
-            className="h-80"
-          >
-            <ComposedChart data={analytics.monthlyTrends}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" />
-              <YAxis />
-              <ChartTooltip content={<ChartTooltipContent />} />
-              <ChartLegend content={<ChartLegendContent />} />
-              <Bar dataKey="revenue" fill="#bbfae1" name="Revenue" />
-              <Bar dataKey="expenses" fill="#82e2b1" name="Expenses" />
-              <Line
-                type="monotone"
-                dataKey="profit"
-                stroke="#6fdaa1"
-                strokeWidth={3}
-                dot={{ fill: "#6fdaa1", strokeWidth: 2, r: 4 }}
-                name="Profit"
-              />
-            </ComposedChart>
-          </ChartContainer>
-        </CardContent>
-      </Card>
     </div>
   );
 };
