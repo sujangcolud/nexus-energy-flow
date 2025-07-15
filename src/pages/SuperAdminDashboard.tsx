@@ -567,8 +567,8 @@ const SuperAdminDashboard = () => {
         </Card>
       </div>
 
-      {/* Revenue Sources Breakdown */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+      {/* Revenue Sources and Expense Analysis */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
         <Card className="border border-gray-200">
           <CardHeader className="bg-brand-50 border-b border-gray-200">
             <CardTitle className="text-black">Revenue Sources</CardTitle>
