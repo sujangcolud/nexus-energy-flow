@@ -54,7 +54,6 @@ import {
   Receipt,
   PiggyBank,
   BarChart3,
-  Calendar,
   CalendarIcon,
   RefreshCw,
   Eye,
@@ -63,7 +62,6 @@ import {
   Activity,
   Users,
   TrendingUp as TrendingUpIcon,
-  LineChart,
 } from "lucide-react";
 import { toast } from "sonner";
 
