@@ -2,95 +2,103 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+/* Professional design system with brand color #bbfae1 (mint green)
 All colors MUST be HSL.
 */
 
 @layer base {
   :root {
-    --background: 220 20% 97%; /* Very light cool gray */
-    --foreground: 222.2 84% 4.9%;
+    --background: 0 0% 100%; /* Pure white background */
+    --foreground: 220 13% 18%; /* Dark charcoal for text */
 
     --card: 0 0% 100%; /* White cards */
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 220 13% 18%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 220 13% 18%;
 
-    --primary: 217 91% 60%; /* Vibrant blue */
-    --primary-foreground: 0 0% 100%; /* White */
+    /* Brand color #bbfae1 converted to HSL: 154 65% 85% */
+    --primary: 154 65% 85%; /* Brand mint green */
+    --primary-foreground: 220 13% 18%; /* Dark text on brand color */
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 220 14% 96%; /* Very light gray */
+    --secondary-foreground: 220 13% 18%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 220 14% 96%; /* Light gray background */
+    --muted-foreground: 220 8% 46%; /* Medium gray text */
 
-    --accent: 217 91% 95%; /* Very light blue */
-    --accent-foreground: 217 91% 30%; /* Darker blue for text on accent */
+    --accent: 154 65% 95%; /* Very light brand tint */
+    --accent-foreground: 220 13% 18%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 220 13% 91%; /* Light gray borders */
+    --input: 220 13% 91%;
+    --ring: 154 65% 85%; /* Brand color for focus rings */
 
     --radius: 0.5rem;
 
-    --sidebar-background: 0 0% 98%;
-
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
+    /* Sidebar with brand accent */
+    --sidebar-background: 0 0% 98%; /* Off-white */
+    --sidebar-foreground: 220 13% 18%;
+    --sidebar-primary: 154 65% 85%; /* Brand color */
+    --sidebar-primary-foreground: 220 13% 18%;
+    --sidebar-accent: 154 65% 95%; /* Light brand tint */
+    --sidebar-accent-foreground: 220 13% 18%;
     --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 154 65% 85%;
 
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* Custom brand variations */
+    --brand-50: 154 65% 97%; /* Very light brand tint */
+    --brand-100: 154 65% 95%;
+    --brand-200: 154 65% 90%;
+    --brand-300: 154 65% 85%; /* Main brand color */
+    --brand-400: 154 65% 75%;
+    --brand-500: 154 65% 65%;
+    --brand-600: 154 65% 55%;
+    --brand-700: 154 65% 45%;
+    --brand-800: 154 65% 35%;
+    --brand-900: 154 65% 25%;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    --background: 220 13% 9%; /* Dark background */
+    --foreground: 220 14% 96%;
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    --card: 220 13% 9%;
+    --card-foreground: 220 14% 96%;
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 220 13% 9%;
+    --popover-foreground: 220 14% 96%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 154 65% 85%; /* Keep brand color in dark mode */
+    --primary-foreground: 220 13% 18%;
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 220 13% 14%;
+    --secondary-foreground: 220 14% 96%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 220 13% 14%;
+    --muted-foreground: 220 8% 65%;
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 154 65% 20%; /* Darker brand tint for dark mode */
+    --accent-foreground: 220 14% 96%;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 220 14% 96%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --border: 220 13% 20%;
+    --input: 220 13% 20%;
+    --ring: 154 65% 85%;
+
+    --sidebar-background: 220 13% 9%;
+    --sidebar-foreground: 220 14% 96%;
+    --sidebar-primary: 154 65% 85%;
+    --sidebar-primary-foreground: 220 13% 18%;
+    --sidebar-accent: 220 13% 14%;
+    --sidebar-accent-foreground: 220 14% 96%;
+    --sidebar-border: 220 13% 20%;
+    --sidebar-ring: 154 65% 85%;
   }
 }
 
@@ -101,5 +109,101 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+/* Brand utilities */
+@layer utilities {
+  .bg-brand-50 {
+    background-color: hsl(var(--brand-50));
+  }
+  .bg-brand-100 {
+    background-color: hsl(var(--brand-100));
+  }
+  .bg-brand-200 {
+    background-color: hsl(var(--brand-200));
+  }
+  .bg-brand-300 {
+    background-color: hsl(var(--brand-300));
+  }
+  .bg-brand-400 {
+    background-color: hsl(var(--brand-400));
+  }
+  .bg-brand-500 {
+    background-color: hsl(var(--brand-500));
+  }
+  .bg-brand-600 {
+    background-color: hsl(var(--brand-600));
+  }
+  .bg-brand-700 {
+    background-color: hsl(var(--brand-700));
+  }
+  .bg-brand-800 {
+    background-color: hsl(var(--brand-800));
+  }
+  .bg-brand-900 {
+    background-color: hsl(var(--brand-900));
+  }
+
+  .text-brand-50 {
+    color: hsl(var(--brand-50));
+  }
+  .text-brand-100 {
+    color: hsl(var(--brand-100));
+  }
+  .text-brand-200 {
+    color: hsl(var(--brand-200));
+  }
+  .text-brand-300 {
+    color: hsl(var(--brand-300));
+  }
+  .text-brand-400 {
+    color: hsl(var(--brand-400));
+  }
+  .text-brand-500 {
+    color: hsl(var(--brand-500));
+  }
+  .text-brand-600 {
+    color: hsl(var(--brand-600));
+  }
+  .text-brand-700 {
+    color: hsl(var(--brand-700));
+  }
+  .text-brand-800 {
+    color: hsl(var(--brand-800));
+  }
+  .text-brand-900 {
+    color: hsl(var(--brand-900));
+  }
+
+  .border-brand-50 {
+    border-color: hsl(var(--brand-50));
+  }
+  .border-brand-100 {
+    border-color: hsl(var(--brand-100));
+  }
+  .border-brand-200 {
+    border-color: hsl(var(--brand-200));
+  }
+  .border-brand-300 {
+    border-color: hsl(var(--brand-300));
+  }
+  .border-brand-400 {
+    border-color: hsl(var(--brand-400));
+  }
+  .border-brand-500 {
+    border-color: hsl(var(--brand-500));
+  }
+  .border-brand-600 {
+    border-color: hsl(var(--brand-600));
+  }
+  .border-brand-700 {
+    border-color: hsl(var(--brand-700));
+  }
+  .border-brand-800 {
+    border-color: hsl(var(--brand-800));
+  }
+  .border-brand-900 {
+    border-color: hsl(var(--brand-900));
   }
 }
