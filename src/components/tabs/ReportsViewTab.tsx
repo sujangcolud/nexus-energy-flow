@@ -1030,7 +1030,7 @@ const ReportsViewTab = () => {
           <CardContent className="p-6">
             <ChartContainer
               config={{
-                amount: { label: "Amount", color: "#bbfae1" },
+                amount: { label: "Amount", color: "#8b5cf6" },
               }}
               className="h-64"
             >
