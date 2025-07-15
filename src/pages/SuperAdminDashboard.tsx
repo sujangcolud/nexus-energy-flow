@@ -52,12 +52,16 @@ interface AnalyticsData {
   restaurantRevenue: number;
   chargingRevenue: number;
   dailyAverageRevenue: number;
+  weeklyAverageRevenue: number;
+  monthlyAverageRevenue: number;
   revenueGrowth: number;
 
   // Expense Analytics
   totalExpenses: number;
   expensesByCategory: Record<string, number>;
   dailyAverageExpenses: number;
+  weeklyAverageExpenses: number;
+  monthlyAverageExpenses: number;
   expenseGrowth: number;
 
   // Profitability
@@ -161,6 +165,41 @@ const SuperAdminDashboard = () => {
       const dailyAverageRevenue =
         daysSinceStart > 0 ? totalRevenue / daysSinceStart : 0;
 
+      // Calculate 7-day and 1-month averages
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+      const sevenDayOrders = orders.filter(
+        (order) => new Date(order.order_date) >= sevenDaysAgo,
+      );
+      const sevenDayCharging = chargingSessions.filter(
+        (session) => new Date(session.session_date) >= sevenDaysAgo,
+      );
+      const thirtyDayOrders = orders.filter(
+        (order) => new Date(order.order_date) >= thirtyDaysAgo,
+      );
+      const thirtyDayCharging = chargingSessions.filter(
+        (session) => new Date(session.session_date) >= thirtyDaysAgo,
+      );
+
+      const sevenDayRevenue =
+        sevenDayOrders.reduce((sum, order) => sum + order.total, 0) +
+        sevenDayCharging.reduce(
+          (sum, session) => sum + session.total_amount,
+          0,
+        );
+      const thirtyDayRevenue =
+        thirtyDayOrders.reduce((sum, order) => sum + order.total, 0) +
+        thirtyDayCharging.reduce(
+          (sum, session) => sum + session.total_amount,
+          0,
+        );
+
+      const weeklyAverageRevenue = sevenDayRevenue / 7;
+      const monthlyAverageRevenue = thirtyDayRevenue / 30;
+
       // Expense Calculations
       const totalExpenses = expenses.reduce(
         (sum, expense) => sum + expense.amount,
@@ -168,6 +207,19 @@ const SuperAdminDashboard = () => {
       );
       const dailyAverageExpenses =
         daysSinceStart > 0 ? totalExpenses / daysSinceStart : 0;
+
+      const sevenDayExpenses = expenses.filter(
+        (expense) => new Date(expense.expense_date) >= sevenDaysAgo,
+      );
+      const thirtyDayExpenses = expenses.filter(
+        (expense) => new Date(expense.expense_date) >= thirtyDaysAgo,
+      );
+
+      const weeklyAverageExpenses =
+        sevenDayExpenses.reduce((sum, expense) => sum + expense.amount, 0) / 7;
+      const monthlyAverageExpenses =
+        thirtyDayExpenses.reduce((sum, expense) => sum + expense.amount, 0) /
+        30;
 
       const expensesByCategory = expenses.reduce(
         (acc, expense) => {
@@ -305,10 +357,14 @@ const SuperAdminDashboard = () => {
         restaurantRevenue,
         chargingRevenue,
         dailyAverageRevenue,
+        weeklyAverageRevenue,
+        monthlyAverageRevenue,
         revenueGrowth: 15.2, // This would need historical comparison
         totalExpenses,
         expensesByCategory,
         dailyAverageExpenses,
+        weeklyAverageExpenses,
+        monthlyAverageExpenses,
         expenseGrowth: -8.5, // This would need historical comparison
         netProfit,
         profitMargin,
@@ -368,13 +424,16 @@ const SuperAdminDashboard = () => {
   }
 
   const COLORS = [
-    "#bbfae1",
-    "#a8f2d1",
-    "#95eac1",
-    "#82e2b1",
-    "#6fdaa1",
-    "#5dd191",
-    "#4ac981",
+    "#3b82f6", // Blue
+    "#10b981", // Green
+    "#f59e0b", // Amber
+    "#ef4444", // Red
+    "#8b5cf6", // Purple
+    "#06b6d4", // Cyan
+    "#84cc16", // Lime
+    "#f97316", // Orange
+    "#ec4899", // Pink
+    "#bbfae1", // Brand color
   ];
 
   return (
@@ -459,14 +518,21 @@ const SuperAdminDashboard = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600 font-medium">
-                  Daily Average Revenue
+                  Average Revenue
                 </p>
-                <p className="text-3xl font-bold text-black">
-                  NRs. {analytics.dailyAverageRevenue.toFixed(0)}
+                <p className="text-2xl font-bold text-black">
+                  NRs. {analytics.weeklyAverageRevenue.toFixed(0)}
                 </p>
-                <div className="flex items-center mt-2">
-                  <Activity className="h-4 w-4 text-primary mr-1" />
-                  <span className="text-sm text-gray-600">per day</span>
+                <div className="flex items-center gap-4 mt-2">
+                  <div className="flex items-center">
+                    <Activity className="h-3 w-3 text-blue-600 mr-1" />
+                    <span className="text-xs text-blue-600">7d avg</span>
+                  </div>
+                  <div className="flex items-center">
+                    <span className="text-xs text-gray-600">
+                      1m: NRs. {analytics.monthlyAverageRevenue.toFixed(0)}
+                    </span>
+                  </div>
                 </div>
               </div>
               <div className="p-3 bg-brand-100 rounded-xl">
