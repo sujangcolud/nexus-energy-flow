@@ -38,8 +38,7 @@ import DepositsTab from "@/components/tabs/DepositsTab";
 import WithdrawalsTab from "@/components/tabs/WithdrawalsTab";
 import CooperativeSavingsTab from "@/components/tabs/CooperativeSavingsTab";
 import InsightsTab from "@/components/tabs/InsightsTab";
-import ReportsTab from "@/components/tabs/ReportsTab";
-import ReportsViewTab from "@/components/tabs/ReportsViewTab";
+import CombinedReportsTab from "@/components/tabs/CombinedReportsTab";
 import MenuManagementTab from "@/components/tabs/MenuManagementTab";
 import DataInputTab from "@/components/tabs/DataInputTab";
 import UserManagementTab from "@/components/tabs/UserManagementTab";
@@ -123,18 +122,9 @@ const Dashboard = () => {
         path: "reports",
         label: "Reports",
         icon: FileText,
-        component: ReportsTab,
+        component: CombinedReportsTab,
         roles: ["reports_viewer", "super_admin"],
-        description: "Generate comprehensive business reports",
-      },
-      {
-        id: "reports-view",
-        path: "reports-view",
-        label: "View Reports",
-        icon: FileText,
-        component: ReportsViewTab,
-        roles: ["reports_viewer", "super_admin"],
-        description: "View and analyze generated reports",
+        description: "Generate, view, and export business reports",
       },
       {
         id: "insights",
