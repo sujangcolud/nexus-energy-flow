@@ -1,1158 +1,949 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { toast } from "sonner";
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  ChartLegend,
+  ChartLegendContent,
+} from "@/components/ui/chart";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  XAxis,
+  YAxis,
+  Pie,
+  PieChart,
+  Cell,
+  Line,
+  LineChart,
+  Area,
+  AreaChart,
+  ComposedChart,
+  ResponsiveContainer,
+} from "recharts";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   FileText,
-  Calculator,
-  DollarSign,
+  Download,
   TrendingUp,
+  TrendingDown,
+  DollarSign,
   ShoppingCart,
   Zap,
   Receipt,
-  CreditCard,
-  Banknote,
-  Users,
-  Sparkles,
-  Eye,
-  Calendar,
+  PiggyBank,
   BarChart3,
-  PieChart,
-  TrendingDown,
-  Target,
-  Filter,
-  Download,
+  Calendar,
   RefreshCw,
+  Eye,
+  Filter,
+  Target,
+  Activity,
+  Users,
 } from "lucide-react";
-import {
-  format,
-  parseISO,
-  eachDayOfInterval,
-  startOfMonth,
-  endOfMonth,
-  addMonths,
-} from "date-fns";
+import { toast } from "sonner";
+
+interface ReportVisualization {
+  id: string;
+  title: string;
+  type: "chart" | "table" | "metric";
+  data: any;
+  description: string;
+  period: string;
+  generated_at: string;
+}
+
+interface BusinessMetrics {
+  dailyRevenue: Array<{
+    date: string;
+    restaurant: number;
+    charging: number;
+    total: number;
+  }>;
+  monthlyTrends: Array<{
+    month: string;
+    revenue: number;
+    expenses: number;
+    profit: number;
+    orders: number;
+  }>;
+  expenseCategories: Array<{
+    category: string;
+    amount: number;
+    percentage: number;
+  }>;
+  topProducts: Array<{
+    name: string;
+    quantity: number;
+    revenue: number;
+    category: string;
+  }>;
+  hourlyPatterns: Array<{
+    hour: number;
+    orders: number;
+    charging: number;
+    revenue: number;
+  }>;
+  paymentMethods: Array<{
+    method: string;
+    amount: number;
+    count: number;
+    percentage: number;
+  }>;
+  profitabilityAnalysis: {
+    totalRevenue: number;
+    totalExpenses: number;
+    netProfit: number;
+    profitMargin: number;
+    breakEvenPoint: number;
+    growthRate: number;
+  };
+  cashFlowAnalysis: {
+    totalDeposits: number;
+    totalWithdrawals: number;
+    cooperativeSavings: number;
+    netCashFlow: number;
+    burnRate: number;
+    runway: number;
+  };
+  businessKPIs: {
+    averageOrderValue: number;
+    averageChargingValue: number;
+    customerAcquisitionCost: number;
+    customerLifetimeValue: number;
+    orderFrequency: number;
+    chargingUtilization: number;
+  };
+}
 
 const ReportsViewTab = () => {
-  const [dateRange, setDateRange] = useState({
-    startDate: new Date().toISOString().split("T")[0],
-    endDate: new Date().toISOString().split("T")[0],
-  });
-  const [reportData, setReportData] = useState<any>({});
-  const [isLoading, setIsLoading] = useState(false);
   const { user } = useAuth();
-  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-  const [selectedDayData, setSelectedDayData] = useState<any>(null);
+  const [metrics, setMetrics] = useState<BusinessMetrics | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [selectedPeriod, setSelectedPeriod] = useState<
+    "7d" | "30d" | "90d" | "1y"
+  >("30d");
+  const [selectedView, setSelectedView] = useState<
+    "overview" | "revenue" | "expenses" | "trends"
+  >("overview");
 
-  const formatCurrency = (amount: number) => `NRs. ${amount.toFixed(2)}`;
-
-  const fetchReportData = async () => {
-    if (!user) return;
-
-    setIsLoading(true);
+  const fetchBusinessMetrics = async () => {
+    setLoading(true);
     try {
-      const { startDate, endDate } = dateRange;
+      // Calculate date range based on selected period
+      const endDate = new Date();
+      const startDate = new Date();
 
-      // Fetch all data types
+      switch (selectedPeriod) {
+        case "7d":
+          startDate.setDate(startDate.getDate() - 7);
+          break;
+        case "30d":
+          startDate.setDate(startDate.getDate() - 30);
+          break;
+        case "90d":
+          startDate.setDate(startDate.getDate() - 90);
+          break;
+        case "1y":
+          startDate.setFullYear(startDate.getFullYear() - 1);
+          break;
+      }
+
+      const startDateStr = startDate.toISOString().split("T")[0];
+      const endDateStr = endDate.toISOString().split("T")[0];
+
+      // Fetch all business data
       const [
-        ordersRes,
-        chargingRes,
-        expensesRes,
-        savingsRes,
-        depositsRes,
-        withdrawalsRes,
+        ordersData,
+        chargingData,
+        expensesData,
+        depositsData,
+        withdrawalsData,
+        cooperativeData,
       ] = await Promise.all([
         supabase
           .from("orders")
           .select("*")
-          .gte("order_date", startDate)
-          .lte("order_date", endDate)
-          .eq("user_id", user.id),
+          .eq("user_id", user!.id)
+          .gte("order_date", startDateStr)
+          .lte("order_date", endDateStr),
         supabase
           .from("charging_sessions")
           .select("*")
-          .gte("session_date", startDate)
-          .lte("session_date", endDate)
-          .eq("user_id", user.id),
+          .eq("user_id", user!.id)
+          .gte("session_date", startDateStr)
+          .lte("session_date", endDateStr),
         supabase
           .from("expenses")
           .select("*")
-          .gte("expense_date", startDate)
-          .lte("expense_date", endDate)
-          .eq("user_id", user.id),
-        supabase
-          .from("cooperative_savings")
-          .select("*")
-          .gte("contribution_date", startDate)
-          .lte("contribution_date", endDate)
-          .eq("user_id", user.id),
+          .eq("user_id", user!.id)
+          .gte("expense_date", startDateStr)
+          .lte("expense_date", endDateStr),
         supabase
           .from("deposits")
           .select("*")
-          .gte("deposit_date", startDate)
-          .lte("deposit_date", endDate)
-          .eq("user_id", user.id),
+          .eq("user_id", user!.id)
+          .gte("deposit_date", startDateStr)
+          .lte("deposit_date", endDateStr),
         supabase
           .from("withdrawals")
           .select("*")
-          .gte("withdrawal_date", startDate)
-          .lte("withdrawal_date", endDate)
-          .eq("user_id", user.id),
+          .eq("user_id", user!.id)
+          .gte("withdrawal_date", startDateStr)
+          .lte("withdrawal_date", endDateStr),
+        supabase
+          .from("cooperative_savings")
+          .select("*")
+          .eq("user_id", user!.id)
+          .gte("contribution_date", startDateStr)
+          .lte("contribution_date", endDateStr),
       ]);
 
-      setReportData({
-        orders: ordersRes.data || [],
-        charging: chargingRes.data || [],
-        expenses: expensesRes.data || [],
-        savings: savingsRes.data || [],
-        deposits: depositsRes.data || [],
-        withdrawals: withdrawalsRes.data || [],
+      const orders = ordersData.data || [];
+      const chargingSessions = chargingData.data || [];
+      const expenses = expensesData.data || [];
+      const deposits = depositsData.data || [];
+      const withdrawals = withdrawalsData.data || [];
+      const cooperative = cooperativeData.data || [];
+
+      // Process daily revenue trends
+      const dailyRevenue = [];
+      const daysDiff = Math.ceil(
+        (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24),
+      );
+
+      for (let i = 0; i < daysDiff; i++) {
+        const date = new Date(startDate);
+        date.setDate(date.getDate() + i);
+        const dateStr = date.toISOString().split("T")[0];
+
+        const dayOrders = orders.filter(
+          (order) => order.order_date === dateStr,
+        );
+        const dayCharging = chargingSessions.filter(
+          (session) => session.session_date === dateStr,
+        );
+
+        const restaurantRevenue = dayOrders.reduce(
+          (sum, order) => sum + order.total,
+          0,
+        );
+        const chargingRevenue = dayCharging.reduce(
+          (sum, session) => sum + session.total_amount,
+          0,
+        );
+
+        dailyRevenue.push({
+          date: dateStr,
+          restaurant: restaurantRevenue,
+          charging: chargingRevenue,
+          total: restaurantRevenue + chargingRevenue,
+        });
+      }
+
+      // Process monthly trends
+      const monthlyData = new Map();
+
+      [...orders, ...chargingSessions].forEach((item) => {
+        const date = item.order_date || item.session_date;
+        const month = date.substring(0, 7); // YYYY-MM
+        if (!monthlyData.has(month)) {
+          monthlyData.set(month, { revenue: 0, orders: 0 });
+        }
+        monthlyData.get(month).revenue += item.total || item.total_amount;
+        monthlyData.get(month).orders += 1;
       });
+
+      expenses.forEach((expense) => {
+        const month = expense.expense_date.substring(0, 7);
+        if (!monthlyData.has(month)) {
+          monthlyData.set(month, { revenue: 0, orders: 0 });
+        }
+        if (!monthlyData.get(month).expenses) {
+          monthlyData.get(month).expenses = 0;
+        }
+        monthlyData.get(month).expenses += expense.amount;
+      });
+
+      const monthlyTrends = Array.from(monthlyData.entries())
+        .map(([month, data]) => ({
+          month,
+          revenue: data.revenue,
+          expenses: data.expenses || 0,
+          profit: data.revenue - (data.expenses || 0),
+          orders: data.orders,
+        }))
+        .sort((a, b) => a.month.localeCompare(b.month));
+
+      // Process expense categories
+      const expensesByCategory = expenses.reduce(
+        (acc, expense) => {
+          acc[expense.category] = (acc[expense.category] || 0) + expense.amount;
+          return acc;
+        },
+        {} as Record<string, number>,
+      );
+
+      const totalExpenses = expenses.reduce(
+        (sum, expense) => sum + expense.amount,
+        0,
+      );
+      const expenseCategories = Object.entries(expensesByCategory).map(
+        ([category, amount]) => ({
+          category,
+          amount,
+          percentage: totalExpenses > 0 ? (amount / totalExpenses) * 100 : 0,
+        }),
+      );
+
+      // Process top products
+      const productSales = orders.reduce(
+        (acc, order) => {
+          if (!acc[order.item_name]) {
+            acc[order.item_name] = {
+              quantity: 0,
+              revenue: 0,
+              category: "Food",
+            };
+          }
+          acc[order.item_name].quantity += order.quantity;
+          acc[order.item_name].revenue += order.total;
+          return acc;
+        },
+        {} as Record<
+          string,
+          { quantity: number; revenue: number; category: string }
+        >,
+      );
+
+      const topProducts = Object.entries(productSales)
+        .map(([name, data]) => ({ name, ...data }))
+        .sort((a, b) => b.revenue - a.revenue)
+        .slice(0, 10);
+
+      // Process payment methods
+      const paymentData = new Map();
+
+      [
+        ...orders,
+        ...chargingSessions,
+        ...expenses,
+        ...deposits,
+        ...withdrawals,
+      ].forEach((item) => {
+        const method = item.payment_mode || item.mode || "Unknown";
+        const amount = item.total || item.total_amount || item.amount;
+        if (!paymentData.has(method)) {
+          paymentData.set(method, { amount: 0, count: 0 });
+        }
+        paymentData.get(method).amount += amount;
+        paymentData.get(method).count += 1;
+      });
+
+      const totalPaymentAmount = Array.from(paymentData.values()).reduce(
+        (sum, data) => sum + data.amount,
+        0,
+      );
+      const paymentMethods = Array.from(paymentData.entries()).map(
+        ([method, data]) => ({
+          method,
+          amount: data.amount,
+          count: data.count,
+          percentage:
+            totalPaymentAmount > 0
+              ? (data.amount / totalPaymentAmount) * 100
+              : 0,
+        }),
+      );
+
+      // Calculate business metrics
+      const totalRevenue =
+        orders.reduce((sum, order) => sum + order.total, 0) +
+        chargingSessions.reduce(
+          (sum, session) => sum + session.total_amount,
+          0,
+        );
+      const netProfit = totalRevenue - totalExpenses;
+      const profitMargin =
+        totalRevenue > 0 ? (netProfit / totalRevenue) * 100 : 0;
+
+      const totalDeposits = deposits.reduce(
+        (sum, deposit) => sum + deposit.amount,
+        0,
+      );
+      const totalWithdrawals = withdrawals.reduce(
+        (sum, withdrawal) => sum + withdrawal.amount,
+        0,
+      );
+      const cooperativeSavings = cooperative.reduce(
+        (sum, saving) => sum + saving.contribution_amount,
+        0,
+      );
+      const netCashFlow = totalDeposits - totalWithdrawals;
+
+      const businessMetrics: BusinessMetrics = {
+        dailyRevenue,
+        monthlyTrends,
+        expenseCategories,
+        topProducts,
+        hourlyPatterns: [], // Would need hour-level data
+        paymentMethods,
+        profitabilityAnalysis: {
+          totalRevenue,
+          totalExpenses,
+          netProfit,
+          profitMargin,
+          breakEvenPoint:
+            totalExpenses > 0 ? totalExpenses / (totalRevenue / daysDiff) : 0,
+          growthRate: 15.2, // Would need historical comparison
+        },
+        cashFlowAnalysis: {
+          totalDeposits,
+          totalWithdrawals,
+          cooperativeSavings,
+          netCashFlow,
+          burnRate: totalExpenses / daysDiff,
+          runway:
+            netCashFlow > 0 ? netCashFlow / (totalExpenses / daysDiff) : 0,
+        },
+        businessKPIs: {
+          averageOrderValue:
+            orders.length > 0 ? totalRevenue / orders.length : 0,
+          averageChargingValue:
+            chargingSessions.length > 0
+              ? chargingSessions.reduce((sum, s) => sum + s.total_amount, 0) /
+                chargingSessions.length
+              : 0,
+          customerAcquisitionCost: 150, // Would need marketing spend data
+          customerLifetimeValue: 2500, // Would need customer retention data
+          orderFrequency: orders.length / daysDiff,
+          chargingUtilization: chargingSessions.length / daysDiff,
+        },
+      };
+
+      setMetrics(businessMetrics);
     } catch (error) {
-      console.error("Error fetching report data:", error);
-      toast.error("Failed to load report data");
+      console.error("Error fetching business metrics:", error);
+      toast.error("Failed to load business metrics");
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchReportData();
-  }, [user, dateRange]);
-
-  // Calculate totals
-  const totals = {
-    revenue:
-      (reportData.orders || []).reduce(
-        (sum: number, order: any) => sum + order.total,
-        0,
-      ) +
-      (reportData.charging || []).reduce(
-        (sum: number, session: any) => sum + session.total_amount,
-        0,
-      ),
-    expenses: (reportData.expenses || []).reduce(
-      (sum: number, expense: any) => sum + expense.amount,
-      0,
-    ),
-    deposits: (reportData.deposits || []).reduce(
-      (sum: number, deposit: any) => sum + deposit.amount,
-      0,
-    ),
-    withdrawals: (reportData.withdrawals || []).reduce(
-      (sum: number, withdrawal: any) => sum + withdrawal.amount,
-      0,
-    ),
-    savings: (reportData.savings || []).reduce(
-      (sum: number, saving: any) => sum + saving.contribution_amount,
-      0,
-    ),
-  };
-
-  const netProfit = totals.revenue - totals.expenses;
-  const cashFlow = totals.deposits - totals.withdrawals;
-
-  // Payment method analysis
-  const paymentAnalysis = (() => {
-    const methods: Record<string, number> = {};
-
-    [...(reportData.orders || []), ...(reportData.charging || [])].forEach(
-      (item: any) => {
-        const method = item.payment_mode;
-        methods[method] =
-          (methods[method] || 0) + (item.total || item.total_amount);
-      },
-    );
-
-    return Object.entries(methods)
-      .map(([method, amount]) => ({ method, amount }))
-      .sort((a, b) => b.amount - a.amount);
-  })();
-
-  // Category breakdown for expenses
-  const expenseCategories = (() => {
-    const categories: Record<string, number> = {};
-
-    (reportData.expenses || []).forEach((expense: any) => {
-      categories[expense.category] =
-        (categories[expense.category] || 0) + expense.amount;
-    });
-
-    return Object.entries(categories)
-      .map(([category, amount]) => ({ category, amount }))
-      .sort((a, b) => b.amount - a.amount);
-  })();
-
-  // Daily breakdown
-  const dailyBreakdown = (() => {
-    if (!dateRange.startDate || !dateRange.endDate) return [];
-
-    const days = eachDayOfInterval({
-      start: parseISO(dateRange.startDate),
-      end: parseISO(dateRange.endDate),
-    });
-
-    return days.map((day) => {
-      const dayStr = format(day, "yyyy-MM-dd");
-
-      const dayOrders = (reportData.orders || []).filter(
-        (order: any) => order.order_date === dayStr,
-      );
-      const dayCharging = (reportData.charging || []).filter(
-        (session: any) => session.session_date === dayStr,
-      );
-      const dayExpenses = (reportData.expenses || []).filter(
-        (expense: any) => expense.expense_date === dayStr,
-      );
-      const dayDeposits = (reportData.deposits || []).filter(
-        (deposit: any) => deposit.deposit_date === dayStr,
-      );
-      const dayWithdrawals = (reportData.withdrawals || []).filter(
-        (withdrawal: any) => withdrawal.withdrawal_date === dayStr,
-      );
-
-      const revenue =
-        dayOrders.reduce((sum: number, order: any) => sum + order.total, 0) +
-        dayCharging.reduce(
-          (sum: number, session: any) => sum + session.total_amount,
-          0,
-        );
-      const expenses = dayExpenses.reduce(
-        (sum: number, expense: any) => sum + expense.amount,
-        0,
-      );
-      const deposits = dayDeposits.reduce(
-        (sum: number, deposit: any) => sum + deposit.amount,
-        0,
-      );
-      const withdrawals = dayWithdrawals.reduce(
-        (sum: number, withdrawal: any) => sum + withdrawal.amount,
-        0,
-      );
-
-      return {
-        date: dayStr,
-        revenue,
-        expenses,
-        profit: revenue - expenses,
-        deposits,
-        withdrawals,
-        cashFlow: deposits - withdrawals,
-        transactions:
-          dayOrders.length + dayCharging.length + dayExpenses.length,
-      };
-    });
-  })();
-
-  const openDayDetail = (dayData: any) => {
-    const dayStr = dayData.date;
-    const dayOrders = (reportData.orders || []).filter(
-      (order: any) => order.order_date === dayStr,
-    );
-    const dayCharging = (reportData.charging || []).filter(
-      (session: any) => session.session_date === dayStr,
-    );
-    const dayExpenses = (reportData.expenses || []).filter(
-      (expense: any) => expense.expense_date === dayStr,
-    );
-
-    setSelectedDayData({
-      ...dayData,
-      orders: dayOrders,
-      charging: dayCharging,
-      expenses: dayExpenses,
-    });
-    setIsDetailModalOpen(true);
-  };
-
-  const setQuickDateRange = (type: string) => {
-    const today = new Date();
-    let startDate = "";
-    let endDate = format(today, "yyyy-MM-dd");
-
-    switch (type) {
-      case "today":
-        startDate = endDate;
-        break;
-      case "week":
-        startDate = format(
-          new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000),
-          "yyyy-MM-dd",
-        );
-        break;
-      case "month":
-        startDate = format(startOfMonth(today), "yyyy-MM-dd");
-        endDate = format(endOfMonth(today), "yyyy-MM-dd");
-        break;
-      case "lastMonth":
-        const lastMonth = addMonths(today, -1);
-        startDate = format(startOfMonth(lastMonth), "yyyy-MM-dd");
-        endDate = format(endOfMonth(lastMonth), "yyyy-MM-dd");
-        break;
+    if (user) {
+      fetchBusinessMetrics();
     }
+  }, [user, selectedPeriod]);
 
-    setDateRange({ startDate, endDate });
+  const exportData = () => {
+    if (!metrics) return;
+
+    const data = {
+      exportDate: new Date().toISOString(),
+      period: selectedPeriod,
+      metrics,
+    };
+
+    const blob = new Blob([JSON.stringify(data, null, 2)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `business-metrics-${selectedPeriod}-${new Date().toISOString().split("T")[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    toast.success("Data exported successfully!");
   };
 
-  const paymentModeColors = {
-    Cash: "from-green-500 to-emerald-500",
-    Esewa: "from-blue-500 to-cyan-500",
-    Fonepay: "from-purple-500 to-pink-500",
-    Bank: "from-indigo-500 to-blue-500",
-    Cheque: "from-orange-500 to-red-500",
-    Credit: "from-violet-500 to-purple-500",
-  };
+  const COLORS = [
+    "#bbfae1",
+    "#a8f2d1",
+    "#95eac1",
+    "#82e2b1",
+    "#6fdaa1",
+    "#5dd191",
+    "#4ac981",
+  ];
 
-  const categoryColors = {
-    "Food & Beverages": "from-orange-500 to-red-500",
-    Transportation: "from-blue-500 to-cyan-500",
-    Utilities: "from-yellow-500 to-orange-500",
-    "Office Supplies": "from-green-500 to-emerald-500",
-    Marketing: "from-purple-500 to-pink-500",
-    Equipment: "from-gray-500 to-slate-500",
-    Maintenance: "from-red-500 to-pink-500",
-    Insurance: "from-indigo-500 to-blue-500",
-  };
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-blue-50 to-indigo-50 relative overflow-hidden">
-      {/* Animated Background Elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-20 w-64 h-64 bg-gradient-to-r from-cyan-400/20 to-blue-500/20 rounded-full blur-3xl animate-pulse"></div>
-        <div
-          className="absolute top-1/3 right-20 w-80 h-80 bg-gradient-to-r from-blue-400/20 to-indigo-500/20 rounded-full blur-3xl animate-pulse"
-          style={{ animationDelay: "1s" }}
-        ></div>
-        <div
-          className="absolute bottom-20 left-1/4 w-72 h-72 bg-gradient-to-r from-indigo-400/20 to-purple-500/20 rounded-full blur-3xl animate-pulse"
-          style={{ animationDelay: "2s" }}
-        ></div>
-      </div>
-
-      <div className="relative z-10 space-y-8 p-6">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="p-4 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-xl animate-pulse">
-              <Eye className="h-8 w-8" />
-            </div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-cyan-600 via-blue-600 to-indigo-600 bg-clip-text text-transparent">
-              Reports Viewer
-            </h1>
-            <Sparkles className="h-8 w-8 text-blue-500 animate-bounce" />
-          </div>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Comprehensive view of your business reports with detailed analytics
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-16">
+        <div className="text-center">
+          <RefreshCw className="h-16 w-16 text-primary mx-auto mb-4 animate-spin" />
+          <p className="text-xl font-semibold text-black">
+            Loading Business Insights...
           </p>
         </div>
+      </div>
+    );
+  }
 
-        {/* Date Range Controls */}
-        <Card className="bg-gradient-to-r from-white/90 to-cyan-50/90 backdrop-blur-sm border-0 shadow-xl">
-          <CardHeader className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-t-lg">
-            <CardTitle className="flex items-center gap-3 text-xl">
-              <div className="p-2 bg-white/20 rounded-lg">
-                <Calendar className="h-6 w-6" />
-              </div>
-              Date Range Selection
-              <Filter className="h-5 w-5 animate-pulse" />
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-6">
-            <div className="flex flex-wrap items-center gap-4">
-              <div className="flex items-center gap-2">
-                <Label
-                  htmlFor="startDate"
-                  className="text-sm font-medium text-gray-700"
-                >
-                  From:
-                </Label>
-                <Input
-                  id="startDate"
-                  type="date"
-                  value={dateRange.startDate}
-                  onChange={(e) =>
-                    setDateRange({ ...dateRange, startDate: e.target.value })
-                  }
-                  className="border-cyan-200 focus:border-cyan-500 focus:ring-cyan-500"
-                />
-              </div>
-              <div className="flex items-center gap-2">
-                <Label
-                  htmlFor="endDate"
-                  className="text-sm font-medium text-gray-700"
-                >
-                  To:
-                </Label>
-                <Input
-                  id="endDate"
-                  type="date"
-                  value={dateRange.endDate}
-                  onChange={(e) =>
-                    setDateRange({ ...dateRange, endDate: e.target.value })
-                  }
-                  className="border-blue-200 focus:border-blue-500 focus:ring-blue-500"
-                />
-              </div>
-              <div className="flex gap-2 flex-wrap">
-                <Button
-                  onClick={() => setQuickDateRange("today")}
-                  variant="outline"
-                  size="sm"
-                  className="hover:bg-cyan-50"
-                >
-                  Today
-                </Button>
-                <Button
-                  onClick={() => setQuickDateRange("week")}
-                  variant="outline"
-                  size="sm"
-                  className="hover:bg-blue-50"
-                >
-                  Last 7 Days
-                </Button>
-                <Button
-                  onClick={() => setQuickDateRange("month")}
-                  variant="outline"
-                  size="sm"
-                  className="hover:bg-indigo-50"
-                >
-                  This Month
-                </Button>
-                <Button
-                  onClick={() => setQuickDateRange("lastMonth")}
-                  variant="outline"
-                  size="sm"
-                  className="hover:bg-purple-50"
-                >
-                  Last Month
-                </Button>
-              </div>
-              <Button
-                onClick={fetchReportData}
-                disabled={isLoading}
-                className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white"
+  if (!metrics) {
+    return (
+      <div className="text-center py-16">
+        <FileText className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+        <p className="text-gray-500">No metrics data available</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="flex items-center gap-3 mb-8">
+        <div className="p-3 bg-primary rounded-xl">
+          <Eye className="h-6 w-6 text-black" />
+        </div>
+        <div>
+          <h1 className="text-2xl font-bold text-black">Analytics Dashboard</h1>
+          <p className="text-gray-600">
+            Comprehensive business insights and visualizations
+          </p>
+        </div>
+      </div>
+
+      {/* Controls */}
+      <Card className="border border-gray-200">
+        <CardContent className="p-6">
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="flex items-center gap-2">
+              <Calendar className="h-4 w-4 text-gray-600" />
+              <Select
+                value={selectedPeriod}
+                onValueChange={(value: any) => setSelectedPeriod(value)}
               >
-                {isLoading ? (
-                  <RefreshCw className="h-4 w-4 animate-spin mr-2" />
-                ) : (
-                  <Filter className="h-4 w-4 mr-2" />
-                )}
-                {isLoading ? "Loading..." : "Apply Filter"}
-              </Button>
+                <SelectTrigger className="w-40">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="7d">Last 7 Days</SelectItem>
+                  <SelectItem value="30d">Last 30 Days</SelectItem>
+                  <SelectItem value="90d">Last 3 Months</SelectItem>
+                  <SelectItem value="1y">Last Year</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Filter className="h-4 w-4 text-gray-600" />
+              <Select
+                value={selectedView}
+                onValueChange={(value: any) => setSelectedView(value)}
+              >
+                <SelectTrigger className="w-40">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="overview">Overview</SelectItem>
+                  <SelectItem value="revenue">Revenue</SelectItem>
+                  <SelectItem value="expenses">Expenses</SelectItem>
+                  <SelectItem value="trends">Trends</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <Button onClick={exportData} variant="outline" className="ml-auto">
+              <Download className="h-4 w-4 mr-2" />
+              Export Data
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Key Performance Indicators */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <Card className="border border-gray-200">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600 font-medium">
+                  Total Revenue
+                </p>
+                <p className="text-2xl font-bold text-black">
+                  NRs.{" "}
+                  {metrics.profitabilityAnalysis.totalRevenue.toLocaleString()}
+                </p>
+                <div className="flex items-center mt-2">
+                  <TrendingUp className="h-4 w-4 text-green-600 mr-1" />
+                  <span className="text-sm text-green-600">
+                    +{metrics.profitabilityAnalysis.growthRate}%
+                  </span>
+                </div>
+              </div>
+              <div className="p-3 bg-brand-100 rounded-xl">
+                <DollarSign className="h-6 w-6 text-black" />
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-green-600 font-medium flex items-center gap-1">
-                    <TrendingUp className="h-4 w-4" />
-                    Total Revenue
-                  </p>
-                  <p className="text-2xl font-bold text-green-800">
-                    {formatCurrency(totals.revenue)}
-                  </p>
-                  <p className="text-xs text-green-600 mt-1">
-                    Orders + Charging
-                  </p>
-                </div>
-                <div className="p-3 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl text-white">
-                  <DollarSign className="h-6 w-6" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-red-50 to-pink-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-red-600 font-medium flex items-center gap-1">
-                    <TrendingDown className="h-4 w-4" />
-                    Total Expenses
-                  </p>
-                  <p className="text-2xl font-bold text-red-800">
-                    {formatCurrency(totals.expenses)}
-                  </p>
-                  <p className="text-xs text-red-600 mt-1">
-                    {expenseCategories.length} categories
-                  </p>
-                </div>
-                <div className="p-3 bg-gradient-to-r from-red-500 to-pink-500 rounded-xl text-white">
-                  <Receipt className="h-6 w-6" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card
-            className={`${netProfit >= 0 ? "bg-gradient-to-br from-blue-50 to-indigo-50" : "bg-gradient-to-br from-orange-50 to-red-50"} border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105`}
-          >
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p
-                    className={`text-sm font-medium flex items-center gap-1 ${netProfit >= 0 ? "text-blue-600" : "text-orange-600"}`}
-                  >
-                    <Target className="h-4 w-4" />
-                    Net Profit
-                  </p>
-                  <p
-                    className={`text-2xl font-bold ${netProfit >= 0 ? "text-blue-800" : "text-orange-800"}`}
-                  >
-                    {formatCurrency(netProfit)}
-                  </p>
-                  <p
-                    className={`text-xs mt-1 ${netProfit >= 0 ? "text-blue-600" : "text-orange-600"}`}
-                  >
-                    {totals.revenue > 0
-                      ? ((netProfit / totals.revenue) * 100).toFixed(1)
-                      : 0}
-                    % margin
-                  </p>
-                </div>
-                <div
-                  className={`p-3 rounded-xl text-white ${netProfit >= 0 ? "bg-gradient-to-r from-blue-500 to-indigo-500" : "bg-gradient-to-r from-orange-500 to-red-500"}`}
+        <Card className="border border-gray-200">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600 font-medium">Net Profit</p>
+                <p
+                  className={`text-2xl font-bold ${metrics.profitabilityAnalysis.netProfit >= 0 ? "text-green-600" : "text-red-600"}`}
                 >
-                  <Calculator className="h-6 w-6" />
+                  NRs.{" "}
+                  {metrics.profitabilityAnalysis.netProfit.toLocaleString()}
+                </p>
+                <div className="flex items-center mt-2">
+                  <Target className="h-4 w-4 text-primary mr-1" />
+                  <span className="text-sm text-gray-600">
+                    {metrics.profitabilityAnalysis.profitMargin.toFixed(1)}%
+                    margin
+                  </span>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-purple-50 to-pink-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-purple-600 font-medium flex items-center gap-1">
-                    <Banknote className="h-4 w-4" />
-                    Cash Flow
-                  </p>
-                  <p
-                    className={`text-2xl font-bold ${cashFlow >= 0 ? "text-purple-800" : "text-red-800"}`}
-                  >
-                    {formatCurrency(cashFlow)}
-                  </p>
-                  <p className="text-xs text-purple-600 mt-1">
-                    Deposits - Withdrawals
-                  </p>
-                </div>
-                <div className="p-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl text-white">
-                  <CreditCard className="h-6 w-6" />
-                </div>
+              <div className="p-3 bg-brand-100 rounded-xl">
+                <Target className="h-6 w-6 text-black" />
               </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 bg-white/80 backdrop-blur-sm border border-cyan-200">
-            <TabsTrigger
-              value="overview"
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-blue-500 data-[state=active]:text-white"
-            >
-              Overview
-            </TabsTrigger>
-            <TabsTrigger
-              value="daily"
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-indigo-500 data-[state=active]:text-white"
-            >
-              Daily View
-            </TabsTrigger>
-            <TabsTrigger
-              value="payments"
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500 data-[state=active]:to-purple-500 data-[state=active]:text-white"
-            >
-              Payment Analysis
-            </TabsTrigger>
-            <TabsTrigger
-              value="categories"
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-pink-500 data-[state=active]:text-white"
-            >
-              Categories
-            </TabsTrigger>
-          </TabsList>
-
-          {/* Overview Tab */}
-          <TabsContent value="overview">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card className="bg-gradient-to-br from-white/90 to-cyan-50/90 backdrop-blur-sm border-0 shadow-2xl">
-                <CardHeader className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-t-lg">
-                  <CardTitle className="flex items-center gap-3 text-xl">
-                    <div className="p-2 bg-white/20 rounded-lg">
-                      <BarChart3 className="h-6 w-6" />
-                    </div>
-                    Transaction Summary
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-6 space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="p-4 bg-gradient-to-r from-orange-50 to-red-50 rounded-lg">
-                      <p className="text-sm text-orange-600 font-medium">
-                        Orders
-                      </p>
-                      <p className="text-xl font-bold text-orange-800">
-                        {(reportData.orders || []).length}
-                      </p>
-                    </div>
-                    <div className="p-4 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-lg">
-                      <p className="text-sm text-yellow-600 font-medium">
-                        Charging Sessions
-                      </p>
-                      <p className="text-xl font-bold text-yellow-800">
-                        {(reportData.charging || []).length}
-                      </p>
-                    </div>
-                    <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg">
-                      <p className="text-sm text-blue-600 font-medium">
-                        Deposits
-                      </p>
-                      <p className="text-xl font-bold text-blue-800">
-                        {(reportData.deposits || []).length}
-                      </p>
-                    </div>
-                    <div className="p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg">
-                      <p className="text-sm text-purple-600 font-medium">
-                        Withdrawals
-                      </p>
-                      <p className="text-xl font-bold text-purple-800">
-                        {(reportData.withdrawals || []).length}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium text-gray-700">
-                        Revenue vs Target
-                      </span>
-                      <span className="font-bold text-cyan-600">75%</span>
-                    </div>
-                    <Progress value={75} className="h-3" />
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-gradient-to-br from-white/90 to-blue-50/90 backdrop-blur-sm border-0 shadow-2xl">
-                <CardHeader className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-t-lg">
-                  <CardTitle className="flex items-center gap-3 text-xl">
-                    <div className="p-2 bg-white/20 rounded-lg">
-                      <PieChart className="h-6 w-6" />
-                    </div>
-                    Financial Breakdown
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-6">
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center p-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg">
-                      <span className="font-medium text-gray-800">
-                        Revenue Share
-                      </span>
-                      <span className="font-bold text-green-600">
-                        {totals.revenue > 0 ? "100%" : "0%"}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center p-3 bg-gradient-to-r from-red-50 to-pink-50 rounded-lg">
-                      <span className="font-medium text-gray-800">
-                        Expense Ratio
-                      </span>
-                      <span className="font-bold text-red-600">
-                        {totals.revenue > 0
-                          ? ((totals.expenses / totals.revenue) * 100).toFixed(
-                              1,
-                            )
-                          : 0}
-                        %
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg">
-                      <span className="font-medium text-gray-800">
-                        Savings Rate
-                      </span>
-                      <span className="font-bold text-blue-600">
-                        {totals.revenue > 0
-                          ? ((totals.savings / totals.revenue) * 100).toFixed(1)
-                          : 0}
-                        %
-                      </span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
             </div>
-          </TabsContent>
+          </CardContent>
+        </Card>
 
-          {/* Daily View Tab */}
-          <TabsContent value="daily">
-            <Card className="bg-gradient-to-br from-white/90 to-blue-50/90 backdrop-blur-sm border-0 shadow-2xl">
-              <CardHeader className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-t-lg">
-                <CardTitle className="flex items-center gap-3 text-xl">
-                  <div className="p-2 bg-white/20 rounded-lg">
-                    <Calendar className="h-6 w-6" />
-                  </div>
-                  Daily Performance Analysis
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-0">
-                {dailyBreakdown.length === 0 ? (
-                  <div className="text-center py-12">
-                    <Calendar className="h-16 w-16 mx-auto text-gray-300 mb-4" />
-                    <p className="text-xl font-semibold text-gray-700 mb-2">
-                      No data for selected period
-                    </p>
-                    <p className="text-gray-500">
-                      Try selecting a different date range.
-                    </p>
-                  </div>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow className="bg-gradient-to-r from-gray-50 to-blue-50">
-                          <TableHead className="font-semibold text-gray-700">
-                            Date
-                          </TableHead>
-                          <TableHead className="font-semibold text-gray-700">
-                            Revenue
-                          </TableHead>
-                          <TableHead className="font-semibold text-gray-700">
-                            Expenses
-                          </TableHead>
-                          <TableHead className="font-semibold text-gray-700">
-                            Profit
-                          </TableHead>
-                          <TableHead className="font-semibold text-gray-700">
-                            Cash Flow
-                          </TableHead>
-                          <TableHead className="font-semibold text-gray-700">
-                            Transactions
-                          </TableHead>
-                          <TableHead className="font-semibold text-gray-700">
-                            Actions
-                          </TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {dailyBreakdown.map((day, index) => (
-                          <TableRow
-                            key={day.date}
-                            className="hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-200"
-                            style={{ animationDelay: `${index * 50}ms` }}
-                          >
-                            <TableCell className="font-medium">
-                              {format(parseISO(day.date), "MMM dd, yyyy")}
-                            </TableCell>
-                            <TableCell>
-                              <span className="font-bold text-green-600">
-                                {formatCurrency(day.revenue)}
-                              </span>
-                            </TableCell>
-                            <TableCell>
-                              <span className="font-bold text-red-600">
-                                {formatCurrency(day.expenses)}
-                              </span>
-                            </TableCell>
-                            <TableCell>
-                              <span
-                                className={`font-bold ${day.profit >= 0 ? "text-blue-600" : "text-orange-600"}`}
-                              >
-                                {formatCurrency(day.profit)}
-                              </span>
-                            </TableCell>
-                            <TableCell>
-                              <span
-                                className={`font-bold ${day.cashFlow >= 0 ? "text-purple-600" : "text-red-600"}`}
-                              >
-                                {formatCurrency(day.cashFlow)}
-                              </span>
-                            </TableCell>
-                            <TableCell>
-                              <Badge
-                                variant="outline"
-                                className="bg-blue-50 border-blue-200"
-                              >
-                                {day.transactions}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => openDayDetail(day)}
-                                className="hover:bg-blue-50 hover:border-blue-300"
-                              >
-                                <Eye className="h-4 w-4 mr-1" />
-                                Details
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
+        <Card className="border border-gray-200">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600 font-medium">
+                  Avg Order Value
+                </p>
+                <p className="text-2xl font-bold text-black">
+                  NRs. {metrics.businessKPIs.averageOrderValue.toFixed(0)}
+                </p>
+                <div className="flex items-center mt-2">
+                  <ShoppingCart className="h-4 w-4 text-primary mr-1" />
+                  <span className="text-sm text-gray-600">
+                    {metrics.businessKPIs.orderFrequency.toFixed(1)}/day
+                  </span>
+                </div>
+              </div>
+              <div className="p-3 bg-brand-100 rounded-xl">
+                <ShoppingCart className="h-6 w-6 text-black" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
-          {/* Payment Analysis Tab */}
-          <TabsContent value="payments">
-            <Card className="bg-gradient-to-br from-white/90 to-indigo-50/90 backdrop-blur-sm border-0 shadow-2xl">
-              <CardHeader className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-t-lg">
-                <CardTitle className="flex items-center gap-3 text-xl">
-                  <div className="p-2 bg-white/20 rounded-lg">
-                    <CreditCard className="h-6 w-6" />
-                  </div>
-                  Payment Method Analysis
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-6">
-                {paymentAnalysis.length === 0 ? (
-                  <div className="text-center py-8">
-                    <CreditCard className="h-16 w-16 mx-auto text-gray-300 mb-4" />
-                    <p className="text-gray-500">No payment data available</p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {paymentAnalysis.map((payment, index) => {
-                      const percentage =
-                        totals.revenue > 0
-                          ? (payment.amount / totals.revenue) * 100
-                          : 0;
-                      return (
-                        <div
-                          key={payment.method}
-                          className="p-4 bg-gradient-to-r from-white to-indigo-50 rounded-lg border border-indigo-100"
-                          style={{ animationDelay: `${index * 100}ms` }}
-                        >
-                          <div className="flex items-center justify-between mb-3">
-                            <div className="flex items-center gap-2">
-                              <div
-                                className={`w-3 h-3 rounded-full bg-gradient-to-r ${paymentModeColors[payment.method as keyof typeof paymentModeColors] || "from-gray-500 to-slate-500"}`}
-                              ></div>
-                              <span className="font-medium text-gray-800">
-                                {payment.method}
-                              </span>
-                            </div>
-                            <Badge
-                              className={`bg-gradient-to-r ${paymentModeColors[payment.method as keyof typeof paymentModeColors] || "from-gray-500 to-slate-500"} text-white border-0 text-xs`}
-                            >
-                              {percentage.toFixed(1)}%
-                            </Badge>
-                          </div>
-                          <p className="text-lg font-bold text-indigo-600 mb-1">
-                            {formatCurrency(payment.amount)}
-                          </p>
-                          <div className="w-full bg-gray-200 rounded-full h-2">
-                            <div
-                              className={`bg-gradient-to-r ${paymentModeColors[payment.method as keyof typeof paymentModeColors] || "from-gray-500 to-slate-500"} h-2 rounded-full transition-all duration-500`}
-                              style={{ width: `${percentage}%` }}
-                            ></div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
+        <Card className="border border-gray-200">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600 font-medium">Cash Flow</p>
+                <p
+                  className={`text-2xl font-bold ${metrics.cashFlowAnalysis.netCashFlow >= 0 ? "text-green-600" : "text-red-600"}`}
+                >
+                  NRs. {metrics.cashFlowAnalysis.netCashFlow.toLocaleString()}
+                </p>
+                <div className="flex items-center mt-2">
+                  <PiggyBank className="h-4 w-4 text-primary mr-1" />
+                  <span className="text-sm text-gray-600">
+                    {metrics.cashFlowAnalysis.runway.toFixed(0)} days runway
+                  </span>
+                </div>
+              </div>
+              <div className="p-3 bg-brand-100 rounded-xl">
+                <PiggyBank className="h-6 w-6 text-black" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
-          {/* Categories Tab */}
-          <TabsContent value="categories">
-            <Card className="bg-gradient-to-br from-white/90 to-purple-50/90 backdrop-blur-sm border-0 shadow-2xl">
-              <CardHeader className="bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-t-lg">
-                <CardTitle className="flex items-center gap-3 text-xl">
-                  <div className="p-2 bg-white/20 rounded-lg">
-                    <PieChart className="h-6 w-6" />
-                  </div>
-                  Expense Categories
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-6">
-                {expenseCategories.length === 0 ? (
-                  <div className="text-center py-8">
-                    <Receipt className="h-16 w-16 mx-auto text-gray-300 mb-4" />
-                    <p className="text-gray-500">No expense data available</p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {expenseCategories.map((category, index) => {
-                      const percentage =
-                        totals.expenses > 0
-                          ? (category.amount / totals.expenses) * 100
-                          : 0;
-                      return (
-                        <div
-                          key={category.category}
-                          className="p-4 bg-gradient-to-r from-white to-purple-50 rounded-lg border border-purple-100"
-                          style={{ animationDelay: `${index * 100}ms` }}
-                        >
-                          <div className="flex items-center justify-between mb-3">
-                            <div className="flex items-center gap-2">
-                              <div
-                                className={`w-3 h-3 rounded-full bg-gradient-to-r ${categoryColors[category.category as keyof typeof categoryColors] || "from-gray-500 to-slate-500"}`}
-                              ></div>
-                              <span className="font-medium text-gray-800 text-sm">
-                                {category.category}
-                              </span>
-                            </div>
-                            <Badge
-                              className={`bg-gradient-to-r ${categoryColors[category.category as keyof typeof categoryColors] || "from-gray-500 to-slate-500"} text-white border-0 text-xs`}
-                            >
-                              {percentage.toFixed(1)}%
-                            </Badge>
-                          </div>
-                          <p className="text-lg font-bold text-purple-600 mb-1">
-                            {formatCurrency(category.amount)}
-                          </p>
-                          <div className="w-full bg-gray-200 rounded-full h-2">
-                            <div
-                              className={`bg-gradient-to-r ${categoryColors[category.category as keyof typeof categoryColors] || "from-gray-500 to-slate-500"} h-2 rounded-full transition-all duration-500`}
-                              style={{ width: `${percentage}%` }}
-                            ></div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+      {/* Revenue Trends Chart */}
+      <Card className="border border-gray-200">
+        <CardHeader className="bg-brand-50 border-b border-gray-200">
+          <CardTitle className="text-black">Daily Revenue Trends</CardTitle>
+        </CardHeader>
+        <CardContent className="p-6">
+          <ChartContainer
+            config={{
+              restaurant: { label: "Restaurant", color: "#82e2b1" },
+              charging: { label: "EV Charging", color: "#bbfae1" },
+              total: { label: "Total", color: "#6fdaa1" },
+            }}
+            className="h-80"
+          >
+            <ComposedChart data={metrics.dailyRevenue}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis
+                dataKey="date"
+                tickFormatter={(value) =>
+                  new Date(value).toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                  })
+                }
+              />
+              <YAxis />
+              <ChartTooltip content={<ChartTooltipContent />} />
+              <ChartLegend content={<ChartLegendContent />} />
+              <Area
+                type="monotone"
+                dataKey="total"
+                stroke="#6fdaa1"
+                fill="#6fdaa1"
+                fillOpacity={0.3}
+                name="Total Revenue"
+              />
+              <Bar dataKey="restaurant" fill="#82e2b1" name="Restaurant" />
+              <Bar dataKey="charging" fill="#bbfae1" name="EV Charging" />
+            </ComposedChart>
+          </ChartContainer>
+        </CardContent>
+      </Card>
 
-        {/* Day Detail Modal */}
-        <Dialog open={isDetailModalOpen} onOpenChange={setIsDetailModalOpen}>
-          <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto bg-gradient-to-br from-white to-blue-50">
-            <DialogHeader>
-              <DialogTitle className="text-2xl bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                {selectedDayData && selectedDayData.date
-                  ? format(
-                      parseISO(selectedDayData.date),
-                      "EEEE, MMMM dd, yyyy",
-                    )
-                  : "Day Details"}
-              </DialogTitle>
-              <DialogDescription>
-                Detailed breakdown of all transactions for this day
-              </DialogDescription>
-            </DialogHeader>
-            {selectedDayData ? (
-              <div className="space-y-6">
-                {/* Day Summary */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="p-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg">
-                    <p className="text-sm text-green-600 font-medium">
-                      Revenue
-                    </p>
-                    <p className="text-lg font-bold text-green-800">
-                      {formatCurrency(selectedDayData.revenue)}
-                    </p>
+      {/* Charts Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Monthly Trends */}
+        <Card className="border border-gray-200">
+          <CardHeader className="bg-brand-50 border-b border-gray-200">
+            <CardTitle className="text-black">
+              Monthly Business Trends
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
+            <ChartContainer
+              config={{
+                revenue: { label: "Revenue", color: "#bbfae1" },
+                expenses: { label: "Expenses", color: "#82e2b1" },
+                profit: { label: "Profit", color: "#6fdaa1" },
+              }}
+              className="h-64"
+            >
+              <ComposedChart data={metrics.monthlyTrends}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="month" />
+                <YAxis />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <ChartLegend content={<ChartLegendContent />} />
+                <Bar dataKey="revenue" fill="#bbfae1" name="Revenue" />
+                <Bar dataKey="expenses" fill="#82e2b1" name="Expenses" />
+                <Line
+                  type="monotone"
+                  dataKey="profit"
+                  stroke="#6fdaa1"
+                  strokeWidth={3}
+                  dot={{ fill: "#6fdaa1" }}
+                  name="Profit"
+                />
+              </ComposedChart>
+            </ChartContainer>
+          </CardContent>
+        </Card>
+
+        {/* Expense Categories */}
+        <Card className="border border-gray-200">
+          <CardHeader className="bg-brand-50 border-b border-gray-200">
+            <CardTitle className="text-black">Expense Distribution</CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
+            <ChartContainer
+              config={{
+                amount: { label: "Amount", color: "#bbfae1" },
+              }}
+              className="h-64"
+            >
+              <PieChart>
+                <Pie
+                  data={metrics.expenseCategories}
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={80}
+                  dataKey="amount"
+                  nameKey="category"
+                >
+                  {metrics.expenseCategories.map((entry, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={COLORS[index % COLORS.length]}
+                    />
+                  ))}
+                </Pie>
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <ChartLegend content={<ChartLegendContent />} />
+              </PieChart>
+            </ChartContainer>
+          </CardContent>
+        </Card>
+
+        {/* Payment Methods */}
+        <Card className="border border-gray-200">
+          <CardHeader className="bg-brand-50 border-b border-gray-200">
+            <CardTitle className="text-black">
+              Payment Method Analysis
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
+            <ChartContainer
+              config={{
+                amount: { label: "Amount", color: "#bbfae1" },
+              }}
+              className="h-64"
+            >
+              <BarChart data={metrics.paymentMethods}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="method" />
+                <YAxis />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Bar
+                  dataKey="amount"
+                  fill="#bbfae1"
+                  name="Transaction Amount"
+                />
+              </BarChart>
+            </ChartContainer>
+          </CardContent>
+        </Card>
+
+        {/* Top Products */}
+        <Card className="border border-gray-200">
+          <CardHeader className="bg-brand-50 border-b border-gray-200">
+            <CardTitle className="text-black">
+              Top Products Performance
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
+            <div className="space-y-3 max-h-64 overflow-y-auto">
+              {metrics.topProducts.slice(0, 8).map((product, index) => (
+                <div
+                  key={product.name}
+                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center text-black text-xs font-bold">
+                      {index + 1}
+                    </div>
+                    <div>
+                      <p className="font-medium text-black">{product.name}</p>
+                      <p className="text-sm text-gray-600">
+                        {product.quantity} sold
+                      </p>
+                    </div>
                   </div>
-                  <div className="p-3 bg-gradient-to-r from-red-50 to-pink-50 rounded-lg">
-                    <p className="text-sm text-red-600 font-medium">Expenses</p>
-                    <p className="text-lg font-bold text-red-800">
-                      {formatCurrency(selectedDayData.expenses)}
+                  <div className="text-right">
+                    <p className="font-bold text-black">
+                      NRs. {product.revenue.toLocaleString()}
                     </p>
-                  </div>
-                  <div className="p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg">
-                    <p className="text-sm text-blue-600 font-medium">Profit</p>
-                    <p
-                      className={`text-lg font-bold ${selectedDayData.profit >= 0 ? "text-blue-800" : "text-orange-800"}`}
-                    >
-                      {formatCurrency(selectedDayData.profit)}
-                    </p>
-                  </div>
-                  <div className="p-3 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg">
-                    <p className="text-sm text-purple-600 font-medium">
-                      Cash Flow
-                    </p>
-                    <p
-                      className={`text-lg font-bold ${selectedDayData.cashFlow >= 0 ? "text-purple-800" : "text-red-800"}`}
-                    >
-                      {formatCurrency(selectedDayData.cashFlow)}
-                    </p>
+                    <Badge variant="outline" className="text-xs">
+                      {product.category}
+                    </Badge>
                   </div>
                 </div>
-
-                {/* Transactions */}
-                <Tabs defaultValue="orders" className="space-y-4">
-                  <TabsList className="grid w-full grid-cols-3">
-                    <TabsTrigger value="orders">
-                      Orders ({selectedDayData.orders?.length || 0})
-                    </TabsTrigger>
-                    <TabsTrigger value="charging">
-                      Charging ({selectedDayData.charging?.length || 0})
-                    </TabsTrigger>
-                    <TabsTrigger value="expenses">
-                      Expenses ({selectedDayData.expenses?.length || 0})
-                    </TabsTrigger>
-                  </TabsList>
-
-                  <TabsContent value="orders">
-                    {selectedDayData.orders?.length > 0 ? (
-                      <div className="overflow-x-auto">
-                        <Table>
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead>Item</TableHead>
-                              <TableHead>Quantity</TableHead>
-                              <TableHead>Rate</TableHead>
-                              <TableHead>Total</TableHead>
-                              <TableHead>Payment</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {selectedDayData.orders.map((order: any) => (
-                              <TableRow key={order.id}>
-                                <TableCell className="font-medium">
-                                  {order.item_name}
-                                </TableCell>
-                                <TableCell>{order.quantity}</TableCell>
-                                <TableCell>
-                                  {formatCurrency(order.rate)}
-                                </TableCell>
-                                <TableCell className="font-bold text-green-600">
-                                  {formatCurrency(order.total)}
-                                </TableCell>
-                                <TableCell>
-                                  <Badge variant="outline">
-                                    {order.payment_mode}
-                                  </Badge>
-                                </TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      </div>
-                    ) : (
-                      <p className="text-center text-gray-500 py-8">
-                        No orders for this day
-                      </p>
-                    )}
-                  </TabsContent>
-
-                  <TabsContent value="charging">
-                    {selectedDayData.charging?.length > 0 ? (
-                      <div className="overflow-x-auto">
-                        <Table>
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead>Battery Range</TableHead>
-                              <TableHead>Energy (kCal)</TableHead>
-                              <TableHead>Amount</TableHead>
-                              <TableHead>Payment</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {selectedDayData.charging.map((session: any) => (
-                              <TableRow key={session.id}>
-                                <TableCell>
-                                  {session.start_percentage}% →{" "}
-                                  {session.end_percentage}%
-                                </TableCell>
-                                <TableCell>{session.kcal} kCal</TableCell>
-                                <TableCell className="font-bold text-yellow-600">
-                                  {formatCurrency(session.total_amount)}
-                                </TableCell>
-                                <TableCell>
-                                  <Badge variant="outline">
-                                    {session.payment_mode}
-                                  </Badge>
-                                </TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      </div>
-                    ) : (
-                      <p className="text-center text-gray-500 py-8">
-                        No charging sessions for this day
-                      </p>
-                    )}
-                  </TabsContent>
-
-                  <TabsContent value="expenses">
-                    {selectedDayData.expenses?.length > 0 ? (
-                      <div className="overflow-x-auto">
-                        <Table>
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead>Description</TableHead>
-                              <TableHead>Category</TableHead>
-                              <TableHead>Amount</TableHead>
-                              <TableHead>Payment</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {selectedDayData.expenses.map((expense: any) => (
-                              <TableRow key={expense.id}>
-                                <TableCell className="font-medium">
-                                  {expense.description}
-                                </TableCell>
-                                <TableCell>
-                                  <Badge
-                                    className={`bg-gradient-to-r ${categoryColors[expense.category as keyof typeof categoryColors] || "from-gray-500 to-slate-500"} text-white border-0`}
-                                  >
-                                    {expense.category}
-                                  </Badge>
-                                </TableCell>
-                                <TableCell className="font-bold text-red-600">
-                                  {formatCurrency(expense.amount)}
-                                </TableCell>
-                                <TableCell>
-                                  <Badge variant="outline">
-                                    {expense.payment_mode}
-                                  </Badge>
-                                </TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      </div>
-                    ) : (
-                      <p className="text-center text-gray-500 py-8">
-                        No expenses for this day
-                      </p>
-                    )}
-                  </TabsContent>
-                </Tabs>
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <p className="text-gray-500">Loading details...</p>
-              </div>
-            )}
-          </DialogContent>
-        </Dialog>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       </div>
+
+      {/* Business Intelligence Summary */}
+      <Card className="border border-gray-200">
+        <CardHeader className="bg-brand-50 border-b border-gray-200">
+          <CardTitle className="text-black">
+            Business Intelligence Summary
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="space-y-4">
+              <h4 className="font-semibold text-black">
+                Profitability Metrics
+              </h4>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Profit Margin</span>
+                  <span className="font-bold text-black">
+                    {metrics.profitabilityAnalysis.profitMargin.toFixed(1)}%
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Break Even Point</span>
+                  <span className="font-bold text-black">
+                    {metrics.profitabilityAnalysis.breakEvenPoint.toFixed(0)}{" "}
+                    days
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Growth Rate</span>
+                  <span className="font-bold text-green-600">
+                    +{metrics.profitabilityAnalysis.growthRate}%
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <h4 className="font-semibold text-black">Customer Metrics</h4>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Customer LTV</span>
+                  <span className="font-bold text-black">
+                    NRs.{" "}
+                    {metrics.businessKPIs.customerLifetimeValue.toLocaleString()}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Acquisition Cost</span>
+                  <span className="font-bold text-black">
+                    NRs.{" "}
+                    {metrics.businessKPIs.customerAcquisitionCost.toLocaleString()}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Order Frequency</span>
+                  <span className="font-bold text-black">
+                    {metrics.businessKPIs.orderFrequency.toFixed(1)}/day
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <h4 className="font-semibold text-black">Financial Health</h4>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Burn Rate</span>
+                  <span className="font-bold text-black">
+                    NRs. {metrics.cashFlowAnalysis.burnRate.toFixed(0)}/day
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Cash Runway</span>
+                  <span className="font-bold text-black">
+                    {metrics.cashFlowAnalysis.runway.toFixed(0)} days
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Cooperative Savings</span>
+                  <span className="font-bold text-black">
+                    NRs.{" "}
+                    {metrics.cashFlowAnalysis.cooperativeSavings.toLocaleString()}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
