@@ -741,7 +741,7 @@ const ReportsViewTab = () => {
         <CardHeader className="bg-brand-50 border-b border-gray-200">
           <CardTitle className="flex items-center gap-3 text-black">
             <div className="p-2 bg-primary rounded-lg">
-              <LineChart className="h-5 w-5 text-black" />
+              <BarChart3 className="h-5 w-5 text-black" />
             </div>
             Business Correlation Analytics
           </CardTitle>
