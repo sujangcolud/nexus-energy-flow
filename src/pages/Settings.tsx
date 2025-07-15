@@ -113,6 +113,18 @@ const Settings = () => {
       icon: "👥",
     },
     {
+      id: "share_investments",
+      label: "Share Investments",
+      description: "Manage shareholder contributions and equity",
+      icon: "📈",
+    },
+    {
+      id: "opening_balance",
+      label: "Opening Balance",
+      description: "Set cutoff date and opening balance",
+      icon: "📅",
+    },
+    {
       id: "reports",
       label: "Reports",
       description: "Generate comprehensive business reports",
