@@ -1,411 +1,157 @@
-
-import { useState, useEffect } from 'react';
-import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { toast } from 'sonner';
-import { Users, UserPlus, Shield, Database, BarChart3, UserCheck, Eye, EyeOff, FileText } from 'lucide-react';
-
-type AppRole = 'user' | 'data_entry' | 'reports_viewer' | 'super_admin';
-
-interface UserWithRole {
-  id: string;
-  email: string | undefined;
-  role: AppRole;
-}
-
-interface NewUserData {
-  email: string;
-  password: string;
-  firstName: string;
-  lastName: string;
-  role: AppRole;
-}
+import { useState, useEffect } from "react";
+import { useAuth } from "@/context/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { toast } from "sonner";
+import { UserCog, Users, Shield } from "lucide-react";
 
 const UserManagementTab = () => {
-  const { user } = useAuth();
-  const [users, setUsers] = useState<UserWithRole[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [isCreating, setIsCreating] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [logs, setLogs] = useState<any[]>([]);
-  
-  const [newUser, setNewUser] = useState<NewUserData>({
-    email: '',
-    password: '',
-    firstName: '',
-    lastName: '',
-    role: 'user'
-  });
+  const { user, userRole } = useAuth();
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [canEditTransactions, setCanEditTransactions] = useState(false);
 
-  const fetchUsersAndRoles = async () => {
+  useEffect(() => {
+    if (user && userRole === "super_admin") {
+      fetchUsers();
+    }
+    const canEdit = localStorage.getItem("canEditTransactions");
+    if (canEdit) {
+      setCanEditTransactions(JSON.parse(canEdit));
+    }
+  }, [user, userRole]);
+
+  const fetchUsers = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase.rpc('get_all_users_with_roles');
+      const { data, error } = await supabase
+        .from("user_profiles")
+        .select("*")
+        .order("created_at", { ascending: false });
+
       if (error) throw error;
-      
-      // Filter out 'super_user' and map to valid AppRole types
-      const filteredUsers = (data || []).map(user => ({
-        ...user,
-        role: user.role === 'super_user' ? 'super_admin' as AppRole : user.role as AppRole
-      })).filter(user => ['user', 'data_entry', 'reports_viewer', 'super_admin'].includes(user.role));
-      
-      setUsers(filteredUsers);
+      setUsers(data || []);
     } catch (error) {
-      console.error('Error fetching users and roles:', error);
-      toast.error('Failed to load users.');
+      console.error("Error fetching users:", error);
+      toast.error("Failed to load users");
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchUsersAndRoles();
-    fetchLogs();
-  }, []);
-
-  const fetchLogs = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("logs")
-        .select("*")
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      setLogs(data || []);
-    } catch (error) {
-      console.error("Error fetching logs:", error);
-      toast.error("Failed to load logs.");
-    }
-  };
-
-  const handleCreateUser = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!newUser.email || !newUser.password || !newUser.firstName || !newUser.lastName) {
-      toast.error('Please fill in all required fields.');
-      return;
-    }
-
-    setIsCreating(true);
-    
-    try {
-      // Call the edge function to create user with admin privileges
-      const { data, error } = await supabase.functions.invoke('create-user', {
-        body: {
-          email: newUser.email,
-          password: newUser.password,
-          firstName: newUser.firstName,
-          lastName: newUser.lastName,
-          role: newUser.role
-        }
-      });
-
-      if (error) {
-        console.error('Error creating user:', error);
-        toast.error(error.message || 'Failed to create user.');
-        return;
-      }
-
-      toast.success(`User ${newUser.email} created successfully with role: ${newUser.role}`);
-      
-      // Reset form
-      setNewUser({
-        email: '',
-        password: '',
-        firstName: '',
-        lastName: '',
-        role: 'user'
-      });
-      
-      // Refresh users list
-      fetchUsersAndRoles();
-      
-    } catch (error: any) {
-      console.error('Error creating user:', error);
-      toast.error(error.message || 'Failed to create user.');
-    } finally {
-      setIsCreating(false);
-    }
-  };
-
-  const handleRoleChange = async (userId: string, newRole: AppRole) => {
-    try {
-      const { error } = await supabase.rpc('update_user_role', { user_id_to_update: userId, new_role: newRole });
-      if (error) throw error;
-      toast.success('User role updated successfully.');
-      fetchUsersAndRoles();
-    } catch (error: any) {
-      console.error('Error updating role:', error);
-      toast.error(error.message || 'Failed to update role.');
-    }
-  };
-
-  const generatePassword = () => {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
-    let password = '';
-    for (let i = 0; i < 12; i++) {
-      password += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    setNewUser(prev => ({ ...prev, password }));
-  };
-
-  const getRoleIcon = (role: AppRole) => {
-    switch (role) {
-      case 'super_admin':
-        return <Shield className="h-4 w-4 text-purple-600" />;
-      case 'data_entry':
-        return <Database className="h-4 w-4 text-blue-600" />;
-      case 'reports_viewer':
-        return <BarChart3 className="h-4 w-4 text-green-600" />;
-      default:
-        return <UserCheck className="h-4 w-4 text-gray-600" />;
-    }
-  };
-
-  const getRoleDescription = (role: AppRole) => {
-    switch (role) {
-      case 'super_admin':
-        return 'Full access to all features and user management';
-      case 'data_entry':
-        return 'Can manage orders, charging, expenses, deposits, withdrawals, and savings';
-      case 'reports_viewer':
-        return 'Can view reports, analytics, and import bulk data';
-      case 'user':
-        return 'Basic user access';
-      default:
-        return '';
-    }
-  };
+  if (userRole !== "super_admin") {
+    return (
+      <div className="space-y-8">
+        <div className="flex items-center gap-3 mb-8">
+          <div className="p-3 bg-primary rounded-xl">
+            <Shield className="h-6 w-6 text-black" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-black">Access Denied</h1>
+            <p className="text-gray-600">
+              You need super admin privileges to access this page
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <Users className="h-6 w-6 text-blue-600" />
-        <h2 className="text-2xl font-bold text-gray-900">User Management</h2>
+    <div className="space-y-8">
+      <div className="flex items-center gap-3 mb-8">
+        <div className="p-3 bg-primary rounded-xl">
+          <UserCog className="h-6 w-6 text-black" />
+        </div>
+        <div>
+          <h1 className="text-2xl font-bold text-black">User Management</h1>
+          <p className="text-gray-600">Manage users and their permissions</p>
+        </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <UserPlus className="h-5 w-5" />
-            Create New User
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleCreateUser} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="firstName">First Name</Label>
-                <Input
-                  id="firstName"
-                  type="text"
-                  placeholder="John"
-                  value={newUser.firstName}
-                  onChange={(e) => setNewUser(prev => ({ ...prev, firstName: e.target.value }))}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="lastName">Last Name</Label>
-                <Input
-                  id="lastName"
-                  type="text"
-                  placeholder="Doe"
-                  value={newUser.lastName}
-                  onChange={(e) => setNewUser(prev => ({ ...prev, lastName: e.target.value }))}
-                  required
-                />
-              </div>
+      <Card className="border border-gray-200">
+        <CardContent className="p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600 font-medium">Total Users</p>
+              <p className="text-2xl font-bold text-black">{users.length}</p>
             </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="email">Email Address</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="user@example.com"
-                value={newUser.email}
-                onChange={(e) => setNewUser(prev => ({ ...prev, email: e.target.value }))}
-                required
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <div className="flex gap-2">
-                <div className="relative flex-grow">
-                  <Input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Enter password"
-                    value={newUser.password}
-                    onChange={(e) => setNewUser(prev => ({ ...prev, password: e.target.value }))}
-                    required
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7 p-0"
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </Button>
-                </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={generatePassword}
-                >
-                  Generate
-                </Button>
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="role">Role</Label>
-              <Select value={newUser.role} onValueChange={(value: AppRole) => setNewUser(prev => ({ ...prev, role: value }))}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="user">User</SelectItem>
-                  <SelectItem value="data_entry">Data Entry</SelectItem>
-                  <SelectItem value="reports_viewer">Reports Viewer</SelectItem>
-                  <SelectItem value="super_admin">Super Admin</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <Button type="submit" disabled={isCreating} className="w-full">
-              <UserPlus className="h-4 w-4 mr-2" />
-              {isCreating ? 'Creating User...' : 'Create User'}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>User Roles & Permissions</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            <div className="p-4 border rounded-lg">
-              <div className="flex items-center gap-2 mb-2">
-                <Shield className="h-4 w-4 text-purple-600" />
-                <span className="font-semibold">Super Admin</span>
-              </div>
-              <p className="text-sm text-gray-600">Full access to all features and user management</p>
-            </div>
-            <div className="p-4 border rounded-lg">
-              <div className="flex items-center gap-2 mb-2">
-                <Database className="h-4 w-4 text-blue-600" />
-                <span className="font-semibold">Data Entry</span>
-              </div>
-              <p className="text-sm text-gray-600">Can manage orders, charging, expenses, deposits, withdrawals, and savings</p>
-            </div>
-            <div className="p-4 border rounded-lg col-span-1 md:col-span-2">
-              <div className="flex items-center gap-2 mb-2">
-                <BarChart3 className="h-4 w-4 text-green-600" />
-                <span className="font-semibold">Reports Viewer</span>
-              </div>
-              <p className="text-sm text-gray-600">Can view reports, analytics, and import bulk data</p>
+            <div className="p-3 bg-blue-100 rounded-xl">
+              <Users className="h-6 w-6 text-blue-600" />
             </div>
           </div>
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Existing Users</CardTitle>
+      <Card className="border border-gray-200">
+        <CardHeader className="bg-brand-50 border-b border-gray-200">
+          <CardTitle className="text-black">All Users</CardTitle>
         </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Email</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Permissions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loading ? (
-                <TableRow><TableCell colSpan={3} className="text-center">Loading users...</TableCell></TableRow>
-              ) : (
-                users.map((u) => (
-                  <TableRow key={u.id}>
-                    <TableCell className="font-medium">{u.email}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        {getRoleIcon(u.role)}
-                        <Select
-                          value={u.role}
-                          onValueChange={(newRole: AppRole) => handleRoleChange(u.id, newRole)}
-                          disabled={u.id === user?.id}
-                        >
-                          <SelectTrigger className="w-[180px]">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="user">User</SelectItem>
-                            <SelectItem value="data_entry">Data Entry</SelectItem>
-                            <SelectItem value="reports_viewer">Reports Viewer</SelectItem>
-                            <SelectItem value="super_admin">Super Admin</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
+        <CardContent className="p-6">
+          {loading ? (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+              <p className="text-gray-500 mt-2">Loading users...</p>
+            </div>
+          ) : users.length === 0 ? (
+            <div className="text-center py-8">
+              <Users className="h-12 w-12 mx-auto text-gray-300 mb-3" />
+              <p className="text-gray-500">No users found</p>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Role</TableHead>
+                  <TableHead>Created</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {users.map((userItem) => (
+                  <TableRow key={userItem.id}>
+                    <TableCell className="font-medium">
+                      {userItem.email}
                     </TableCell>
                     <TableCell>
-                      <span className="text-sm text-gray-600">
-                        {getRoleDescription(u.role)}
-                      </span>
+                      {userItem.first_name && userItem.last_name
+                        ? `${userItem.first_name} ${userItem.last_name}`
+                        : userItem.email}
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={
+                          userItem.role === "super_admin"
+                            ? "default"
+                            : "outline"
+                        }
+                        className={
+                          userItem.role === "super_admin"
+                            ? "bg-primary text-black"
+                            : ""
+                        }
+                      >
+                        {userItem.role || "user"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {new Date(userItem.created_at).toLocaleDateString()}
                     </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FileText className="h-5 w-5" />
-            Activity Logs
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>User</TableHead>
-                <TableHead>Action</TableHead>
-                <TableHead>Table</TableHead>
-                <TableHead>Record ID</TableHead>
-                <TableHead>Timestamp</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {logs.map((log) => (
-                <TableRow key={log.id}>
-                  <TableCell>{log.user_id}</TableCell>
-                  <TableCell>{log.action}</TableCell>
-                  <TableCell>{log.table_name}</TableCell>
-                  <TableCell>{log.record_id}</TableCell>
-                  <TableCell>
-                    {new Date(log.created_at).toLocaleString()}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
     </div>

@@ -49,19 +49,34 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     try {
       console.log("Fetching profile for user:", userId);
 
-      // Try to get profile first
-      const { data: profile, error: profileError } = await supabase
+      // Add timeout for profile fetch
+      const profilePromise = supabase
         .from("profiles")
         .select("*")
         .eq("id", userId)
         .maybeSingle();
 
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error("Profile fetch timeout")), 5000);
+      });
+
+      const { data: profile, error: profileError } = (await Promise.race([
+        profilePromise,
+        timeoutPromise,
+      ])) as any;
+
       console.log("Profile data:", profile, "Profile error:", profileError);
 
-      // Use the new security definer function to get user role safely
-      const { data: userRole, error: roleError } = await supabase.rpc(
-        "get_current_user_role",
-      );
+      // Use the new security definer function to get user role safely with timeout
+      const rolePromise = supabase.rpc("get_current_user_role");
+      const roleTimeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error("Role fetch timeout")), 5000);
+      });
+
+      const { data: userRole, error: roleError } = (await Promise.race([
+        rolePromise,
+        roleTimeoutPromise,
+      ])) as any;
 
       console.log("Role data:", userRole, "Role error:", roleError);
 
@@ -106,11 +121,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   useEffect(() => {
     console.log("Setting up auth state listener");
 
+    // Add a timeout to prevent infinite loading
+    const timeoutId = setTimeout(() => {
+      console.log("Auth loading timeout reached, setting loading to false");
+      setLoading(false);
+    }, 10000); // 10 second timeout
+
     // Set up auth state listener
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log("Auth state changed:", event, session);
+      clearTimeout(timeoutId); // Clear timeout since we got a response
       setSession(session);
 
       if (session?.user) {
@@ -126,18 +148,29 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     });
 
     // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log("Initial session check:", session);
-      setSession(session);
-      if (session?.user) {
-        setTimeout(() => {
-          fetchUserProfile(session.user.id);
-        }, 100);
-      }
-      setLoading(false);
-    });
+    supabase.auth
+      .getSession()
+      .then(({ data: { session } }) => {
+        console.log("Initial session check:", session);
+        clearTimeout(timeoutId); // Clear timeout since we got a response
+        setSession(session);
+        if (session?.user) {
+          setTimeout(() => {
+            fetchUserProfile(session.user.id);
+          }, 100);
+        }
+        setLoading(false);
+      })
+      .catch((error) => {
+        console.error("Error getting session:", error);
+        clearTimeout(timeoutId);
+        setLoading(false);
+      });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(timeoutId);
+    };
   }, []);
 
   const login = async (email: string, password: string) => {

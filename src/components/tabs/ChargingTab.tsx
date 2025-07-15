@@ -3,6 +3,7 @@ import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -30,7 +31,7 @@ import {
   BatteryCharging,
   TrendingUp,
   Activity,
-  Sparkles,
+  Edit,
 } from "lucide-react";
 import { DateRange } from "react-day-picker";
 import {
@@ -63,14 +64,14 @@ import useTableControls from "@/hooks/useTableControls";
 
 interface ChargingSession {
   id: string;
-  start_percentage: number;
-  end_percentage: number;
-  per_percent_rate: number;
-  kcal: number;
-  per_unit_rate: number;
+  session_date: string;
+  start_time: string;
+  end_time: string;
+  duration_minutes: number;
+  energy_consumed: number;
+  rate_per_kwh: number;
   total_amount: number;
   payment_mode: string;
-  session_date: string;
   created_at: string;
 }
 
@@ -79,20 +80,22 @@ const ChargingTab = () => {
   const [sessions, setSessions] = useState<ChargingSession[]>([]);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const { page, range, onPageChange, onRangeChange, itemsPerPage } =
-    useTableControls();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedSession, setSelectedSession] =
     useState<ChargingSession | null>(null);
   const [canEditTransactions, setCanEditTransactions] = useState(false);
+  const { page, range, onPageChange, onRangeChange, itemsPerPage } =
+    useTableControls();
 
-  // Form state
-  const [startPercentage, setStartPercentage] = useState(0);
-  const [endPercentage, setEndPercentage] = useState(0);
-  const [perPercentRate, setPerPercentRate] = useState(0);
-  const [kcal, setKcal] = useState(0);
-  const [perUnitRate, setPerUnitRate] = useState(0);
-  const [paymentMode, setPaymentMode] = useState("");
+  // Form data
+  const [formData, setFormData] = useState({
+    session_date: new Date().toISOString().split("T")[0],
+    start_time: "",
+    end_time: "",
+    energy_consumed: "",
+    rate_per_kwh: "15",
+    payment_mode: "",
+  });
 
   const paymentModes = ["Cash", "Esewa", "Fonepay", "Bank", "Cheque", "Credit"];
 
@@ -103,7 +106,7 @@ const ChargingTab = () => {
     try {
       let query = supabase
         .from("charging_sessions")
-        .select("*", { count: "exact" })
+        .select("*")
         .eq("user_id", user.id);
 
       if (range?.from) {
@@ -113,7 +116,7 @@ const ChargingTab = () => {
         query = query.lte("session_date", format(range.to, "yyyy-MM-dd"));
       }
 
-      const { data, error, count } = await query
+      const { data, error } = await query
         .order("created_at", { ascending: false })
         .range((page - 1) * itemsPerPage, page * itemsPerPage - 1);
 
@@ -128,97 +131,85 @@ const ChargingTab = () => {
   };
 
   useEffect(() => {
-    fetchSessions();
+    if (user) {
+      fetchSessions();
+    }
     const canEdit = localStorage.getItem("canEditTransactions");
     if (canEdit) {
       setCanEditTransactions(JSON.parse(canEdit));
     }
   }, [user, page, range]);
 
-  const calculateChargedPercentage = () => {
-    return Math.max(0, endPercentage - startPercentage);
-  };
+  const calculateDuration = (startTime: string, endTime: string): number => {
+    if (!startTime || !endTime) return 0;
 
-  const calculatePercentageCost = () => {
-    return calculateChargedPercentage() * perPercentRate;
-  };
+    const start = new Date(`2000-01-01T${startTime}`);
+    const end = new Date(`2000-01-01T${endTime}`);
 
-  const calculateKcalCost = () => {
-    return kcal * perUnitRate;
-  };
+    if (end < start) {
+      end.setDate(end.getDate() + 1);
+    }
 
-  const calculateTotalAmount = () => {
-    return calculatePercentageCost() + calculateKcalCost();
+    return Math.round((end.getTime() - start.getTime()) / (1000 * 60));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) return;
 
-    if (!user) {
-      toast.error("User not authenticated");
-      return;
-    }
-
-    if (endPercentage <= startPercentage) {
-      toast.error("End percentage must be greater than start percentage");
-      return;
-    }
-
-    if (!paymentMode) {
-      toast.error("Please select a payment mode");
+    if (
+      !formData.start_time ||
+      !formData.end_time ||
+      !formData.energy_consumed ||
+      !formData.payment_mode
+    ) {
+      toast.error("Please fill all required fields");
       return;
     }
 
     setSubmitting(true);
     try {
-      const totalAmount = calculateTotalAmount();
+      const duration = calculateDuration(
+        formData.start_time,
+        formData.end_time,
+      );
+      const energyConsumed = parseFloat(formData.energy_consumed);
+      const ratePerKwh = parseFloat(formData.rate_per_kwh);
+      const totalAmount = energyConsumed * ratePerKwh;
 
       const { error } = await supabase.from("charging_sessions").insert({
         user_id: user.id,
-        start_percentage: startPercentage,
-        end_percentage: endPercentage,
-        per_percent_rate: perPercentRate,
-        kcal: kcal,
-        per_unit_rate: perUnitRate,
+        session_date: formData.session_date,
+        start_time: formData.start_time,
+        end_time: formData.end_time,
+        duration_minutes: duration,
+        energy_consumed: energyConsumed,
+        rate_per_kwh: ratePerKwh,
         total_amount: totalAmount,
-        payment_mode: paymentMode,
-        session_date: new Date().toISOString().split("T")[0],
+        payment_mode: formData.payment_mode,
       });
 
       if (error) throw error;
 
-      toast.success("Charging session recorded successfully!");
-
-      // Reset form
-      setStartPercentage(0);
-      setEndPercentage(0);
-      setPerPercentRate(0);
-      setKcal(0);
-      setPerUnitRate(0);
-      setPaymentMode("");
-
+      toast.success("Charging session added successfully!");
+      setFormData({
+        session_date: new Date().toISOString().split("T")[0],
+        start_time: "",
+        end_time: "",
+        energy_consumed: "",
+        rate_per_kwh: "15",
+        payment_mode: "",
+      });
       fetchSessions();
     } catch (error) {
-      console.error("Error saving charging session:", error);
-      toast.error("Failed to save charging session");
+      console.error("Error adding charging session:", error);
+      toast.error("Failed to add charging session");
     } finally {
       setSubmitting(false);
     }
   };
 
-  const totalSessionCost = sessions.reduce(
-    (sum, session) => sum + session.total_amount,
-    0,
-  );
-  const averageSessionCost =
-    sessions.length > 0 ? totalSessionCost / sessions.length : 0;
-  const totalKcal = sessions.reduce((sum, session) => sum + session.kcal, 0);
-
-  const logAction = async (
-    action: string,
-    record_id: string,
-    details: any,
-  ) => {
+  const logAction = async (action: string, record_id: string, details: any) => {
     if (!user) return;
     await supabase.from("logs").insert({
       user_id: user.id,
@@ -238,12 +229,12 @@ const ChargingTab = () => {
 
       if (error) throw error;
 
-      toast.success("Session deleted successfully!");
+      toast.success("Charging session deleted successfully!");
       logAction("delete", id, { id });
       fetchSessions();
     } catch (error) {
-      console.error("Error deleting session:", error);
-      toast.error("Failed to delete session");
+      console.error("Error deleting charging session:", error);
+      toast.error("Failed to delete charging session");
     }
   };
 
@@ -258,18 +249,50 @@ const ChargingTab = () => {
 
       if (error) throw error;
 
-      toast.success("Session updated successfully!");
+      toast.success("Charging session updated successfully!");
       logAction("update", selectedSession.id, selectedSession);
       setIsEditDialogOpen(false);
       fetchSessions();
     } catch (error) {
-      console.error("Error updating session:", error);
-      toast.error("Failed to update session");
+      console.error("Error updating charging session:", error);
+      toast.error("Failed to update charging session");
     }
   };
 
+  const totalEnergyConsumed = sessions.reduce(
+    (acc, session) => acc + Number(session.energy_consumed),
+    0,
+  );
+  const totalRevenue = sessions.reduce(
+    (acc, session) => acc + Number(session.total_amount),
+    0,
+  );
+  const averageSessionDuration =
+    sessions.length > 0
+      ? sessions.reduce(
+          (acc, session) => acc + Number(session.duration_minutes),
+          0,
+        ) / sessions.length
+      : 0;
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-orange-50 to-red-50 relative overflow-hidden">
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="flex items-center gap-3 mb-8">
+        <div className="p-3 bg-primary rounded-xl">
+          <Zap className="h-6 w-6 text-black" />
+        </div>
+        <div>
+          <h1 className="text-2xl font-bold text-black">
+            EV Charging Management
+          </h1>
+          <p className="text-gray-600">
+            Track energy consumption and charging sessions
+          </p>
+        </div>
+      </div>
+
+      {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -278,101 +301,96 @@ const ChargingTab = () => {
           {selectedSession && (
             <div className="space-y-4">
               <div>
-                <Label htmlFor="editStartPercentage">Start Percentage</Label>
+                <Label>Session Date</Label>
                 <Input
-                  id="editStartPercentage"
-                  type="number"
-                  value={selectedSession.start_percentage}
+                  type="date"
+                  value={selectedSession.session_date}
                   onChange={(e) =>
                     setSelectedSession({
                       ...selectedSession,
-                      start_percentage: parseInt(e.target.value),
+                      session_date: e.target.value,
+                    })
+                  }
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Start Time</Label>
+                  <Input
+                    type="time"
+                    value={selectedSession.start_time}
+                    onChange={(e) =>
+                      setSelectedSession({
+                        ...selectedSession,
+                        start_time: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+                <div>
+                  <Label>End Time</Label>
+                  <Input
+                    type="time"
+                    value={selectedSession.end_time}
+                    onChange={(e) =>
+                      setSelectedSession({
+                        ...selectedSession,
+                        end_time: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+              </div>
+              <div>
+                <Label>Energy Consumed (kWh)</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={selectedSession.energy_consumed}
+                  onChange={(e) =>
+                    setSelectedSession({
+                      ...selectedSession,
+                      energy_consumed: parseFloat(e.target.value),
                     })
                   }
                 />
               </div>
               <div>
-                <Label htmlFor="editEndPercentage">End Percentage</Label>
+                <Label>Rate per kWh (NRs.)</Label>
                 <Input
-                  id="editEndPercentage"
                   type="number"
-                  value={selectedSession.end_percentage}
+                  step="0.01"
+                  value={selectedSession.rate_per_kwh}
                   onChange={(e) =>
                     setSelectedSession({
                       ...selectedSession,
-                      end_percentage: parseInt(e.target.value),
+                      rate_per_kwh: parseFloat(e.target.value),
                     })
                   }
                 />
               </div>
               <div>
-                <Label htmlFor="editPerPercentRate">Per Percent Rate</Label>
-                <Input
-                  id="editPerPercentRate"
-                  type="number"
-                  value={selectedSession.per_percent_rate}
-                  onChange={(e) =>
-                    setSelectedSession({
-                      ...selectedSession,
-                      per_percent_rate: parseFloat(e.target.value),
-                    })
-                  }
-                />
-              </div>
-              <div>
-                <Label htmlFor="editKcal">kCal</Label>
-                <Input
-                  id="editKcal"
-                  type="number"
-                  value={selectedSession.kcal}
-                  onChange={(e) =>
-                    setSelectedSession({
-                      ...selectedSession,
-                      kcal: parseFloat(e.target.value),
-                    })
-                  }
-                />
-              </div>
-              <div>
-                <Label htmlFor="editPerUnitRate">Per Unit Rate</Label>
-                <Input
-                  id="editPerUnitRate"
-                  type="number"
-                  value={selectedSession.per_unit_rate}
-                  onChange={(e) =>
-                    setSelectedSession({
-                      ...selectedSession,
-                      per_unit_rate: parseFloat(e.target.value),
-                    })
-                  }
-                />
-              </div>
-              <div>
-                <Label htmlFor="editTotalAmount">Total Amount</Label>
-                <Input
-                  id="editTotalAmount"
-                  type="number"
-                  value={selectedSession.total_amount}
-                  onChange={(e) =>
-                    setSelectedSession({
-                      ...selectedSession,
-                      total_amount: parseFloat(e.target.value),
-                    })
-                  }
-                />
-              </div>
-              <div>
-                <Label htmlFor="editPaymentMode">Payment Mode</Label>
-                <Input
-                  id="editPaymentMode"
+                <Label>Payment Mode</Label>
+                <Select
                   value={selectedSession.payment_mode}
-                  onChange={(e) =>
+                  onValueChange={(value) =>
                     setSelectedSession({
                       ...selectedSession,
-                      payment_mode: e.target.value,
+                      payment_mode: value,
                     })
                   }
-                />
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {paymentModes.map((mode) => (
+                      <SelectItem key={mode} value={mode}>
+                        {mode}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           )}
@@ -381,534 +399,261 @@ const ChargingTab = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      {/* Animated Background Elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-20 w-64 h-64 bg-gradient-to-r from-yellow-400/20 to-orange-500/20 rounded-full blur-3xl animate-pulse"></div>
-        <div
-          className="absolute top-1/3 right-20 w-80 h-80 bg-gradient-to-r from-orange-400/20 to-red-500/20 rounded-full blur-3xl animate-pulse"
-          style={{ animationDelay: "1s" }}
-        ></div>
-        <div
-          className="absolute bottom-20 left-1/4 w-72 h-72 bg-gradient-to-r from-red-400/20 to-pink-500/20 rounded-full blur-3xl animate-pulse"
-          style={{ animationDelay: "2s" }}
-        ></div>
+
+      {/* Statistics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card className="border border-gray-200">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600 font-medium">
+                  Total Energy
+                </p>
+                <p className="text-2xl font-bold text-black">
+                  {totalEnergyConsumed.toFixed(2)} kWh
+                </p>
+              </div>
+              <div className="p-3 bg-green-100 rounded-xl">
+                <BatteryCharging className="h-6 w-6 text-green-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border border-gray-200">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600 font-medium">
+                  Total Revenue
+                </p>
+                <p className="text-2xl font-bold text-black">
+                  NRs. {totalRevenue.toFixed(2)}
+                </p>
+              </div>
+              <div className="p-3 bg-blue-100 rounded-xl">
+                <TrendingUp className="h-6 w-6 text-blue-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border border-gray-200">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600 font-medium">
+                  Avg Duration
+                </p>
+                <p className="text-2xl font-bold text-black">
+                  {averageSessionDuration.toFixed(0)} min
+                </p>
+              </div>
+              <div className="p-3 bg-orange-100 rounded-xl">
+                <Activity className="h-6 w-6 text-orange-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
-      <div className="relative z-10 space-y-8 p-6">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="p-4 rounded-2xl bg-gradient-to-r from-yellow-500 to-orange-600 text-white shadow-xl animate-pulse">
-              <Zap className="h-8 w-8" />
-            </div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-yellow-600 via-orange-600 to-red-600 bg-clip-text text-transparent">
-              Energy Charging Station
-            </h1>
-            <Zap className="h-8 w-8 text-yellow-500 animate-bounce" />
-          </div>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Track your electric vehicle charging sessions with precision and
-            style
-          </p>
-        </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Add New Session Form */}
+        <Card className="border border-gray-200">
+          <CardHeader className="bg-brand-50 border-b border-gray-200">
+            <CardTitle className="text-black">
+              Add New Charging Session
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <Label className="text-black">Session Date</Label>
+                <Input
+                  type="date"
+                  value={formData.session_date}
+                  onChange={(e) =>
+                    setFormData({ ...formData, session_date: e.target.value })
+                  }
+                  className="focus:ring-primary focus:border-primary"
+                />
+              </div>
 
-        {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card className="bg-gradient-to-br from-yellow-50 to-orange-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm text-yellow-600 font-medium">
-                    Total Sessions
-                  </p>
-                  <p className="text-2xl font-bold text-yellow-800">
-                    {sessions.length}
-                  </p>
+                  <Label className="text-black">Start Time</Label>
+                  <Input
+                    type="time"
+                    value={formData.start_time}
+                    onChange={(e) =>
+                      setFormData({ ...formData, start_time: e.target.value })
+                    }
+                    className="focus:ring-primary focus:border-primary"
+                  />
                 </div>
-                <div className="p-3 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-xl text-white">
-                  <BatteryCharging className="h-6 w-6" />
+                <div>
+                  <Label className="text-black">End Time</Label>
+                  <Input
+                    type="time"
+                    value={formData.end_time}
+                    onChange={(e) =>
+                      setFormData({ ...formData, end_time: e.target.value })
+                    }
+                    className="focus:ring-primary focus:border-primary"
+                  />
                 </div>
               </div>
-            </CardContent>
-          </Card>
 
-          <Card className="bg-gradient-to-br from-orange-50 to-red-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-orange-600 font-medium">
-                    Total Cost
-                  </p>
-                  <p className="text-2xl font-bold text-orange-800">
-                    NRs. {totalSessionCost.toFixed(2)}
-                  </p>
-                </div>
-                <div className="p-3 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl text-white">
-                  <TrendingUp className="h-6 w-6" />
-                </div>
+              <div>
+                <Label className="text-black">Energy Consumed (kWh)</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  placeholder="Enter energy consumed"
+                  value={formData.energy_consumed}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      energy_consumed: e.target.value,
+                    })
+                  }
+                  className="focus:ring-primary focus:border-primary"
+                />
               </div>
-            </CardContent>
-          </Card>
 
-          <Card className="bg-gradient-to-br from-red-50 to-pink-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-red-600 font-medium">
-                    Average Cost
-                  </p>
-                  <p className="text-2xl font-bold text-red-800">
-                    NRs. {averageSessionCost.toFixed(2)}
-                  </p>
-                </div>
-                <div className="p-3 bg-gradient-to-r from-red-500 to-pink-500 rounded-xl text-white">
-                  <Activity className="h-6 w-6" />
-                </div>
+              <div>
+                <Label className="text-black">Rate per kWh (NRs.)</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  placeholder="Enter rate per kWh"
+                  value={formData.rate_per_kwh}
+                  onChange={(e) =>
+                    setFormData({ ...formData, rate_per_kwh: e.target.value })
+                  }
+                  className="focus:ring-primary focus:border-primary"
+                />
               </div>
-            </CardContent>
-          </Card>
 
-          <Card className="bg-gradient-to-br from-pink-50 to-purple-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-pink-600 font-medium">
-                    Total Energy
-                  </p>
-                  <p className="text-2xl font-bold text-pink-800">
-                    {totalKcal} kCal
-                  </p>
-                </div>
-                <div className="p-3 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl text-white">
-                  <Battery className="h-6 w-6" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Charging Session Form */}
-          <Card className="bg-gradient-to-br from-white/90 to-yellow-50/90 backdrop-blur-sm border-0 shadow-2xl hover:shadow-3xl transition-all duration-300">
-            <CardHeader className="bg-gradient-to-r from-yellow-500 to-orange-600 text-white rounded-t-lg">
-              <CardTitle className="flex items-center gap-3 text-xl">
-                <div className="p-2 bg-white/20 rounded-lg">
-                  <Zap className="h-6 w-6" />
-                </div>
-                New Charging Session
-                <Sparkles className="h-5 w-5 animate-pulse" />
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-6 space-y-6">
-              <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Battery Percentage Section */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                      <Battery className="h-4 w-4 text-yellow-600" />
-                      Start Battery %
-                    </label>
-                    <Input
-                      type="number"
-                      value={startPercentage}
-                      onChange={(e) =>
-                        setStartPercentage(Number(e.target.value))
-                      }
-                      placeholder="0"
-                      min="0"
-                      max="100"
-                      required
-                      className="border-yellow-200 focus:border-yellow-500 focus:ring-yellow-500"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                      <BatteryCharging className="h-4 w-4 text-green-600" />
-                      End Battery %
-                    </label>
-                    <Input
-                      type="number"
-                      value={endPercentage}
-                      onChange={(e) => setEndPercentage(Number(e.target.value))}
-                      placeholder="0"
-                      min="0"
-                      max="100"
-                      required
-                      className="border-green-200 focus:border-green-500 focus:ring-green-500"
-                    />
-                  </div>
-                </div>
-
-                {/* Charging Progress Visualization */}
-                {startPercentage > 0 && endPercentage > startPercentage && (
-                  <div className="p-4 bg-gradient-to-r from-yellow-50 to-green-50 rounded-lg border border-yellow-200">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium text-gray-600">
-                        Charging Progress
-                      </span>
-                      <span className="text-lg font-bold bg-gradient-to-r from-yellow-600 to-green-600 bg-clip-text text-transparent">
-                        +{calculateChargedPercentage()}%
-                      </span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-3">
-                      <div
-                        className="bg-gradient-to-r from-yellow-500 to-green-500 h-3 rounded-full transition-all duration-500"
-                        style={{ width: `${calculateChargedPercentage()}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Rates Section */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700">
-                      Rate per %
-                    </label>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      value={perPercentRate}
-                      onChange={(e) =>
-                        setPerPercentRate(Number(e.target.value))
-                      }
-                      placeholder="0.00"
-                      min="0"
-                      required
-                      className="border-orange-200 focus:border-orange-500 focus:ring-orange-500"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700">
-                      kCal Consumed
-                    </label>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      value={kcal}
-                      onChange={(e) => setKcal(Number(e.target.value))}
-                      placeholder="0.00"
-                      min="0"
-                      required
-                      className="border-red-200 focus:border-red-500 focus:ring-red-500"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700">
-                      Rate per kCal
-                    </label>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      value={perUnitRate}
-                      onChange={(e) => setPerUnitRate(Number(e.target.value))}
-                      placeholder="0.00"
-                      min="0"
-                      required
-                      className="border-purple-200 focus:border-purple-500 focus:ring-purple-500"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700">
-                      Payment Mode
-                    </label>
-                    <Select
-                      value={paymentMode}
-                      onValueChange={setPaymentMode}
-                      required
-                    >
-                      <SelectTrigger className="border-blue-200 focus:border-blue-500 focus:ring-blue-500">
-                        <SelectValue placeholder="Select payment mode" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {paymentModes.map((mode) => (
-                          <SelectItem key={mode} value={mode}>
-                            {mode}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                {/* Cost Calculation Display */}
-                {(startPercentage > 0 || kcal > 0) && (
-                  <div className="p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
-                    <h4 className="font-semibold text-gray-800 mb-3">
-                      Cost Breakdown
-                    </h4>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span>Percentage Cost:</span>
-                        <span className="font-medium">
-                          NRs. {calculatePercentageCost().toFixed(2)}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>kCal Cost:</span>
-                        <span className="font-medium">
-                          NRs. {calculateKcalCost().toFixed(2)}
-                        </span>
-                      </div>
-                      <div className="border-t border-blue-200 pt-2 flex justify-between font-bold text-lg">
-                        <span>Total Amount:</span>
-                        <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                          NRs. {calculateTotalAmount().toFixed(2)}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                <Button
-                  type="submit"
-                  disabled={submitting}
-                  className="w-full h-12 bg-gradient-to-r from-yellow-500 via-orange-500 to-red-500 hover:from-yellow-600 hover:via-orange-600 hover:to-red-600 text-white font-semibold shadow-lg transition-all duration-300 transform hover:scale-105"
+              <div>
+                <Label className="text-black">Payment Mode</Label>
+                <Select
+                  value={formData.payment_mode}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, payment_mode: value })
+                  }
                 >
-                  {submitting ? (
-                    <div className="flex items-center gap-2">
-                      <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                      Recording Session...
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2">
-                      <Plus className="h-5 w-5" />
-                      Record Charging Session
-                    </div>
-                  )}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
+                  <SelectTrigger className="focus:ring-primary focus:border-primary">
+                    <SelectValue placeholder="Select payment method" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {paymentModes.map((mode) => (
+                      <SelectItem key={mode} value={mode}>
+                        {mode}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-          {/* Recent Sessions Preview */}
-          <Card className="bg-gradient-to-br from-white/90 to-blue-50/90 backdrop-blur-sm border-0 shadow-2xl hover:shadow-3xl transition-all duration-300">
-            <CardHeader className="bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-t-lg">
-              <CardTitle className="flex items-center gap-3 text-xl">
-                <div className="p-2 bg-white/20 rounded-lg">
-                  <Activity className="h-6 w-6" />
-                </div>
-                Recent Sessions
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-6">
-              {sessions.length === 0 ? (
-                <div className="text-center py-8">
-                  <BatteryCharging className="h-16 w-16 mx-auto text-gray-300 mb-4" />
-                  <p className="text-gray-500 text-lg font-medium">
-                    No charging sessions yet
+              {formData.start_time && formData.end_time && (
+                <div className="p-3 bg-brand-50 rounded-lg">
+                  <p className="text-sm text-black">
+                    Duration:{" "}
+                    {calculateDuration(formData.start_time, formData.end_time)}{" "}
+                    minutes
                   </p>
-                  <p className="text-gray-400">
-                    Record your first session to get started!
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-3 max-h-96 overflow-y-auto">
-                  {sessions.slice(0, 5).map((session, index) => (
-                    <div
-                      key={session.id}
-                      className="p-4 bg-gradient-to-r from-white to-blue-50 rounded-lg border border-blue-100 hover:shadow-md transition-all duration-200"
-                      style={{ animationDelay: `${index * 100}ms` }}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg text-white">
-                            <Zap className="h-4 w-4" />
-                          </div>
-                          <div>
-                            <p className="font-medium text-gray-800">
-                              {session.start_percentage}% →{" "}
-                              {session.end_percentage}%
-                            </p>
-                            <p className="text-sm text-gray-500">
-                              {format(
-                                new Date(session.session_date),
-                                "MMM dd, yyyy",
-                              )}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-bold text-blue-600">
-                            NRs. {session.total_amount.toFixed(2)}
-                          </p>
-                          <Badge variant="outline" className="text-xs">
-                            {session.payment_mode}
-                          </Badge>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                  {formData.energy_consumed && formData.rate_per_kwh && (
+                    <p className="text-sm text-black">
+                      Total Amount: NRs.{" "}
+                      {(
+                        parseFloat(formData.energy_consumed) *
+                        parseFloat(formData.rate_per_kwh)
+                      ).toFixed(2)}
+                    </p>
+                  )}
                 </div>
               )}
-            </CardContent>
-          </Card>
-        </div>
 
-        {/* Charging History */}
-        <Card className="bg-gradient-to-br from-white/90 to-gray-50/90 backdrop-blur-sm border-0 shadow-2xl">
-          <CardHeader className="border-b border-gray-200/50 flex flex-row items-center justify-between">
-            <CardTitle className="text-2xl font-bold bg-gradient-to-r from-gray-700 to-gray-900 bg-clip-text text-transparent">
-              Charging History
-            </CardTitle>
-            <div className="flex items-center gap-2">
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-[300px] justify-start text-left font-normal hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50",
-                      !range && "text-muted-foreground",
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {range?.from ? (
-                      range.to ? (
-                        <>
-                          {format(range.from, "LLL dd, y")} -{" "}
-                          {format(range.to, "LLL dd, y")}
-                        </>
-                      ) : (
-                        format(range.from, "LLL dd, y")
-                      )
-                    ) : (
-                      <span>Pick a date range</span>
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="end">
-                  <Calendar
-                    initialFocus
-                    mode="range"
-                    defaultMonth={range?.from}
-                    selected={range}
-                    onSelect={onRangeChange}
-                    numberOfMonths={2}
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
+              <Button
+                type="submit"
+                disabled={submitting}
+                className="w-full bg-primary hover:bg-brand-400 text-black"
+              >
+                {submitting ? "Adding..." : "Add Session"}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+
+        {/* Recent Sessions */}
+        <Card className="border border-gray-200">
+          <CardHeader className="bg-brand-50 border-b border-gray-200">
+            <CardTitle className="text-black">Charging Sessions</CardTitle>
           </CardHeader>
-          <CardContent className="p-0">
+          <CardContent className="p-6">
             {loading ? (
-              <div className="text-center py-10">
-                <div className="w-16 h-16 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full animate-spin mx-auto flex items-center justify-center mb-4">
-                  <Zap className="h-8 w-8 text-white" />
-                </div>
-                <p className="text-gray-600">Loading charging sessions...</p>
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                <p className="text-gray-500 mt-2">Loading sessions...</p>
               </div>
             ) : sessions.length === 0 ? (
-              <div className="text-center py-12">
-                <BatteryCharging className="h-16 w-16 mx-auto text-gray-300 mb-4" />
-                <p className="text-xl font-semibold text-gray-700 mb-2">
-                  No sessions found
-                </p>
-                <p className="text-gray-500">
-                  Start recording your charging sessions to see them here.
+              <div className="text-center py-8">
+                <Battery className="h-12 w-12 mx-auto text-gray-300 mb-3" />
+                <p className="text-gray-500">No charging sessions found</p>
+                <p className="text-sm text-gray-400">
+                  Add your first session to get started!
                 </p>
               </div>
             ) : (
-              <div className="overflow-x-auto">
+              <div className="space-y-4">
                 <Table>
                   <TableHeader>
-                    <TableRow className="bg-gradient-to-r from-gray-50 to-blue-50">
-                      <TableHead className="font-semibold text-gray-700">
-                        Date
-                      </TableHead>
-                      <TableHead className="font-semibold text-gray-700">
-                        Battery Range
-                      </TableHead>
-                      <TableHead className="font-semibold text-gray-700">
-                        Energy (kCal)
-                      </TableHead>
-                      <TableHead className="font-semibold text-gray-700">
-                        Rates
-                      </TableHead>
-                      <TableHead className="font-semibold text-gray-700">
-                        Total Amount
-                      </TableHead>
-                      <TableHead className="font-semibold text-gray-700">
-                        Payment
-                      </TableHead>
-                      <TableHead className="font-semibold text-gray-700">
-                        Actions
-                      </TableHead>
+                    <TableRow>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Duration</TableHead>
+                      <TableHead>Energy</TableHead>
+                      <TableHead>Amount</TableHead>
+                      <TableHead>Payment</TableHead>
+                      {canEditTransactions && <TableHead>Actions</TableHead>}
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    <TableRow>
-                      <TableCell colSpan={4} className="font-bold">
-                        Total
-                      </TableCell>
-                      <TableCell colSpan={2} className="font-bold text-right">
-                        NRs. {totalSessionCost.toFixed(2)}
-                      </TableCell>
-                    </TableRow>
-                    {sessions.map((session, index) => (
-                      <TableRow
-                        key={session.id}
-                        className="hover:bg-gradient-to-r hover:from-yellow-50 hover:to-orange-50 transition-all duration-200"
-                        style={{ animationDelay: `${index * 50}ms` }}
-                      >
-                        <TableCell className="font-medium">
+                    {sessions.map((session) => (
+                      <TableRow key={session.id}>
+                        <TableCell>
                           {format(
                             new Date(session.session_date),
                             "MMM dd, yyyy",
                           )}
                         </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Battery className="h-4 w-4 text-red-500" />
-                            <span>{session.start_percentage}%</span>
-                            <span className="text-gray-400">→</span>
-                            <BatteryCharging className="h-4 w-4 text-green-500" />
-                            <span>{session.end_percentage}%</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>{session.kcal} kCal</TableCell>
-                        <TableCell>
-                          <div className="text-sm">
-                            <div>Per %: NRs. {session.per_percent_rate}</div>
-                            <div>Per kCal: NRs. {session.per_unit_rate}</div>
-                          </div>
+                        <TableCell>{session.duration_minutes} min</TableCell>
+                        <TableCell>{session.energy_consumed} kWh</TableCell>
+                        <TableCell className="font-medium">
+                          NRs. {Number(session.total_amount).toFixed(2)}
                         </TableCell>
                         <TableCell>
-                          <span className="font-bold text-lg bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">
-                            NRs. {session.total_amount.toFixed(2)}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          <Badge
-                            variant="outline"
-                            className="bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200"
-                          >
+                          <Badge variant="outline">
                             {session.payment_mode}
                           </Badge>
                         </TableCell>
-                        <TableCell>
-                          {canEditTransactions && (
+                        {canEditTransactions && (
+                          <TableCell>
                             <div className="flex gap-2">
                               <Button
-                                variant="outline"
                                 size="sm"
+                                variant="outline"
                                 onClick={() => {
                                   setSelectedSession(session);
                                   setIsEditDialogOpen(true);
                                 }}
                               >
-                                Edit
+                                <Edit className="h-3 w-3" />
                               </Button>
                               <AlertDialog>
                                 <AlertDialogTrigger asChild>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                                  >
-                                    <Trash2 className="h-4 w-4" />
+                                  <Button size="sm" variant="outline">
+                                    <Trash2 className="h-3 w-3" />
                                   </Button>
                                 </AlertDialogTrigger>
                                 <AlertDialogContent>
@@ -918,11 +663,13 @@ const ChargingTab = () => {
                                     </AlertDialogTitle>
                                     <AlertDialogDescription>
                                       This action cannot be undone. This will
-                                      permanently delete the session.
+                                      permanently delete the charging session.
                                     </AlertDialogDescription>
                                   </AlertDialogHeader>
                                   <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogCancel>
+                                      Cancel
+                                    </AlertDialogCancel>
                                     <AlertDialogAction
                                       onClick={() => handleDelete(session.id)}
                                     >
@@ -932,8 +679,8 @@ const ChargingTab = () => {
                                 </AlertDialogContent>
                               </AlertDialog>
                             </div>
-                          )}
-                        </TableCell>
+                          </TableCell>
+                        )}
                       </TableRow>
                     ))}
                   </TableBody>
@@ -941,31 +688,6 @@ const ChargingTab = () => {
               </div>
             )}
           </CardContent>
-          {sessions.length > 0 && (
-            <div className="flex justify-center p-4 border-t border-gray-200">
-              <div className="flex items-center gap-4">
-                <Button
-                  onClick={() => onPageChange(page - 1)}
-                  disabled={page === 1}
-                  variant="outline"
-                  className="hover:bg-gradient-to-r hover:from-yellow-50 hover:to-orange-50"
-                >
-                  Previous
-                </Button>
-                <span className="px-4 py-2 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg font-medium">
-                  Page {page}
-                </span>
-                <Button
-                  onClick={() => onPageChange(page + 1)}
-                  disabled={sessions.length < itemsPerPage}
-                  variant="outline"
-                  className="hover:bg-gradient-to-r hover:from-yellow-50 hover:to-orange-50"
-                >
-                  Next
-                </Button>
-              </div>
-            </div>
-          )}
         </Card>
       </div>
     </div>
