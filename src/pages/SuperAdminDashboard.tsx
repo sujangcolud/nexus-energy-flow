@@ -667,6 +667,64 @@ const SuperAdminDashboard = () => {
 
         <Card className="border border-gray-200">
           <CardHeader className="bg-brand-50 border-b border-gray-200">
+            <CardTitle className="text-black">Average Expenses</CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="text-center bg-red-50 p-4 rounded-lg border border-red-200">
+                  <Receipt className="h-6 w-6 mx-auto mb-2 text-red-600" />
+                  <p className="text-sm text-red-700 mb-1">7-Day Average</p>
+                  <p className="text-xl font-bold text-red-700">
+                    NRs. {analytics.weeklyAverageExpenses.toFixed(0)}
+                  </p>
+                  <p className="text-xs text-red-600">per day</p>
+                </div>
+                <div className="text-center bg-orange-50 p-4 rounded-lg border border-orange-200">
+                  <Receipt className="h-6 w-6 mx-auto mb-2 text-orange-600" />
+                  <p className="text-sm text-orange-700 mb-1">
+                    1-Month Average
+                  </p>
+                  <p className="text-xl font-bold text-orange-700">
+                    NRs. {analytics.monthlyAverageExpenses.toFixed(0)}
+                  </p>
+                  <p className="text-xs text-orange-600">per day</p>
+                </div>
+                <div className="text-center bg-gray-50 p-4 rounded-lg border border-gray-200">
+                  <Receipt className="h-6 w-6 mx-auto mb-2 text-gray-600" />
+                  <p className="text-sm text-gray-700 mb-1">All-Time Average</p>
+                  <p className="text-xl font-bold text-gray-700">
+                    NRs. {analytics.dailyAverageExpenses.toFixed(0)}
+                  </p>
+                  <p className="text-xs text-gray-600">per day</p>
+                </div>
+              </div>
+
+              <div className="pt-4 border-t border-gray-200">
+                <div className="grid grid-cols-2 gap-4 text-center">
+                  <div className="bg-gray-50 p-3 rounded-lg">
+                    <p className="text-sm text-gray-600">Total Expenses</p>
+                    <p className="font-bold text-black">
+                      NRs. {analytics.totalExpenses.toLocaleString()}
+                    </p>
+                  </div>
+                  <div className="bg-gray-50 p-3 rounded-lg">
+                    <p className="text-sm text-gray-600">Expense Growth</p>
+                    <p
+                      className={`font-bold ${analytics.expenseGrowth < 0 ? "text-green-600" : "text-red-600"}`}
+                    >
+                      {analytics.expenseGrowth > 0 ? "+" : ""}
+                      {analytics.expenseGrowth}%
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border border-gray-200">
+          <CardHeader className="bg-brand-50 border-b border-gray-200">
             <CardTitle className="text-black">Expense Categories</CardTitle>
           </CardHeader>
           <CardContent className="p-6">
@@ -674,7 +732,7 @@ const SuperAdminDashboard = () => {
               config={{
                 amount: {
                   label: "Amount",
-                  color: "#bbfae1",
+                  color: "#ef4444",
                 },
               }}
               className="h-64"
