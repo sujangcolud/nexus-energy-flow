@@ -45,6 +45,15 @@ const Index = () => {
     );
   }, []);
 
+  console.log(
+    "Index component rendering - authLoading:",
+    authLoading,
+    "user:",
+    !!user,
+    "loading:",
+    loading,
+  );
+
   // Don't render the login form if user is already authenticated
   if (user && !authLoading) {
     return null;
