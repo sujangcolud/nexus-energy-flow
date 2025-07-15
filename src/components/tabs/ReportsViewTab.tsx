@@ -34,6 +34,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { DateRange } from "react-day-picker";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 import {
   FileText,
   Download,
@@ -46,12 +55,15 @@ import {
   PiggyBank,
   BarChart3,
   Calendar,
+  CalendarIcon,
   RefreshCw,
   Eye,
   Filter,
   Target,
   Activity,
   Users,
+  TrendingUp as TrendingUpIcon,
+  LineChart,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -126,6 +138,15 @@ interface BusinessMetrics {
     orderFrequency: number;
     chargingUtilization: number;
   };
+
+  // Business Correlation Data
+  businessCorrelation: Array<{
+    date: string;
+    restaurantOrders: number;
+    chargingSessions: number;
+    restaurantRevenue: number;
+    chargingRevenue: number;
+  }>;
 }
 
 const ReportsViewTab = () => {
@@ -138,6 +159,12 @@ const ReportsViewTab = () => {
   const [selectedView, setSelectedView] = useState<
     "overview" | "revenue" | "expenses" | "trends"
   >("overview");
+  const [correlationDateRange, setCorrelationDateRange] = useState<
+    DateRange | undefined
+  >({
+    from: new Date(new Date().setDate(new Date().getDate() - 30)),
+    to: new Date(),
+  });
 
   const fetchBusinessMetrics = async () => {
     setLoading(true);
@@ -393,6 +420,44 @@ const ReportsViewTab = () => {
       );
       const netCashFlow = totalDeposits - totalWithdrawals;
 
+      // Process business correlation data
+      const correlationData = [];
+      const correlationStartDate =
+        correlationDateRange?.from ||
+        new Date(new Date().setDate(new Date().getDate() - 30));
+      const correlationEndDate = correlationDateRange?.to || new Date();
+      const correlationDaysDiff = Math.ceil(
+        (correlationEndDate.getTime() - correlationStartDate.getTime()) /
+          (1000 * 60 * 60 * 24),
+      );
+
+      for (let i = 0; i < correlationDaysDiff; i++) {
+        const date = new Date(correlationStartDate);
+        date.setDate(date.getDate() + i);
+        const dateStr = date.toISOString().split("T")[0];
+
+        const dayOrders = orders.filter(
+          (order) => order.order_date === dateStr,
+        );
+        const dayCharging = chargingSessions.filter(
+          (session) => session.session_date === dateStr,
+        );
+
+        correlationData.push({
+          date: dateStr,
+          restaurantOrders: dayOrders.length,
+          chargingSessions: dayCharging.length,
+          restaurantRevenue: dayOrders.reduce(
+            (sum, order) => sum + order.total,
+            0,
+          ),
+          chargingRevenue: dayCharging.reduce(
+            (sum, session) => sum + session.total_amount,
+            0,
+          ),
+        });
+      }
+
       const businessMetrics: BusinessMetrics = {
         dailyRevenue,
         monthlyTrends,
@@ -400,6 +465,7 @@ const ReportsViewTab = () => {
         topProducts,
         hourlyPatterns: [], // Would need hour-level data
         paymentMethods,
+        businessCorrelation: correlationData,
         profitabilityAnalysis: {
           totalRevenue,
           totalExpenses,
@@ -473,13 +539,16 @@ const ReportsViewTab = () => {
   };
 
   const COLORS = [
-    "#bbfae1",
-    "#a8f2d1",
-    "#95eac1",
-    "#82e2b1",
-    "#6fdaa1",
-    "#5dd191",
-    "#4ac981",
+    "#3b82f6", // Blue
+    "#10b981", // Green
+    "#f59e0b", // Amber
+    "#ef4444", // Red
+    "#8b5cf6", // Purple
+    "#06b6d4", // Cyan
+    "#84cc16", // Lime
+    "#f97316", // Orange
+    "#ec4899", // Pink
+    "#bbfae1", // Brand color
   ];
 
   if (loading) {
@@ -669,6 +738,208 @@ const ReportsViewTab = () => {
         </Card>
       </div>
 
+      {/* Business Correlation Analytics */}
+      <Card className="border border-gray-200">
+        <CardHeader className="bg-brand-50 border-b border-gray-200">
+          <CardTitle className="flex items-center gap-3 text-black">
+            <div className="p-2 bg-primary rounded-lg">
+              <LineChart className="h-5 w-5 text-black" />
+            </div>
+            Business Correlation Analytics
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-6">
+          {/* Date Range Selector */}
+          <div className="mb-6">
+            <label className="text-sm font-medium text-black mb-2 block">
+              Date Range for Correlation Analysis
+            </label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-80 justify-start text-left font-normal",
+                    !correlationDateRange && "text-muted-foreground",
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {correlationDateRange?.from ? (
+                    correlationDateRange.to ? (
+                      <>
+                        {format(correlationDateRange.from, "LLL dd, y")} -{" "}
+                        {format(correlationDateRange.to, "LLL dd, y")}
+                      </>
+                    ) : (
+                      format(correlationDateRange.from, "LLL dd, y")
+                    )
+                  ) : (
+                    <span>Pick a date range</span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  initialFocus
+                  mode="range"
+                  defaultMonth={correlationDateRange?.from}
+                  selected={correlationDateRange}
+                  onSelect={setCorrelationDateRange}
+                  numberOfMonths={2}
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+
+          {/* Correlation Line Chart */}
+          <div className="mb-6">
+            <h4 className="text-lg font-semibold text-black mb-4">
+              Restaurant Orders vs Charging Sessions Correlation
+            </h4>
+            <ChartContainer
+              config={{
+                restaurantOrders: {
+                  label: "Restaurant Orders",
+                  color: "#10b981",
+                },
+                chargingSessions: {
+                  label: "Charging Sessions",
+                  color: "#3b82f6",
+                },
+                restaurantRevenue: {
+                  label: "Restaurant Revenue",
+                  color: "#84cc16",
+                },
+                chargingRevenue: {
+                  label: "Charging Revenue",
+                  color: "#f59e0b",
+                },
+              }}
+              className="h-80"
+            >
+              <ComposedChart data={metrics.businessCorrelation}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis
+                  dataKey="date"
+                  tickFormatter={(value) =>
+                    new Date(value).toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                    })
+                  }
+                />
+                <YAxis yAxisId="count" orientation="left" />
+                <YAxis yAxisId="revenue" orientation="right" />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <ChartLegend content={<ChartLegendContent />} />
+                <Line
+                  yAxisId="count"
+                  type="monotone"
+                  dataKey="restaurantOrders"
+                  stroke="#10b981"
+                  strokeWidth={3}
+                  dot={{ fill: "#10b981", r: 4 }}
+                  name="Restaurant Orders"
+                />
+                <Line
+                  yAxisId="count"
+                  type="monotone"
+                  dataKey="chargingSessions"
+                  stroke="#3b82f6"
+                  strokeWidth={3}
+                  dot={{ fill: "#3b82f6", r: 4 }}
+                  name="Charging Sessions"
+                />
+                <Line
+                  yAxisId="revenue"
+                  type="monotone"
+                  dataKey="restaurantRevenue"
+                  stroke="#84cc16"
+                  strokeWidth={2}
+                  strokeDasharray="5 5"
+                  dot={{ fill: "#84cc16", r: 3 }}
+                  name="Restaurant Revenue"
+                />
+                <Line
+                  yAxisId="revenue"
+                  type="monotone"
+                  dataKey="chargingRevenue"
+                  stroke="#f59e0b"
+                  strokeWidth={2}
+                  strokeDasharray="5 5"
+                  dot={{ fill: "#f59e0b", r: 3 }}
+                  name="Charging Revenue"
+                />
+              </ComposedChart>
+            </ChartContainer>
+          </div>
+
+          {/* Daily Summary Table */}
+          <div>
+            <h4 className="text-lg font-semibold text-black mb-4">
+              Daily Business Summary
+            </h4>
+            <div className="max-h-64 overflow-y-auto border border-gray-200 rounded-lg">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 sticky top-0">
+                  <tr>
+                    <th className="px-4 py-3 text-left font-semibold text-black">
+                      Date
+                    </th>
+                    <th className="px-4 py-3 text-right font-semibold text-black">
+                      Charging Sessions
+                    </th>
+                    <th className="px-4 py-3 text-right font-semibold text-black">
+                      Restaurant Income
+                    </th>
+                    <th className="px-4 py-3 text-right font-semibold text-black">
+                      Charging Revenue
+                    </th>
+                    <th className="px-4 py-3 text-right font-semibold text-black">
+                      Total Revenue
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {metrics.businessCorrelation
+                    .slice()
+                    .reverse()
+                    .map((day, index) => (
+                      <tr
+                        key={day.date}
+                        className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}
+                      >
+                        <td className="px-4 py-3 text-black">
+                          {new Date(day.date).toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                            year: "2-digit",
+                          })}
+                        </td>
+                        <td className="px-4 py-3 text-right text-black font-medium">
+                          {day.chargingSessions}
+                        </td>
+                        <td className="px-4 py-3 text-right text-black font-medium">
+                          NRs. {day.restaurantRevenue.toLocaleString()}
+                        </td>
+                        <td className="px-4 py-3 text-right text-black font-medium">
+                          NRs. {day.chargingRevenue.toLocaleString()}
+                        </td>
+                        <td className="px-4 py-3 text-right text-black font-bold">
+                          NRs.{" "}
+                          {(
+                            day.restaurantRevenue + day.chargingRevenue
+                          ).toLocaleString()}
+                        </td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Revenue Trends Chart */}
       <Card className="border border-gray-200">
         <CardHeader className="bg-brand-50 border-b border-gray-200">
@@ -677,9 +948,9 @@ const ReportsViewTab = () => {
         <CardContent className="p-6">
           <ChartContainer
             config={{
-              restaurant: { label: "Restaurant", color: "#82e2b1" },
-              charging: { label: "EV Charging", color: "#bbfae1" },
-              total: { label: "Total", color: "#6fdaa1" },
+              restaurant: { label: "Restaurant", color: "#10b981" },
+              charging: { label: "EV Charging", color: "#3b82f6" },
+              total: { label: "Total", color: "#8b5cf6" },
             }}
             className="h-80"
           >
@@ -700,13 +971,13 @@ const ReportsViewTab = () => {
               <Area
                 type="monotone"
                 dataKey="total"
-                stroke="#6fdaa1"
-                fill="#6fdaa1"
+                stroke="#8b5cf6"
+                fill="#8b5cf6"
                 fillOpacity={0.3}
                 name="Total Revenue"
               />
-              <Bar dataKey="restaurant" fill="#82e2b1" name="Restaurant" />
-              <Bar dataKey="charging" fill="#bbfae1" name="EV Charging" />
+              <Bar dataKey="restaurant" fill="#10b981" name="Restaurant" />
+              <Bar dataKey="charging" fill="#3b82f6" name="EV Charging" />
             </ComposedChart>
           </ChartContainer>
         </CardContent>
@@ -724,9 +995,9 @@ const ReportsViewTab = () => {
           <CardContent className="p-6">
             <ChartContainer
               config={{
-                revenue: { label: "Revenue", color: "#bbfae1" },
-                expenses: { label: "Expenses", color: "#82e2b1" },
-                profit: { label: "Profit", color: "#6fdaa1" },
+                revenue: { label: "Revenue", color: "#10b981" },
+                expenses: { label: "Expenses", color: "#ef4444" },
+                profit: { label: "Profit", color: "#3b82f6" },
               }}
               className="h-64"
             >
@@ -736,14 +1007,14 @@ const ReportsViewTab = () => {
                 <YAxis />
                 <ChartTooltip content={<ChartTooltipContent />} />
                 <ChartLegend content={<ChartLegendContent />} />
-                <Bar dataKey="revenue" fill="#bbfae1" name="Revenue" />
-                <Bar dataKey="expenses" fill="#82e2b1" name="Expenses" />
+                <Bar dataKey="revenue" fill="#10b981" name="Revenue" />
+                <Bar dataKey="expenses" fill="#ef4444" name="Expenses" />
                 <Line
                   type="monotone"
                   dataKey="profit"
-                  stroke="#6fdaa1"
+                  stroke="#3b82f6"
                   strokeWidth={3}
-                  dot={{ fill: "#6fdaa1" }}
+                  dot={{ fill: "#3b82f6" }}
                   name="Profit"
                 />
               </ComposedChart>
@@ -796,7 +1067,7 @@ const ReportsViewTab = () => {
           <CardContent className="p-6">
             <ChartContainer
               config={{
-                amount: { label: "Amount", color: "#bbfae1" },
+                amount: { label: "Amount", color: "#06b6d4" },
               }}
               className="h-64"
             >
@@ -807,7 +1078,7 @@ const ReportsViewTab = () => {
                 <ChartTooltip content={<ChartTooltipContent />} />
                 <Bar
                   dataKey="amount"
-                  fill="#bbfae1"
+                  fill="#06b6d4"
                   name="Transaction Amount"
                 />
               </BarChart>
