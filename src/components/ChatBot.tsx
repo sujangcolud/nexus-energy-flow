@@ -52,10 +52,6 @@ const ChatBot = ({ isOpen, onToggle }: ChatBotProps) => {
     setIsLoading(true);
 
     try {
-<<<<<<< HEAD
-      const context = "";
-      const botResponse = await fetchOpenAIAnswer(inputValue, context);
-=======
       const { data, error } = await supabase.functions.invoke("chatbot", {
         body: { question: inputValue },
       });
@@ -63,7 +59,6 @@ const ChatBot = ({ isOpen, onToggle }: ChatBotProps) => {
       if (error) {
         throw new Error(error.message);
       }
->>>>>>> origin/main
 
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
