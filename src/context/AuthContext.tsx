@@ -106,11 +106,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   useEffect(() => {
     console.log("Setting up auth state listener");
 
+    // Add a timeout to prevent infinite loading
+    const timeoutId = setTimeout(() => {
+      console.log("Auth loading timeout reached, setting loading to false");
+      setLoading(false);
+    }, 10000); // 10 second timeout
+
     // Set up auth state listener
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log("Auth state changed:", event, session);
+      clearTimeout(timeoutId); // Clear timeout since we got a response
       setSession(session);
 
       if (session?.user) {
@@ -126,18 +133,29 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     });
 
     // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log("Initial session check:", session);
-      setSession(session);
-      if (session?.user) {
-        setTimeout(() => {
-          fetchUserProfile(session.user.id);
-        }, 100);
-      }
-      setLoading(false);
-    });
+    supabase.auth
+      .getSession()
+      .then(({ data: { session } }) => {
+        console.log("Initial session check:", session);
+        clearTimeout(timeoutId); // Clear timeout since we got a response
+        setSession(session);
+        if (session?.user) {
+          setTimeout(() => {
+            fetchUserProfile(session.user.id);
+          }, 100);
+        }
+        setLoading(false);
+      })
+      .catch((error) => {
+        console.error("Error getting session:", error);
+        clearTimeout(timeoutId);
+        setLoading(false);
+      });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(timeoutId);
+    };
   }, []);
 
   const login = async (email: string, password: string) => {
