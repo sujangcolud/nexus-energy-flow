@@ -49,19 +49,34 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     try {
       console.log("Fetching profile for user:", userId);
 
-      // Try to get profile first
-      const { data: profile, error: profileError } = await supabase
+      // Add timeout for profile fetch
+      const profilePromise = supabase
         .from("profiles")
         .select("*")
         .eq("id", userId)
         .maybeSingle();
 
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error("Profile fetch timeout")), 5000);
+      });
+
+      const { data: profile, error: profileError } = (await Promise.race([
+        profilePromise,
+        timeoutPromise,
+      ])) as any;
+
       console.log("Profile data:", profile, "Profile error:", profileError);
 
-      // Use the new security definer function to get user role safely
-      const { data: userRole, error: roleError } = await supabase.rpc(
-        "get_current_user_role",
-      );
+      // Use the new security definer function to get user role safely with timeout
+      const rolePromise = supabase.rpc("get_current_user_role");
+      const roleTimeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error("Role fetch timeout")), 5000);
+      });
+
+      const { data: userRole, error: roleError } = (await Promise.race([
+        rolePromise,
+        roleTimeoutPromise,
+      ])) as any;
 
       console.log("Role data:", userRole, "Role error:", roleError);
 
