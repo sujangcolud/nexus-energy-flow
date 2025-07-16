@@ -78,6 +78,10 @@ const App = () => {
                 <Route path="deposits" element={<DepositsTab />} />
                 <Route path="withdrawals" element={<WithdrawalsTab />} />
                 <Route path="cooperative" element={<CooperativeSavingsTab />} />
+                <Route
+                  path="share-investments"
+                  element={<ShareInvestmentsTab />}
+                />
                 {/* TODO: Add role-based protection for menu if needed at route level, or handle in MenuManagementTab */}
                 <Route path="menu" element={<MenuManagementTab />} />
                 <Route path="insights" element={<InsightsTab />} />
