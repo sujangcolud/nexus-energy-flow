@@ -27,9 +27,9 @@ import {
   Upload,
   LayoutDashboard,
   Settings as SettingsIcon,
+  Sparkles,
   Bell,
   Search,
-  TrendingUp,
 } from "lucide-react";
 import ChatBot from "@/components/ChatBot";
 
@@ -46,7 +46,6 @@ import ReportsViewTab from "@/components/tabs/ReportsViewTab";
 import MenuManagementTab from "@/components/tabs/MenuManagementTab";
 import DataInputTab from "@/components/tabs/DataInputTab";
 import UserManagementTab from "@/components/tabs/UserManagementTab";
-import ShareInvestmentsTab from "@/components/tabs/ShareInvestmentsTab";
 
 const Dashboard = () => {
   const { user, signOut, userRole } = useAuth();
@@ -62,7 +61,7 @@ const Dashboard = () => {
     }
   };
 
-  // Define role-based navigation items with clean color schemes
+  // Define role-based navigation items with vibrant color schemes
   const getNavItems = () => {
     const allItems = [
       // Data Entry - accessible to data_entry, super_admin
@@ -73,8 +72,8 @@ const Dashboard = () => {
         icon: ShoppingCart,
         component: OrdersTab,
         roles: ["data_entry", "super_admin"],
-        color: "bg-orange-600",
-        bgColor: "bg-orange-50",
+        gradient: "from-orange-400 via-pink-500 to-red-500",
+        bgGradient: "from-orange-50 to-pink-50",
         description: "Manage food orders",
       },
       {
@@ -84,8 +83,8 @@ const Dashboard = () => {
         icon: Zap,
         component: ChargingTab,
         roles: ["data_entry", "super_admin"],
-        color: "bg-yellow-600",
-        bgColor: "bg-yellow-50",
+        gradient: "from-yellow-400 via-orange-500 to-red-500",
+        bgGradient: "from-yellow-50 to-orange-50",
         description: "Track energy consumption",
       },
       {
@@ -95,8 +94,8 @@ const Dashboard = () => {
         icon: Receipt,
         component: ExpensesTab,
         roles: ["data_entry", "super_admin"],
-        color: "bg-red-600",
-        bgColor: "bg-red-50",
+        gradient: "from-red-500 via-pink-500 to-purple-600",
+        bgGradient: "from-red-50 to-purple-50",
         description: "Monitor business expenses",
       },
       {
@@ -106,8 +105,8 @@ const Dashboard = () => {
         icon: CreditCard,
         component: DepositsTab,
         roles: ["data_entry", "super_admin"],
-        color: "bg-green-600",
-        bgColor: "bg-green-50",
+        gradient: "from-green-400 via-emerald-500 to-teal-600",
+        bgGradient: "from-green-50 to-emerald-50",
         description: "Handle financial deposits",
       },
       {
@@ -117,8 +116,8 @@ const Dashboard = () => {
         icon: Banknote,
         component: WithdrawalsTab,
         roles: ["data_entry", "super_admin"],
-        color: "bg-blue-600",
-        bgColor: "bg-blue-50",
+        gradient: "from-blue-500 via-indigo-500 to-purple-600",
+        bgGradient: "from-blue-50 to-indigo-50",
         description: "Process withdrawals",
       },
       {
@@ -128,31 +127,9 @@ const Dashboard = () => {
         icon: Users,
         component: CooperativeSavingsTab,
         roles: ["data_entry", "super_admin"],
-        color: "bg-teal-600",
-        bgColor: "bg-teal-50",
+        gradient: "from-teal-400 via-cyan-500 to-blue-600",
+        bgGradient: "from-teal-50 to-cyan-50",
         description: "Cooperative savings management",
-      },
-      {
-        id: "share_investments",
-        path: "share-investments",
-        label: "Share Investments",
-        icon: TrendingUp,
-        component: ShareInvestmentsTab,
-        roles: ["data_entry", "super_admin"],
-        color: "bg-emerald-600",
-        bgColor: "bg-emerald-50",
-        description: "Manage share investments",
-      },
-      // Add Analytics page
-      {
-        id: "analytics",
-        path: "analytics",
-        label: "Analytics",
-        icon: BarChart3,
-        roles: ["reports_viewer", "super_admin"],
-        color: "bg-purple-600",
-        bgColor: "bg-purple-50",
-        description: "Financial analytics & insights",
       },
 
       // Reports and Analytics - accessible to reports_viewer, super_admin
@@ -163,8 +140,8 @@ const Dashboard = () => {
         icon: FileText,
         component: ReportsTab,
         roles: ["reports_viewer", "super_admin"],
-        color: "bg-violet-600",
-        bgColor: "bg-violet-50",
+        gradient: "from-violet-500 via-purple-500 to-pink-600",
+        bgGradient: "from-violet-50 to-purple-50",
         description: "Generate business reports",
       },
       {
@@ -174,20 +151,20 @@ const Dashboard = () => {
         icon: FileText,
         component: ReportsViewTab,
         roles: ["reports_viewer", "super_admin"],
-        color: "bg-indigo-600",
-        bgColor: "bg-indigo-50",
+        gradient: "from-indigo-500 via-blue-500 to-cyan-600",
+        bgGradient: "from-indigo-50 to-blue-50",
         description: "View generated reports",
       },
       {
         id: "insights",
         path: "insights",
-        label: "Insights",
+        label: "Analytics",
         icon: BarChart3,
         component: InsightsTab,
         roles: ["reports_viewer", "super_admin"],
-        color: "bg-green-600",
-        bgColor: "bg-green-50",
-        description: "Business insights",
+        gradient: "from-emerald-500 via-green-500 to-lime-600",
+        bgGradient: "from-emerald-50 to-green-50",
+        description: "Business analytics & insights",
       },
       {
         id: "data-input",
@@ -196,8 +173,8 @@ const Dashboard = () => {
         icon: Upload,
         component: DataInputTab,
         roles: ["reports_viewer", "super_admin"],
-        color: "bg-sky-600",
-        bgColor: "bg-sky-50",
+        gradient: "from-sky-400 via-blue-500 to-indigo-600",
+        bgGradient: "from-sky-50 to-blue-50",
         description: "Import data in bulk",
       },
 
@@ -208,8 +185,8 @@ const Dashboard = () => {
         label: "Infographics",
         icon: LayoutDashboard,
         roles: ["super_admin"],
-        color: "bg-rose-600",
-        bgColor: "bg-rose-50",
+        gradient: "from-rose-500 via-pink-500 to-fuchsia-600",
+        bgGradient: "from-rose-50 to-pink-50",
         description: "Visual analytics dashboard",
       },
       {
@@ -219,8 +196,8 @@ const Dashboard = () => {
         icon: UtensilsCrossed,
         component: MenuManagementTab,
         roles: ["super_admin"],
-        color: "bg-amber-600",
-        bgColor: "bg-amber-50",
+        gradient: "from-amber-400 via-yellow-500 to-orange-600",
+        bgGradient: "from-amber-50 to-yellow-50",
         description: "Manage menu items",
       },
       {
@@ -230,8 +207,8 @@ const Dashboard = () => {
         icon: UserCog,
         component: UserManagementTab,
         roles: ["super_admin"],
-        color: "bg-slate-600",
-        bgColor: "bg-slate-50",
+        gradient: "from-slate-600 via-gray-700 to-zinc-800",
+        bgGradient: "from-slate-50 to-gray-50",
         description: "Manage users & permissions",
       },
     ];
@@ -258,30 +235,30 @@ const Dashboard = () => {
   // Show access denied message if user has no accessible items
   if (userRole && navItems.length === 0) {
     return (
-      <div className="min-h-screen bg-slate-50">
-        <header className="bg-white shadow-sm border-b border-slate-200 sticky top-0 z-50">
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50">
+        <header className="bg-white/80 backdrop-blur-md shadow-lg border-b border-purple-200/50 sticky top-0 z-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center py-4">
               <div className="flex items-center gap-3">
-                <div className="p-3 rounded-lg shadow-sm bg-slate-600 text-white">
+                <div className="p-3 rounded-xl shadow-lg bg-gradient-to-r from-purple-600 to-pink-600 text-white">
                   <BarChart3 className="h-6 w-6" />
                 </div>
                 <div>
-                  <h1 className="text-xl font-bold text-slate-800">
+                  <h1 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
                     EcoSoft Pro
                   </h1>
-                  <p className="text-sm text-slate-600">
+                  <p className="text-sm text-gray-600">
                     Business Management System
                   </p>
                 </div>
               </div>
 
               <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2 text-sm text-slate-700">
+                <div className="flex items-center gap-2 text-sm text-gray-700">
                   <User className="h-4 w-4" />
                   <span>{user?.email}</span>
                   {userRole && (
-                    <span className="bg-slate-100 text-slate-700 px-3 py-1 rounded-full text-xs font-medium">
+                    <span className="bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 px-3 py-1 rounded-full text-xs font-medium">
                       {userRole.replace("_", " ")}
                     </span>
                   )}
@@ -291,7 +268,7 @@ const Dashboard = () => {
                   variant="outline"
                   size="sm"
                   onClick={handleSignOut}
-                  className="flex items-center gap-2 hover:bg-red-50 hover:border-red-300"
+                  className="flex items-center gap-2 hover:bg-gradient-to-r hover:from-red-50 hover:to-pink-50 hover:border-red-300"
                 >
                   <LogOut className="h-4 w-4" />
                   Sign Out
@@ -300,7 +277,7 @@ const Dashboard = () => {
                   <Button
                     variant="outline"
                     size="icon"
-                    className="hover:bg-slate-100 hover:border-slate-300"
+                    className="hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 hover:border-blue-300"
                   >
                     <SettingsIcon className="h-4 w-4" />
                   </Button>
@@ -311,15 +288,15 @@ const Dashboard = () => {
         </header>
 
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <Card className="max-w-md mx-auto shadow-lg border border-slate-200 bg-white">
+          <Card className="max-w-md mx-auto shadow-2xl border-0 bg-white/70 backdrop-blur-sm">
             <CardContent className="flex flex-col items-center justify-center p-8 space-y-4">
-              <div className="p-4 rounded-full bg-slate-600 text-white">
+              <div className="p-4 rounded-full bg-gradient-to-r from-yellow-400 to-orange-500 text-white">
                 <User className="h-8 w-8" />
               </div>
-              <h2 className="text-xl font-semibold text-slate-900">
+              <h2 className="text-xl font-semibold text-gray-900">
                 Access Pending
               </h2>
-              <p className="text-center text-slate-600">
+              <p className="text-center text-gray-600">
                 Your account role ({userRole.replace("_", " ")}) is being
                 configured. Please contact your administrator for access.
               </p>
@@ -331,9 +308,22 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 relative overflow-hidden">
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-10 left-10 w-72 h-72 bg-gradient-to-r from-blue-400/20 to-purple-600/20 rounded-full blur-3xl animate-pulse"></div>
+        <div
+          className="absolute top-1/2 right-10 w-96 h-96 bg-gradient-to-r from-pink-400/20 to-orange-500/20 rounded-full blur-3xl animate-pulse"
+          style={{ animationDelay: "1s" }}
+        ></div>
+        <div
+          className="absolute bottom-10 left-1/3 w-80 h-80 bg-gradient-to-r from-emerald-400/20 to-cyan-500/20 rounded-full blur-3xl animate-pulse"
+          style={{ animationDelay: "2s" }}
+        ></div>
+      </div>
+
       {/* Header */}
-      <header className="bg-white shadow-sm border-b border-slate-200 sticky top-0 z-50">
+      <header className="bg-white/80 backdrop-blur-md shadow-lg border-b border-purple-200/50 sticky top-0 z-50 relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center gap-4">
@@ -342,7 +332,7 @@ const Dashboard = () => {
                   variant="outline"
                   size="icon"
                   onClick={() => navigate(-1)}
-                  className="hover:bg-slate-100 hover:border-slate-300 transition-colors"
+                  className="hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50 hover:border-purple-300 hover:scale-105 transition-all duration-200"
                 >
                   <ArrowLeft className="h-4 w-4" />
                 </Button>
@@ -356,16 +346,17 @@ const Dashboard = () => {
               >
                 {({ isActive }) => (
                   <>
-                    <div className="p-3 rounded-lg shadow-sm transition-all group-hover:shadow-md bg-slate-600 text-white">
+                    <div className="p-3 rounded-xl shadow-lg transition-all group-hover:shadow-xl group-hover:scale-105 bg-gradient-to-r from-purple-600 to-pink-600 text-white">
                       <BarChart3 className="h-6 w-6" />
                     </div>
                     <div>
                       <h1
-                        className={`text-xl font-bold transition-colors ${isActive ? "text-slate-800" : "text-slate-700 group-hover:text-slate-800"}`}
+                        className={`text-xl font-bold transition-colors flex items-center gap-2 ${isActive ? "bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent" : "text-gray-800 group-hover:bg-gradient-to-r group-hover:from-purple-600 group-hover:to-pink-600 group-hover:bg-clip-text group-hover:text-transparent"}`}
                       >
                         EcoSoft Pro
+                        <Sparkles className="h-5 w-5 text-yellow-500 animate-pulse" />
                       </h1>
-                      <p className="text-sm text-slate-600">
+                      <p className="text-sm text-gray-600">
                         Business Management System
                       </p>
                     </div>
@@ -375,13 +366,13 @@ const Dashboard = () => {
             </div>
 
             <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2 text-sm text-slate-700">
-                <div className="p-2 rounded-full bg-slate-100">
-                  <User className="h-4 w-4 text-slate-600" />
+              <div className="flex items-center gap-2 text-sm text-gray-700">
+                <div className="p-2 rounded-full bg-gradient-to-r from-blue-100 to-purple-100">
+                  <User className="h-4 w-4 text-purple-600" />
                 </div>
                 <span className="font-medium">{user?.email}</span>
                 {userRole && (
-                  <span className="bg-slate-100 text-slate-700 px-3 py-1 rounded-full text-xs font-medium border border-slate-200">
+                  <span className="bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 px-3 py-1 rounded-full text-xs font-medium border border-purple-200">
                     {userRole.replace("_", " ")}
                   </span>
                 )}
@@ -390,7 +381,7 @@ const Dashboard = () => {
               <Button
                 variant="outline"
                 size="icon"
-                className="hover:bg-slate-100 hover:border-slate-300 transition-colors"
+                className="hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 hover:border-blue-300 hover:scale-105 transition-all duration-200"
               >
                 <Bell className="h-4 w-4" />
               </Button>
@@ -399,7 +390,7 @@ const Dashboard = () => {
                 variant="outline"
                 size="sm"
                 onClick={handleSignOut}
-                className="flex items-center gap-2 hover:bg-red-50 hover:border-red-300 transition-colors"
+                className="flex items-center gap-2 hover:bg-gradient-to-r hover:from-red-50 hover:to-pink-50 hover:border-red-300 hover:scale-105 transition-all duration-200"
               >
                 <LogOut className="h-4 w-4" />
                 Sign Out
@@ -409,7 +400,7 @@ const Dashboard = () => {
                 <Button
                   variant="outline"
                   size="icon"
-                  className="hover:bg-slate-100 hover:border-slate-300 transition-colors"
+                  className="hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 hover:border-blue-300 hover:scale-105 transition-all duration-200"
                 >
                   <SettingsIcon className="h-4 w-4" />
                 </Button>
@@ -420,11 +411,11 @@ const Dashboard = () => {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
         {/* Mobile-only active page title */}
         {isSubPageActive && (
           <div className="sm:hidden mb-6 text-center">
-            <h2 className="text-2xl font-bold text-slate-800">
+            <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
               {currentPageTitle}
             </h2>
           </div>
@@ -435,12 +426,12 @@ const Dashboard = () => {
           <div className="space-y-8">
             {/* Welcome Section */}
             <div className="text-center mb-12">
-              <h1 className="text-4xl font-bold text-slate-800 mb-4">
-                Welcome back, {user?.name || "User"}!
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 via-pink-600 to-orange-500 bg-clip-text text-transparent mb-4">
+                Welcome back, {user?.name || "User"}! ✨
               </h1>
-              <p className="text-xl text-slate-600 max-w-2xl mx-auto">
-                Choose a module below to manage your business operations
-                efficiently
+              <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+                Choose a module below to manage your business operations with
+                style and efficiency
               </p>
             </div>
 
@@ -451,23 +442,29 @@ const Dashboard = () => {
                 return (
                   <Link key={item.id} to={item.path} className="block group">
                     <Card
-                      className={`cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-105 ${item.bgColor} border border-slate-200 h-full`}
+                      className={`cursor-pointer transition-all duration-300 ease-in-out hover:shadow-2xl hover:scale-110 hover:-rotate-1 bg-gradient-to-br ${item.bgGradient} hover:shadow-purple-200/50 border-0 overflow-hidden relative h-full`}
+                      style={{ animationDelay: `${index * 100}ms` }}
                     >
-                      <CardContent className="flex flex-col items-center justify-center p-6 space-y-4 h-full">
+                      <div className="absolute inset-0 bg-gradient-to-r from-white/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                      <CardContent className="flex flex-col items-center justify-center p-6 space-y-4 h-full relative z-10">
                         <div
-                          className={`p-4 rounded-lg transition-all duration-300 ${item.color} text-white shadow-sm group-hover:shadow-md`}
+                          className={`p-4 rounded-2xl transition-all duration-300 ease-in-out bg-gradient-to-r ${item.gradient} text-white shadow-lg group-hover:shadow-xl group-hover:scale-110`}
                         >
                           <Icon className="h-8 w-8" />
                         </div>
                         <div className="text-center space-y-2">
-                          <p className="font-semibold text-lg text-slate-800">
+                          <p className="font-bold text-lg transition-colors duration-200 ease-in-out text-gray-800 group-hover:text-gray-900">
                             {item.label}
                           </p>
-                          <p className="text-sm text-slate-600">
+                          <p className="text-sm text-gray-600 group-hover:text-gray-700 transition-colors duration-200">
                             {item.description}
                           </p>
                         </div>
                       </CardContent>
+
+                      {/* Floating dots decoration */}
+                      <div className="absolute top-2 right-2 w-2 h-2 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full opacity-60 group-hover:opacity-100 transition-opacity duration-300"></div>
+                      <div className="absolute top-2 right-6 w-1 h-1 bg-gradient-to-r from-pink-400 to-red-500 rounded-full opacity-40 group-hover:opacity-80 transition-opacity duration-300"></div>
                     </Card>
                   </Link>
                 );
@@ -476,7 +473,7 @@ const Dashboard = () => {
 
             {/* Quick Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
-              <Card className="bg-blue-50 border border-blue-200 shadow-sm hover:shadow-md transition-shadow">
+              <Card className="bg-gradient-to-br from-blue-50 to-cyan-50 border-0 shadow-lg hover:shadow-xl transition-all duration-300">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
@@ -487,14 +484,14 @@ const Dashboard = () => {
                         {navItems.length}
                       </p>
                     </div>
-                    <div className="p-3 bg-blue-600 rounded-lg text-white">
+                    <div className="p-3 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl text-white">
                       <LayoutDashboard className="h-6 w-6" />
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="bg-green-50 border border-green-200 shadow-sm hover:shadow-md transition-shadow">
+              <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-0 shadow-lg hover:shadow-xl transition-all duration-300">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
@@ -505,26 +502,26 @@ const Dashboard = () => {
                         {userRole?.replace("_", " ")}
                       </p>
                     </div>
-                    <div className="p-3 bg-green-600 rounded-lg text-white">
+                    <div className="p-3 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl text-white">
                       <User className="h-6 w-6" />
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="bg-slate-50 border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+              <Card className="bg-gradient-to-br from-purple-50 to-pink-50 border-0 shadow-lg hover:shadow-xl transition-all duration-300">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-slate-600 font-medium">
+                      <p className="text-sm text-purple-600 font-medium">
                         System Status
                       </p>
-                      <p className="text-2xl font-bold text-slate-800">
+                      <p className="text-2xl font-bold text-purple-800">
                         Online
                       </p>
                     </div>
-                    <div className="p-3 bg-slate-600 rounded-lg text-white">
-                      <BarChart3 className="h-6 w-6" />
+                    <div className="p-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl text-white">
+                      <Sparkles className="h-6 w-6" />
                     </div>
                   </div>
                 </CardContent>

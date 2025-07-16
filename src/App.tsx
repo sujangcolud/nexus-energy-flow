@@ -24,10 +24,8 @@ import ReportsTab from "./components/tabs/ReportsTab";
 import ReportsViewTab from "./components/tabs/ReportsViewTab";
 import DataInputTab from "./components/tabs/DataInputTab";
 import UserManagementTab from "./components/tabs/UserManagementTab";
-import ShareInvestmentsTab from "./components/tabs/ShareInvestmentsTab";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import Settings from "./pages/Settings";
-import Analytics from "./pages/Analytics";
 import { Outlet } from "react-router-dom"; // Needed for nested routes
 
 const queryClient = new QueryClient();
@@ -78,10 +76,9 @@ const App = () => {
                 <Route path="expenses" element={<ExpensesTab />} />
                 <Route path="deposits" element={<DepositsTab />} />
                 <Route path="withdrawals" element={<WithdrawalsTab />} />
-                <Route path="cooperative" element={<CooperativeSavingsTab />} />
                 <Route
-                  path="share-investments"
-                  element={<ShareInvestmentsTab />}
+                  path="cooperative"
+                  element={<CooperativeSavingsTab />}
                 />
                 {/* TODO: Add role-based protection for menu if needed at route level, or handle in MenuManagementTab */}
                 <Route path="menu" element={<MenuManagementTab />} />
@@ -90,7 +87,6 @@ const App = () => {
                 <Route path="reports-view" element={<ReportsViewTab />} />
                 <Route path="data-input" element={<DataInputTab />} />
                 <Route path="user-management" element={<UserManagementTab />} />
-                <Route path="analytics" element={<Analytics />} />
                 <Route
                   path="super-admin"
                   element={

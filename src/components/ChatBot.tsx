@@ -3,17 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Badge } from "@/components/ui/badge";
-import {
-  Send,
-  Bot,
-  User,
-  MessageCircle,
-  X,
-  Minimize2,
-  RefreshCw,
-  AlertCircle,
-} from "lucide-react";
+import { Send, Bot, User, MessageCircle, X, Minimize2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Message {
@@ -33,26 +23,13 @@ const ChatBot = ({ isOpen, onToggle }: ChatBotProps) => {
     {
       id: "1",
       type: "bot",
-      content:
-        '🔋 Welcome to Energy Palace Nexus Business Assistant! I\'m here to help you analyze your restaurant and charging station operations.\n\n💡 I can help with:\n• Financial analysis and KPIs\n• Revenue optimization strategies\n• Expense management insights\n• Cash flow analysis\n• Menu performance tracking\n• Charging station utilization\n• Business forecasting\n\nTry asking: "What\'s my revenue breakdown this week?" or "How is my cash flow?"',
+      content: "Hello! I'm your business assistant. How can I help you today?",
       timestamp: new Date(),
     },
   ]);
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [connectionStatus, setConnectionStatus] = useState<
-    "connected" | "error" | "connecting"
-  >("connected");
-  const [retryCount, setRetryCount] = useState(0);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
-
-  const exampleQuestions = [
-    "What's my total revenue this week?",
-    "How is my cash flow looking?",
-    "Which menu items are most profitable?",
-    "Show me expense breakdown by category",
-    "What's the charging vs restaurant revenue?",
-  ];
 
   useEffect(() => {
     if (scrollAreaRef.current) {
@@ -95,8 +72,7 @@ const ChatBot = ({ isOpen, onToggle }: ChatBotProps) => {
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         type: "bot",
-        content:
-          "Sorry, I encountered an error while processing your request. Please try asking about your business data, financial metrics, or operational insights.",
+        content: "Sorry, I encountered an error while processing your request.",
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, errorMessage]);
@@ -116,7 +92,7 @@ const ChatBot = ({ isOpen, onToggle }: ChatBotProps) => {
     return (
       <Button
         onClick={onToggle}
-        className="fixed bottom-4 right-4 rounded-full w-14 h-14 shadow-lg z-50 bg-slate-600 hover:bg-slate-700 touch-target"
+        className="fixed bottom-4 right-4 rounded-full w-14 h-14 shadow-lg z-50"
         size="icon"
       >
         <MessageCircle className="h-6 w-6" />
@@ -125,32 +101,18 @@ const ChatBot = ({ isOpen, onToggle }: ChatBotProps) => {
   }
 
   return (
-    <Card className="fixed bottom-4 right-4 w-80 sm:w-96 h-[500px] max-h-[80vh] shadow-xl z-50 flex flex-col border border-slate-200 bg-white">
+    <Card className="fixed bottom-4 right-4 w-96 h-[500px] shadow-xl z-50 flex flex-col">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center">
-              <Bot className="h-4 w-4 text-slate-600" />
-            </div>
-            <CardTitle className="text-lg text-slate-800">
-              Business Assistant
-            </CardTitle>
+            <Bot className="h-5 w-5 text-primary" />
+            <CardTitle className="text-lg">Business Assistant</CardTitle>
           </div>
           <div className="flex gap-1">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onToggle}
-              className="hover:bg-slate-100 touch-target"
-            >
+            <Button variant="ghost" size="icon" onClick={onToggle}>
               <Minimize2 className="h-4 w-4" />
             </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onToggle}
-              className="hover:bg-slate-100 touch-target"
-            >
+            <Button variant="ghost" size="icon" onClick={onToggle}>
               <X className="h-4 w-4" />
             </Button>
           </div>
@@ -166,24 +128,24 @@ const ChatBot = ({ isOpen, onToggle }: ChatBotProps) => {
                 className={`flex gap-3 ${message.type === "user" ? "justify-end" : "justify-start"}`}
               >
                 {message.type === "bot" && (
-                  <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0">
-                    <Bot className="h-4 w-4 text-slate-600" />
+                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <Bot className="h-4 w-4 text-primary" />
                   </div>
                 )}
 
                 <div
                   className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${
                     message.type === "user"
-                      ? "bg-slate-600 text-white ml-auto"
-                      : "bg-slate-100 text-slate-800"
+                      ? "bg-primary text-primary-foreground ml-auto"
+                      : "bg-muted"
                   }`}
                 >
-                  <div className="whitespace-pre-wrap">{message.content}</div>
+                  {message.content}
                 </div>
 
                 {message.type === "user" && (
-                  <div className="w-8 h-8 rounded-full bg-slate-600 flex items-center justify-center flex-shrink-0">
-                    <User className="h-4 w-4 text-white" />
+                  <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+                    <User className="h-4 w-4 text-primary-foreground" />
                   </div>
                 )}
               </div>
@@ -191,18 +153,18 @@ const ChatBot = ({ isOpen, onToggle }: ChatBotProps) => {
 
             {isLoading && (
               <div className="flex gap-3 justify-start">
-                <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0">
-                  <Bot className="h-4 w-4 text-slate-600" />
+                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <Bot className="h-4 w-4 text-primary" />
                 </div>
-                <div className="bg-slate-100 rounded-lg px-3 py-2 text-sm">
+                <div className="bg-muted rounded-lg px-3 py-2 text-sm">
                   <div className="flex gap-1">
-                    <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"></div>
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
                     <div
-                      className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"
+                      className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
                       style={{ animationDelay: "0.1s" }}
                     ></div>
                     <div
-                      className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"
+                      className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
                       style={{ animationDelay: "0.2s" }}
                     ></div>
                   </div>
@@ -217,15 +179,14 @@ const ChatBot = ({ isOpen, onToggle }: ChatBotProps) => {
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyPress={handleKeyPress}
-            placeholder="Ask about your business data..."
+            placeholder="Ask anything in natural language..."
             disabled={isLoading}
-            className="flex-1 border-slate-300 focus:border-slate-500"
+            className="flex-1"
           />
           <Button
             onClick={handleSendMessage}
             disabled={!inputValue.trim() || isLoading}
             size="icon"
-            className="bg-slate-600 hover:bg-slate-700 touch-target"
           >
             <Send className="h-4 w-4" />
           </Button>
