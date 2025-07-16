@@ -294,7 +294,7 @@ const Settings = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["user-permissions"] });
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast.error(`Failed to update permission: ${error.message}`);
     },
   });
