@@ -22,7 +22,6 @@ import {
   Eye,
   EyeOff,
   ArrowRight,
-  Sparkles,
 } from "lucide-react";
 
 const Index = () => {
@@ -33,19 +32,9 @@ const Index = () => {
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("login");
   const [showPassword, setShowPassword] = useState(false);
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [isHovered, setIsHovered] = useState(false);
   const { login, signup, user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
-
-  // Mouse tracking for interactive effects
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      setMousePosition({ x: e.clientX, y: e.clientY });
-    };
-    window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove);
-  }, []);
 
   // Redirect if already logged in
   useEffect(() => {
@@ -102,143 +91,92 @@ const Index = () => {
       title: "Business Management",
       description:
         "Comprehensive tools for managing orders, expenses, and financial data",
-      color: "from-blue-600 to-indigo-600",
-      delay: "0ms",
+      color: "bg-blue-600",
     },
     {
       icon: Zap,
       title: "Energy Tracking",
       description:
         "Monitor charging sessions and energy consumption with detailed analytics",
-      color: "from-yellow-500 to-orange-600",
-      delay: "200ms",
+      color: "bg-yellow-600",
     },
     {
       icon: Shield,
       title: "Role-Based Access",
       description:
         "Secure access control with different permission levels for team members",
-      color: "from-green-500 to-emerald-600",
-      delay: "400ms",
+      color: "bg-green-600",
     },
   ];
 
-  const FloatingParticle = ({ delay }: { delay: number }) => (
-    <div
-      className={`absolute w-2 h-2 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full opacity-30 animate-pulse`}
-      style={{
-        left: `${Math.random() * 100}%`,
-        top: `${Math.random() * 100}%`,
-        animationDelay: `${delay}ms`,
-        animationDuration: "3s",
-      }}
-    />
-  );
-
   return (
-    <div className="min-h-screen relative overflow-hidden">
-      {/* Animated Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(120,119,198,0.3),rgba(255,255,255,0))]" />
-        <div className="absolute inset-0 bg-[conic-gradient(from_0deg_at_50%_50%,rgba(59,130,246,0.1),rgba(147,51,234,0.1),rgba(59,130,246,0.1))]" />
-      </div>
-
-      {/* Floating Particles */}
-      <div className="absolute inset-0 pointer-events-none">
-        {Array.from({ length: 20 }).map((_, i) => (
-          <FloatingParticle key={i} delay={i * 200} />
-        ))}
-      </div>
-
-      {/* Interactive Cursor Effect */}
-      <div
-        className="fixed w-96 h-96 pointer-events-none z-10 opacity-20"
-        style={{
-          background:
-            "radial-gradient(circle, rgba(59,130,246,0.2) 0%, transparent 70%)",
-          left: mousePosition.x - 192,
-          top: mousePosition.y - 192,
-          transition: "all 0.3s ease-out",
-        }}
-      />
-
-      <div className="relative z-20 min-h-screen flex items-center justify-center p-4">
-        <div className="w-full max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100">
+      <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 lg:p-8">
+        <div className="w-full max-w-6xl mx-auto">
           {/* Header */}
-          <div className="text-center mb-16 animate-in fade-in slide-in-from-top duration-1000">
-            <div className="inline-flex items-center gap-4 mb-8 group">
-              <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 rounded-3xl blur-lg opacity-75 group-hover:opacity-100 transition-opacity duration-300" />
-                <div className="relative p-4 bg-gradient-to-r from-blue-600 to-purple-600 rounded-3xl shadow-2xl">
-                  <Building2 className="h-10 w-10 text-white" />
-                </div>
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-3 mb-6">
+              <div className="p-3 bg-slate-600 rounded-lg shadow-lg">
+                <Building2 className="h-8 w-8 text-white" />
               </div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-                  Energy Palace
-                </h1>
-                <Sparkles className="h-8 w-8 text-yellow-400 animate-pulse" />
-                <h1 className="text-5xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent">
-                  Nexus Point
-                </h1>
-              </div>
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-800">
+                Energy Palace Nexus
+              </h1>
             </div>
-            <p className="text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
-              Next-generation business management platform for energy
-              operations, financial tracking, and advanced data analytics
+            <p className="text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed">
+              Professional business management platform for energy operations
+              and financial tracking
             </p>
-            <div className="flex justify-center mt-6">
+            <div className="flex justify-center mt-4">
               <div className="flex items-center gap-1">
                 {Array.from({ length: 5 }).map((_, i) => (
                   <Star
                     key={i}
-                    className="h-5 w-5 text-yellow-400 fill-current"
+                    className="h-4 w-4 text-yellow-500 fill-current"
                   />
                 ))}
-                <span className="ml-2 text-gray-300">
-                  Trusted by 10,000+ businesses
+                <span className="ml-2 text-slate-600 text-sm">
+                  Trusted by businesses worldwide
                 </span>
               </div>
             </div>
           </div>
 
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
-            {/* Enhanced Auth Form */}
-            <div className="animate-in fade-in slide-in-from-left duration-1000 delay-300">
+          <div className="grid lg:grid-cols-2 gap-12 items-start max-w-6xl mx-auto">
+            {/* Auth Form */}
+            <div className="order-2 lg:order-1">
               <Card
-                className="shadow-2xl border border-white/10 bg-white/5 backdrop-blur-md hover:bg-white/10 transition-all duration-500 group"
+                className="shadow-lg border border-slate-200 bg-white hover:shadow-xl transition-shadow duration-300"
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-purple-600/20 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-xl" />
-                <CardHeader className="space-y-6 relative z-10">
-                  <CardTitle className="text-3xl font-bold text-center text-white flex items-center justify-center gap-2">
+                <CardHeader className="space-y-4">
+                  <CardTitle className="text-2xl font-semibold text-center text-slate-800 flex items-center justify-center gap-2">
                     Access Your Dashboard
                     <ArrowRight
-                      className={`h-6 w-6 transition-transform duration-300 ${isHovered ? "translate-x-1" : ""}`}
+                      className={`h-5 w-5 transition-transform duration-300 text-slate-600 ${isHovered ? "translate-x-1" : ""}`}
                     />
                   </CardTitle>
-                  <CardDescription className="text-center text-gray-300 text-lg">
-                    Sign in to your personalized control center or create a new
-                    account
+                  <CardDescription className="text-center text-slate-600">
+                    Sign in to your account or create a new one
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="relative z-10">
+                <CardContent>
                   <Tabs
                     value={activeTab}
                     onValueChange={setActiveTab}
                     className="space-y-6"
                   >
-                    <TabsList className="grid w-full grid-cols-2 bg-white/10 backdrop-blur-sm border border-white/20">
+                    <TabsList className="grid w-full grid-cols-2 bg-slate-100">
                       <TabsTrigger
                         value="login"
-                        className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-purple-600 data-[state=active]:text-white text-gray-300"
+                        className="data-[state=active]:bg-white data-[state=active]:text-slate-800 text-slate-600"
                       >
                         Sign In
                       </TabsTrigger>
                       <TabsTrigger
                         value="signup"
-                        className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-green-600 data-[state=active]:to-emerald-600 data-[state=active]:text-white text-gray-300"
+                        className="data-[state=active]:bg-white data-[state=active]:text-slate-800 text-slate-600"
                       >
                         Sign Up
                       </TabsTrigger>
@@ -249,7 +187,7 @@ const Index = () => {
                         <div className="space-y-3">
                           <Label
                             htmlFor="login-email"
-                            className="text-gray-200 font-medium"
+                            className="text-slate-700 font-medium"
                           >
                             Email Address
                           </Label>
@@ -260,13 +198,13 @@ const Index = () => {
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required
-                            className="h-14 bg-white/10 border-white/20 text-white placeholder:text-gray-400 focus:border-blue-500 focus:ring-blue-500 transition-all duration-300"
+                            className="h-12 border-slate-300 focus:border-slate-500 focus:ring-slate-500"
                           />
                         </div>
                         <div className="space-y-3">
                           <Label
                             htmlFor="login-password"
-                            className="text-gray-200 font-medium"
+                            className="text-slate-700 font-medium"
                           >
                             Password
                           </Label>
@@ -278,12 +216,12 @@ const Index = () => {
                               value={password}
                               onChange={(e) => setPassword(e.target.value)}
                               required
-                              className="h-14 bg-white/10 border-white/20 text-white placeholder:text-gray-400 focus:border-blue-500 focus:ring-blue-500 pr-12 transition-all duration-300"
+                              className="h-12 border-slate-300 focus:border-slate-500 focus:ring-slate-500 pr-12"
                             />
                             <button
                               type="button"
                               onClick={() => setShowPassword(!showPassword)}
-                              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700 transition-colors"
                             >
                               {showPassword ? (
                                 <EyeOff className="h-5 w-5" />
@@ -295,7 +233,7 @@ const Index = () => {
                         </div>
                         <Button
                           type="submit"
-                          className="w-full h-14 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold shadow-lg transition-all duration-300 transform hover:scale-[1.02] hover:shadow-blue-500/25 group"
+                          className="w-full h-12 bg-slate-800 hover:bg-slate-700 text-white font-medium transition-colors"
                           disabled={loading}
                         >
                           {loading ? (
@@ -306,7 +244,7 @@ const Index = () => {
                           ) : (
                             <div className="flex items-center gap-2">
                               Sign In
-                              <ChevronRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                              <ChevronRight className="h-5 w-5" />
                             </div>
                           )}
                         </Button>
@@ -315,11 +253,11 @@ const Index = () => {
 
                     <TabsContent value="signup" className="space-y-6">
                       <form onSubmit={handleSignup} className="space-y-6">
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <div className="space-y-3">
                             <Label
                               htmlFor="firstName"
-                              className="text-gray-200 font-medium"
+                              className="text-slate-700 font-medium"
                             >
                               First Name
                             </Label>
@@ -330,13 +268,13 @@ const Index = () => {
                               value={firstName}
                               onChange={(e) => setFirstName(e.target.value)}
                               required
-                              className="h-14 bg-white/10 border-white/20 text-white placeholder:text-gray-400 focus:border-green-500 focus:ring-green-500 transition-all duration-300"
+                              className="h-12 border-slate-300 focus:border-slate-500 focus:ring-slate-500"
                             />
                           </div>
                           <div className="space-y-3">
                             <Label
                               htmlFor="lastName"
-                              className="text-gray-200 font-medium"
+                              className="text-slate-700 font-medium"
                             >
                               Last Name
                             </Label>
@@ -347,14 +285,14 @@ const Index = () => {
                               value={lastName}
                               onChange={(e) => setLastName(e.target.value)}
                               required
-                              className="h-14 bg-white/10 border-white/20 text-white placeholder:text-gray-400 focus:border-green-500 focus:ring-green-500 transition-all duration-300"
+                              className="h-12 border-slate-300 focus:border-slate-500 focus:ring-slate-500"
                             />
                           </div>
                         </div>
                         <div className="space-y-3">
                           <Label
                             htmlFor="signup-email"
-                            className="text-gray-200 font-medium"
+                            className="text-slate-700 font-medium"
                           >
                             Email Address
                           </Label>
@@ -365,13 +303,13 @@ const Index = () => {
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required
-                            className="h-14 bg-white/10 border-white/20 text-white placeholder:text-gray-400 focus:border-green-500 focus:ring-green-500 transition-all duration-300"
+                            className="h-12 border-slate-300 focus:border-slate-500 focus:ring-slate-500"
                           />
                         </div>
                         <div className="space-y-3">
                           <Label
                             htmlFor="signup-password"
-                            className="text-gray-200 font-medium"
+                            className="text-slate-700 font-medium"
                           >
                             Password
                           </Label>
@@ -383,13 +321,13 @@ const Index = () => {
                               value={password}
                               onChange={(e) => setPassword(e.target.value)}
                               required
-                              className="h-14 bg-white/10 border-white/20 text-white placeholder:text-gray-400 focus:border-green-500 focus:ring-green-500 pr-12 transition-all duration-300"
+                              className="h-12 border-slate-300 focus:border-slate-500 focus:ring-slate-500 pr-12"
                               minLength={6}
                             />
                             <button
                               type="button"
                               onClick={() => setShowPassword(!showPassword)}
-                              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700 transition-colors"
                             >
                               {showPassword ? (
                                 <EyeOff className="h-5 w-5" />
@@ -401,7 +339,7 @@ const Index = () => {
                         </div>
                         <Button
                           type="submit"
-                          className="w-full h-14 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold shadow-lg transition-all duration-300 transform hover:scale-[1.02] hover:shadow-green-500/25 group"
+                          className="w-full h-12 bg-slate-800 hover:bg-slate-700 text-white font-medium transition-colors"
                           disabled={loading}
                         >
                           {loading ? (
@@ -412,7 +350,7 @@ const Index = () => {
                           ) : (
                             <div className="flex items-center gap-2">
                               Create Account
-                              <ChevronRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                              <ChevronRight className="h-5 w-5" />
                             </div>
                           )}
                         </Button>
@@ -423,41 +361,37 @@ const Index = () => {
               </Card>
             </div>
 
-            {/* Enhanced Features */}
-            <div className="space-y-10 animate-in fade-in slide-in-from-right duration-1000 delay-500">
+            {/* Features */}
+            <div className="space-y-8 order-1 lg:order-2">
               <div className="text-center lg:text-left">
-                <h2 className="text-4xl font-bold text-white mb-6 flex items-center gap-3">
-                  Powerful Business Intelligence
-                  <div className="w-3 h-3 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full animate-pulse" />
+                <h2 className="text-3xl font-bold text-slate-800 mb-4">
+                  Business Intelligence Platform
                 </h2>
-                <p className="text-xl text-gray-300 leading-relaxed">
-                  Transform your operations with our cutting-edge suite of
-                  intelligent business tools
+                <p className="text-lg text-slate-600 leading-relaxed">
+                  Streamline your operations with our comprehensive suite of
+                  business tools
                 </p>
               </div>
 
-              <div className="space-y-8">
+              <div className="space-y-6">
                 {features.map((feature, index) => (
                   <div
                     key={index}
-                    className="group flex items-start gap-6 p-8 bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all duration-500 transform hover:scale-[1.02] hover:shadow-2xl cursor-pointer"
-                    style={{ animationDelay: feature.delay }}
+                    className="flex items-start gap-4 p-6 bg-white rounded-lg border border-slate-200 shadow-sm hover:shadow-md transition-shadow duration-300"
                   >
                     <div
-                      className={`relative p-4 bg-gradient-to-r ${feature.color} rounded-2xl shadow-lg group-hover:scale-110 transition-transform duration-300`}
+                      className={`p-3 ${feature.color} rounded-lg shadow-sm`}
                     >
-                      <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                      <feature.icon className="h-8 w-8 text-white relative z-10" />
+                      <feature.icon className="h-6 w-6 text-white" />
                     </div>
                     <div className="flex-1">
-                      <h3 className="font-bold text-xl text-white mb-3 group-hover:text-blue-300 transition-colors">
+                      <h3 className="font-semibold text-lg text-slate-800 mb-2">
                         {feature.title}
                       </h3>
-                      <p className="text-gray-300 leading-relaxed group-hover:text-gray-200 transition-colors">
+                      <p className="text-slate-600 leading-relaxed">
                         {feature.description}
                       </p>
                     </div>
-                    <ChevronRight className="h-6 w-6 text-gray-400 group-hover:text-white group-hover:translate-x-2 transition-all duration-300" />
                   </div>
                 ))}
               </div>
