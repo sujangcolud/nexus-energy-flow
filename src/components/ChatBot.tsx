@@ -23,7 +23,8 @@ const ChatBot = ({ isOpen, onToggle }: ChatBotProps) => {
     {
       id: "1",
       type: "bot",
-      content: "Hello! I'm your business assistant. How can I help you today?",
+      content:
+        "Hello! I'm your business assistant. I can help you analyze your business data, calculate financial metrics, and provide insights about your operations. What would you like to know?",
       timestamp: new Date(),
     },
   ]);
@@ -72,7 +73,8 @@ const ChatBot = ({ isOpen, onToggle }: ChatBotProps) => {
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         type: "bot",
-        content: "Sorry, I encountered an error while processing your request.",
+        content:
+          "Sorry, I encountered an error while processing your request. Please try asking about your business data, financial metrics, or operational insights.",
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, errorMessage]);
@@ -92,7 +94,7 @@ const ChatBot = ({ isOpen, onToggle }: ChatBotProps) => {
     return (
       <Button
         onClick={onToggle}
-        className="fixed bottom-4 right-4 rounded-full w-14 h-14 shadow-lg z-50"
+        className="fixed bottom-4 right-4 rounded-full w-14 h-14 shadow-lg z-50 bg-slate-600 hover:bg-slate-700 touch-target"
         size="icon"
       >
         <MessageCircle className="h-6 w-6" />
@@ -101,18 +103,32 @@ const ChatBot = ({ isOpen, onToggle }: ChatBotProps) => {
   }
 
   return (
-    <Card className="fixed bottom-4 right-4 w-96 h-[500px] shadow-xl z-50 flex flex-col">
+    <Card className="fixed bottom-4 right-4 w-80 sm:w-96 h-[500px] max-h-[80vh] shadow-xl z-50 flex flex-col border border-slate-200 bg-white">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Bot className="h-5 w-5 text-primary" />
-            <CardTitle className="text-lg">Business Assistant</CardTitle>
+            <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center">
+              <Bot className="h-4 w-4 text-slate-600" />
+            </div>
+            <CardTitle className="text-lg text-slate-800">
+              Business Assistant
+            </CardTitle>
           </div>
           <div className="flex gap-1">
-            <Button variant="ghost" size="icon" onClick={onToggle}>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onToggle}
+              className="hover:bg-slate-100 touch-target"
+            >
               <Minimize2 className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="icon" onClick={onToggle}>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onToggle}
+              className="hover:bg-slate-100 touch-target"
+            >
               <X className="h-4 w-4" />
             </Button>
           </div>
@@ -128,24 +144,24 @@ const ChatBot = ({ isOpen, onToggle }: ChatBotProps) => {
                 className={`flex gap-3 ${message.type === "user" ? "justify-end" : "justify-start"}`}
               >
                 {message.type === "bot" && (
-                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <Bot className="h-4 w-4 text-primary" />
+                  <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0">
+                    <Bot className="h-4 w-4 text-slate-600" />
                   </div>
                 )}
 
                 <div
                   className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${
                     message.type === "user"
-                      ? "bg-primary text-primary-foreground ml-auto"
-                      : "bg-muted"
+                      ? "bg-slate-600 text-white ml-auto"
+                      : "bg-slate-100 text-slate-800"
                   }`}
                 >
-                  {message.content}
+                  <div className="whitespace-pre-wrap">{message.content}</div>
                 </div>
 
                 {message.type === "user" && (
-                  <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
-                    <User className="h-4 w-4 text-primary-foreground" />
+                  <div className="w-8 h-8 rounded-full bg-slate-600 flex items-center justify-center flex-shrink-0">
+                    <User className="h-4 w-4 text-white" />
                   </div>
                 )}
               </div>
@@ -153,18 +169,18 @@ const ChatBot = ({ isOpen, onToggle }: ChatBotProps) => {
 
             {isLoading && (
               <div className="flex gap-3 justify-start">
-                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                  <Bot className="h-4 w-4 text-primary" />
+                <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0">
+                  <Bot className="h-4 w-4 text-slate-600" />
                 </div>
-                <div className="bg-muted rounded-lg px-3 py-2 text-sm">
+                <div className="bg-slate-100 rounded-lg px-3 py-2 text-sm">
                   <div className="flex gap-1">
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                    <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"></div>
                     <div
-                      className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                      className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"
                       style={{ animationDelay: "0.1s" }}
                     ></div>
                     <div
-                      className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                      className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"
                       style={{ animationDelay: "0.2s" }}
                     ></div>
                   </div>
@@ -179,14 +195,15 @@ const ChatBot = ({ isOpen, onToggle }: ChatBotProps) => {
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyPress={handleKeyPress}
-            placeholder="Ask anything in natural language..."
+            placeholder="Ask about your business data..."
             disabled={isLoading}
-            className="flex-1"
+            className="flex-1 border-slate-300 focus:border-slate-500"
           />
           <Button
             onClick={handleSendMessage}
             disabled={!inputValue.trim() || isLoading}
             size="icon"
+            className="bg-slate-600 hover:bg-slate-700 touch-target"
           >
             <Send className="h-4 w-4" />
           </Button>
