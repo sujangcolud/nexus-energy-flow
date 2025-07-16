@@ -90,6 +90,7 @@ const App = () => {
                 <Route path="reports-view" element={<ReportsViewTab />} />
                 <Route path="data-input" element={<DataInputTab />} />
                 <Route path="user-management" element={<UserManagementTab />} />
+                <Route path="analytics" element={<Analytics />} />
                 <Route
                   path="super-admin"
                   element={
