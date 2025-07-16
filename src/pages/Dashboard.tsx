@@ -255,7 +255,10 @@ const Dashboard = () => {
     const tabSettings = storedSettings ? JSON.parse(storedSettings) : {};
 
     return allItems.filter(
-      (item) => item.roles.includes(userRole) && (tabSettings[item.id] ?? true),
+      (item) =>
+        item.roles.includes(userRole) &&
+        (tabSettings[item.id] ?? true) &&
+        hasTabAccess(item.id),
     );
   };
 
