@@ -143,13 +143,13 @@ const Dashboard = () => {
         bgColor: "bg-emerald-50",
         description: "Manage share investments",
       },
-      // Add Analytics page
+      // Add Analytics page - accessible to all users
       {
         id: "analytics",
         path: "analytics",
         label: "Analytics",
         icon: BarChart3,
-        roles: ["reports_viewer", "super_admin"],
+        roles: ["user", "data_entry", "reports_viewer", "super_admin"],
         color: "bg-purple-600",
         bgColor: "bg-purple-50",
         description: "Financial analytics & insights",
