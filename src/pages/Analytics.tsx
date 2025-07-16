@@ -571,9 +571,11 @@ const Analytics = () => {
               </AreaChart>
             </ResponsiveContainer>
           </CardContent>
-        </Card>
+                </Card>
+        )}
 
         {/* Income Sources */}
+        {analyticsSettings.showIncomeSources && (
         <Card>
           <CardHeader>
             <CardTitle>Income Sources</CardTitle>
