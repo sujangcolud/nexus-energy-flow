@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { useUserPermissions } from "@/hooks/useUserPermissions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -28,7 +27,6 @@ import {
   Upload,
   LayoutDashboard,
   Settings as SettingsIcon,
-  Settings,
   Bell,
   Search,
   TrendingUp,
@@ -52,7 +50,6 @@ import ShareInvestmentsTab from "@/components/tabs/ShareInvestmentsTab";
 
 const Dashboard = () => {
   const { user, signOut, userRole } = useAuth();
-  const { hasTabAccess } = useUserPermissions();
   const location = useLocation();
   const navigate = useNavigate();
   const [isChatBotOpen, setIsChatBotOpen] = useState(false);
@@ -146,13 +143,13 @@ const Dashboard = () => {
         bgColor: "bg-emerald-50",
         description: "Manage share investments",
       },
-      // Add Analytics page - accessible to all users
+      // Add Analytics page
       {
         id: "analytics",
         path: "analytics",
         label: "Analytics",
         icon: BarChart3,
-        roles: ["user", "data_entry", "reports_viewer", "super_admin"],
+        roles: ["reports_viewer", "super_admin"],
         color: "bg-purple-600",
         bgColor: "bg-purple-50",
         description: "Financial analytics & insights",
@@ -176,7 +173,7 @@ const Dashboard = () => {
         label: "View Reports",
         icon: FileText,
         component: ReportsViewTab,
-        roles: ["user", "reports_viewer", "super_admin"],
+        roles: ["reports_viewer", "super_admin"],
         color: "bg-indigo-600",
         bgColor: "bg-indigo-50",
         description: "View generated reports",
@@ -187,7 +184,7 @@ const Dashboard = () => {
         label: "Insights",
         icon: BarChart3,
         component: InsightsTab,
-        roles: ["user", "reports_viewer", "super_admin"],
+        roles: ["reports_viewer", "super_admin"],
         color: "bg-green-600",
         bgColor: "bg-green-50",
         description: "Business insights",
@@ -237,16 +234,6 @@ const Dashboard = () => {
         bgColor: "bg-slate-50",
         description: "Manage users & permissions",
       },
-      {
-        id: "admin_panel",
-        path: "admin-panel",
-        label: "Admin Panel",
-        icon: Settings,
-        roles: ["super_admin"],
-        color: "bg-purple-600",
-        bgColor: "bg-purple-50",
-        description: "Advanced user & permission management",
-      },
     ];
 
     if (!userRole) return [];
@@ -255,10 +242,7 @@ const Dashboard = () => {
     const tabSettings = storedSettings ? JSON.parse(storedSettings) : {};
 
     return allItems.filter(
-      (item) =>
-        item.roles.includes(userRole) &&
-        (tabSettings[item.id] ?? true) &&
-        hasTabAccess(item.id),
+      (item) => item.roles.includes(userRole) && (tabSettings[item.id] ?? true),
     );
   };
 
