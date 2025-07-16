@@ -3,6 +3,31 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import {
   Settings as SettingsIcon,
   Palette,
@@ -11,9 +36,48 @@ import {
   Sparkles,
   Save,
   RotateCcw,
+  Users,
+  UserPlus,
+  Shield,
+  Database,
+  BarChart3,
+  UserCheck,
+  FileText,
+  Plus,
+  RefreshCw,
+  Edit,
+  UserCog,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import PasswordChangeForm from "@/components/PasswordChangeForm";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+
+type AppRole = "user" | "data_entry" | "reports_viewer" | "super_admin";
+
+interface UserWithRole {
+  id: string;
+  email: string | undefined;
+  role: AppRole;
+  first_name?: string;
+  last_name?: string;
+  created_at: string;
+}
+
+interface NewUserData {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  role: AppRole;
+}
+
+interface UserPermission {
+  user_id: string;
+  tab_id: string;
+  enabled: boolean;
+}
 
 const allItems = [
   {
@@ -21,86 +85,111 @@ const allItems = [
     label: "Orders",
     icon: "🛒",
     description: "Manage food orders and transactions",
+    defaultRoles: ["data_entry", "super_admin"] as AppRole[],
   },
   {
     id: "charging",
     label: "Charging",
     icon: "⚡",
     description: "Track energy consumption and billing",
+    defaultRoles: ["data_entry", "super_admin"] as AppRole[],
   },
   {
     id: "expenses",
     label: "Expenses",
     icon: "📄",
     description: "Monitor business expenses",
+    defaultRoles: ["data_entry", "super_admin"] as AppRole[],
   },
   {
     id: "deposits",
     label: "Deposits",
     icon: "💳",
     description: "Handle financial deposits",
+    defaultRoles: ["data_entry", "super_admin"] as AppRole[],
   },
   {
     id: "withdrawals",
     label: "Withdrawals",
     icon: "💵",
     description: "Process withdrawals and payouts",
+    defaultRoles: ["data_entry", "super_admin"] as AppRole[],
   },
   {
     id: "cooperative",
     label: "Savings",
     icon: "👥",
     description: "Cooperative savings management",
+    defaultRoles: ["data_entry", "super_admin"] as AppRole[],
   },
   {
     id: "reports",
     label: "Reports",
     icon: "📊",
     description: "Generate business reports",
+    defaultRoles: ["reports_viewer", "super_admin"] as AppRole[],
   },
   {
     id: "reports-view",
     label: "View Reports",
     icon: "👁️",
     description: "View generated reports",
+    defaultRoles: ["user", "reports_viewer", "super_admin"] as AppRole[],
   },
   {
     id: "insights",
     label: "Analytics",
     icon: "📈",
     description: "Business analytics and insights",
+    defaultRoles: ["user", "reports_viewer", "super_admin"] as AppRole[],
   },
   {
     id: "data-input",
     label: "Bulk Data Import",
     icon: "📤",
     description: "Import data in bulk",
+    defaultRoles: ["reports_viewer", "super_admin"] as AppRole[],
   },
   {
     id: "super_admin_dashboard",
     label: "Admin Dashboard",
     icon: "🔧",
     description: "Administrator control panel",
+    defaultRoles: ["super_admin"] as AppRole[],
   },
   {
     id: "menu",
     label: "Menu Management",
     icon: "🍽️",
     description: "Manage menu items and pricing",
+    defaultRoles: ["super_admin"] as AppRole[],
   },
   {
-    id: "user_management",
-    label: "User Management",
-    icon: "👤",
-    description: "Manage users and permissions",
+    id: "share_investments",
+    label: "Share Investments",
+    icon: "📈",
+    description: "Manage share investments",
+    defaultRoles: ["data_entry", "super_admin"] as AppRole[],
   },
 ];
 
 const Settings = () => {
-  const { user } = useAuth();
+  const { user, hasRole } = useAuth();
+  const queryClient = useQueryClient();
   const [tabSettings, setTabSettings] = useState<Record<string, boolean>>({});
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [canEditTransactions, setCanEditTransactions] = useState(false);
+  const [showCreateUserForm, setShowCreateUserForm] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+  const [logs, setLogs] = useState<any[]>([]);
+  const [newUser, setNewUser] = useState<NewUserData>({
+    email: "",
+    password: "",
+    firstName: "",
+    lastName: "",
+    role: "user",
+  });
 
   useEffect(() => {
     const storedSettings = localStorage.getItem("tabSettings");
@@ -321,7 +410,9 @@ const Settings = () => {
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-between">
-              <Label htmlFor="edit-transactions">Enable Transaction Editing</Label>
+              <Label htmlFor="edit-transactions">
+                Enable Transaction Editing
+              </Label>
               <Switch
                 id="edit-transactions"
                 checked={canEditTransactions}
