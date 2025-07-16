@@ -564,12 +564,7 @@ const Analytics = () => {
                   Total Assets
                 </p>
                 <p className="text-2xl font-bold text-blue-600">
-                  $
-                  {(
-                    financials.bankBalance +
-                    financials.cashInHand +
-                    financials.cooperativeBalance
-                  ).toLocaleString()}
+                  ${financials.totalAssets.toLocaleString()}
                 </p>
               </div>
               <CreditCard className="h-8 w-8 text-blue-600" />
