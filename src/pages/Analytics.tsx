@@ -545,9 +545,11 @@ const Analytics = () => {
               </PieChart>
             </ResponsiveContainer>
           </CardContent>
-        </Card>
+                </Card>
+        )}
 
         {/* Income Trend */}
+        {analyticsSettings.showIncomeTrend && (
         <Card>
           <CardHeader>
             <CardTitle>Daily Income Trend</CardTitle>
