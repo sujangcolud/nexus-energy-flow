@@ -513,9 +513,11 @@ const Analytics = () => {
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
-        </Card>
+                </Card>
+        )}
 
         {/* Balance Distribution */}
+        {analyticsSettings.showBalanceDistribution && (
         <Card>
           <CardHeader>
             <CardTitle>Balance Distribution</CardTitle>
