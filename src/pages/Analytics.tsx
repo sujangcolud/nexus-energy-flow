@@ -167,92 +167,93 @@ const Analytics = () => {
     },
   });
 
-  // Calculate financial metrics
+  // Calculate financial metrics with correct column names
   const calculateFinancials = (): FinancialData => {
-    // Restaurant income (cash and non-cash orders)
+    // Restaurant income using correct column name 'total'
     const restaurantIncome = ordersData.reduce(
-      (sum, order) => sum + (order.total_amount || 0),
+      (sum, order) => sum + (parseFloat(order.total) || 0),
       0,
     );
 
-    // Charging income
+    // Charging income using correct column name 'total_amount'
     const chargingIncome = chargingData.reduce(
-      (sum, session) => sum + (session.amount_charged || 0),
+      (sum, session) => sum + (parseFloat(session.total_amount) || 0),
       0,
     );
 
     // Total deposits to bank
     const totalDeposits = depositsData.reduce(
-      (sum, deposit) => sum + (deposit.amount || 0),
+      (sum, deposit) => sum + (parseFloat(deposit.amount) || 0),
       0,
     );
 
     // Total withdrawals from bank
     const totalWithdrawals = withdrawalsData.reduce(
-      (sum, withdrawal) => sum + (withdrawal.amount || 0),
+      (sum, withdrawal) => sum + (parseFloat(withdrawal.amount) || 0),
       0,
     );
 
-    // Bank expenses (non-cash expenses)
+    // Total expenses using correct column name
+    const totalExpenses = expensesData.reduce(
+      (sum, expense) => sum + (parseFloat(expense.amount) || 0),
+      0,
+    );
+
+    // Bank expenses (non-cash expenses) using correct column 'payment_mode'
     const bankExpenses = expensesData
-      .filter((expense) => expense.payment_method !== "cash")
-      .reduce((sum, expense) => sum + (expense.amount || 0), 0);
+      .filter((expense) => expense.payment_mode !== "cash")
+      .reduce((sum, expense) => sum + (parseFloat(expense.amount) || 0), 0);
 
     // Cash expenses
     const cashExpenses = expensesData
-      .filter((expense) => expense.payment_method === "cash")
-      .reduce((sum, expense) => sum + (expense.amount || 0), 0);
+      .filter((expense) => expense.payment_mode === "cash")
+      .reduce((sum, expense) => sum + (parseFloat(expense.amount) || 0), 0);
 
-    // Cash orders (restaurant income paid in cash)
+    // Cash orders (restaurant income paid in cash) using correct column 'payment_mode'
     const cashOrders = ordersData
-      .filter((order) => order.payment_method === "cash")
-      .reduce((sum, order) => sum + (order.total_amount || 0), 0);
+      .filter((order) => order.payment_mode === "cash")
+      .reduce((sum, order) => sum + (parseFloat(order.total) || 0), 0);
 
-    // Cash from charging (if any charging is paid in cash)
+    // Cash from charging using correct column 'payment_mode'
     const cashFromCharging = chargingData
-      .filter((session) => session.payment_method === "cash")
-      .reduce((sum, session) => sum + (session.amount_charged || 0), 0);
+      .filter((session) => session.payment_mode === "cash")
+      .reduce(
+        (sum, session) => sum + (parseFloat(session.total_amount) || 0),
+        0,
+      );
 
-    // Cooperative savings
+    // Cooperative savings using correct column name 'contribution_amount'
     const cooperativeSavings = cooperativeData.reduce(
-      (sum, saving) => sum + (saving.amount || 0),
+      (sum, saving) => sum + (parseFloat(saving.contribution_amount) || 0),
       0,
     );
 
-    // Cooperative withdrawals
-    const cooperativeWithdrawals = cooperativeData
-      .filter((item) => item.transaction_type === "withdrawal")
-      .reduce((sum, withdrawal) => sum + Math.abs(withdrawal.amount || 0), 0);
+    // Use actual balances from balances table if available
+    const actualBankBalance = balancesData?.bank_balance
+      ? parseFloat(balancesData.bank_balance)
+      : totalDeposits - totalWithdrawals - bankExpenses;
+    const actualCashInHand = balancesData?.cash_in_hand
+      ? parseFloat(balancesData.cash_in_hand)
+      : cashOrders + cashFromCharging - cashExpenses;
+    const actualCooperativeBalance = balancesData?.cooperative_balance
+      ? parseFloat(balancesData.cooperative_balance)
+      : cooperativeSavings;
 
-    // Cash deposited to bank/cooperative from cash on hand
-    const cashDepositsToBank = depositsData
-      .filter((deposit) => deposit.source === "cash")
-      .reduce((sum, deposit) => sum + (deposit.amount || 0), 0);
-
-    const cashDepositsToCooperative = cooperativeData
-      .filter((item) => item.source === "cash")
-      .reduce((sum, deposit) => sum + (deposit.amount || 0), 0);
-
-    // Calculate balances
-    const bankBalance = totalDeposits - totalWithdrawals - bankExpenses;
-
-    const cashInHand =
-      cashOrders +
-      cashFromCharging -
-      cashExpenses -
-      cashDepositsToBank -
-      cashDepositsToCooperative;
-
-    const cooperativeBalance = cooperativeSavings - cooperativeWithdrawals;
+    const totalIncome = restaurantIncome + chargingIncome;
+    const netProfit = totalIncome - totalExpenses;
+    const totalAssets =
+      actualBankBalance + actualCashInHand + actualCooperativeBalance;
 
     return {
-      bankBalance,
-      cashInHand,
-      cooperativeBalance,
-      totalIncome: restaurantIncome + chargingIncome,
-      totalExpenses: bankExpenses + cashExpenses,
+      bankBalance: actualBankBalance,
+      cashInHand: actualCashInHand,
+      cooperativeBalance: actualCooperativeBalance,
+      totalIncome,
+      totalExpenses,
       chargingIncome,
       restaurantIncome,
+      netProfit,
+      totalAssets,
     };
   };
 
