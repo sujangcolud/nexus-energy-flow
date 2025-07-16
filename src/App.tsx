@@ -100,6 +100,14 @@ const App = () => {
                     </ProtectedRoute>
                   }
                 />
+                <Route
+                  path="admin-panel"
+                  element={
+                    <ProtectedRoute allowedRoles={["super_admin"]}>
+                      <AdminPanel />
+                    </ProtectedRoute>
+                  }
+                />
                 <Route path="settings" element={<Settings />} />
                 {/* It might be good to have an index route that explicitly shows the cards */}
                 {/* <Route index element={<DashboardPageWithCards />} /> */}
