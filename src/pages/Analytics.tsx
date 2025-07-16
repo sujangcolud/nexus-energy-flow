@@ -402,7 +402,7 @@ const Analytics = () => {
             <CardTitle>Balance Distribution</CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={250}>
               <PieChart>
                 <Pie
                   data={balanceData}
