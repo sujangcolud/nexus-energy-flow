@@ -55,6 +55,32 @@ interface FinancialData {
 const Analytics = () => {
   const [timeRange, setTimeRange] = useState("30");
   const [selectedMetric, setSelectedMetric] = useState("all");
+  const [analyticsSettings, setAnalyticsSettings] = useState({
+    showKeyMetrics: true,
+    showCharts: true,
+    showCorrelation: true,
+    showBalanceDistribution: true,
+    showIncomeTrend: true,
+    showIncomeSources: true,
+    showSummaryStats: true,
+    autoRefresh: false,
+  });
+
+  useEffect(() => {
+    const storedSettings = localStorage.getItem("analyticsSettings");
+    if (storedSettings) {
+      setAnalyticsSettings(JSON.parse(storedSettings));
+    }
+  }, []);
+
+  const handleAnalyticsToggle = (setting: string) => {
+    const newSettings = {
+      ...analyticsSettings,
+      [setting]: !analyticsSettings[setting as keyof typeof analyticsSettings],
+    };
+    setAnalyticsSettings(newSettings);
+    localStorage.setItem("analyticsSettings", JSON.stringify(newSettings));
+  };
 
   // Fetch all financial data
   const { data: ordersData = [] } = useQuery({
