@@ -610,6 +610,323 @@ const Settings = () => {
           </div>
         </div>
 
+        {/* User Management Section - Only visible to super admin */}
+        {hasRole("super_admin") && (
+          <>
+            <Card className="bg-gradient-to-br from-blue-50 to-cyan-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300">
+              <CardHeader>
+                <div className="flex justify-between items-center">
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="h-5 w-5" />
+                    User Management
+                  </CardTitle>
+                  <Dialog
+                    open={showCreateUserForm}
+                    onOpenChange={setShowCreateUserForm}
+                  >
+                    <DialogTrigger asChild>
+                      <Button className="bg-blue-600 hover:bg-blue-700">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Create User
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Create New User</DialogTitle>
+                        <DialogDescription>
+                          Add a new user to the system with specified role and
+                          permissions.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <Label htmlFor="firstName">First Name</Label>
+                            <Input
+                              id="firstName"
+                              value={newUser.firstName}
+                              onChange={(e) =>
+                                setNewUser({
+                                  ...newUser,
+                                  firstName: e.target.value,
+                                })
+                              }
+                              required
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="lastName">Last Name</Label>
+                            <Input
+                              id="lastName"
+                              value={newUser.lastName}
+                              onChange={(e) =>
+                                setNewUser({
+                                  ...newUser,
+                                  lastName: e.target.value,
+                                })
+                              }
+                              required
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <Label htmlFor="email">Email</Label>
+                          <Input
+                            id="email"
+                            type="email"
+                            value={newUser.email}
+                            onChange={(e) =>
+                              setNewUser({ ...newUser, email: e.target.value })
+                            }
+                            required
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="password">Password</Label>
+                          <div className="flex gap-2">
+                            <div className="relative flex-grow">
+                              <Input
+                                id="password"
+                                type={showPassword ? "text" : "password"}
+                                value={newUser.password}
+                                onChange={(e) =>
+                                  setNewUser({
+                                    ...newUser,
+                                    password: e.target.value,
+                                  })
+                                }
+                                required
+                              />
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7 p-0"
+                                onClick={() => setShowPassword(!showPassword)}
+                              >
+                                {showPassword ? (
+                                  <EyeOff className="h-4 w-4" />
+                                ) : (
+                                  <Eye className="h-4 w-4" />
+                                )}
+                              </Button>
+                            </div>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={generatePassword}
+                            >
+                              Generate
+                            </Button>
+                          </div>
+                        </div>
+                        <div>
+                          <Label htmlFor="role">Role</Label>
+                          <Select
+                            value={newUser.role}
+                            onValueChange={(value: AppRole) =>
+                              setNewUser({ ...newUser, role: value })
+                            }
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="user">User</SelectItem>
+                              <SelectItem value="data_entry">
+                                Data Entry
+                              </SelectItem>
+                              <SelectItem value="reports_viewer">
+                                Reports Viewer
+                              </SelectItem>
+                              <SelectItem value="super_admin">
+                                Super Admin
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      <DialogFooter>
+                        <Button
+                          onClick={handleCreateUser}
+                          disabled={createUserMutation.isPending}
+                          className="bg-blue-600 hover:bg-blue-700"
+                        >
+                          {createUserMutation.isPending ? (
+                            <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                          ) : (
+                            <Plus className="h-4 w-4 mr-2" />
+                          )}
+                          Create User
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {usersLoading ? (
+                  <div className="text-center py-8">
+                    <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4" />
+                    <p>Loading users...</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {users?.map((u) => (
+                      <Card key={u.id} className="border-l-4 border-l-blue-500">
+                        <CardContent className="p-6">
+                          <div className="flex justify-between items-start mb-4">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-3 mb-2">
+                                <h3 className="text-lg font-semibold">
+                                  {u.first_name || u.last_name
+                                    ? `${u.first_name} ${u.last_name}`.trim()
+                                    : u.email}
+                                </h3>
+                                <div className="flex items-center gap-2">
+                                  {getRoleIcon(u.role)}
+                                  <Select
+                                    value={u.role}
+                                    onValueChange={(newRole: AppRole) =>
+                                      handleRoleChange(u.id, newRole)
+                                    }
+                                    disabled={u.id === user?.id}
+                                  >
+                                    <SelectTrigger className="w-[180px]">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="user">User</SelectItem>
+                                      <SelectItem value="data_entry">
+                                        Data Entry
+                                      </SelectItem>
+                                      <SelectItem value="reports_viewer">
+                                        Reports Viewer
+                                      </SelectItem>
+                                      <SelectItem value="super_admin">
+                                        Super Admin
+                                      </SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                              </div>
+                              <p className="text-gray-600">{u.email}</p>
+                              <p className="text-sm text-gray-500">
+                                Created:{" "}
+                                {new Date(u.created_at).toLocaleDateString()}
+                              </p>
+                              <p className="text-sm text-gray-600 mt-1">
+                                {getRoleDescription(u.role)}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="border-t pt-4">
+                            <h4 className="text-md font-semibold mb-3 flex items-center gap-2">
+                              <SettingsIcon className="h-4 w-4" />
+                              Module Permissions
+                            </h4>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                              {allItems.map((item) => {
+                                const isEnabled = isTabEnabledForUser(
+                                  u.id,
+                                  item.id,
+                                );
+                                const hasDefaultAccess =
+                                  item.defaultRoles.includes(u.role);
+
+                                return (
+                                  <div
+                                    key={item.id}
+                                    className={`flex items-center justify-between p-3 rounded-lg border ${
+                                      isEnabled
+                                        ? "bg-green-50 border-green-200"
+                                        : "bg-gray-50 border-gray-200"
+                                    }`}
+                                  >
+                                    <div className="flex items-center gap-2">
+                                      <span
+                                        className={`text-xl ${isEnabled ? "" : "opacity-50"}`}
+                                      >
+                                        {item.icon}
+                                      </span>
+                                      <div>
+                                        <span
+                                          className={`text-sm font-medium ${isEnabled ? "text-green-800" : "text-gray-600"}`}
+                                        >
+                                          {item.label}
+                                        </span>
+                                        {hasDefaultAccess && (
+                                          <div className="text-xs text-blue-600">
+                                            Role Default
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                    <Switch
+                                      checked={isEnabled}
+                                      onCheckedChange={(enabled) =>
+                                        handlePermissionToggle(
+                                          u.id,
+                                          item.id,
+                                          enabled,
+                                        )
+                                      }
+                                      disabled={
+                                        updatePermissionMutation.isPending
+                                      }
+                                    />
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Activity Logs */}
+            <Card className="bg-gradient-to-br from-yellow-50 to-orange-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  Activity Logs
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>User</TableHead>
+                      <TableHead>Action</TableHead>
+                      <TableHead>Table</TableHead>
+                      <TableHead>Record ID</TableHead>
+                      <TableHead>Timestamp</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {logs.map((log) => (
+                      <TableRow key={log.id}>
+                        <TableCell>{log.user_id}</TableCell>
+                        <TableCell>{log.action}</TableCell>
+                        <TableCell>{log.table_name}</TableCell>
+                        <TableCell>{log.record_id}</TableCell>
+                        <TableCell>
+                          {new Date(log.created_at).toLocaleString()}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </>
+        )}
+
         <Card className="bg-gradient-to-br from-blue-50 to-cyan-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300">
           <CardHeader>
             <CardTitle>Transaction Settings</CardTitle>
