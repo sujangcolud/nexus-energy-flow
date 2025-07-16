@@ -268,7 +268,7 @@ const Settings = () => {
       });
       queryClient.invalidateQueries({ queryKey: ["admin-users"] });
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast.error(`Failed to create user: ${error.message}`);
     },
   });
