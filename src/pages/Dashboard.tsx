@@ -27,6 +27,7 @@ import {
   Upload,
   LayoutDashboard,
   Settings as SettingsIcon,
+  Settings,
   Bell,
   Search,
   TrendingUp,
