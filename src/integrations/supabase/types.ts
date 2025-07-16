@@ -392,6 +392,66 @@ export type Database = {
         };
         Relationships: [];
       };
+      opening_balances: {
+        Row: {
+          created_at: string | null;
+          cutoff_date: string;
+          id: string;
+          opening_balance_amount: number;
+          updated_at: string | null;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string | null;
+          cutoff_date: string;
+          id?: string;
+          opening_balance_amount?: number;
+          updated_at?: string | null;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string | null;
+          cutoff_date?: string;
+          id?: string;
+          opening_balance_amount?: number;
+          updated_at?: string | null;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
+      share_investments: {
+        Row: {
+          contribution_amount: number;
+          created_at: string | null;
+          id: string;
+          investment_date: string | null;
+          payment_mode: string;
+          shareholder_name: string;
+          updated_at: string | null;
+          user_id: string;
+        };
+        Insert: {
+          contribution_amount: number;
+          created_at?: string | null;
+          id?: string;
+          investment_date?: string | null;
+          payment_mode: string;
+          shareholder_name: string;
+          updated_at?: string | null;
+          user_id: string;
+        };
+        Update: {
+          contribution_amount?: number;
+          created_at?: string | null;
+          id?: string;
+          investment_date?: string | null;
+          payment_mode?: string;
+          shareholder_name?: string;
+          updated_at?: string | null;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       [_ in never]: never;
