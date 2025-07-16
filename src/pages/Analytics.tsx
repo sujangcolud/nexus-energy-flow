@@ -543,12 +543,13 @@ const Analytics = () => {
               <div>
                 <p className="text-sm font-medium text-slate-600">Net Profit</p>
                 <p
-                  className={`text-2xl font-bold ${financials.totalIncome - financials.totalExpenses >= 0 ? "text-green-600" : "text-red-600"}`}
+                  className={`text-2xl font-bold ${
+                    financials.netProfit >= 0
+                      ? "text-green-600"
+                      : "text-red-600"
+                  }`}
                 >
-                  $
-                  {(
-                    financials.totalIncome - financials.totalExpenses
-                  ).toLocaleString()}
+                  ${financials.netProfit.toLocaleString()}
                 </p>
               </div>
               <BarChart3 className="h-8 w-8 text-slate-600" />
