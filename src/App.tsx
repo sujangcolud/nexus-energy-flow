@@ -28,7 +28,6 @@ import ShareInvestmentsTab from "./components/tabs/ShareInvestmentsTab";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import Settings from "./pages/Settings";
 import Analytics from "./pages/Analytics";
-import AdminPanel from "./pages/AdminPanel";
 import { Outlet } from "react-router-dom"; // Needed for nested routes
 
 const queryClient = new QueryClient();
