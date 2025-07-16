@@ -60,27 +60,33 @@ const ChatBot = ({ isOpen, onToggle }: ChatBotProps) => {
     }
   }, [messages]);
 
-  const handleSendMessage = async () => {
-    if (!inputValue.trim() || isLoading) return;
+  const handleSendMessage = async (messageText?: string) => {
+    const question = messageText || inputValue.trim();
+    if (!question || isLoading) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
       type: "user",
-      content: inputValue,
+      content: question,
       timestamp: new Date(),
     };
 
     setMessages((prev) => [...prev, userMessage]);
     setInputValue("");
     setIsLoading(true);
+    setConnectionStatus("connecting");
 
     try {
       const { data, error } = await supabase.functions.invoke("chatbot", {
-        body: { question: inputValue },
+        body: { question },
       });
 
       if (error) {
-        throw new Error(error.message);
+        throw new Error(error.message || "Failed to get response from chatbot");
+      }
+
+      if (!data || !data.answer) {
+        throw new Error("No response received from chatbot");
       }
 
       const botMessage: Message = {
@@ -91,17 +97,53 @@ const ChatBot = ({ isOpen, onToggle }: ChatBotProps) => {
       };
 
       setMessages((prev) => [...prev, botMessage]);
-    } catch (error) {
+      setConnectionStatus("connected");
+      setRetryCount(0);
+    } catch (error: any) {
+      console.error("Chatbot error:", error);
+      setConnectionStatus("error");
+      setRetryCount((prev) => prev + 1);
+
+      let errorContent = "🔧 I'm experiencing technical difficulties. ";
+
+      if (error.message?.includes("OpenAI") || error.message?.includes("API")) {
+        errorContent +=
+          "The AI service is temporarily unavailable. Please try again in a moment.";
+      } else if (
+        error.message?.includes("network") ||
+        error.message?.includes("fetch")
+      ) {
+        errorContent +=
+          "There seems to be a connection issue. Please check your internet connection.";
+      } else if (
+        error.message?.includes("unauthorized") ||
+        error.message?.includes("auth")
+      ) {
+        errorContent +=
+          "Authentication error. Please refresh the page and try again.";
+      } else {
+        errorContent +=
+          "Please try rephrasing your question or ask about:\n• Revenue and profit analysis\n• Expense tracking\n• Cash flow status\n• Menu performance\n• Charging station data";
+      }
+
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         type: "bot",
-        content:
-          "Sorry, I encountered an error while processing your request. Please try asking about your business data, financial metrics, or operational insights.",
+        content: errorContent,
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleRetry = () => {
+    if (messages.length > 1) {
+      const lastUserMessage = messages.findLast((msg) => msg.type === "user");
+      if (lastUserMessage) {
+        handleSendMessage(lastUserMessage.content);
+      }
     }
   };
 
