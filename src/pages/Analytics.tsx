@@ -76,7 +76,7 @@ const Analytics = () => {
   const handleAnalyticsToggle = (setting: string) => {
     const newSettings = {
       ...analyticsSettings,
-      [setting]: !analyticsSettings[setting as keyof typeof analyticsSettings],
+      [setting]: !analyticsSettings[setting as keyof typeof analyticsSettings]
     };
     setAnalyticsSettings(newSettings);
     localStorage.setItem("analyticsSettings", JSON.stringify(newSettings));
@@ -163,7 +163,7 @@ const Analytics = () => {
     },
   });
 
-  const { data: cooperativeData = [] } = useQuery({
+    const { data: cooperativeData = [] } = useQuery({
     queryKey: ["cooperative", timeRange],
     queryFn: async () => {
       const date = new Date();
@@ -195,7 +195,7 @@ const Analytics = () => {
     },
   });
 
-  // Calculate financial metrics with correct column names
+    // Calculate financial metrics with correct column names
   const calculateFinancials = (): FinancialData => {
     // Restaurant income using correct column name 'total'
     const restaurantIncome = ordersData.reduce(
@@ -245,10 +245,7 @@ const Analytics = () => {
     // Cash from charging using correct column 'payment_mode'
     const cashFromCharging = chargingData
       .filter((session) => session.payment_mode === "cash")
-      .reduce(
-        (sum, session) => sum + (parseFloat(session.total_amount) || 0),
-        0,
-      );
+      .reduce((sum, session) => sum + (parseFloat(session.total_amount) || 0), 0);
 
     // Cooperative savings using correct column name 'contribution_amount'
     const cooperativeSavings = cooperativeData.reduce(
@@ -257,20 +254,13 @@ const Analytics = () => {
     );
 
     // Use actual balances from balances table if available
-    const actualBankBalance = balancesData?.bank_balance
-      ? parseFloat(balancesData.bank_balance)
-      : totalDeposits - totalWithdrawals - bankExpenses;
-    const actualCashInHand = balancesData?.cash_in_hand
-      ? parseFloat(balancesData.cash_in_hand)
-      : cashOrders + cashFromCharging - cashExpenses;
-    const actualCooperativeBalance = balancesData?.cooperative_balance
-      ? parseFloat(balancesData.cooperative_balance)
-      : cooperativeSavings;
+    const actualBankBalance = balancesData?.bank_balance ? parseFloat(balancesData.bank_balance) : totalDeposits - totalWithdrawals - bankExpenses;
+    const actualCashInHand = balancesData?.cash_in_hand ? parseFloat(balancesData.cash_in_hand) : cashOrders + cashFromCharging - cashExpenses;
+    const actualCooperativeBalance = balancesData?.cooperative_balance ? parseFloat(balancesData.cooperative_balance) : cooperativeSavings;
 
     const totalIncome = restaurantIncome + chargingIncome;
     const netProfit = totalIncome - totalExpenses;
-    const totalAssets =
-      actualBankBalance + actualCashInHand + actualCooperativeBalance;
+    const totalAssets = actualBankBalance + actualCashInHand + actualCooperativeBalance;
 
     return {
       bankBalance: actualBankBalance,
@@ -292,15 +282,12 @@ const Analytics = () => {
     const date = new Date();
     date.setDate(date.getDate() - (6 - i));
 
-    const dayCharging = chargingData
+        const dayCharging = chargingData
       .filter(
         (session) =>
           new Date(session.created_at).toDateString() === date.toDateString(),
       )
-      .reduce(
-        (sum, session) => sum + (parseFloat(session.total_amount) || 0),
-        0,
-      );
+      .reduce((sum, session) => sum + (parseFloat(session.total_amount) || 0), 0);
 
     const dayRestaurant = ordersData
       .filter(
@@ -348,7 +335,7 @@ const Analytics = () => {
             Comprehensive view of your financial performance
           </p>
         </div>
-        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           <Select value={timeRange} onValueChange={setTimeRange}>
             <SelectTrigger className="w-full sm:w-[180px]">
               <SelectValue placeholder="Select time range" />
@@ -379,9 +366,7 @@ const Analytics = () => {
                 checked={analyticsSettings.showKeyMetrics}
                 onCheckedChange={() => handleAnalyticsToggle("showKeyMetrics")}
               />
-              <Label htmlFor="showKeyMetrics" className="text-sm">
-                Key Metrics
-              </Label>
+              <Label htmlFor="showKeyMetrics" className="text-sm">Key Metrics</Label>
             </div>
             <div className="flex items-center space-x-2">
               <Switch
@@ -389,9 +374,7 @@ const Analytics = () => {
                 checked={analyticsSettings.showCharts}
                 onCheckedChange={() => handleAnalyticsToggle("showCharts")}
               />
-              <Label htmlFor="showCharts" className="text-sm">
-                Charts
-              </Label>
+              <Label htmlFor="showCharts" className="text-sm">Charts</Label>
             </div>
             <div className="flex items-center space-x-2">
               <Switch
@@ -399,33 +382,23 @@ const Analytics = () => {
                 checked={analyticsSettings.showCorrelation}
                 onCheckedChange={() => handleAnalyticsToggle("showCorrelation")}
               />
-              <Label htmlFor="showCorrelation" className="text-sm">
-                Correlation
-              </Label>
+              <Label htmlFor="showCorrelation" className="text-sm">Correlation</Label>
             </div>
             <div className="flex items-center space-x-2">
               <Switch
                 id="showSummaryStats"
                 checked={analyticsSettings.showSummaryStats}
-                onCheckedChange={() =>
-                  handleAnalyticsToggle("showSummaryStats")
-                }
+                onCheckedChange={() => handleAnalyticsToggle("showSummaryStats")}
               />
-              <Label htmlFor="showSummaryStats" className="text-sm">
-                Summary Stats
-              </Label>
+              <Label htmlFor="showSummaryStats" className="text-sm">Summary Stats</Label>
             </div>
             <div className="flex items-center space-x-2">
               <Switch
                 id="showBalanceDistribution"
                 checked={analyticsSettings.showBalanceDistribution}
-                onCheckedChange={() =>
-                  handleAnalyticsToggle("showBalanceDistribution")
-                }
+                onCheckedChange={() => handleAnalyticsToggle("showBalanceDistribution")}
               />
-              <Label htmlFor="showBalanceDistribution" className="text-sm">
-                Balance Distribution
-              </Label>
+              <Label htmlFor="showBalanceDistribution" className="text-sm">Balance Distribution</Label>
             </div>
             <div className="flex items-center space-x-2">
               <Switch
@@ -433,21 +406,15 @@ const Analytics = () => {
                 checked={analyticsSettings.showIncomeTrend}
                 onCheckedChange={() => handleAnalyticsToggle("showIncomeTrend")}
               />
-              <Label htmlFor="showIncomeTrend" className="text-sm">
-                Income Trend
-              </Label>
+              <Label htmlFor="showIncomeTrend" className="text-sm">Income Trend</Label>
             </div>
             <div className="flex items-center space-x-2">
               <Switch
                 id="showIncomeSources"
                 checked={analyticsSettings.showIncomeSources}
-                onCheckedChange={() =>
-                  handleAnalyticsToggle("showIncomeSources")
-                }
+                onCheckedChange={() => handleAnalyticsToggle("showIncomeSources")}
               />
-              <Label htmlFor="showIncomeSources" className="text-sm">
-                Income Sources
-              </Label>
+              <Label htmlFor="showIncomeSources" className="text-sm">Income Sources</Label>
             </div>
             <div className="flex items-center space-x-2">
               <Switch
@@ -455,71 +422,70 @@ const Analytics = () => {
                 checked={analyticsSettings.autoRefresh}
                 onCheckedChange={() => handleAnalyticsToggle("autoRefresh")}
               />
-              <Label htmlFor="autoRefresh" className="text-sm">
-                Auto Refresh
-              </Label>
+              <Label htmlFor="autoRefresh" className="text-sm">Auto Refresh</Label>
             </div>
           </div>
-        </CardContent>
+                </CardContent>
       </Card>
 
-      {/* Key Metrics Cards */}
+            {/* Key Metrics Cards */}
       {analyticsSettings.showKeyMetrics && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
-          <Card className="bg-green-50 border-green-200">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-green-700">
-                Bank Balance
-              </CardTitle>
-              <Banknote className="h-4 w-4 text-green-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-800">
-                ${financials.bankBalance.toLocaleString()}
-              </div>
-              <p className="text-xs text-green-600 mt-1">
-                Deposits minus withdrawals and bank expenses
-              </p>
-            </CardContent>
-          </Card>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
+        <Card className="bg-green-50 border-green-200">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-green-700">
+              Bank Balance
+            </CardTitle>
+            <Banknote className="h-4 w-4 text-green-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-800">
+              ${financials.bankBalance.toLocaleString()}
+            </div>
+            <p className="text-xs text-green-600 mt-1">
+              Deposits minus withdrawals and bank expenses
+            </p>
+          </CardContent>
+        </Card>
 
-          <Card className="bg-blue-50 border-blue-200">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-blue-700">
-                Cash in Hand
-              </CardTitle>
-              <DollarSign className="h-4 w-4 text-blue-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-blue-800">
-                ${financials.cashInHand.toLocaleString()}
-              </div>
-              <p className="text-xs text-blue-600 mt-1">
-                Cash received minus expenses and deposits
-              </p>
-            </CardContent>
-          </Card>
+        <Card className="bg-blue-50 border-blue-200">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-blue-700">
+              Cash in Hand
+            </CardTitle>
+            <DollarSign className="h-4 w-4 text-blue-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-blue-800">
+              ${financials.cashInHand.toLocaleString()}
+            </div>
+            <p className="text-xs text-blue-600 mt-1">
+              Cash received minus expenses and deposits
+            </p>
+          </CardContent>
+        </Card>
 
-          <Card className="bg-amber-50 border-amber-200">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-amber-700">
-                Cooperative Balance
-              </CardTitle>
-              <PiggyBank className="h-4 w-4 text-amber-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-amber-800">
-                ${financials.cooperativeBalance.toLocaleString()}
-              </div>
-              <p className="text-xs text-amber-600 mt-1">
-                Savings minus withdrawals
-              </p>
-            </CardContent>
-          </Card>
-        </div>
+        <Card className="bg-amber-50 border-amber-200">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-amber-700">
+              Cooperative Balance
+            </CardTitle>
+            <PiggyBank className="h-4 w-4 text-amber-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-amber-800">
+              ${financials.cooperativeBalance.toLocaleString()}
+            </div>
+            <p className="text-xs text-amber-600 mt-1">
+              Savings minus withdrawals
+            </p>
+          </CardContent>
+                </Card>
+      </div>
       )}
 
-      {/* Charts Grid */}
+            {/* Charts Grid */}
+      {analyticsSettings.showCharts && (
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Charging vs Restaurant Correlation */}
         <Card>
@@ -672,7 +638,7 @@ const Analytics = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-slate-600">Net Profit</p>
-                <p
+                                <p
                   className={`text-2xl font-bold ${
                     financials.netProfit >= 0
                       ? "text-green-600"
@@ -694,7 +660,7 @@ const Analytics = () => {
                 <p className="text-sm font-medium text-slate-600">
                   Total Assets
                 </p>
-                <p className="text-2xl font-bold text-blue-600">
+                                <p className="text-2xl font-bold text-blue-600">
                   ${financials.totalAssets.toLocaleString()}
                 </p>
               </div>
