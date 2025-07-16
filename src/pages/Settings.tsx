@@ -191,6 +191,123 @@ const Settings = () => {
     role: "user",
   });
 
+  // Fetch all users
+  const { data: users = [], isLoading: usersLoading } = useQuery({
+    queryKey: ["admin-users"],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_all_users_with_roles");
+      if (error) throw error;
+
+      const filteredUsers = (data || [])
+        .map((user) => ({
+          ...user,
+          role:
+            user.role === "super_user"
+              ? ("super_admin" as AppRole)
+              : (user.role as AppRole),
+        }))
+        .filter((user) =>
+          ["user", "data_entry", "reports_viewer", "super_admin"].includes(
+            user.role,
+          ),
+        );
+
+      return filteredUsers as UserWithRole[];
+    },
+    enabled: hasRole("super_admin"),
+  });
+
+  // Fetch user permissions
+  const { data: userPermissions = [] } = useQuery({
+    queryKey: ["user-permissions"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("user_tab_permissions")
+        .select("*");
+
+      if (error && error.code !== "42P01") throw error;
+      return (data as UserPermission[]) || [];
+    },
+    enabled: hasRole("super_admin"),
+  });
+
+  // Create user mutation
+  const createUserMutation = useMutation({
+    mutationFn: async (userData: typeof newUser) => {
+      const { data, error } = await supabase.functions.invoke("create-user", {
+        body: {
+          email: userData.email,
+          password: userData.password,
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          role: userData.role,
+        },
+      });
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      toast.success("User created successfully!");
+      setShowCreateUserForm(false);
+      setNewUser({
+        email: "",
+        password: "",
+        firstName: "",
+        lastName: "",
+        role: "user",
+      });
+      queryClient.invalidateQueries({ queryKey: ["admin-users"] });
+    },
+    onError: (error: any) => {
+      toast.error(`Failed to create user: ${error.message}`);
+    },
+  });
+
+  // Update user permission mutation
+  const updatePermissionMutation = useMutation({
+    mutationFn: async ({
+      userId,
+      tabId,
+      enabled,
+    }: {
+      userId: string;
+      tabId: string;
+      enabled: boolean;
+    }) => {
+      const { error } = await supabase.from("user_tab_permissions").upsert({
+        user_id: userId,
+        tab_id: tabId,
+        enabled,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["user-permissions"] });
+    },
+    onError: (error: any) => {
+      toast.error(`Failed to update permission: ${error.message}`);
+    },
+  });
+
+  // Update user role mutation
+  const updateRoleMutation = useMutation({
+    mutationFn: async ({ userId, role }: { userId: string; role: string }) => {
+      const { error } = await supabase.rpc("update_user_role", {
+        user_id_to_update: userId,
+        new_role: role,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("User role updated successfully!");
+      queryClient.invalidateQueries({ queryKey: ["admin-users"] });
+    },
+    onError: (error: any) => {
+      toast.error(`Failed to update role: ${error.message}`);
+    },
+  });
+
   useEffect(() => {
     const storedSettings = localStorage.getItem("tabSettings");
     if (storedSettings) {
@@ -210,7 +327,12 @@ const Settings = () => {
     if (canEdit) {
       setCanEditTransactions(JSON.parse(canEdit));
     }
-  }, []);
+
+    // Fetch logs if admin
+    if (hasRole("super_admin")) {
+      fetchLogs();
+    }
+  }, [hasRole]);
 
   const handleToggle = (tabId: string) => {
     const newSettings = { ...tabSettings, [tabId]: !tabSettings[tabId] };
