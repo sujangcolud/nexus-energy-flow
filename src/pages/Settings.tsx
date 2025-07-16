@@ -334,10 +334,94 @@ const Settings = () => {
     }
   }, [hasRole]);
 
+  const fetchLogs = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("logs")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      setLogs(data || []);
+    } catch (error) {
+      console.error("Error fetching logs:", error);
+      toast.error("Failed to load logs.");
+    }
+  };
+
   const handleToggle = (tabId: string) => {
     const newSettings = { ...tabSettings, [tabId]: !tabSettings[tabId] };
     setTabSettings(newSettings);
     localStorage.setItem("tabSettings", JSON.stringify(newSettings));
+  };
+
+  const handleCreateUser = () => {
+    if (
+      !newUser.email ||
+      !newUser.password ||
+      !newUser.firstName ||
+      !newUser.lastName
+    ) {
+      toast.error("Please fill in all required fields.");
+      return;
+    }
+    createUserMutation.mutate(newUser);
+  };
+
+  const handleRoleChange = (userId: string, newRole: AppRole) => {
+    updateRoleMutation.mutate({ userId, role: newRole });
+  };
+
+  const generatePassword = () => {
+    const chars =
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
+    let password = "";
+    for (let i = 0; i < 12; i++) {
+      password += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    setNewUser((prev) => ({ ...prev, password }));
+  };
+
+  const getRoleIcon = (role: AppRole) => {
+    switch (role) {
+      case "super_admin":
+        return <Shield className="h-4 w-4 text-purple-600" />;
+      case "data_entry":
+        return <Database className="h-4 w-4 text-blue-600" />;
+      case "reports_viewer":
+        return <BarChart3 className="h-4 w-4 text-green-600" />;
+      default:
+        return <UserCheck className="h-4 w-4 text-gray-600" />;
+    }
+  };
+
+  const getRoleDescription = (role: AppRole) => {
+    switch (role) {
+      case "super_admin":
+        return "Full access to all features and user management";
+      case "data_entry":
+        return "Can manage orders, charging, expenses, deposits, withdrawals, and savings";
+      case "reports_viewer":
+        return "Can view reports, analytics, and import bulk data";
+      case "user":
+        return "Basic user access";
+      default:
+        return "";
+    }
+  };
+
+  const isTabEnabledForUser = (userId: string, tabId: string) => {
+    const permission = userPermissions.find(
+      (perm) => perm.user_id === userId && perm.tab_id === tabId,
+    );
+    return permission ? permission.enabled : true;
+  };
+
+  const handlePermissionToggle = (
+    userId: string,
+    tabId: string,
+    enabled: boolean,
+  ) => {
+    updatePermissionMutation.mutate({ userId, tabId, enabled });
   };
 
   useEffect(() => {
