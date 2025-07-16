@@ -30,6 +30,7 @@ import {
   Sparkles,
   Bell,
   Search,
+  TrendingUp,
 } from "lucide-react";
 import ChatBot from "@/components/ChatBot";
 
