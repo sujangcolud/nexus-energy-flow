@@ -378,7 +378,7 @@ const Analytics = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={250}>
               <BarChart data={correlationData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="date" />
