@@ -52,6 +52,7 @@ import ShareInvestmentsTab from "@/components/tabs/ShareInvestmentsTab";
 
 const Dashboard = () => {
   const { user, signOut, userRole } = useAuth();
+  const { hasTabAccess } = useUserPermissions();
   const location = useLocation();
   const navigate = useNavigate();
   const [isChatBotOpen, setIsChatBotOpen] = useState(false);
