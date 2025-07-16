@@ -34,7 +34,7 @@ const ChatBot = ({ isOpen, onToggle }: ChatBotProps) => {
       id: "1",
       type: "bot",
       content:
-        '🔋 Welcome to Energy Palace Nexus Business Assistant! I\'m here to help you analyze your restaurant and charging station operations.\n\n💡 I can help with:\n• Financial analysis and KPIs\n• Revenue optimization strategies\n• Expense management insights\n• Cash flow analysis\n• Menu performance tracking\n• Charging station utilization\n• Business forecasting\n\nTry asking: "What\'s my revenue breakdown this week?" or "How is my cash flow?"',
+        '🔋 Welcome to Energy Palace Nexus Business Assistant! I\'m here to help you analyze your restaurant and charging station operations.\n\n💡 I can help with:\n• Financial analysis and KPIs\n• Revenue optimization strategies\n• Expense management insights\n• Cash flow analysis\n• Menu performance tracking\n• Charging station utilization\n��� Business forecasting\n\nTry asking: "What\'s my revenue breakdown this week?" or "How is my cash flow?"',
       timestamp: new Date(),
     },
   ]);
@@ -283,24 +283,68 @@ const ChatBot = ({ isOpen, onToggle }: ChatBotProps) => {
           </div>
         </ScrollArea>
 
+        {/* Example Questions */}
+        {messages.length <= 1 && (
+          <div className="mb-4 p-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border">
+            <p className="text-xs font-medium text-slate-600 mb-2">
+              Try asking:
+            </p>
+            <div className="flex flex-wrap gap-1">
+              {exampleQuestions.slice(0, 3).map((question, index) => (
+                <Button
+                  key={index}
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleSendMessage(question)}
+                  disabled={isLoading}
+                  className="text-xs h-7 px-2 bg-white hover:bg-blue-50 border-blue-200"
+                >
+                  {question}
+                </Button>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="flex gap-2 mt-4">
           <Input
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyPress={handleKeyPress}
-            placeholder="Ask about your business data..."
+            placeholder="Ask about revenue, expenses, trends..."
             disabled={isLoading}
-            className="flex-1 border-slate-300 focus:border-slate-500"
+            className="flex-1 border-slate-300 focus:border-blue-500"
           />
           <Button
-            onClick={handleSendMessage}
+            onClick={() => handleSendMessage()}
             disabled={!inputValue.trim() || isLoading}
             size="icon"
-            className="bg-slate-600 hover:bg-slate-700 touch-target"
+            className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 touch-target"
           >
-            <Send className="h-4 w-4" />
+            {isLoading ? (
+              <RefreshCw className="h-4 w-4 animate-spin" />
+            ) : (
+              <Send className="h-4 w-4" />
+            )}
           </Button>
         </div>
+
+        {connectionStatus === "error" && retryCount > 0 && (
+          <div className="mt-2 p-2 bg-red-50 rounded-lg border border-red-200">
+            <div className="flex items-center gap-2 text-xs text-red-600">
+              <AlertCircle className="h-3 w-3" />
+              <span>Connection issues (attempt {retryCount})</span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleRetry}
+                className="ml-auto h-6 px-2 text-xs"
+              >
+                Retry
+              </Button>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
