@@ -34,13 +34,25 @@ const ChatBot = ({ isOpen, onToggle }: ChatBotProps) => {
       id: "1",
       type: "bot",
       content:
-        "Hello! I'm your business assistant. I can help you analyze your business data, calculate financial metrics, and provide insights about your operations. What would you like to know?",
+        '🔋 Welcome to Energy Palace Nexus Business Assistant! I\'m here to help you analyze your restaurant and charging station operations.\n\n💡 I can help with:\n• Financial analysis and KPIs\n• Revenue optimization strategies\n• Expense management insights\n• Cash flow analysis\n• Menu performance tracking\n• Charging station utilization\n• Business forecasting\n\nTry asking: "What\'s my revenue breakdown this week?" or "How is my cash flow?"',
       timestamp: new Date(),
     },
   ]);
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState<
+    "connected" | "error" | "connecting"
+  >("connected");
+  const [retryCount, setRetryCount] = useState(0);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+
+  const exampleQuestions = [
+    "What's my total revenue this week?",
+    "How is my cash flow looking?",
+    "Which menu items are most profitable?",
+    "Show me expense breakdown by category",
+    "What's the charging vs restaurant revenue?",
+  ];
 
   useEffect(() => {
     if (scrollAreaRef.current) {
