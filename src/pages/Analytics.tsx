@@ -269,14 +269,17 @@ const Analytics = () => {
         (session) =>
           new Date(session.created_at).toDateString() === date.toDateString(),
       )
-      .reduce((sum, session) => sum + (session.amount_charged || 0), 0);
+      .reduce(
+        (sum, session) => sum + (parseFloat(session.total_amount) || 0),
+        0,
+      );
 
     const dayRestaurant = ordersData
       .filter(
         (order) =>
           new Date(order.created_at).toDateString() === date.toDateString(),
       )
-      .reduce((sum, order) => sum + (order.total_amount || 0), 0);
+      .reduce((sum, order) => sum + (parseFloat(order.total) || 0), 0);
 
     return {
       date: date.toLocaleDateString("en-US", { weekday: "short" }),
