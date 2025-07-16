@@ -149,6 +149,22 @@ const Analytics = () => {
     },
   });
 
+  // Fetch current balances
+  const { data: balancesData } = useQuery({
+    queryKey: ["balances"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("balances")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .single();
+
+      if (error && error.code !== "PGRST116") throw error;
+      return data;
+    },
+  });
+
   // Calculate financial metrics
   const calculateFinancials = (): FinancialData => {
     // Restaurant income (cash and non-cash orders)
