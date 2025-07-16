@@ -132,8 +132,8 @@ Analyze the question and provide a comprehensive, data-driven response. Include 
             content: enhancedPrompt,
           },
         ],
-        max_tokens: 500,
-        temperature: 0.7,
+        max_tokens: 800,
+        temperature: 0.3,
       }),
     });
 
