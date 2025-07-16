@@ -312,7 +312,7 @@ const Settings = () => {
       toast.success("User role updated successfully!");
       queryClient.invalidateQueries({ queryKey: ["admin-users"] });
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast.error(`Failed to update role: ${error.message}`);
     },
   });
