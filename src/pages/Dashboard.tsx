@@ -133,6 +133,17 @@ const Dashboard = () => {
         bgGradient: "from-teal-50 to-cyan-50",
         description: "Cooperative savings management",
       },
+      {
+        id: "share_investments",
+        path: "share-investments",
+        label: "Share Investments",
+        icon: TrendingUp,
+        component: ShareInvestmentsTab,
+        roles: ["data_entry", "super_admin"],
+        gradient: "from-emerald-400 via-green-500 to-teal-600",
+        bgGradient: "from-emerald-50 to-green-50",
+        description: "Manage share investments",
+      },
 
       // Reports and Analytics - accessible to reports_viewer, super_admin
       {
