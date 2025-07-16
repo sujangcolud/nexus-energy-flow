@@ -171,14 +171,43 @@ const ChatBot = ({ isOpen, onToggle }: ChatBotProps) => {
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center">
-              <Bot className="h-4 w-4 text-slate-600" />
+            <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
+              <Bot className="h-4 w-4 text-white" />
             </div>
-            <CardTitle className="text-lg text-slate-800">
-              Business Assistant
-            </CardTitle>
+            <div>
+              <CardTitle className="text-lg text-slate-800">
+                Business Assistant
+              </CardTitle>
+              <div className="flex items-center gap-1">
+                <Badge
+                  variant={
+                    connectionStatus === "connected"
+                      ? "default"
+                      : connectionStatus === "error"
+                        ? "destructive"
+                        : "secondary"
+                  }
+                  className="text-xs"
+                >
+                  {connectionStatus === "connected" && "🟢 Online"}
+                  {connectionStatus === "error" && "🔴 Error"}
+                  {connectionStatus === "connecting" && "🟡 Connecting"}
+                </Badge>
+              </div>
+            </div>
           </div>
           <div className="flex gap-1">
+            {connectionStatus === "error" && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleRetry}
+                className="hover:bg-slate-100 touch-target"
+                title="Retry last message"
+              >
+                <RefreshCw className="h-4 w-4" />
+              </Button>
+            )}
             <Button
               variant="ghost"
               size="icon"
