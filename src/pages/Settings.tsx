@@ -182,7 +182,16 @@ const Settings = () => {
   const [showCreateUserForm, setShowCreateUserForm] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
-  const [logs, setLogs] = useState<any[]>([]);
+  const [logs, setLogs] = useState<
+    Array<{
+      id: string;
+      user_id: string;
+      action: string;
+      table_name: string;
+      record_id: string;
+      created_at: string;
+    }>
+  >([]);
   const [newUser, setNewUser] = useState<NewUserData>({
     email: "",
     password: "",
