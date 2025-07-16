@@ -46,6 +46,7 @@ import ReportsViewTab from "@/components/tabs/ReportsViewTab";
 import MenuManagementTab from "@/components/tabs/MenuManagementTab";
 import DataInputTab from "@/components/tabs/DataInputTab";
 import UserManagementTab from "@/components/tabs/UserManagementTab";
+import ShareInvestmentsTab from "@/components/tabs/ShareInvestmentsTab";
 
 const Dashboard = () => {
   const { user, signOut, userRole } = useAuth();
