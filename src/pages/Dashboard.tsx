@@ -30,6 +30,7 @@ import {
   Sparkles,
   Bell,
   Search,
+  TrendingUp,
 } from "lucide-react";
 import ChatBot from "@/components/ChatBot";
 
@@ -46,6 +47,7 @@ import ReportsViewTab from "@/components/tabs/ReportsViewTab";
 import MenuManagementTab from "@/components/tabs/MenuManagementTab";
 import DataInputTab from "@/components/tabs/DataInputTab";
 import UserManagementTab from "@/components/tabs/UserManagementTab";
+import ShareInvestmentsTab from "@/components/tabs/ShareInvestmentsTab";
 
 const Dashboard = () => {
   const { user, signOut, userRole } = useAuth();
@@ -130,6 +132,17 @@ const Dashboard = () => {
         gradient: "from-teal-400 via-cyan-500 to-blue-600",
         bgGradient: "from-teal-50 to-cyan-50",
         description: "Cooperative savings management",
+      },
+      {
+        id: "share_investments",
+        path: "share-investments",
+        label: "Share Investments",
+        icon: TrendingUp,
+        component: ShareInvestmentsTab,
+        roles: ["data_entry", "super_admin"],
+        gradient: "from-emerald-400 via-green-500 to-teal-600",
+        bgGradient: "from-emerald-50 to-green-50",
+        description: "Manage share investments",
       },
 
       // Reports and Analytics - accessible to reports_viewer, super_admin
