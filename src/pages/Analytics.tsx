@@ -46,6 +46,8 @@ interface FinancialData {
   totalExpenses: number;
   chargingIncome: number;
   restaurantIncome: number;
+  netProfit: number;
+  totalAssets: number;
 }
 
 const Analytics = () => {
