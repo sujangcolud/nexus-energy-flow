@@ -50,6 +50,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import PasswordChangeForm from "@/components/PasswordChangeForm";
+import DataManagement from "@/components/DataManagement";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -982,6 +983,8 @@ const Settings = () => {
             </Card>
           </>
         )}
+
+        {hasRole("super_admin") && <DataManagement />}
 
         <Card className="bg-gradient-to-br from-blue-50 to-cyan-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300">
           <CardHeader>
