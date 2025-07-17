@@ -49,6 +49,7 @@ import MenuManagementTab from "@/components/tabs/MenuManagementTab";
 import DataInputTab from "@/components/tabs/DataInputTab";
 import UserManagementTab from "@/components/tabs/UserManagementTab";
 import ShareInvestmentsTab from "@/components/tabs/ShareInvestmentsTab";
+import ExpenseBookingsTab from "@/components/tabs/ExpenseBookingsTab";
 
 const Dashboard = () => {
   const { user, signOut, userRole } = useAuth();
@@ -246,6 +247,17 @@ const Dashboard = () => {
         color: "bg-purple-600",
         bgColor: "bg-purple-50",
         description: "Advanced user & permission management",
+      },
+      {
+        id: "expense_bookings",
+        path: "expense-bookings",
+        label: "Expense Bookings",
+        icon: FileText,
+        component: ExpenseBookingsTab,
+        roles: ["data_entry", "super_admin"],
+        color: "bg-cyan-600",
+        bgColor: "bg-cyan-50",
+        description: "Manage expense bookings",
       },
     ];
 
