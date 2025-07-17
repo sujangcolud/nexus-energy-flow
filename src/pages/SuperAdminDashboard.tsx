@@ -90,6 +90,7 @@ interface MenuItemAvailability {
 }
 
 const SuperAdminDashboard = () => {
+  console.log("Rendering SuperAdminDashboard component");
   const [monthlyFinancialSummary, setMonthlyFinancialSummary] = useState<
     MonthlyFinancialSummary[]
   >([]);

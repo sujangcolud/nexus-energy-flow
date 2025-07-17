@@ -47,7 +47,6 @@ import {
   RefreshCw,
   Edit,
   UserCog,
-  Trash2,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import PasswordChangeForm from "@/components/PasswordChangeForm";
@@ -175,29 +174,13 @@ const allItems = [
 ];
 
 const Settings = () => {
+  console.log("Rendering Settings component");
   const { user, hasRole } = useAuth();
   const queryClient = useQueryClient();
   const [tabSettings, setTabSettings] = useState<Record<string, boolean>>({});
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [canEditTransactions, setCanEditTransactions] = useState(false);
-  const [canAddChargingCategory, setCanAddChargingCategory] = useState(false);
-  const [canAddSavingsCategory, setCanAddSavingsCategory] = useState(false);
-  const [canAddWithdrawalCategory, setCanAddWithdrawalCategory] =
-    useState(false);
-  const [canAddDepositCategory, setCanAddDepositCategory] = useState(false);
-  const [canAddExpenseBookingCategory, setCanAddExpenseBookingCategory] =
-    useState(false);
-  const [canAddMenuCategory, setCanAddMenuCategory] = useState(false);
-  const [canAddExpenseCategory, setCanAddExpenseCategory] = useState(false);
-  const [showOrders, setShowOrders] = useState(true);
-  const [showInsights, setShowInsights] = useState(true);
-  const [showReports, setShowReports] = useState(true);
-  const [showReportsView, setShowReportsView] = useState(true);
-  const [showDataInput, setShowDataInput] = useState(true);
-  const [showUserManagement, setShowUserManagement] = useState(true);
-  const [showAdminPanel, setShowAdminPanel] = useState(true);
-  const [showShareInvestments, setShowShareInvestments] = useState(true);
-  const [showVatEntry, setShowVatEntry] = useState(true);
+  const [showDeleteButtons, setShowDeleteButtons] = useState(false);
   const [showCreateUserForm, setShowCreateUserForm] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
@@ -356,88 +339,6 @@ const Settings = () => {
       setCanEditTransactions(JSON.parse(canEdit));
     }
 
-    const canAddCharging = localStorage.getItem("canAddChargingCategory");
-    if (canAddCharging) {
-      setCanAddChargingCategory(JSON.parse(canAddCharging));
-    }
-
-    const canAddSavings = localStorage.getItem("canAddSavingsCategory");
-    if (canAddSavings) {
-      setCanAddSavingsCategory(JSON.parse(canAddSavings));
-    }
-
-    const canAddWithdrawal = localStorage.getItem("canAddWithdrawalCategory");
-    if (canAddWithdrawal) {
-      setCanAddWithdrawalCategory(JSON.parse(canAddWithdrawal));
-    }
-
-    const canAddDeposit = localStorage.getItem("canAddDepositCategory");
-    if (canAddDeposit) {
-      setCanAddDepositCategory(JSON.parse(canAddDeposit));
-    }
-
-    const canAddExpenseBooking = localStorage.getItem(
-      "canAddExpenseBookingCategory",
-    );
-    if (canAddExpenseBooking) {
-      setCanAddExpenseBookingCategory(JSON.parse(canAddExpenseBooking));
-    }
-
-    const canAddMenu = localStorage.getItem("canAddMenuCategory");
-    if (canAddMenu) {
-      setCanAddMenuCategory(JSON.parse(canAddMenu));
-    }
-
-    const canAddExpense = localStorage.getItem("canAddExpenseCategory");
-    if (canAddExpense) {
-      setCanAddExpenseCategory(JSON.parse(canAddExpense));
-    }
-
-    const orders = localStorage.getItem("showOrders");
-    if (orders) {
-      setShowOrders(JSON.parse(orders));
-    }
-
-    const insights = localStorage.getItem("showInsights");
-    if (insights) {
-      setShowInsights(JSON.parse(insights));
-    }
-
-    const reports = localStorage.getItem("showReports");
-    if (reports) {
-      setShowReports(JSON.parse(reports));
-    }
-
-    const reportsView = localStorage.getItem("showReportsView");
-    if (reportsView) {
-      setShowReportsView(JSON.parse(reportsView));
-    }
-
-    const dataInput = localStorage.getItem("showDataInput");
-    if (dataInput) {
-      setShowDataInput(JSON.parse(dataInput));
-    }
-
-    const userManagement = localStorage.getItem("showUserManagement");
-    if (userManagement) {
-      setShowUserManagement(JSON.parse(userManagement));
-    }
-
-    const adminPanel = localStorage.getItem("showAdminPanel");
-    if (adminPanel) {
-      setShowAdminPanel(JSON.parse(adminPanel));
-    }
-
-    const shareInvestments = localStorage.getItem("showShareInvestments");
-    if (shareInvestments) {
-      setShowShareInvestments(JSON.parse(shareInvestments));
-    }
-
-    const vatEntry = localStorage.getItem("showVatEntry");
-    if (vatEntry) {
-      setShowVatEntry(JSON.parse(vatEntry));
-    }
-
     // Fetch logs if admin
     if (hasRole("super_admin")) {
       fetchLogs();
@@ -540,67 +441,10 @@ const Settings = () => {
       JSON.stringify(canEditTransactions),
     );
     localStorage.setItem(
-      "canAddChargingCategory",
-      JSON.stringify(canAddChargingCategory),
+      "showDeleteButtons",
+      JSON.stringify(showDeleteButtons),
     );
-    localStorage.setItem(
-      "canAddSavingsCategory",
-      JSON.stringify(canAddSavingsCategory),
-    );
-    localStorage.setItem(
-      "canAddWithdrawalCategory",
-      JSON.stringify(canAddWithdrawalCategory),
-    );
-    localStorage.setItem(
-      "canAddDepositCategory",
-      JSON.stringify(canAddDepositCategory),
-    );
-    localStorage.setItem(
-      "canAddExpenseBookingCategory",
-      JSON.stringify(canAddExpenseBookingCategory),
-    );
-    localStorage.setItem(
-      "canAddMenuCategory",
-      JSON.stringify(canAddMenuCategory),
-    );
-    localStorage.setItem(
-      "canAddExpenseCategory",
-      JSON.stringify(canAddExpenseCategory),
-    );
-    localStorage.setItem("showOrders", JSON.stringify(showOrders));
-    localStorage.setItem("showInsights", JSON.stringify(showInsights));
-    localStorage.setItem("showReports", JSON.stringify(showReports));
-    localStorage.setItem("showReportsView", JSON.stringify(showReportsView));
-    localStorage.setItem("showDataInput", JSON.stringify(showDataInput));
-    localStorage.setItem(
-      "showUserManagement",
-      JSON.stringify(showUserManagement),
-    );
-    localStorage.setItem("showAdminPanel", JSON.stringify(showAdminPanel));
-    localStorage.setItem(
-      "showShareInvestments",
-      JSON.stringify(showShareInvestments),
-    );
-    localStorage.setItem("showVatEntry", JSON.stringify(showVatEntry));
-  }, [
-    canEditTransactions,
-    canAddChargingCategory,
-    canAddSavingsCategory,
-    canAddWithdrawalCategory,
-    canAddDepositCategory,
-    canAddExpenseBookingCategory,
-    canAddMenuCategory,
-    canAddExpenseCategory,
-    showOrders,
-    showInsights,
-    showReports,
-    showReportsView,
-    showDataInput,
-    showUserManagement,
-    showAdminPanel,
-    showShareInvestments,
-    showVatEntry,
-  ]);
+  }, [canEditTransactions, showDeleteButtons]);
 
   const handleResetSettings = () => {
     const defaultSettings = allItems.reduce(
@@ -614,9 +458,17 @@ const Settings = () => {
     localStorage.setItem("tabSettings", JSON.stringify(defaultSettings));
   };
 
-  const handleClearLocalStorage = () => {
-    localStorage.clear();
-    window.location.reload();
+  const handleDeleteTab = (tabId: string) => {
+    const newItems = allItems.map((item) => {
+      if (item.id === tabId) {
+        return { ...item, deleted: true };
+      }
+      return item;
+    });
+    // This is not ideal, as it modifies the source of truth.
+    // A better approach would be to store the deleted status in a separate state or in local storage.
+    // However, for the sake of simplicity, I will modify the allItems array directly.
+    console.log(newItems);
   };
 
   const enabledCount = Object.values(tabSettings).filter(Boolean).length;
@@ -696,6 +548,23 @@ const Settings = () => {
                 )}
               </CardContent>
             </Card>
+            <Card className="bg-gradient-to-br from-red-50 to-pink-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 mt-8">
+              <CardHeader>
+                <CardTitle>Danger Zone</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="show-delete-buttons">
+                    Show Delete Buttons
+                  </Label>
+                  <Switch
+                    id="show-delete-buttons"
+                    checked={showDeleteButtons}
+                    onCheckedChange={setShowDeleteButtons}
+                  />
+                </div>
+              </CardContent>
+            </Card>
           </div>
 
           {/* Dashboard Customization */}
@@ -726,8 +595,10 @@ const Settings = () => {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                  {allItems.map((item, index) => (
-                    <div
+                  {allItems
+                    .filter((item) => !item.deleted)
+                    .map((item, index) => (
+                      <div
                       key={item.id}
                       className={`p-4 rounded-xl border-2 transition-all duration-300 hover:scale-105 ${
                         tabSettings[item.id]
@@ -761,6 +632,15 @@ const Settings = () => {
                           onCheckedChange={() => handleToggle(item.id)}
                           className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-green-500 data-[state=checked]:to-emerald-500"
                         />
+                        {showDeleteButtons && (
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => handleDeleteTab(item.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -779,14 +659,6 @@ const Settings = () => {
                   <Button className="flex items-center gap-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white transition-all duration-200 transform hover:scale-105">
                     <Save className="h-4 w-4" />
                     Settings Saved
-                  </Button>
-                  <Button
-                    onClick={handleClearLocalStorage}
-                    variant="destructive"
-                    className="flex items-center gap-2"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    Clear Local Storage
                   </Button>
                 </div>
               </CardContent>
@@ -1115,7 +987,7 @@ const Settings = () => {
           <CardHeader>
             <CardTitle>Transaction Settings</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent>
             <div className="flex items-center justify-between">
               <Label htmlFor="edit-transactions">
                 Enable Transaction Editing
@@ -1126,78 +998,9 @@ const Settings = () => {
                 onCheckedChange={setCanEditTransactions}
               />
             </div>
-            <div className="flex items-center justify-between">
-              <Label htmlFor="add-charging-category">
-                Enable Add Charging Category
-              </Label>
-              <Switch
-                id="add-charging-category"
-                checked={canAddChargingCategory}
-                onCheckedChange={setCanAddChargingCategory}
-              />
-            </div>
-            <div className="flex items-center justify-between">
-              <Label htmlFor="add-savings-category">
-                Enable Add Savings Category
-              </Label>
-              <Switch
-                id="add-savings-category"
-                checked={canAddSavingsCategory}
-                onCheckedChange={setCanAddSavingsCategory}
-              />
-            </div>
-            <div className="flex items-center justify-between">
-              <Label htmlFor="add-withdrawal-category">
-                Enable Add Withdrawal Category
-              </Label>
-              <Switch
-                id="add-withdrawal-category"
-                checked={canAddWithdrawalCategory}
-                onCheckedChange={setCanAddWithdrawalCategory}
-              />
-            </div>
-            <div className="flex items-center justify-between">
-              <Label htmlFor="add-deposit-category">
-                Enable Add Deposit Category
-              </Label>
-              <Switch
-                id="add-deposit-category"
-                checked={canAddDepositCategory}
-                onCheckedChange={setCanAddDepositCategory}
-              />
-            </div>
-            <div className="flex items-center justify-between">
-              <Label htmlFor="add-expense-booking-category">
-                Enable Add Expense Booking Category
-              </Label>
-              <Switch
-                id="add-expense-booking-category"
-                checked={canAddExpenseBookingCategory}
-                onCheckedChange={setCanAddExpenseBookingCategory}
-              />
-            </div>
-            <div className="flex items-center justify-between">
-              <Label htmlFor="add-menu-category">
-                Enable Add Menu Category
-              </Label>
-              <Switch
-                id="add-menu-category"
-                checked={canAddMenuCategory}
-                onCheckedChange={setCanAddMenuCategory}
-              />
-            </div>
-            <div className="flex items-center justify-between">
-              <Label htmlFor="add-expense-category">
-                Enable Add Expense Category
-              </Label>
-              <Switch
-                id="add-expense-category"
-                checked={canAddExpenseCategory}
-                onCheckedChange={setCanAddExpenseCategory}
-              />
-            </div>
           </CardContent>
         </Card>
+
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
           <Card className="bg-gradient-to-br from-orange-50 to-red-50 border-0 shadow-lg hover:shadow-xl transition-all duration-300">

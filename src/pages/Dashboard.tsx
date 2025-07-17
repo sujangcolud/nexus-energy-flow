@@ -81,6 +81,7 @@ const Dashboard = () => {
         color: "bg-orange-600",
         bgColor: "bg-orange-50",
         description: "Manage food orders",
+    deleted: false,
       },
       {
         id: "charging",
@@ -92,6 +93,7 @@ const Dashboard = () => {
         color: "bg-yellow-600",
         bgColor: "bg-yellow-50",
         description: "Track energy consumption",
+    deleted: false,
       },
       {
         id: "expenses",
@@ -103,6 +105,7 @@ const Dashboard = () => {
         color: "bg-red-600",
         bgColor: "bg-red-50",
         description: "Monitor business expenses",
+    deleted: false,
       },
       {
         id: "deposits",
@@ -114,6 +117,7 @@ const Dashboard = () => {
         color: "bg-green-600",
         bgColor: "bg-green-50",
         description: "Handle financial deposits",
+    deleted: false,
       },
       {
         id: "withdrawals",
@@ -125,6 +129,7 @@ const Dashboard = () => {
         color: "bg-blue-600",
         bgColor: "bg-blue-50",
         description: "Process withdrawals",
+    deleted: false,
       },
       {
         id: "cooperative",
@@ -136,6 +141,7 @@ const Dashboard = () => {
         color: "bg-teal-600",
         bgColor: "bg-teal-50",
         description: "Cooperative savings management",
+    deleted: false,
       },
       {
         id: "share_investments",
@@ -147,6 +153,7 @@ const Dashboard = () => {
         color: "bg-emerald-600",
         bgColor: "bg-emerald-50",
         description: "Manage share investments",
+    deleted: false,
       },
       // Add Analytics page - accessible to all users
       {
@@ -158,6 +165,7 @@ const Dashboard = () => {
         color: "bg-purple-600",
         bgColor: "bg-purple-50",
         description: "Financial analytics & insights",
+    deleted: false,
       },
 
       // Reports and Analytics - accessible to reports_viewer, super_admin
@@ -171,6 +179,7 @@ const Dashboard = () => {
         color: "bg-violet-600",
         bgColor: "bg-violet-50",
         description: "Generate business reports",
+    deleted: false,
       },
       {
         id: "reports-view",
@@ -182,6 +191,7 @@ const Dashboard = () => {
         color: "bg-indigo-600",
         bgColor: "bg-indigo-50",
         description: "View generated reports",
+    deleted: false,
       },
       {
         id: "insights",
@@ -193,6 +203,7 @@ const Dashboard = () => {
         color: "bg-green-600",
         bgColor: "bg-green-50",
         description: "Business insights",
+    deleted: false,
       },
       {
         id: "data-input",
@@ -204,6 +215,7 @@ const Dashboard = () => {
         color: "bg-sky-600",
         bgColor: "bg-sky-50",
         description: "Import data in bulk",
+    deleted: false,
       },
 
       // Super Admin Only
@@ -216,6 +228,7 @@ const Dashboard = () => {
         color: "bg-rose-600",
         bgColor: "bg-rose-50",
         description: "Visual analytics dashboard",
+    deleted: false,
       },
       {
         id: "menu",
@@ -227,6 +240,7 @@ const Dashboard = () => {
         color: "bg-amber-600",
         bgColor: "bg-amber-50",
         description: "Manage menu items",
+    deleted: false,
       },
       {
         id: "user_management",
@@ -238,6 +252,7 @@ const Dashboard = () => {
         color: "bg-slate-600",
         bgColor: "bg-slate-50",
         description: "Manage users & permissions",
+    deleted: false,
       },
       {
         id: "admin_panel",
@@ -248,6 +263,7 @@ const Dashboard = () => {
         color: "bg-purple-600",
         bgColor: "bg-purple-50",
         description: "Advanced user & permission management",
+    deleted: false,
       },
       {
         id: "expense_bookings",
@@ -259,6 +275,7 @@ const Dashboard = () => {
         color: "bg-cyan-600",
         bgColor: "bg-cyan-50",
         description: "Manage expense bookings",
+    deleted: false,
       },
       {
         id: "vat_entry",
@@ -270,6 +287,7 @@ const Dashboard = () => {
         color: "bg-lime-600",
         bgColor: "bg-lime-50",
         description: "Manage VAT entries",
+    deleted: false,
       },
     ];
 
@@ -318,6 +336,7 @@ const Dashboard = () => {
 
     return allItems.filter(
       (item) =>
+        !item.deleted &&
         item.roles.includes(userRole) &&
         (tabSettings[item.id] ?? true) &&
         hasTabAccess(item.id) &&
