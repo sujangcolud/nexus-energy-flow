@@ -187,6 +187,8 @@ const Settings = () => {
   const [canAddDepositCategory, setCanAddDepositCategory] = useState(false);
   const [canAddExpenseBookingCategory, setCanAddExpenseBookingCategory] =
     useState(false);
+  const [canAddMenuCategory, setCanAddMenuCategory] = useState(false);
+  const [canAddExpenseCategory, setCanAddExpenseCategory] = useState(false);
   const [showCreateUserForm, setShowCreateUserForm] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
@@ -372,6 +374,16 @@ const Settings = () => {
       setCanAddExpenseBookingCategory(JSON.parse(canAddExpenseBooking));
     }
 
+    const canAddMenu = localStorage.getItem("canAddMenuCategory");
+    if (canAddMenu) {
+      setCanAddMenuCategory(JSON.parse(canAddMenu));
+    }
+
+    const canAddExpense = localStorage.getItem("canAddExpenseCategory");
+    if (canAddExpense) {
+      setCanAddExpenseCategory(JSON.parse(canAddExpense));
+    }
+
     // Fetch logs if admin
     if (hasRole("super_admin")) {
       fetchLogs();
@@ -493,6 +505,14 @@ const Settings = () => {
       "canAddExpenseBookingCategory",
       JSON.stringify(canAddExpenseBookingCategory),
     );
+    localStorage.setItem(
+      "canAddMenuCategory",
+      JSON.stringify(canAddMenuCategory),
+    );
+    localStorage.setItem(
+      "canAddExpenseCategory",
+      JSON.stringify(canAddExpenseCategory),
+    );
   }, [
     canEditTransactions,
     canAddChargingCategory,
@@ -500,6 +520,8 @@ const Settings = () => {
     canAddWithdrawalCategory,
     canAddDepositCategory,
     canAddExpenseBookingCategory,
+    canAddMenuCategory,
+    canAddExpenseCategory,
   ]);
 
   const handleResetSettings = () => {
@@ -1063,6 +1085,26 @@ const Settings = () => {
                 id="add-expense-booking-category"
                 checked={canAddExpenseBookingCategory}
                 onCheckedChange={setCanAddExpenseBookingCategory}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="add-menu-category">
+                Enable Add Menu Category
+              </Label>
+              <Switch
+                id="add-menu-category"
+                checked={canAddMenuCategory}
+                onCheckedChange={setCanAddMenuCategory}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="add-expense-category">
+                Enable Add Expense Category
+              </Label>
+              <Switch
+                id="add-expense-category"
+                checked={canAddExpenseCategory}
+                onCheckedChange={setCanAddExpenseCategory}
               />
             </div>
           </CardContent>
