@@ -77,6 +77,7 @@ interface AnalyticsData {
   cashBalance: number;
   esewaBalance: number;
   fonepayBalance: number;
+  bankBalance: number;
   cooperativeBalance: number;
 }
 
@@ -152,6 +153,7 @@ const InsightsTab = () => {
         cash_in_hand: 0,
         esewa_balance: 0,
         fonepay_balance: 0,
+        bank_balance: 0,
         cooperative_balance: 0,
       };
 
@@ -272,6 +274,79 @@ const InsightsTab = () => {
         overall: {} as Record<string, { count: number; amount: number }>,
       };
 
+      const cashBalance =
+        orders
+          .filter((i: any) => i.payment_mode === "Cash")
+          .reduce((sum: number, i: any) => sum + i.total, 0) +
+        chargingSessions
+          .filter((i: any) => i.payment_mode === "Cash")
+          .reduce((sum: number, i: any) => sum + i.total_amount, 0) -
+        expenses
+          .filter((i: any) => i.payment_mode === "Cash")
+          .reduce((sum: number, i: any) => sum + i.amount, 0) -
+        cooperative
+          .filter((i: any) => i.contribution_method === "Cash")
+          .reduce((sum: number, i: any) => sum + i.contribution_amount, 0) -
+        deposits
+          .filter((i: any) => i.deposit_method === "Cash")
+          .reduce((sum: number, i: any) => sum + i.amount, 0);
+
+      const esewaBalance =
+        orders
+          .filter((i: any) => i.payment_mode === "Esewa")
+          .reduce((sum: number, i: any) => sum + i.total, 0) +
+        chargingSessions
+          .filter((i: any) => i.payment_mode === "Esewa")
+          .reduce((sum: number, i: any) => sum + i.total_amount, 0) -
+        expenses
+          .filter((i: any) => i.payment_mode === "Esewa")
+          .reduce((sum: number, i: any) => sum + i.amount, 0) -
+        cooperative
+          .filter((i: any) => i.contribution_method === "Esewa")
+          .reduce((sum: number, i: any) => sum + i.contribution_amount, 0) -
+        deposits
+          .filter((i: any) => i.deposit_method === "Esewa")
+          .reduce((sum: number, i: any) => sum + i.amount, 0) +
+        withdrawals
+          .filter((i: any) => i.withdrawal_method === "Esewa")
+          .reduce((sum: number, i: any) => sum + i.amount, 0);
+
+      const fonepayBalance =
+        orders
+          .filter((i: any) => i.payment_mode === "Fonepay")
+          .reduce((sum: number, i: any) => sum + i.total, 0) +
+        chargingSessions
+          .filter((i: any) => i.payment_mode === "Fonepay")
+          .reduce((sum: number, i: any) => sum + i.total_amount, 0) -
+        expenses
+          .filter((i: any) => i.payment_mode === "Fonepay")
+          .reduce((sum: number, i: any) => sum + i.amount, 0) -
+        cooperative
+          .filter((i: any) => i.contribution_method === "Fonepay")
+          .reduce((sum: number, i: any) => sum + i.contribution_amount, 0) -
+        deposits
+          .filter((i: any) => i.deposit_method === "Fonepay")
+          .reduce((sum: number, i: any) => sum + i.amount, 0) +
+        withdrawals
+          .filter((i: any) => i.withdrawal_method === "Fonepay")
+          .reduce((sum: number, i: any) => sum + i.amount, 0);
+
+      const bankBalance =
+        deposits
+          .filter((i: any) => i.deposit_method === "Bank")
+          .reduce((sum: number, i: any) => sum + i.amount, 0) -
+        withdrawals
+          .filter((i: any) => i.withdrawal_method === "Bank")
+          .reduce((sum: number, i: any) => sum + i.amount, 0) -
+        expenses
+          .filter((i: any) => ["Cheque", "Bank"].includes(i.payment_mode))
+          .reduce((sum: number, i: any) => sum + i.amount, 0);
+
+      const cooperativeBalance = cooperative.reduce(
+        (sum, saving) => sum + saving.contribution_amount,
+        0,
+      );
+
       const analytics: AnalyticsData = {
         totalRevenue,
         totalExpenses,
@@ -305,10 +380,11 @@ const InsightsTab = () => {
           revenue: 15.5,
           orders: 12.3,
         },
-        cashBalance: balances.cash_in_hand,
-        esewaBalance: balances.esewa_balance,
-        fonepayBalance: balances.fonepay_balance,
-        cooperativeBalance: balances.cooperative_balance,
+        cashBalance: balances.cash_in_hand || cashBalance,
+        esewaBalance: balances.esewa_balance || esewaBalance,
+        fonepayBalance: balances.fonepay_balance || fonepayBalance,
+        bankBalance: balances.bank_balance || bankBalance,
+        cooperativeBalance: balances.cooperative_balance || cooperativeBalance,
       };
 
       setAnalytics(analytics);
@@ -522,6 +598,14 @@ const InsightsTab = () => {
                   </p>
                   <p className="text-xl font-bold text-teal-800">
                     NRs. {analytics.cooperativeSavings.toLocaleString()}
+                  </p>
+                </div>
+                <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg">
+                  <p className="text-sm text-blue-600 font-medium">
+                    Bank Balance
+                  </p>
+                  <p className="text-xl font-bold text-blue-800">
+                    NRs. {analytics.bankBalance.toLocaleString()}
                   </p>
                 </div>
               </div>
