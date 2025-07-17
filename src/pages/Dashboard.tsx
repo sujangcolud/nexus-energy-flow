@@ -271,6 +271,16 @@ const Dashboard = () => {
         bgColor: "bg-lime-50",
         description: "Manage VAT entries",
       },
+      {
+        id: "custom_report_creator",
+        path: "custom-reports/create",
+        label: "Custom Reports",
+        icon: Settings,
+        roles: ["super_admin"],
+        color: "bg-gray-600",
+        bgColor: "bg-gray-50",
+        description: "Create custom reports",
+      }
     ];
 
     if (!userRole) return [];
