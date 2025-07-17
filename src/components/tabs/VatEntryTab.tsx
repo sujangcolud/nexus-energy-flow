@@ -198,6 +198,33 @@ const VatEntryTab = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
+              <TableRow>
+                <TableCell colSpan={2} className="font-bold">
+                  Total
+                </TableCell>
+                <TableCell className="font-bold">
+                  {incomes
+                    .reduce((acc, income) => acc + income.total, 0)
+                    .toFixed(2)}
+                </TableCell>
+                <TableCell className="font-bold">
+                  {incomes
+                    .reduce(
+                      (acc, income) => acc + calculateVAT(income.total).base,
+                      0,
+                    )
+                    .toFixed(2)}
+                </TableCell>
+                <TableCell className="font-bold">
+                  {incomes
+                    .reduce(
+                      (acc, income) => acc + calculateVAT(income.total).vat,
+                      0,
+                    )
+                    .toFixed(2)}
+                </TableCell>
+                <TableCell />
+              </TableRow>
               {incomes.map((income) => {
                 const { base, vat } = calculateVAT(income.total);
                 return (
