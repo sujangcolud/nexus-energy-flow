@@ -201,6 +201,11 @@ const ReportsViewTab = () => {
       .reduce((sum: number, i: any) => sum + i.contribution_amount, 0) -
     (reportData.deposits || [])
       .filter((i: any) => i.deposit_method === "Cash")
+      .reduce((sum: number, i: any) => sum + i.amount, 0) -
+    (reportData.deposits || [])
+      .filter((i: any) =>
+        ["Fonepay", "Esewa", "Bank"].includes(i.deposit_method),
+      )
       .reduce((sum: number, i: any) => sum + i.amount, 0);
 
   const esewaBalance =
@@ -209,18 +214,15 @@ const ReportsViewTab = () => {
       .reduce((sum: number, i: any) => sum + i.total, 0) +
     (reportData.charging || [])
       .filter((i: any) => i.payment_mode === "Esewa")
-      .reduce((sum: number, i: any) => sum + i.total_amount, 0) -
-    (reportData.expenses || [])
-      .filter((i: any) => i.payment_mode === "Esewa")
-      .reduce((sum: number, i: any) => sum + i.amount, 0) -
-    (reportData.savings || [])
-      .filter((i: any) => i.contribution_method === "Esewa")
-      .reduce((sum: number, i: any) => sum + i.contribution_amount, 0) -
+      .reduce((sum: number, i: any) => sum + i.total_amount, 0) +
     (reportData.deposits || [])
       .filter((i: any) => i.deposit_method === "Esewa")
-      .reduce((sum: number, i: any) => sum + i.amount, 0) +
+      .reduce((sum: number, i: any) => sum + i.amount, 0) -
     (reportData.withdrawals || [])
       .filter((i: any) => i.withdrawal_method === "Esewa")
+      .reduce((sum: number, i: any) => sum + i.amount, 0) -
+    (reportData.expenses || [])
+      .filter((i: any) => i.payment_mode === "Esewa")
       .reduce((sum: number, i: any) => sum + i.amount, 0);
 
   const fonepayBalance =
@@ -229,29 +231,18 @@ const ReportsViewTab = () => {
       .reduce((sum: number, i: any) => sum + i.total, 0) +
     (reportData.charging || [])
       .filter((i: any) => i.payment_mode === "Fonepay")
-      .reduce((sum: number, i: any) => sum + i.total_amount, 0) -
-    (reportData.expenses || [])
-      .filter((i: any) => i.payment_mode === "Fonepay")
-      .reduce((sum: number, i: any) => sum + i.amount, 0) -
-    (reportData.savings || [])
-      .filter((i: any) => i.contribution_method === "Fonepay")
-      .reduce((sum: number, i: any) => sum + i.contribution_amount, 0) -
+      .reduce((sum: number, i: any) => sum + i.total_amount, 0) +
     (reportData.deposits || [])
       .filter((i: any) => i.deposit_method === "Fonepay")
-      .reduce((sum: number, i: any) => sum + i.amount, 0) +
-    (reportData.withdrawals || [])
-      .filter((i: any) => i.withdrawal_method === "Fonepay")
-      .reduce((sum: number, i: any) => sum + i.amount, 0);
-
-  const bankBalance =
-    (reportData.deposits || [])
-      .filter((i: any) => i.deposit_method === "Bank")
       .reduce((sum: number, i: any) => sum + i.amount, 0) -
     (reportData.withdrawals || [])
       .filter((i: any) => i.withdrawal_method === "Bank")
       .reduce((sum: number, i: any) => sum + i.amount, 0) -
     (reportData.expenses || [])
-      .filter((i: any) => ["Cheque", "Bank"].includes(i.payment_mode))
+      .filter((i: any) => i.payment_mode === "Bank")
+      .reduce((sum: number, i: any) => sum + i.amount, 0) -
+    (reportData.expenses || [])
+      .filter((i: any) => i.payment_mode === "Cheque")
       .reduce((sum: number, i: any) => sum + i.amount, 0);
 
   const cooperativeSavings = (reportData.savings || []).reduce(
@@ -387,29 +378,18 @@ const ReportsViewTab = () => {
           .reduce((sum: number, i: any) => sum + i.total, 0) +
         dayCharging
           .filter((i: any) => i.payment_mode === "Fonepay")
-          .reduce((sum: number, i: any) => sum + i.total_amount, 0) -
-        dayExpenses
-          .filter((i: any) => i.payment_mode === "Fonepay")
-          .reduce((sum: number, i: any) => sum + i.amount, 0) -
-        daySavings
-          .filter((i: any) => i.contribution_method === "Fonepay")
-          .reduce((sum: number, i: any) => sum + i.contribution_amount, 0) -
+          .reduce((sum: number, i: any) => sum + i.total_amount, 0) +
         dayDeposits
           .filter((i: any) => i.deposit_method === "Fonepay")
-          .reduce((sum: number, i: any) => sum + i.amount, 0) +
-        dayWithdrawals
-          .filter((i: any) => i.withdrawal_method === "Fonepay")
-          .reduce((sum: number, i: any) => sum + i.amount, 0);
-
-      const bankBalance =
-        dayDeposits
-          .filter((i: any) => i.deposit_method === "Bank")
           .reduce((sum: number, i: any) => sum + i.amount, 0) -
         dayWithdrawals
           .filter((i: any) => i.withdrawal_method === "Bank")
           .reduce((sum: number, i: any) => sum + i.amount, 0) -
         dayExpenses
-          .filter((i: any) => ["Cheque", "Bank"].includes(i.payment_mode))
+          .filter((i: any) => i.payment_mode === "Bank")
+          .reduce((sum: number, i: any) => sum + i.amount, 0) -
+        dayExpenses
+          .filter((i: any) => i.payment_mode === "Cheque")
           .reduce((sum: number, i: any) => sum + i.amount, 0);
 
       const cooperativeSavings = daySavings.reduce(
@@ -430,7 +410,6 @@ const ReportsViewTab = () => {
         cashInHand,
         esewaBalance,
         fonepayBalance,
-        bankBalance,
         cooperativeSavings,
       };
     });
@@ -448,7 +427,6 @@ const ReportsViewTab = () => {
       acc.cashInHand += day.cashInHand;
       acc.esewaBalance += day.esewaBalance;
       acc.fonepayBalance += day.fonepayBalance;
-      acc.bankBalance += day.bankBalance;
       acc.cooperativeSavings += day.cooperativeSavings;
       return acc;
     },
@@ -463,7 +441,6 @@ const ReportsViewTab = () => {
       cashInHand: 0,
       esewaBalance: 0,
       fonepayBalance: 0,
-      bankBalance: 0,
       cooperativeSavings: 0,
     },
   );
@@ -695,24 +672,6 @@ const ReportsViewTab = () => {
               </div>
             </CardContent>
           </Card>
-          <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-blue-600 font-medium flex items-center gap-1">
-                    <Banknote className="h-4 w-4" />
-                    Bank Balance
-                  </p>
-                  <p className="text-2xl font-bold text-blue-800">
-                    {formatCurrency(bankBalance)}
-                  </p>
-                </div>
-                <div className="p-3 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl text-white">
-                  <Banknote className="h-6 w-6" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
 
           <Card className="bg-gradient-to-br from-red-50 to-pink-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
             <CardContent className="p-6">
@@ -815,7 +774,7 @@ const ReportsViewTab = () => {
         </div>
 
         {/* Custom Reports */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card className="bg-gradient-to-br from-gray-50 to-slate-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -1065,9 +1024,6 @@ const ReportsViewTab = () => {
                             Fonepay Balance
                           </TableHead>
                           <TableHead className="font-semibold text-gray-700">
-                            Bank Balance
-                          </TableHead>
-                          <TableHead className="font-semibold text-gray-700">
                             Cooperative Savings
                           </TableHead>
                           <TableHead className="font-semibold text-gray-700">
@@ -1101,9 +1057,6 @@ const ReportsViewTab = () => {
                           </TableCell>
                           <TableCell>
                             {formatCurrency(grandTotal.fonepayBalance)}
-                          </TableCell>
-                          <TableCell>
-                            {formatCurrency(grandTotal.bankBalance)}
                           </TableCell>
                           <TableCell>
                             {formatCurrency(grandTotal.cooperativeSavings)}
@@ -1163,13 +1116,6 @@ const ReportsViewTab = () => {
                                 className={`font-bold ${day.fonepayBalance >= 0 ? "text-purple-600" : "text-red-600"}`}
                               >
                                 {formatCurrency(day.fonepayBalance)}
-                              </span>
-                            </TableCell>
-                            <TableCell>
-                              <span
-                                className={`font-bold ${day.bankBalance >= 0 ? "text-blue-600" : "text-red-600"}`}
-                              >
-                                {formatCurrency(day.bankBalance)}
                               </span>
                             </TableCell>
                             <TableCell>

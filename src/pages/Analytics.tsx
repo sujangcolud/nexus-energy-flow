@@ -43,8 +43,6 @@ import {
 interface FinancialData {
   bankBalance: number;
   cashInHand: number;
-  esewaBalance: number;
-  fonepayBalance: number;
   cooperativeBalance: number;
   totalIncome: number;
   totalExpenses: number;
@@ -198,105 +196,85 @@ const Analytics = () => {
 
   // Calculate financial metrics with correct column names
   const calculateFinancials = (): FinancialData => {
+    // Restaurant income using correct column name 'total'
     const restaurantIncome = ordersData.reduce(
       (sum, order) => sum + (parseFloat(order.total) || 0),
       0,
     );
+
+    // Charging income using correct column name 'total_amount'
     const chargingIncome = chargingData.reduce(
       (sum, session) => sum + (parseFloat(session.total_amount) || 0),
       0,
     );
+
+    // Total deposits to bank
+    const totalDeposits = depositsData.reduce(
+      (sum, deposit) => sum + (parseFloat(deposit.amount) || 0),
+      0,
+    );
+
+    // Total withdrawals from bank
+    const totalWithdrawals = withdrawalsData.reduce(
+      (sum, withdrawal) => sum + (parseFloat(withdrawal.amount) || 0),
+      0,
+    );
+
+    // Total expenses using correct column name
     const totalExpenses = expensesData.reduce(
       (sum, expense) => sum + (parseFloat(expense.amount) || 0),
       0,
     );
 
-    const cashInHand =
-      ordersData
-        .filter((i: any) => i.payment_mode === "Cash")
-        .reduce((sum: number, i: any) => sum + i.total, 0) +
-      chargingData
-        .filter((i: any) => i.payment_mode === "Cash")
-        .reduce((sum: number, i: any) => sum + i.total_amount, 0) -
-      expensesData
-        .filter((i: any) => i.payment_mode === "Cash")
-        .reduce((sum: number, i: any) => sum + i.amount, 0) -
-      cooperativeData
-        .filter((i: any) => i.contribution_method === "Cash")
-        .reduce((sum: number, i: any) => sum + i.contribution_amount, 0) -
-      depositsData
-        .filter((i: any) => i.deposit_method === "Cash")
-        .reduce((sum: number, i: any) => sum + i.amount, 0);
+    // Bank expenses (non-cash expenses) using correct column 'payment_mode'
+    const bankExpenses = expensesData
+      .filter((expense) => expense.payment_mode !== "cash")
+      .reduce((sum, expense) => sum + (parseFloat(expense.amount) || 0), 0);
 
-    const esewaBalance =
-      ordersData
-        .filter((i: any) => i.payment_mode === "Esewa")
-        .reduce((sum: number, i: any) => sum + i.total, 0) +
-      chargingData
-        .filter((i: any) => i.payment_mode === "Esewa")
-        .reduce((sum: number, i: any) => sum + i.total_amount, 0) -
-      expensesData
-        .filter((i: any) => i.payment_mode === "Esewa")
-        .reduce((sum: number, i: any) => sum + i.amount, 0) -
-      cooperativeData
-        .filter((i: any) => i.contribution_method === "Esewa")
-        .reduce((sum: number, i: any) => sum + i.contribution_amount, 0) -
-      depositsData
-        .filter((i: any) => i.deposit_method === "Esewa")
-        .reduce((sum: number, i: any) => sum + i.amount, 0) +
-      withdrawalsData
-        .filter((i: any) => i.withdrawal_method === "Esewa")
-        .reduce((sum: number, i: any) => sum + i.amount, 0);
+    // Cash expenses
+    const cashExpenses = expensesData
+      .filter((expense) => expense.payment_mode === "cash")
+      .reduce((sum, expense) => sum + (parseFloat(expense.amount) || 0), 0);
 
-    const fonepayBalance =
-      ordersData
-        .filter((i: any) => i.payment_mode === "Fonepay")
-        .reduce((sum: number, i: any) => sum + i.total, 0) +
-      chargingData
-        .filter((i: any) => i.payment_mode === "Fonepay")
-        .reduce((sum: number, i: any) => sum + i.total_amount, 0) -
-      expensesData
-        .filter((i: any) => i.payment_mode === "Fonepay")
-        .reduce((sum: number, i: any) => sum + i.amount, 0) -
-      cooperativeData
-        .filter((i: any) => i.contribution_method === "Fonepay")
-        .reduce((sum: number, i: any) => sum + i.contribution_amount, 0) -
-      depositsData
-        .filter((i: any) => i.deposit_method === "Fonepay")
-        .reduce((sum: number, i: any) => sum + i.amount, 0) +
-      withdrawalsData
-        .filter((i: any) => i.withdrawal_method === "Fonepay")
-        .reduce((sum: number, i: any) => sum + i.amount, 0);
+    // Cash orders using correct column 'payment_mode'
+    const cashOrders = ordersData
+      .filter((order) => order.payment_mode === "cash")
+      .reduce((sum, order) => sum + (parseFloat(order.total) || 0), 0);
 
-    const bankBalance =
-      depositsData
-        .filter((i: any) => i.deposit_method === "Bank")
-        .reduce((sum: number, i: any) => sum + i.amount, 0) -
-      withdrawalsData
-        .filter((i: any) => i.withdrawal_method === "Bank")
-        .reduce((sum: number, i: any) => sum + i.amount, 0) -
-      expensesData
-        .filter((i: any) => ["Cheque", "Bank"].includes(i.payment_mode))
-        .reduce((sum: number, i: any) => sum + i.amount, 0);
+    // Cash from charging using correct column 'payment_mode'
+    const cashFromCharging = chargingData
+      .filter((session) => session.payment_mode === "cash")
+      .reduce(
+        (sum, session) => sum + (parseFloat(session.total_amount) || 0),
+        0,
+      );
 
-    const cooperativeBalance = cooperativeData.reduce(
+    // Cooperative savings using correct column name 'contribution_amount'
+    const cooperativeSavings = cooperativeData.reduce(
       (sum, saving) => sum + (parseFloat(saving.contribution_amount) || 0),
       0,
     );
 
+    // Use actual balances from balances table if available
+    const actualBankBalance = balancesData?.bank_balance
+      ? parseFloat(balancesData.bank_balance)
+      : totalDeposits - totalWithdrawals - bankExpenses;
+    const actualCashInHand = balancesData?.cash_in_hand
+      ? parseFloat(balancesData.cash_in_hand)
+      : cashOrders + cashFromCharging - cashExpenses;
+    const actualCooperativeBalance = balancesData?.cooperative_balance
+      ? parseFloat(balancesData.cooperative_balance)
+      : cooperativeSavings;
+
     const totalIncome = restaurantIncome + chargingIncome;
     const netProfit = totalIncome - totalExpenses;
     const totalAssets =
-      (balancesData?.bank_balance ? parseFloat(balancesData.bank_balance) : bankBalance) +
-      (balancesData?.cash_in_hand ? parseFloat(balancesData.cash_in_hand) : cashInHand) +
-      (balancesData?.cooperative_balance ? parseFloat(balancesData.cooperative_balance) : cooperativeBalance);
+      actualBankBalance + actualCashInHand + actualCooperativeBalance;
 
     return {
-      bankBalance: balancesData?.bank_balance ? parseFloat(balancesData.bank_balance) : bankBalance,
-      cashInHand: balancesData?.cash_in_hand ? parseFloat(balancesData.cash_in_hand) : cashInHand,
-      esewaBalance: balancesData?.esewa_balance ? parseFloat(balancesData.esewa_balance) : esewaBalance,
-      fonepayBalance: balancesData?.fonepay_balance ? parseFloat(balancesData.fonepay_balance) : fonepayBalance,
-      cooperativeBalance: balancesData?.cooperative_balance ? parseFloat(balancesData.cooperative_balance) : cooperativeBalance,
+      bankBalance: actualBankBalance,
+      cashInHand: actualCashInHand,
+      cooperativeBalance: actualCooperativeBalance,
       totalIncome,
       totalExpenses,
       chargingIncome,
@@ -341,8 +319,6 @@ const Analytics = () => {
   const balanceData = [
     { name: "Bank Balance", value: financials.bankBalance, color: "#22c55e" },
     { name: "Cash in Hand", value: financials.cashInHand, color: "#3b82f6" },
-    { name: "Esewa", value: financials.esewaBalance, color: "#10b981" },
-    { name: "Fonepay", value: financials.fonepayBalance, color: "#8b5cf6" },
     {
       name: "Cooperative",
       value: financials.cooperativeBalance,
@@ -488,7 +464,7 @@ const Analytics = () => {
 
       {/* Key Metrics Cards */}
       {analyticsSettings.showKeyMetrics && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-6 mb-6 sm:mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
           <Card className="bg-green-50 border-green-200">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-green-700">
@@ -501,7 +477,7 @@ const Analytics = () => {
                 ${financials.bankBalance.toLocaleString()}
               </div>
               <p className="text-xs text-green-600 mt-1">
-                From bank deposits, withdrawals and expenses
+                Deposits minus withdrawals and bank expenses
               </p>
             </CardContent>
           </Card>
@@ -518,41 +494,7 @@ const Analytics = () => {
                 ${financials.cashInHand.toLocaleString()}
               </div>
               <p className="text-xs text-blue-600 mt-1">
-                From cash income, expenses and deposits
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-teal-50 border-teal-200">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-teal-700">
-                Esewa Balance
-              </CardTitle>
-              <CreditCard className="h-4 w-4 text-teal-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-teal-800">
-                ${financials.esewaBalance.toLocaleString()}
-              </div>
-              <p className="text-xs text-teal-600 mt-1">
-                From Esewa transactions
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-purple-50 border-purple-200">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-purple-700">
-                Fonepay Balance
-              </CardTitle>
-              <CreditCard className="h-4 w-4 text-purple-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-purple-800">
-                ${financials.fonepayBalance.toLocaleString()}
-              </div>
-              <p className="text-xs text-purple-600 mt-1">
-                From Fonepay transactions
+                Cash received minus expenses and deposits
               </p>
             </CardContent>
           </Card>
@@ -569,7 +511,7 @@ const Analytics = () => {
                 ${financials.cooperativeBalance.toLocaleString()}
               </div>
               <p className="text-xs text-amber-600 mt-1">
-                Total cooperative savings
+                Savings minus withdrawals
               </p>
             </CardContent>
           </Card>

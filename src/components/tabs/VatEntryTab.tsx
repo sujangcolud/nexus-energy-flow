@@ -23,7 +23,6 @@ import {
 } from "@/components/ui/dialog";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
-import Bill from "@/components/Bill";
 
 interface Income {
   id: string;
@@ -109,13 +108,7 @@ const VatEntryTab = () => {
   };
 
   const handlePrint = () => {
-    const printContent = document.getElementById("bill-content-to-print");
-    const WinPrint = window.open("", "", "width=900,height=650");
-    WinPrint?.document.write(printContent?.innerHTML || "");
-    WinPrint?.document.close();
-    WinPrint?.focus();
-    WinPrint?.print();
-    WinPrint?.close();
+    window.print();
   };
 
   const handleDownload = () => {
@@ -335,10 +328,9 @@ const VatEntryTab = () => {
                 </TableCell>
                 <TableCell />
               </TableRow>
-              {incomes &&
-                incomes.map((income) => {
-                  const { base, vat } = calculateVAT(income.total);
-                  return (
+              {incomes.map((income) => {
+                const { base, vat } = calculateVAT(income.total);
+                return (
                   <TableRow key={income.id}>
                     <TableCell>{income.order_date}</TableCell>
                     <TableCell>{income.payment_mode}</TableCell>
@@ -364,12 +356,75 @@ const VatEntryTab = () => {
             <DialogTitle>VAT Bill</DialogTitle>
           </DialogHeader>
           {selectedIncome && (
-            <Bill
-              income={selectedIncome}
-              sellerInfo={sellerInfo}
-              billData={billData}
-              user={user}
-            />
+            <div className="p-4" id="bill-content">
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                  <h2 className="font-bold">Buyer Details</h2>
+                  <div className="space-y-2">
+                    <Input
+                      placeholder="Buyer Name"
+                      value={billData.buyerName}
+                      onChange={(e) =>
+                        setBillData({ ...billData, buyerName: e.target.value })
+                      }
+                    />
+                    <Input
+                      placeholder="Buyer Address"
+                      value={billData.buyerAddress}
+                      onChange={(e) =>
+                        setBillData({
+                          ...billData,
+                          buyerAddress: e.target.value,
+                        })
+                      }
+                    />
+                    <Input
+                      placeholder="Buyer Contact"
+                      value={billData.buyerContact}
+                      onChange={(e) =>
+                        setBillData({
+                          ...billData,
+                          buyerContact: e.target.value,
+                        })
+                      }
+                    />
+                    <Input
+                      placeholder="Buyer Email"
+                      value={billData.buyerEmail}
+                      onChange={(e) =>
+                        setBillData({ ...billData, buyerEmail: e.target.value })
+                      }
+                    />
+                    <Input
+                      placeholder="Buyer PAN"
+                      value={billData.buyerPan}
+                      onChange={(e) =>
+                        setBillData({ ...billData, buyerPan: e.target.value })
+                      }
+                    />
+                  </div>
+                </div>
+                <div>
+                  <h2 className="font-bold">Additional Details</h2>
+                  <div className="space-y-2">
+                    <Input
+                      placeholder="Prepared By"
+                      value={billData.preparedBy}
+                      onChange={(e) =>
+                        setBillData({ ...billData, preparedBy: e.target.value })
+                      }
+                    />
+                    <Input
+                      placeholder="Approved By"
+                      value={billData.approvedBy}
+                      onChange={(e) =>
+                        setBillData({ ...billData, approvedBy: e.target.value })
+                      }
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
           )}
           <DialogFooter>
             <Button onClick={handlePrint}>Print</Button>
