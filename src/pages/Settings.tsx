@@ -614,6 +614,11 @@ const Settings = () => {
     localStorage.setItem("tabSettings", JSON.stringify(defaultSettings));
   };
 
+  const handleClearLocalStorage = () => {
+    localStorage.clear();
+    window.location.reload();
+  };
+
   const enabledCount = Object.values(tabSettings).filter(Boolean).length;
   const totalCount = allItems.length;
 
@@ -774,6 +779,14 @@ const Settings = () => {
                   <Button className="flex items-center gap-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white transition-all duration-200 transform hover:scale-105">
                     <Save className="h-4 w-4" />
                     Settings Saved
+                  </Button>
+                  <Button
+                    onClick={handleClearLocalStorage}
+                    variant="destructive"
+                    className="flex items-center gap-2"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Clear Local Storage
                   </Button>
                 </div>
               </CardContent>
