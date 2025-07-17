@@ -245,6 +245,11 @@ const ReportsViewTab = () => {
       .filter((i: any) => i.payment_mode === "Cheque")
       .reduce((sum: number, i: any) => sum + i.amount, 0);
 
+  const cooperativeSavings = (reportData.savings || []).reduce(
+    (sum: number, saving: any) => sum + saving.contribution_amount,
+    0,
+  );
+
   // Payment method analysis
   const paymentAnalysis = (() => {
     const methods: Record<string, number> = {};
@@ -387,6 +392,11 @@ const ReportsViewTab = () => {
           .filter((i: any) => i.payment_mode === "Cheque")
           .reduce((sum: number, i: any) => sum + i.amount, 0);
 
+      const cooperativeSavings = daySavings.reduce(
+        (sum: number, saving: any) => sum + saving.contribution_amount,
+        0,
+      );
+
       return {
         date: dayStr,
         revenue,
@@ -400,6 +410,7 @@ const ReportsViewTab = () => {
         cashInHand,
         esewaBalance,
         fonepayBalance,
+        cooperativeSavings,
       };
     });
   })();
@@ -416,6 +427,7 @@ const ReportsViewTab = () => {
       acc.cashInHand += day.cashInHand;
       acc.esewaBalance += day.esewaBalance;
       acc.fonepayBalance += day.fonepayBalance;
+      acc.cooperativeSavings += day.cooperativeSavings;
       return acc;
     },
     {
@@ -429,6 +441,7 @@ const ReportsViewTab = () => {
       cashInHand: 0,
       esewaBalance: 0,
       fonepayBalance: 0,
+      cooperativeSavings: 0,
     },
   );
 
@@ -740,6 +753,24 @@ const ReportsViewTab = () => {
               </div>
             </CardContent>
           </Card>
+          <Card className="bg-gradient-to-br from-teal-50 to-cyan-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-teal-600 font-medium flex items-center gap-1">
+                    <Users className="h-4 w-4" />
+                    Cooperative Savings
+                  </p>
+                  <p className="text-2xl font-bold text-teal-800">
+                    {formatCurrency(cooperativeSavings)}
+                  </p>
+                </div>
+                <div className="p-3 bg-gradient-to-r from-teal-500 to-cyan-500 rounded-xl text-white">
+                  <Users className="h-6 w-6" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Custom Reports */}
@@ -993,6 +1024,9 @@ const ReportsViewTab = () => {
                             Fonepay Balance
                           </TableHead>
                           <TableHead className="font-semibold text-gray-700">
+                            Cooperative Savings
+                          </TableHead>
+                          <TableHead className="font-semibold text-gray-700">
                             Transactions
                           </TableHead>
                           <TableHead className="font-semibold text-gray-700">
@@ -1023,6 +1057,9 @@ const ReportsViewTab = () => {
                           </TableCell>
                           <TableCell>
                             {formatCurrency(grandTotal.fonepayBalance)}
+                          </TableCell>
+                          <TableCell>
+                            {formatCurrency(grandTotal.cooperativeSavings)}
                           </TableCell>
                           <TableCell>{grandTotal.transactions}</TableCell>
                           <TableCell />
@@ -1079,6 +1116,13 @@ const ReportsViewTab = () => {
                                 className={`font-bold ${day.fonepayBalance >= 0 ? "text-purple-600" : "text-red-600"}`}
                               >
                                 {formatCurrency(day.fonepayBalance)}
+                              </span>
+                            </TableCell>
+                            <TableCell>
+                              <span
+                                className={`font-bold ${day.cooperativeSavings >= 0 ? "text-teal-600" : "text-red-600"}`}
+                              >
+                                {formatCurrency(day.cooperativeSavings)}
                               </span>
                             </TableCell>
                             <TableCell>
