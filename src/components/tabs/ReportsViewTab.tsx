@@ -80,15 +80,67 @@ const ReportsViewTab = () => {
     try {
       const { startDate, endDate } = dateRange;
 
-      const { data, error } = await supabase.rpc('get_report_data', {
-        user_id_param: user.id,
-        from_date: startDate,
-        to_date: endDate,
+      // Fetch all data types
+      const [
+        ordersRes,
+        chargingRes,
+        expensesRes,
+        savingsRes,
+        depositsRes,
+        withdrawalsRes,
+      ] = await Promise.all([
+        supabase
+          .from("orders")
+          .select("*")
+          .gte("order_date", startDate)
+          .lte("order_date", endDate)
+          .eq("user_id", user.id)
+          .order("order_date", { ascending: true }),
+        supabase
+          .from("charging_sessions")
+          .select("*")
+          .gte("session_date", startDate)
+          .lte("session_date", endDate)
+          .eq("user_id", user.id)
+          .order("session_date", { ascending: true }),
+        supabase
+          .from("expenses")
+          .select("*")
+          .gte("expense_date", startDate)
+          .lte("expense_date", endDate)
+          .eq("user_id", user.id)
+          .order("expense_date", { ascending: true }),
+        supabase
+          .from("cooperative_savings")
+          .select("*")
+          .gte("contribution_date", startDate)
+          .lte("contribution_date", endDate)
+          .eq("user_id", user.id)
+          .order("contribution_date", { ascending: true }),
+        supabase
+          .from("deposits")
+          .select("*")
+          .gte("deposit_date", startDate)
+          .lte("deposit_date", endDate)
+          .eq("user_id", user.id)
+          .order("deposit_date", { ascending: true }),
+        supabase
+          .from("withdrawals")
+          .select("*")
+          .gte("withdrawal_date", startDate)
+          .lte("withdrawal_date", endDate)
+          .eq("user_id", user.id)
+          .order("withdrawal_date", { ascending: true }),
+      ]);
+
+      setReportData({
+        orders: ordersRes.data || [],
+        charging: chargingRes.data || [],
+        expenses: expensesRes.data || [],
+        savings: savingsRes.data || [],
+        deposits: depositsRes.data || [],
+        withdrawals: withdrawalsRes.data || [],
       });
-
-      if (error) throw error;
-
-      setReportData(data);
     } catch (error) {
       console.error("Error fetching report data:", error);
       toast.error("Failed to load report data");
@@ -103,8 +155,19 @@ const ReportsViewTab = () => {
 
   // Calculate totals
   const totals = {
-    revenue: reportData.total_revenue || 0,
-    expenses: reportData.total_expenses || 0,
+    revenue:
+      (reportData.orders || []).reduce(
+        (sum: number, order: any) => sum + order.total,
+        0,
+      ) +
+      (reportData.charging || []).reduce(
+        (sum: number, session: any) => sum + session.total_amount,
+        0,
+      ),
+    expenses: (reportData.expenses || []).reduce(
+      (sum: number, expense: any) => sum + expense.amount,
+      0,
+    ),
     deposits: (reportData.deposits || []).reduce(
       (sum: number, deposit: any) => sum + deposit.amount,
       0,
@@ -113,18 +176,88 @@ const ReportsViewTab = () => {
       (sum: number, withdrawal: any) => sum + withdrawal.amount,
       0,
     ),
-    savings: reportData.total_cooperative_savings || 0,
+    savings: (reportData.savings || []).reduce(
+      (sum: number, saving: any) => sum + saving.contribution_amount,
+      0,
+    ),
   };
 
   const netProfit = totals.revenue - totals.expenses;
   const cashFlow = totals.deposits - totals.withdrawals;
 
   // Custom reports
-  const cashInHand = reportData.cash_in_hand || 0;
-  const esewaBalance = reportData.esewa_balance || 0;
-  const fonepayBalance = reportData.fonepay_balance || 0;
-  const bankBalance = reportData.bank_balance || 0;
-  const cooperativeSavings = reportData.total_cooperative_savings || 0;
+  const cashInHand =
+    (reportData.orders || [])
+      .filter((i: any) => i.payment_mode === "Cash")
+      .reduce((sum: number, i: any) => sum + i.total, 0) +
+    (reportData.charging || [])
+      .filter((i: any) => i.payment_mode === "Cash")
+      .reduce((sum: number, i: any) => sum + i.total_amount, 0) -
+    (reportData.expenses || [])
+      .filter((i: any) => i.payment_mode === "Cash")
+      .reduce((sum: number, i: any) => sum + i.amount, 0) -
+    (reportData.savings || [])
+      .filter((i: any) => i.contribution_method === "Cash")
+      .reduce((sum: number, i: any) => sum + i.contribution_amount, 0) -
+    (reportData.deposits || [])
+      .filter((i: any) => i.deposit_method === "Cash")
+      .reduce((sum: number, i: any) => sum + i.amount, 0);
+
+  const esewaBalance =
+    (reportData.orders || [])
+      .filter((i: any) => i.payment_mode === "Esewa")
+      .reduce((sum: number, i: any) => sum + i.total, 0) +
+    (reportData.charging || [])
+      .filter((i: any) => i.payment_mode === "Esewa")
+      .reduce((sum: number, i: any) => sum + i.total_amount, 0) -
+    (reportData.expenses || [])
+      .filter((i: any) => i.payment_mode === "Esewa")
+      .reduce((sum: number, i: any) => sum + i.amount, 0) -
+    (reportData.savings || [])
+      .filter((i: any) => i.contribution_method === "Esewa")
+      .reduce((sum: number, i: any) => sum + i.contribution_amount, 0) -
+    (reportData.deposits || [])
+      .filter((i: any) => i.deposit_method === "Esewa")
+      .reduce((sum: number, i: any) => sum + i.amount, 0) +
+    (reportData.withdrawals || [])
+      .filter((i: any) => i.withdrawal_method === "Esewa")
+      .reduce((sum: number, i: any) => sum + i.amount, 0);
+
+  const fonepayBalance =
+    (reportData.orders || [])
+      .filter((i: any) => i.payment_mode === "Fonepay")
+      .reduce((sum: number, i: any) => sum + i.total, 0) +
+    (reportData.charging || [])
+      .filter((i: any) => i.payment_mode === "Fonepay")
+      .reduce((sum: number, i: any) => sum + i.total_amount, 0) -
+    (reportData.expenses || [])
+      .filter((i: any) => i.payment_mode === "Fonepay")
+      .reduce((sum: number, i: any) => sum + i.amount, 0) -
+    (reportData.savings || [])
+      .filter((i: any) => i.contribution_method === "Fonepay")
+      .reduce((sum: number, i: any) => sum + i.contribution_amount, 0) -
+    (reportData.deposits || [])
+      .filter((i: any) => i.deposit_method === "Fonepay")
+      .reduce((sum: number, i: any) => sum + i.amount, 0) +
+    (reportData.withdrawals || [])
+      .filter((i: any) => i.withdrawal_method === "Fonepay")
+      .reduce((sum: number, i: any) => sum + i.amount, 0);
+
+  const bankBalance =
+    (reportData.deposits || [])
+      .filter((i: any) => i.deposit_method === "Bank")
+      .reduce((sum: number, i: any) => sum + i.amount, 0) -
+    (reportData.withdrawals || [])
+      .filter((i: any) => i.withdrawal_method === "Bank")
+      .reduce((sum: number, i: any) => sum + i.amount, 0) -
+    (reportData.expenses || [])
+      .filter((i: any) => ["Cheque", "Bank"].includes(i.payment_mode))
+      .reduce((sum: number, i: any) => sum + i.amount, 0);
+
+  const cooperativeSavings = (reportData.savings || []).reduce(
+    (sum: number, saving: any) => sum + saving.contribution_amount,
+    0,
+  );
 
   // Payment method analysis
   const paymentAnalysis = (() => {
@@ -185,9 +318,6 @@ const ReportsViewTab = () => {
       const dayWithdrawals = (reportData.withdrawals || []).filter(
         (withdrawal: any) => withdrawal.withdrawal_date === dayStr,
       );
-      const daySavings = (reportData.savings || []).filter(
-        (saving: any) => saving.contribution_date === dayStr,
-      );
 
       const revenue =
         dayOrders.reduce((sum: number, order: any) => sum + order.total, 0) +
@@ -208,6 +338,10 @@ const ReportsViewTab = () => {
         0,
       );
 
+      const daySavings = (reportData.savings || []).filter(
+        (saving: any) => saving.contribution_date === dayStr,
+      );
+
       const cashInHand =
         dayOrders
           .filter((i: any) => i.payment_mode === "Cash")
@@ -223,6 +357,11 @@ const ReportsViewTab = () => {
           .reduce((sum: number, i: any) => sum + i.contribution_amount, 0) -
         dayDeposits
           .filter((i: any) => i.deposit_method === "Cash")
+          .reduce((sum: number, i: any) => sum + i.amount, 0) -
+        dayDeposits
+          .filter((i: any) =>
+            ["Fonepay", "Esewa", "Bank"].includes(i.deposit_method),
+          )
           .reduce((sum: number, i: any) => sum + i.amount, 0);
 
       const esewaBalance =
@@ -231,18 +370,15 @@ const ReportsViewTab = () => {
           .reduce((sum: number, i: any) => sum + i.total, 0) +
         dayCharging
           .filter((i: any) => i.payment_mode === "Esewa")
-          .reduce((sum: number, i: any) => sum + i.total_amount, 0) -
-        dayExpenses
-          .filter((i: any) => i.payment_mode === "Esewa")
-          .reduce((sum: number, i: any) => sum + i.amount, 0) -
-        daySavings
-          .filter((i: any) => i.contribution_method === "Esewa")
-          .reduce((sum: number, i: any) => sum + i.contribution_amount, 0) -
+          .reduce((sum: number, i: any) => sum + i.total_amount, 0) +
         dayDeposits
           .filter((i: any) => i.deposit_method === "Esewa")
-          .reduce((sum: number, i: any) => sum + i.amount, 0) +
+          .reduce((sum: number, i: any) => sum + i.amount, 0) -
         dayWithdrawals
           .filter((i: any) => i.withdrawal_method === "Esewa")
+          .reduce((sum: number, i: any) => sum + i.amount, 0) -
+        dayExpenses
+          .filter((i: any) => i.payment_mode === "Esewa")
           .reduce((sum: number, i: any) => sum + i.amount, 0);
 
       const fonepayBalance =
