@@ -278,11 +278,50 @@ const Dashboard = () => {
     const storedSettings = localStorage.getItem("tabSettings");
     const tabSettings = storedSettings ? JSON.parse(storedSettings) : {};
 
+    const showOrders = JSON.parse(localStorage.getItem("showOrders") || "true");
+    const showInsights = JSON.parse(
+      localStorage.getItem("showInsights") || "true",
+    );
+    const showReports = JSON.parse(
+      localStorage.getItem("showReports") || "true",
+    );
+    const showReportsView = JSON.parse(
+      localStorage.getItem("showReportsView") || "true",
+    );
+    const showDataInput = JSON.parse(
+      localStorage.getItem("showDataInput") || "true",
+    );
+    const showUserManagement = JSON.parse(
+      localStorage.getItem("showUserManagement") || "true",
+    );
+    const showAdminPanel = JSON.parse(
+      localStorage.getItem("showAdminPanel") || "true",
+    );
+    const showShareInvestments = JSON.parse(
+      localStorage.getItem("showShareInvestments") || "true",
+    );
+    const showVatEntry = JSON.parse(
+      localStorage.getItem("showVatEntry") || "true",
+    );
+
+    const tabVisibility: Record<string, boolean> = {
+      orders: showOrders,
+      insights: showInsights,
+      reports: showReports,
+      "reports-view": showReportsView,
+      "data-input": showDataInput,
+      "user-management": showUserManagement,
+      "admin-panel": showAdminPanel,
+      "share-investments": showShareInvestments,
+      "vat-entry": showVatEntry,
+    };
+
     return allItems.filter(
       (item) =>
         item.roles.includes(userRole) &&
         (tabSettings[item.id] ?? true) &&
-        hasTabAccess(item.id),
+        hasTabAccess(item.id) &&
+        (tabVisibility[item.id] ?? true),
     );
   };
 
