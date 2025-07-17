@@ -1185,85 +1185,8 @@ const Settings = () => {
                 onCheckedChange={setCanAddExpenseCategory}
               />
             </div>
-            <div className="flex items-center justify-between">
-              <Label htmlFor="show-orders">Show Orders Tab</Label>
-              <Switch
-                id="show-orders"
-                checked={showOrders}
-                onCheckedChange={setShowOrders}
-              />
-            </div>
-            <div className="flex items-center justify-between">
-              <Label htmlFor="show-insights">Show Insights Tab</Label>
-              <Switch
-                id="show-insights"
-                checked={showInsights}
-                onCheckedChange={setShowInsights}
-              />
-            </div>
-            <div className="flex items-center justify-between">
-              <Label htmlFor="show-reports">Show Reports Tab</Label>
-              <Switch
-                id="show-reports"
-                checked={showReports}
-                onCheckedChange={setShowReports}
-              />
-            </div>
-            <div className="flex items-center justify-between">
-              <Label htmlFor="show-reports-view">Show Reports View Tab</Label>
-              <Switch
-                id="show-reports-view"
-                checked={showReportsView}
-                onCheckedChange={setShowReportsView}
-              />
-            </div>
-            <div className="flex items-center justify-between">
-              <Label htmlFor="show-data-input">Show Data Input Tab</Label>
-              <Switch
-                id="show-data-input"
-                checked={showDataInput}
-                onCheckedChange={setShowDataInput}
-              />
-            </div>
-            <div className="flex items-center justify-between">
-              <Label htmlFor="show-user-management">
-                Show User Management Tab
-              </Label>
-              <Switch
-                id="show-user-management"
-                checked={showUserManagement}
-                onCheckedChange={setShowUserManagement}
-              />
-            </div>
-            <div className="flex items-center justify-between">
-              <Label htmlFor="show-admin-panel">Show Admin Panel Tab</Label>
-              <Switch
-                id="show-admin-panel"
-                checked={showAdminPanel}
-                onCheckedChange={setShowAdminPanel}
-              />
-            </div>
-            <div className="flex items-center justify-between">
-              <Label htmlFor="show-share-investments">
-                Show Share Investments Tab
-              </Label>
-              <Switch
-                id="show-share-investments"
-                checked={showShareInvestments}
-                onCheckedChange={setShowShareInvestments}
-              />
-            </div>
-            <div className="flex items-center justify-between">
-              <Label htmlFor="show-vat-entry">Show VAT Entry Tab</Label>
-              <Switch
-                id="show-vat-entry"
-                checked={showVatEntry}
-                onCheckedChange={setShowVatEntry}
-              />
-            </div>
           </CardContent>
         </Card>
-
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
           <Card className="bg-gradient-to-br from-orange-50 to-red-50 border-0 shadow-lg hover:shadow-xl transition-all duration-300">
