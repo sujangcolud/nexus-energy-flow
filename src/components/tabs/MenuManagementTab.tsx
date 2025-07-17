@@ -67,6 +67,7 @@ const MenuManagementTab = () => {
   const [category, setCategory] = useState("");
   const [newCategory, setNewCategory] = useState("");
   const [isAvailable, setIsAvailable] = useState(true);
+  const [canAddCategory, setCanAddCategory] = useState(false);
 
   const fetchMenuItems = async () => {
     if (!user) return;
@@ -106,6 +107,10 @@ const MenuManagementTab = () => {
   useEffect(() => {
     fetchMenuItems();
     fetchCategories();
+    const canAdd = localStorage.getItem("canAddMenuCategory");
+    if (canAdd) {
+      setCanAddCategory(JSON.parse(canAdd));
+    }
   }, [user]);
 
   const resetForm = () => {
@@ -620,51 +625,53 @@ const MenuManagementTab = () => {
           </div>
 
           {/* Category Management */}
-          <div className="space-y-8">
-            <Card className="bg-gradient-to-br from-white/90 to-amber-50/90 backdrop-blur-sm border-0 shadow-2xl">
-              <CardHeader className="bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-t-lg">
-                <CardTitle className="flex items-center gap-3 text-xl">
-                  <div className="p-2 bg-white/20 rounded-lg">
-                    <BookMarked className="h-6 w-6" />
-                  </div>
-                  Manage Categories
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-6">
-                <form onSubmit={handleAddCategory} className="space-y-4">
-                  <Input
-                    value={newCategory}
-                    onChange={(e) => setNewCategory(e.target.value)}
-                    placeholder="Enter new category"
-                    className="h-12"
-                  />
-                  <Button
-                    type="submit"
-                    className="w-full h-12 bg-gradient-to-r from-amber-500 to-orange-500 text-white"
-                  >
-                    Add Category
-                  </Button>
-                </form>
-                <div className="mt-6 space-y-2">
-                  {categories.map((cat) => (
-                    <div
-                      key={cat.id}
-                      className="flex items-center justify-between bg-white p-3 rounded-lg shadow-sm"
-                    >
-                      <span className="font-medium">{cat.name}</span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDeleteCategory(cat.id)}
-                      >
-                        <Trash2 className="h-4 w-4 text-red-500" />
-                      </Button>
+          {canAddCategory && (
+            <div className="space-y-8">
+              <Card className="bg-gradient-to-br from-white/90 to-amber-50/90 backdrop-blur-sm border-0 shadow-2xl">
+                <CardHeader className="bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-t-lg">
+                  <CardTitle className="flex items-center gap-3 text-xl">
+                    <div className="p-2 bg-white/20 rounded-lg">
+                      <BookMarked className="h-6 w-6" />
                     </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+                    Manage Categories
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <form onSubmit={handleAddCategory} className="space-y-4">
+                    <Input
+                      value={newCategory}
+                      onChange={(e) => setNewCategory(e.target.value)}
+                      placeholder="Enter new category"
+                      className="h-12"
+                    />
+                    <Button
+                      type="submit"
+                      className="w-full h-12 bg-gradient-to-r from-amber-500 to-orange-500 text-white"
+                    >
+                      Add Category
+                    </Button>
+                  </form>
+                  <div className="mt-6 space-y-2">
+                    {categories.map((cat) => (
+                      <div
+                        key={cat.id}
+                        className="flex items-center justify-between bg-white p-3 rounded-lg shadow-sm"
+                      >
+                        <span className="font-medium">{cat.name}</span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeleteCategory(cat.id)}
+                        >
+                          <Trash2 className="h-4 w-4 text-red-500" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
         </div>
       </div>
     </div>
