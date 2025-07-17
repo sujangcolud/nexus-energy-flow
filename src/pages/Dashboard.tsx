@@ -226,27 +226,6 @@ const Dashboard = () => {
         bgColor: "bg-amber-50",
         description: "Manage menu items",
       },
-      {
-        id: "user_management",
-        path: "user-management",
-        label: "User Control",
-        icon: UserCog,
-        component: UserManagementTab,
-        roles: ["super_admin"],
-        color: "bg-slate-600",
-        bgColor: "bg-slate-50",
-        description: "Manage users & permissions",
-      },
-      {
-        id: "admin_panel",
-        path: "admin-panel",
-        label: "Admin Panel",
-        icon: Settings,
-        roles: ["super_admin"],
-        color: "bg-purple-600",
-        bgColor: "bg-purple-50",
-        description: "Advanced user & permission management",
-      },
     ];
 
     if (!userRole) return [];
