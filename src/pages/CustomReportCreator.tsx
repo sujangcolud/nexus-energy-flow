@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -20,17 +20,55 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
+import { Plus, Trash2 } from "lucide-react";
 
 const CustomReportCreator = () => {
   const { user } = useAuth();
   const [reportName, setReportName] = useState("");
-  const [dataSource, setDataSource] = useState("");
+  const [dataSources, setDataSources] = useState<string[]>([]);
+  const [joins, setJoins] = useState<{ from: string; to: string; on: string }[]>([]);
   const [calculationType, setCalculationType] = useState("");
-  const [filters, setFilters] = useState([{ column: "", operator: "", value: "" }]);
+  const [calculationColumn, setCalculationColumn] = useState("");
+  const [filters, setFilters] = useState<{ column: string; operator: string; value: string }[]>([]);
+  const [columns, setColumns] = useState<string[]>([]);
 
-  const dataSources = ["orders", "charging_sessions", "expenses", "deposits", "withdrawals", "cooperative_savings"];
-  const calculationTypes = ["sum", "average", "count"];
+  const allDataSources = ["orders", "charging_sessions", "expenses", "deposits", "withdrawals", "cooperative_savings"];
+  const calculationTypes = ["sum", "average", "count", "min", "max"];
   const operators = ["=", "!=", ">", "<", ">=", "<="];
+
+  useEffect(() => {
+    const fetchColumns = async () => {
+      if (dataSources.length > 0) {
+        const { data, error } = await supabase.rpc('get_table_columns', { table_names: dataSources });
+        if (error) {
+          console.error("Error fetching columns:", error);
+        } else {
+          setColumns(data);
+        }
+      }
+    };
+    fetchColumns();
+  }, [dataSources]);
+
+  const handleAddDataSource = () => {
+    setDataSources([...dataSources, ""]);
+  };
+
+  const handleDataSourceChange = (index: number, value: string) => {
+    const newDataSources = [...dataSources];
+    newDataSources[index] = value;
+    setDataSources(newDataSources);
+  };
+
+  const handleAddJoin = () => {
+    setJoins([...joins, { from: "", to: "", on: "" }]);
+  };
+
+  const handleJoinChange = (index: number, field: string, value: string) => {
+    const newJoins = [...joins];
+    newJoins[index] = { ...newJoins[index], [field]: value };
+    setJoins(newJoins);
+  };
 
   const handleAddFilter = () => {
     setFilters([...filters, { column: "", operator: "", value: "" }]);
@@ -43,7 +81,7 @@ const CustomReportCreator = () => {
   };
 
   const handleSaveLogic = async () => {
-    if (!reportName || !dataSource || !calculationType) {
+    if (!reportName || dataSources.length === 0 || !calculationType || !calculationColumn) {
       toast.error("Please fill in all required fields.");
       return;
     }
@@ -52,8 +90,10 @@ const CustomReportCreator = () => {
       const { error } = await supabase.from("custom_reports").insert({
         user_id: user!.id,
         name: reportName,
-        data_source: dataSource,
+        data_sources: dataSources,
+        joins: joins,
         calculation_type: calculationType,
+        calculation_column: calculationColumn,
         filters: filters,
       });
 
@@ -61,8 +101,10 @@ const CustomReportCreator = () => {
 
       toast.success("Custom report logic saved successfully!");
       setReportName("");
-      setDataSource("");
+      setDataSources([]);
+      setJoins([]);
       setCalculationType("");
+      setCalculationColumn("");
       setFilters([{ column: "", operator: "", value: "" }]);
     } catch (error) {
       console.error("Error saving custom report logic:", error);
@@ -89,22 +131,65 @@ const CustomReportCreator = () => {
               placeholder="e.g., 'Total revenue from cash orders'"
             />
           </div>
+
+          <div>
+            <Label>Data Sources</Label>
+            {dataSources.map((source, index) => (
+              <div key={index} className="flex items-center gap-2 mt-2">
+                <Select
+                  value={source}
+                  onValueChange={(value) => handleDataSourceChange(index, value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select data source" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {allDataSources.map((source) => (
+                      <SelectItem key={source} value={source}>
+                        {source}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button variant="outline" size="icon" onClick={() => setDataSources(dataSources.filter((_, i) => i !== index))}>
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            ))}
+            <Button onClick={handleAddDataSource} variant="outline" size="sm" className="mt-2">
+              <Plus className="h-4 w-4 mr-2" />
+              Add Data Source
+            </Button>
+          </div>
+
+          <div>
+            <Label>Joins</Label>
+            {joins.map((join, index) => (
+              <div key={index} className="grid grid-cols-3 gap-2 mt-2">
+                <Input
+                  value={join.from}
+                  onChange={(e) => handleJoinChange(index, "from", e.target.value)}
+                  placeholder="From table.column"
+                />
+                <Input
+                  value={join.to}
+                  onChange={(e) => handleJoinChange(index, "to", e.target.value)}
+                  placeholder="To table.column"
+                />
+                <Input
+                  value={join.on}
+                  onChange={(e) => handleJoinChange(index, "on", e.target.value)}
+                  placeholder="Join condition"
+                />
+              </div>
+            ))}
+            <Button onClick={handleAddJoin} variant="outline" size="sm" className="mt-2">
+             <Plus className="h-4 w-4 mr-2" />
+              Add Join
+            </Button>
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="dataSource">Data Source</Label>
-              <Select value={dataSource} onValueChange={setDataSource}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select data source" />
-                </SelectTrigger>
-                <SelectContent>
-                  {dataSources.map((source) => (
-                    <SelectItem key={source} value={source}>
-                      {source}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
             <div className="space-y-2">
               <Label htmlFor="calculationType">Calculation Type</Label>
               <Select value={calculationType} onValueChange={setCalculationType}>
@@ -120,16 +205,41 @@ const CustomReportCreator = () => {
                 </SelectContent>
               </Select>
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="calculationColumn">Calculation Column</Label>
+              <Select value={calculationColumn} onValueChange={setCalculationColumn}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select column" />
+                </SelectTrigger>
+                <SelectContent>
+                  {columns.map((column) => (
+                    <SelectItem key={column} value={column}>
+                      {column}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           <div>
             <Label>Filters</Label>
             {filters.map((filter, index) => (
               <div key={index} className="grid grid-cols-3 gap-2 mt-2">
-                <Input
+                <Select
                   value={filter.column}
-                  onChange={(e) => handleFilterChange(index, "column", e.target.value)}
-                  placeholder="Column"
-                />
+                  onValueChange={(value) => handleFilterChange(index, "column", value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select column" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {columns.map((column) => (
+                      <SelectItem key={column} value={column}>
+                        {column}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <Select
                   value={filter.operator}
                   onValueChange={(value) => handleFilterChange(index, "operator", value)}
@@ -153,6 +263,7 @@ const CustomReportCreator = () => {
               </div>
             ))}
             <Button onClick={handleAddFilter} variant="outline" size="sm" className="mt-2">
+              <Plus className="h-4 w-4 mr-2" />
               Add Filter
             </Button>
           </div>
