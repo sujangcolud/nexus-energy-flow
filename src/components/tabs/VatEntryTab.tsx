@@ -335,9 +335,10 @@ const VatEntryTab = () => {
                 </TableCell>
                 <TableCell />
               </TableRow>
-              {incomes.map((income) => {
-                const { base, vat } = calculateVAT(income.total);
-                return (
+              {incomes &&
+                incomes.map((income) => {
+                  const { base, vat } = calculateVAT(income.total);
+                  return (
                   <TableRow key={income.id}>
                     <TableCell>{income.order_date}</TableCell>
                     <TableCell>{income.payment_mode}</TableCell>
