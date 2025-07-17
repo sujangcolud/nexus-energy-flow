@@ -26,29 +26,38 @@ const CustomReportCreator = () => {
   const { user } = useAuth();
   const [reportName, setReportName] = useState("");
   const [dataSources, setDataSources] = useState<string[]>([]);
-  const [joins, setJoins] = useState<{ from: string; to: string; on: string }[]>([]);
+  const [joins, setJoins] = useState<{ fromTable: string; fromColumn: string; toTable: string; toColumn: string }[]>([]);
   const [calculationType, setCalculationType] = useState("");
   const [calculationColumn, setCalculationColumn] = useState("");
   const [filters, setFilters] = useState<{ column: string; operator: string; value: string }[]>([]);
   const [columns, setColumns] = useState<string[]>([]);
+  const [allColumns, setAllColumns] = useState<Record<string, string[]>>({});
 
   const allDataSources = ["orders", "charging_sessions", "expenses", "deposits", "withdrawals", "cooperative_savings"];
   const calculationTypes = ["sum", "average", "count", "min", "max"];
   const operators = ["=", "!=", ">", "<", ">=", "<="];
 
   useEffect(() => {
-    const fetchColumns = async () => {
-      if (dataSources.length > 0) {
-        const { data, error } = await supabase.rpc('get_table_columns', { table_names: dataSources });
-        if (error) {
-          console.error("Error fetching columns:", error);
-        } else {
-          setColumns(data);
-        }
+    const fetchAllColumns = async () => {
+      const { data, error } = await supabase.rpc('get_all_table_columns');
+      if (error) {
+        console.error("Error fetching all columns:", error);
+      } else {
+        setAllColumns(data);
       }
     };
-    fetchColumns();
-  }, [dataSources]);
+    fetchAllColumns();
+  }, []);
+
+  useEffect(() => {
+    const newColumns: string[] = [];
+    dataSources.forEach((source) => {
+      if (allColumns[source]) {
+        newColumns.push(...allColumns[source].map((col) => `${source}.${col}`));
+      }
+    });
+    setColumns(newColumns);
+  }, [dataSources, allColumns]);
 
   const handleAddDataSource = () => {
     setDataSources([...dataSources, ""]);
@@ -61,7 +70,7 @@ const CustomReportCreator = () => {
   };
 
   const handleAddJoin = () => {
-    setJoins([...joins, { from: "", to: "", on: "" }]);
+    setJoins([...joins, { fromTable: "", fromColumn: "", toTable: "", toColumn: "" }]);
   };
 
   const handleJoinChange = (index: number, field: string, value: string) => {
@@ -91,7 +100,7 @@ const CustomReportCreator = () => {
         user_id: user!.id,
         name: reportName,
         data_sources: dataSources,
-        joins: joins,
+        joins: joins.map(j => `${j.fromTable}.${j.fromColumn} = ${j.toTable}.${j.toColumn}`),
         calculation_type: calculationType,
         calculation_column: calculationColumn,
         filters: filters,
@@ -165,22 +174,67 @@ const CustomReportCreator = () => {
           <div>
             <Label>Joins</Label>
             {joins.map((join, index) => (
-              <div key={index} className="grid grid-cols-3 gap-2 mt-2">
-                <Input
-                  value={join.from}
-                  onChange={(e) => handleJoinChange(index, "from", e.target.value)}
-                  placeholder="From table.column"
-                />
-                <Input
-                  value={join.to}
-                  onChange={(e) => handleJoinChange(index, "to", e.target.value)}
-                  placeholder="To table.column"
-                />
-                <Input
-                  value={join.on}
-                  onChange={(e) => handleJoinChange(index, "on", e.target.value)}
-                  placeholder="Join condition"
-                />
+              <div key={index} className="grid grid-cols-4 gap-2 mt-2">
+                <Select
+                  value={join.fromTable}
+                  onValueChange={(value) => handleJoinChange(index, "fromTable", value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="From Table" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {dataSources.map((ds) => (
+                      <SelectItem key={ds} value={ds}>
+                        {ds}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select
+                  value={join.fromColumn}
+                  onValueChange={(value) => handleJoinChange(index, "fromColumn", value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="From Column" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(allColumns[join.fromTable] || []).map((col) => (
+                      <SelectItem key={col} value={col}>
+                        {col}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select
+                  value={join.toTable}
+                  onValueChange={(value) => handleJoinChange(index, "toTable", value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="To Table" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {dataSources.map((ds) => (
+                      <SelectItem key={ds} value={ds}>
+                        {ds}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select
+                  value={join.toColumn}
+                  onValueChange={(value) => handleJoinChange(index, "toColumn", value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="To Column" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(allColumns[join.toTable] || []).map((col) => (
+                      <SelectItem key={col} value={col}>
+                        {col}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             ))}
             <Button onClick={handleAddJoin} variant="outline" size="sm" className="mt-2">
