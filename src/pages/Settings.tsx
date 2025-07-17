@@ -179,6 +179,11 @@ const Settings = () => {
   const [tabSettings, setTabSettings] = useState<Record<string, boolean>>({});
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [canEditTransactions, setCanEditTransactions] = useState(false);
+  const [canAddChargingCategory, setCanAddChargingCategory] = useState(false);
+  const [canAddSavingsCategory, setCanAddSavingsCategory] = useState(false);
+  const [canAddWithdrawalCategory, setCanAddWithdrawalCategory] =
+    useState(false);
+  const [canAddDepositCategory, setCanAddDepositCategory] = useState(false);
   const [showCreateUserForm, setShowCreateUserForm] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
@@ -337,6 +342,26 @@ const Settings = () => {
       setCanEditTransactions(JSON.parse(canEdit));
     }
 
+    const canAddCharging = localStorage.getItem("canAddChargingCategory");
+    if (canAddCharging) {
+      setCanAddChargingCategory(JSON.parse(canAddCharging));
+    }
+
+    const canAddSavings = localStorage.getItem("canAddSavingsCategory");
+    if (canAddSavings) {
+      setCanAddSavingsCategory(JSON.parse(canAddSavings));
+    }
+
+    const canAddWithdrawal = localStorage.getItem("canAddWithdrawalCategory");
+    if (canAddWithdrawal) {
+      setCanAddWithdrawalCategory(JSON.parse(canAddWithdrawal));
+    }
+
+    const canAddDeposit = localStorage.getItem("canAddDepositCategory");
+    if (canAddDeposit) {
+      setCanAddDepositCategory(JSON.parse(canAddDeposit));
+    }
+
     // Fetch logs if admin
     if (hasRole("super_admin")) {
       fetchLogs();
@@ -438,7 +463,29 @@ const Settings = () => {
       "canEditTransactions",
       JSON.stringify(canEditTransactions),
     );
-  }, [canEditTransactions]);
+    localStorage.setItem(
+      "canAddChargingCategory",
+      JSON.stringify(canAddChargingCategory),
+    );
+    localStorage.setItem(
+      "canAddSavingsCategory",
+      JSON.stringify(canAddSavingsCategory),
+    );
+    localStorage.setItem(
+      "canAddWithdrawalCategory",
+      JSON.stringify(canAddWithdrawalCategory),
+    );
+    localStorage.setItem(
+      "canAddDepositCategory",
+      JSON.stringify(canAddDepositCategory),
+    );
+  }, [
+    canEditTransactions,
+    canAddChargingCategory,
+    canAddSavingsCategory,
+    canAddWithdrawalCategory,
+    canAddDepositCategory,
+  ]);
 
   const handleResetSettings = () => {
     const defaultSettings = allItems.reduce(
@@ -940,7 +987,7 @@ const Settings = () => {
           <CardHeader>
             <CardTitle>Transaction Settings</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <Label htmlFor="edit-transactions">
                 Enable Transaction Editing
@@ -949,6 +996,46 @@ const Settings = () => {
                 id="edit-transactions"
                 checked={canEditTransactions}
                 onCheckedChange={setCanEditTransactions}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="add-charging-category">
+                Enable Add Charging Category
+              </Label>
+              <Switch
+                id="add-charging-category"
+                checked={canAddChargingCategory}
+                onCheckedChange={setCanAddChargingCategory}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="add-savings-category">
+                Enable Add Savings Category
+              </Label>
+              <Switch
+                id="add-savings-category"
+                checked={canAddSavingsCategory}
+                onCheckedChange={setCanAddSavingsCategory}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="add-withdrawal-category">
+                Enable Add Withdrawal Category
+              </Label>
+              <Switch
+                id="add-withdrawal-category"
+                checked={canAddWithdrawalCategory}
+                onCheckedChange={setCanAddWithdrawalCategory}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="add-deposit-category">
+                Enable Add Deposit Category
+              </Label>
+              <Switch
+                id="add-deposit-category"
+                checked={canAddDepositCategory}
+                onCheckedChange={setCanAddDepositCategory}
               />
             </div>
           </CardContent>

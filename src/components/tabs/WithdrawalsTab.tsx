@@ -74,10 +74,18 @@ interface Withdrawal {
   remarks: string | null;
   withdrawal_date: string;
   payment_mode: string;
+  category: string;
+}
+
+interface Category {
+  id: string;
+  name: string;
+  created_at: string;
 }
 
 const WithdrawalsTab = () => {
   const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
     amount: "",
@@ -86,7 +94,9 @@ const WithdrawalsTab = () => {
     referenceNumber: "",
     remarks: "",
     payment_mode: "",
+    category: "",
   });
+  const [newCategory, setNewCategory] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { user } = useAuth();
   const { page, range, onPageChange, onRangeChange, itemsPerPage } =
@@ -95,6 +105,7 @@ const WithdrawalsTab = () => {
   const [selectedWithdrawal, setSelectedWithdrawal] =
     useState<Withdrawal | null>(null);
   const [canEditTransactions, setCanEditTransactions] = useState(false);
+  const [canAddCategory, setCanAddCategory] = useState(false);
 
   const commonPurposes = [
     "Salary Payment",
@@ -126,11 +137,30 @@ const WithdrawalsTab = () => {
 
   useEffect(() => {
     fetchWithdrawals();
+    fetchCategories();
     const canEdit = localStorage.getItem("canEditTransactions");
     if (canEdit) {
       setCanEditTransactions(JSON.parse(canEdit));
     }
+    const canAdd = localStorage.getItem("canAddWithdrawalCategory");
+    if (canAdd) {
+      setCanAddCategory(JSON.parse(canAdd));
+    }
   }, [user, page, range]);
+
+  const fetchCategories = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("withdrawal_categories")
+        .select("*")
+        .order("name", { ascending: true });
+      if (error) throw error;
+      setCategories(data || []);
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+      toast.error("Failed to load categories");
+    }
+  };
 
   const fetchWithdrawals = async () => {
     if (!user) return;
@@ -237,6 +267,7 @@ const WithdrawalsTab = () => {
           remarks: formData.remarks || null,
           withdrawal_date: new Date().toISOString().split("T")[0],
           payment_mode: formData.payment_mode,
+          category: formData.category,
         },
       ]);
 
@@ -250,6 +281,7 @@ const WithdrawalsTab = () => {
         referenceNumber: "",
         remarks: "",
         payment_mode: "",
+        category: "",
       });
       fetchWithdrawals();
     } catch (error) {
@@ -257,6 +289,45 @@ const WithdrawalsTab = () => {
       toast.error("Failed to record withdrawal");
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleAddCategory = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newCategory) {
+      toast.error("Please enter a category name");
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from("withdrawal_categories")
+        .insert({ name: newCategory })
+        .select();
+
+      if (error) throw error;
+
+      toast.success(`Category "${newCategory}" added successfully`);
+      setNewCategory("");
+      fetchCategories();
+    } catch (error) {
+      console.error("Error adding category:", error);
+      toast.error("Failed to add category");
+    }
+  };
+
+  const handleDeleteCategory = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from("withdrawal_categories")
+        .delete()
+        .eq("id", id);
+      if (error) throw error;
+      toast.success("Category deleted successfully");
+      fetchCategories();
+    } catch (error) {
+      console.error("Error deleting category:", error);
+      toast.error("Failed to delete category");
     }
   };
 
@@ -609,6 +680,33 @@ const WithdrawalsTab = () => {
                   </Select>
                 </div>
 
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="category"
+                    className="text-sm font-medium text-gray-700"
+                  >
+                    Category *
+                  </Label>
+                  <Select
+                    value={formData.category}
+                    onValueChange={(value) =>
+                      setFormData({ ...formData, category: value })
+                    }
+                    required
+                  >
+                    <SelectTrigger className="h-12">
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map((cat) => (
+                        <SelectItem key={cat.id} value={cat.name}>
+                          {cat.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label
@@ -758,6 +856,55 @@ const WithdrawalsTab = () => {
             </CardContent>
           </Card>
         </div>
+
+        {canAddCategory && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Manage Categories */}
+            <Card className="bg-gradient-to-br from-white/90 to-red-50/90 backdrop-blur-sm border-0 shadow-2xl hover:shadow-3xl transition-all duration-300">
+              <CardHeader className="bg-gradient-to-r from-red-500 to-pink-600 text-white rounded-t-lg">
+                <CardTitle className="flex items-center gap-3 text-xl">
+                  <div className="p-2 bg-white/20 rounded-lg">
+                    <Banknote className="h-6 w-6" />
+                  </div>
+                  Manage Categories
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <form onSubmit={handleAddCategory} className="space-y-4">
+                  <Input
+                    value={newCategory}
+                    onChange={(e) => setNewCategory(e.target.value)}
+                    placeholder="Enter new category"
+                    className="h-12"
+                  />
+                  <Button
+                    type="submit"
+                    className="w-full h-12 bg-gradient-to-r from-red-500 to-pink-500 text-white"
+                  >
+                    Add Category
+                  </Button>
+                </form>
+                <div className="mt-6 space-y-2">
+                  {categories.map((cat) => (
+                    <div
+                      key={cat.id}
+                      className="flex items-center justify-between bg-white p-3 rounded-lg shadow-sm"
+                    >
+                      <span className="font-medium">{cat.name}</span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDeleteCategory(cat.id)}
+                      >
+                        <Trash2 className="h-4 w-4 text-red-500" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         {/* Withdrawal History */}
         <Card className="bg-gradient-to-br from-white/90 to-gray-50/90 backdrop-blur-sm border-0 shadow-2xl">
