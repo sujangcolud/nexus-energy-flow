@@ -38,57 +38,6 @@ interface MonthlyFinancialSummary {
   profit: number;
 }
 
-interface IncomeBreakdown {
-  source: string;
-  amount: number;
-}
-
-interface ExpenseCategorization {
-  category: string;
-  amount: number;
-}
-
-interface MonthlyDepositsWithdrawals {
-  month: string;
-  deposits: number;
-  withdrawals: number;
-}
-
-interface NewUserGrowth {
-  month: string;
-  new_users: number;
-}
-
-interface UserRoleDistribution {
-  role: string;
-  user_count: number;
-}
-
-interface TopSpender {
-  email: string;
-  total_spent: number;
-}
-
-interface PopularProduct {
-  item_name: string;
-  purchase_count: number;
-}
-
-interface SalesByPaymentMode {
-  payment_mode: string;
-  total_sales: number;
-}
-
-interface CooperativeSavingsTrend {
-  month: string;
-  total_savings: number;
-}
-
-interface MenuItemAvailability {
-  status: string;
-  item_count: number;
-}
-
 const SuperAdminDashboard = () => {
   const [monthlyFinancialSummary, setMonthlyFinancialSummary] = useState<
     MonthlyFinancialSummary[]
@@ -98,15 +47,11 @@ const SuperAdminDashboard = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [
-          financialSummaryResult,
-        ] = await Promise.all([
-          supabase.rpc("get_monthly_financial_summary_v2"),
-        ]);
+        const { data, error } = await supabase.rpc("get_monthly_financial_summary_v2");
 
-        if (financialSummaryResult.error) throw financialSummaryResult.error;
+        if (error) throw error;
 
-        setMonthlyFinancialSummary(financialSummaryResult.data);
+        setMonthlyFinancialSummary(data);
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
       } finally {
@@ -175,7 +120,7 @@ const SuperAdminDashboard = () => {
         </div>
 
         {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           <Card className="bg-gradient-to-br from-blue-50 to-cyan-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -192,48 +137,6 @@ const SuperAdminDashboard = () => {
                 </div>
                 <div className="p-3 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl text-white">
                   <DollarSign className="h-6 w-6" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-green-600 font-medium">
-                    Total Users
-                  </p>
-                  <p className="text-2xl font-bold text-green-800">
-                    {userRoleDistribution.reduce(
-                      (acc, item) => acc + item.user_count,
-                      0,
-                    )}
-                  </p>
-                </div>
-                <div className="p-3 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl text-white">
-                  <Users className="h-6 w-6" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-orange-50 to-red-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-orange-600 font-medium">
-                    Total Orders
-                  </p>
-                  <p className="text-2xl font-bold text-orange-800">
-                    {popularProducts.reduce(
-                      (acc, item) => acc + item.purchase_count,
-                      0,
-                    )}
-                  </p>
-                </div>
-                <div className="p-3 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl text-white">
-                  <ShoppingCart className="h-6 w-6" />
                 </div>
               </div>
             </CardContent>
@@ -330,7 +233,6 @@ const SuperAdminDashboard = () => {
             </CardContent>
           </Card>
         </div>
-
       </div>
     </div>
   );
