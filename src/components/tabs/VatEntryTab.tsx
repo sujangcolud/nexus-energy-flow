@@ -46,6 +46,14 @@ const VatEntryTab = () => {
     preparedBy: "",
     approvedBy: "",
   });
+  const [sellerInfo, setSellerInfo] = useState({
+    name: "Energy Palace Pvt. Ltd.",
+    address: "Kamalamai, Bhiman, Sindhuli",
+    contactNumber: "",
+    email: "",
+    pan: "621143805",
+    vatRegistrationNumber: "621143805",
+  });
 
   useEffect(() => {
     fetchIncomes();
@@ -108,73 +116,168 @@ const VatEntryTab = () => {
 
     const { base, vat } = calculateVAT(selectedIncome.total);
 
-    const xml = `
-<vatInvoice>
-  <invoiceNumber>INV-${selectedIncome.id.slice(0, 8)}</invoiceNumber>
-  <invoiceDate>${new Date().toISOString().split("T")[0]}</invoiceDate>
-  <seller>
-    <name>Your Company Name</name>
-    <address>Your Company Address</address>
-    <contactNumber>Your Contact</contactNumber>
-    <email>Your Email</email>
-    <pan>621143805</pan>
-    <vatRegistrationNumber>621143805</vatRegistrationNumber>
-  </seller>
-  <buyer>
-    <name>${billData.buyerName || "Walk-in Customer"}</name>
-    <address>${billData.buyerAddress}</address>
-    <contactNumber>${billData.buyerContact}</contactNumber>
-    <email>${billData.buyerEmail}</email>
-    <pan>${billData.buyerPan}</pan>
-    <vatRegistrationNumber>${billData.buyerPan}</vatRegistrationNumber>
-  </buyer>
-  <items>
-    ${selectedIncome.items
-      .map(
-        (item: any) => `
-    <item>
-      <itemCode>${item.itemCode || ""}</itemCode>
-      <description>${item.description}</description>
-      <hsnCode>${item.hsnCode || ""}</hsnCode>
-      <quantity>${item.quantity}</quantity>
-      <unit>${item.unit || "pcs"}</unit>
-      <unitPrice>${item.unitPrice.toFixed(2)}</unitPrice>
-      <discount>${(item.discount || 0).toFixed(2)}</discount>
-      <totalWithoutVAT>${item.totalPriceWithoutVAT.toFixed(2)}</totalWithoutVAT>
-      <vatRate>13</vatRate>
-      <vatAmount>${item.vatAmount.toFixed(2)}</vatAmount>
-      <totalWithVAT>${item.totalPriceWithVAT.toFixed(2)}</totalWithVAT>
-    </item>
-    `,
-      )
-      .join("")}
-  </items>
-  <totals>
-    <subTotal>${base.toFixed(2)}</subTotal>
-    <totalDiscount>0.00</totalDiscount>
-    <totalVAT>${vat.toFixed(2)}</totalVAT>
-    <grandTotal>${selectedIncome.total.toFixed(2)}</grandTotal>
-  </totals>
-  <paymentDetails>
-    <paymentMode>${selectedIncome.payment_mode}</paymentMode>
-    <amountPaid>${selectedIncome.total.toFixed(2)}</amountPaid>
-    <amountDue>0.00</amountDue>
-  </paymentDetails>
-  <additionalDetails>
-    <remarks>Goods sold are not returnable.</remarks>
-    <irn>IRN-${selectedIncome.id.slice(0, 8)}</irn>
-    <qrCodeData>QRDATA-${selectedIncome.id.slice(0, 8)}</qrCodeData>
-    <preparedBy>${billData.preparedBy || user?.email}</preparedBy>
-    <approvedBy>${billData.approvedBy || "Finance Officer"}</approvedBy>
-  </additionalDetails>
-</vatInvoice>
+    const html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>VAT Invoice - Nepal</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 40px;
+      color: #333;
+    }
+    .invoice-box {
+      max-width: 800px;
+      margin: auto;
+      border: 1px solid #eee;
+      padding: 30px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.15);
+    }
+    .title {
+      font-size: 32px;
+      line-height: 32px;
+      color: #333;
+    }
+    .info {
+      margin-bottom: 40px;
+    }
+    .info div {
+      margin-bottom: 5px;
+    }
+    table {
+      width: 100%;
+      line-height: inherit;
+      border-collapse: collapse;
+    }
+    table td {
+      padding: 5px;
+      vertical-align: top;
+    }
+    table tr td:nth-child(2) {
+      text-align: right;
+    }
+    table tr.top table td {
+      padding-bottom: 20px;
+    }
+    table tr.heading td {
+      background: #eee;
+      border-bottom: 1px solid #ddd;
+      font-weight: bold;
+    }
+    table tr.details td {
+      padding-bottom: 20px;
+    }
+    table tr.item td {
+      border-bottom: 1px solid #eee;
+    }
+    table tr.item.last td {
+      border-bottom: none;
+    }
+    table tr.total td:nth-child(2) {
+      border-top: 2px solid #eee;
+      font-weight: bold;
+    }
+    .footer {
+      margin-top: 30px;
+      text-align: center;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="invoice-box">
+    <table cellpadding="0" cellspacing="0">
+      <tr class="top">
+        <td colspan="2">
+          <table>
+            <tr>
+              <td class="title">
+                VAT INVOICE
+              </td>
+              <td>
+                Invoice #: INV-${selectedIncome.id.slice(0, 8)}<br />
+                Created: ${new Date().toISOString().split("T")[0]}<br />
+                IRN: IRN-${selectedIncome.id.slice(0, 8)}
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr class="information">
+        <td colspan="2">
+          <table>
+            <tr>
+              <td>
+                <strong>Seller:</strong><br />
+                ${sellerInfo.name}<br />
+                PAN/VAT: ${sellerInfo.pan}<br />
+                ${sellerInfo.address}<br />
+                ${sellerInfo.contactNumber}
+              </td>
+              <td>
+                <strong>Buyer:</strong><br />
+                ${billData.buyerName || "Walk-in Customer"}<br />
+                PAN/VAT: ${billData.buyerPan}<br />
+                ${billData.buyerAddress}<br />
+                ${billData.buyerContact}
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr class="heading">
+        <td>Payment Method</td>
+        <td>${selectedIncome.payment_mode}</td>
+      </tr>
+      <tr class="details">
+        <td>Paid</td>
+        <td>NPR ${selectedIncome.total.toFixed(2)}</td>
+      </tr>
+      <tr class="heading">
+        <td>Item</td>
+        <td>Price</td>
+      </tr>
+      ${selectedIncome.items
+        .map(
+          (item: any) =>
+            `<tr class="item">
+              <td>${item.description} (${item.quantity} pcs @ NPR ${item.unitPrice})</td>
+              <td>NPR ${item.totalPriceWithVAT.toFixed(2)}</td>
+            </tr>`,
+        )
+        .join("")}
+      <tr class="item last">
+        <td>Subtotal</td>
+        <td>NPR ${base.toFixed(2)}</td>
+      </tr>
+      <tr class="item">
+        <td>VAT 13%</td>
+        <td>NPR ${vat.toFixed(2)}</td>
+      </tr>
+      <tr class="total">
+        <td></td>
+        <td>Grand Total: NPR ${selectedIncome.total.toFixed(2)}</td>
+      </tr>
+    </table>
+    <div class="footer">
+      Prepared By: ${billData.preparedBy || user?.email} | Approved By: ${
+      billData.approvedBy || "Finance Officer"
+    }<br />
+      Thank you for your business! Goods once sold are not returnable.<br />
+      (QR Code & IRD E-billing ready)
+    </div>
+  </div>
+</body>
+</html>
     `;
 
-    const blob = new Blob([xml], { type: "application/xml" });
+    const blob = new Blob([html], { type: "text/html" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `invoice-${selectedIncome.id.slice(0, 8)}.xml`;
+    a.download = `invoice-${selectedIncome.id.slice(0, 8)}.html`;
     a.click();
     URL.revokeObjectURL(url);
   };
