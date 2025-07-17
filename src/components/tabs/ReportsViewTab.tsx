@@ -185,6 +185,66 @@ const ReportsViewTab = () => {
   const netProfit = totals.revenue - totals.expenses;
   const cashFlow = totals.deposits - totals.withdrawals;
 
+  // Custom reports
+  const cashInHand =
+    (reportData.orders || [])
+      .filter((i: any) => i.payment_mode === "Cash")
+      .reduce((sum: number, i: any) => sum + i.total, 0) +
+    (reportData.charging || [])
+      .filter((i: any) => i.payment_mode === "Cash")
+      .reduce((sum: number, i: any) => sum + i.total_amount, 0) -
+    (reportData.expenses || [])
+      .filter((i: any) => i.payment_mode === "Cash")
+      .reduce((sum: number, i: any) => sum + i.amount, 0) -
+    (reportData.savings || [])
+      .filter((i: any) => i.contribution_method === "Cash")
+      .reduce((sum: number, i: any) => sum + i.contribution_amount, 0) -
+    (reportData.deposits || [])
+      .filter((i: any) => i.deposit_method === "Cash")
+      .reduce((sum: number, i: any) => sum + i.amount, 0) -
+    (reportData.deposits || [])
+      .filter((i: any) =>
+        ["Fonepay", "Esewa", "Bank"].includes(i.deposit_method),
+      )
+      .reduce((sum: number, i: any) => sum + i.amount, 0);
+
+  const esewaBalance =
+    (reportData.orders || [])
+      .filter((i: any) => i.payment_mode === "Esewa")
+      .reduce((sum: number, i: any) => sum + i.total, 0) +
+    (reportData.charging || [])
+      .filter((i: any) => i.payment_mode === "Esewa")
+      .reduce((sum: number, i: any) => sum + i.total_amount, 0) +
+    (reportData.deposits || [])
+      .filter((i: any) => i.deposit_method === "Esewa")
+      .reduce((sum: number, i: any) => sum + i.amount, 0) -
+    (reportData.withdrawals || [])
+      .filter((i: any) => i.withdrawal_method === "Esewa")
+      .reduce((sum: number, i: any) => sum + i.amount, 0) -
+    (reportData.expenses || [])
+      .filter((i: any) => i.payment_mode === "Esewa")
+      .reduce((sum: number, i: any) => sum + i.amount, 0);
+
+  const fonepayBalance =
+    (reportData.orders || [])
+      .filter((i: any) => i.payment_mode === "Fonepay")
+      .reduce((sum: number, i: any) => sum + i.total, 0) +
+    (reportData.charging || [])
+      .filter((i: any) => i.payment_mode === "Fonepay")
+      .reduce((sum: number, i: any) => sum + i.total_amount, 0) +
+    (reportData.deposits || [])
+      .filter((i: any) => i.deposit_method === "Fonepay")
+      .reduce((sum: number, i: any) => sum + i.amount, 0) -
+    (reportData.withdrawals || [])
+      .filter((i: any) => i.withdrawal_method === "Bank")
+      .reduce((sum: number, i: any) => sum + i.amount, 0) -
+    (reportData.expenses || [])
+      .filter((i: any) => i.payment_mode === "Bank")
+      .reduce((sum: number, i: any) => sum + i.amount, 0) -
+    (reportData.expenses || [])
+      .filter((i: any) => i.payment_mode === "Cheque")
+      .reduce((sum: number, i: any) => sum + i.amount, 0);
+
   // Payment method analysis
   const paymentAnalysis = (() => {
     const methods: Record<string, number> = {};
@@ -264,6 +324,69 @@ const ReportsViewTab = () => {
         0,
       );
 
+      const daySavings = (reportData.savings || []).filter(
+        (saving: any) => saving.contribution_date === dayStr,
+      );
+
+      const cashInHand =
+        dayOrders
+          .filter((i: any) => i.payment_mode === "Cash")
+          .reduce((sum: number, i: any) => sum + i.total, 0) +
+        dayCharging
+          .filter((i: any) => i.payment_mode === "Cash")
+          .reduce((sum: number, i: any) => sum + i.total_amount, 0) -
+        dayExpenses
+          .filter((i: any) => i.payment_mode === "Cash")
+          .reduce((sum: number, i: any) => sum + i.amount, 0) -
+        daySavings
+          .filter((i: any) => i.contribution_method === "Cash")
+          .reduce((sum: number, i: any) => sum + i.contribution_amount, 0) -
+        dayDeposits
+          .filter((i: any) => i.deposit_method === "Cash")
+          .reduce((sum: number, i: any) => sum + i.amount, 0) -
+        dayDeposits
+          .filter((i: any) =>
+            ["Fonepay", "Esewa", "Bank"].includes(i.deposit_method),
+          )
+          .reduce((sum: number, i: any) => sum + i.amount, 0);
+
+      const esewaBalance =
+        dayOrders
+          .filter((i: any) => i.payment_mode === "Esewa")
+          .reduce((sum: number, i: any) => sum + i.total, 0) +
+        dayCharging
+          .filter((i: any) => i.payment_mode === "Esewa")
+          .reduce((sum: number, i: any) => sum + i.total_amount, 0) +
+        dayDeposits
+          .filter((i: any) => i.deposit_method === "Esewa")
+          .reduce((sum: number, i: any) => sum + i.amount, 0) -
+        dayWithdrawals
+          .filter((i: any) => i.withdrawal_method === "Esewa")
+          .reduce((sum: number, i: any) => sum + i.amount, 0) -
+        dayExpenses
+          .filter((i: any) => i.payment_mode === "Esewa")
+          .reduce((sum: number, i: any) => sum + i.amount, 0);
+
+      const fonepayBalance =
+        dayOrders
+          .filter((i: any) => i.payment_mode === "Fonepay")
+          .reduce((sum: number, i: any) => sum + i.total, 0) +
+        dayCharging
+          .filter((i: any) => i.payment_mode === "Fonepay")
+          .reduce((sum: number, i: any) => sum + i.total_amount, 0) +
+        dayDeposits
+          .filter((i: any) => i.deposit_method === "Fonepay")
+          .reduce((sum: number, i: any) => sum + i.amount, 0) -
+        dayWithdrawals
+          .filter((i: any) => i.withdrawal_method === "Bank")
+          .reduce((sum: number, i: any) => sum + i.amount, 0) -
+        dayExpenses
+          .filter((i: any) => i.payment_mode === "Bank")
+          .reduce((sum: number, i: any) => sum + i.amount, 0) -
+        dayExpenses
+          .filter((i: any) => i.payment_mode === "Cheque")
+          .reduce((sum: number, i: any) => sum + i.amount, 0);
+
       return {
         date: dayStr,
         revenue,
@@ -274,6 +397,9 @@ const ReportsViewTab = () => {
         cashFlow: deposits - withdrawals,
         transactions:
           dayOrders.length + dayCharging.length + dayExpenses.length,
+        cashInHand,
+        esewaBalance,
+        fonepayBalance,
       };
     });
   })();
@@ -287,6 +413,9 @@ const ReportsViewTab = () => {
       acc.withdrawals += day.withdrawals;
       acc.cashFlow += day.cashFlow;
       acc.transactions += day.transactions;
+      acc.cashInHand += day.cashInHand;
+      acc.esewaBalance += day.esewaBalance;
+      acc.fonepayBalance += day.fonepayBalance;
       return acc;
     },
     {
@@ -297,6 +426,9 @@ const ReportsViewTab = () => {
       withdrawals: 0,
       cashFlow: 0,
       transactions: 0,
+      cashInHand: 0,
+      esewaBalance: 0,
+      fonepayBalance: 0,
     },
   );
 
@@ -610,6 +742,68 @@ const ReportsViewTab = () => {
           </Card>
         </div>
 
+        {/* Custom Reports */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <Card className="bg-gradient-to-br from-gray-50 to-slate-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 font-medium flex items-center gap-1">
+                    <DollarSign className="h-4 w-4" />
+                    Cash in Hand
+                  </p>
+                  <p className="text-2xl font-bold text-gray-800">
+                    {formatCurrency(cashInHand)}
+                  </p>
+                </div>
+                <div className="p-3 bg-gradient-to-r from-gray-500 to-slate-500 rounded-xl text-white">
+                  <Banknote className="h-6 w-6" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-green-600 font-medium flex items-center gap-1">
+                    <img src="/esewa_logo.png" alt="Esewa" className="h-4 w-4" />
+                    Esewa Balance
+                  </p>
+                  <p className="text-2xl font-bold text-green-800">
+                    {formatCurrency(esewaBalance)}
+                  </p>
+                </div>
+                <div className="p-3 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl text-white">
+                  <CreditCard className="h-6 w-6" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="bg-gradient-to-br from-purple-50 to-pink-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-purple-600 font-medium flex items-center gap-1">
+                    <img
+                      src="/fonepay_logo.png"
+                      alt="Fonepay"
+                      className="h-4 w-4"
+                    />
+                    Fonepay Balance
+                  </p>
+                  <p className="text-2xl font-bold text-purple-800">
+                    {formatCurrency(fonepayBalance)}
+                  </p>
+                </div>
+                <div className="p-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl text-white">
+                  <CreditCard className="h-6 w-6" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
         <Tabs defaultValue="overview" className="space-y-6">
           <TabsList className="grid w-full grid-cols-4 bg-white/80 backdrop-blur-sm border border-cyan-200">
             <TabsTrigger
@@ -790,6 +984,15 @@ const ReportsViewTab = () => {
                             Cash Flow
                           </TableHead>
                           <TableHead className="font-semibold text-gray-700">
+                            Cash In Hand
+                          </TableHead>
+                          <TableHead className="font-semibold text-gray-700">
+                            Esewa Balance
+                          </TableHead>
+                          <TableHead className="font-semibold text-gray-700">
+                            Fonepay Balance
+                          </TableHead>
+                          <TableHead className="font-semibold text-gray-700">
                             Transactions
                           </TableHead>
                           <TableHead className="font-semibold text-gray-700">
@@ -811,6 +1014,15 @@ const ReportsViewTab = () => {
                           </TableCell>
                           <TableCell>
                             {formatCurrency(grandTotal.cashFlow)}
+                          </TableCell>
+                          <TableCell>
+                            {formatCurrency(grandTotal.cashInHand)}
+                          </TableCell>
+                          <TableCell>
+                            {formatCurrency(grandTotal.esewaBalance)}
+                          </TableCell>
+                          <TableCell>
+                            {formatCurrency(grandTotal.fonepayBalance)}
                           </TableCell>
                           <TableCell>{grandTotal.transactions}</TableCell>
                           <TableCell />
@@ -846,6 +1058,27 @@ const ReportsViewTab = () => {
                                 className={`font-bold ${day.cashFlow >= 0 ? "text-purple-600" : "text-red-600"}`}
                               >
                                 {formatCurrency(day.cashFlow)}
+                              </span>
+                            </TableCell>
+                            <TableCell>
+                              <span
+                                className={`font-bold ${day.cashInHand >= 0 ? "text-gray-600" : "text-red-600"}`}
+                              >
+                                {formatCurrency(day.cashInHand)}
+                              </span>
+                            </TableCell>
+                            <TableCell>
+                              <span
+                                className={`font-bold ${day.esewaBalance >= 0 ? "text-green-600" : "text-red-600"}`}
+                              >
+                                {formatCurrency(day.esewaBalance)}
+                              </span>
+                            </TableCell>
+                            <TableCell>
+                              <span
+                                className={`font-bold ${day.fonepayBalance >= 0 ? "text-purple-600" : "text-red-600"}`}
+                              >
+                                {formatCurrency(day.fonepayBalance)}
                               </span>
                             </TableCell>
                             <TableCell>
