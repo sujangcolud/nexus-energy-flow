@@ -185,6 +185,8 @@ const Settings = () => {
   const [canAddWithdrawalCategory, setCanAddWithdrawalCategory] =
     useState(false);
   const [canAddDepositCategory, setCanAddDepositCategory] = useState(false);
+  const [canAddExpenseBookingCategory, setCanAddExpenseBookingCategory] =
+    useState(false);
   const [showCreateUserForm, setShowCreateUserForm] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
@@ -363,6 +365,13 @@ const Settings = () => {
       setCanAddDepositCategory(JSON.parse(canAddDeposit));
     }
 
+    const canAddExpenseBooking = localStorage.getItem(
+      "canAddExpenseBookingCategory",
+    );
+    if (canAddExpenseBooking) {
+      setCanAddExpenseBookingCategory(JSON.parse(canAddExpenseBooking));
+    }
+
     // Fetch logs if admin
     if (hasRole("super_admin")) {
       fetchLogs();
@@ -480,12 +489,17 @@ const Settings = () => {
       "canAddDepositCategory",
       JSON.stringify(canAddDepositCategory),
     );
+    localStorage.setItem(
+      "canAddExpenseBookingCategory",
+      JSON.stringify(canAddExpenseBookingCategory),
+    );
   }, [
     canEditTransactions,
     canAddChargingCategory,
     canAddSavingsCategory,
     canAddWithdrawalCategory,
     canAddDepositCategory,
+    canAddExpenseBookingCategory,
   ]);
 
   const handleResetSettings = () => {
@@ -1039,6 +1053,16 @@ const Settings = () => {
                 id="add-deposit-category"
                 checked={canAddDepositCategory}
                 onCheckedChange={setCanAddDepositCategory}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="add-expense-booking-category">
+                Enable Add Expense Booking Category
+              </Label>
+              <Switch
+                id="add-expense-booking-category"
+                checked={canAddExpenseBookingCategory}
+                onCheckedChange={setCanAddExpenseBookingCategory}
               />
             </div>
           </CardContent>
