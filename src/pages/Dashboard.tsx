@@ -50,6 +50,7 @@ import DataInputTab from "@/components/tabs/DataInputTab";
 import UserManagementTab from "@/components/tabs/UserManagementTab";
 import ShareInvestmentsTab from "@/components/tabs/ShareInvestmentsTab";
 import ExpenseBookingsTab from "@/components/tabs/ExpenseBookingsTab";
+import VatEntryTab from "@/components/tabs/VatEntryTab";
 
 const Dashboard = () => {
   const { user, signOut, userRole } = useAuth();
@@ -258,6 +259,17 @@ const Dashboard = () => {
         color: "bg-cyan-600",
         bgColor: "bg-cyan-50",
         description: "Manage expense bookings",
+      },
+      {
+        id: "vat_entry",
+        path: "vat-entry",
+        label: "VAT Entry",
+        icon: FileText,
+        component: VatEntryTab,
+        roles: ["data_entry", "super_admin"],
+        color: "bg-lime-600",
+        bgColor: "bg-lime-50",
+        description: "Manage VAT entries",
       },
     ];
 

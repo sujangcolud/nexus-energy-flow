@@ -29,6 +29,7 @@ import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import Settings from "./pages/Settings";
 import Analytics from "./pages/Analytics";
 import ExpenseBookingsTab from "./components/tabs/ExpenseBookingsTab";
+import VatEntryTab from "./components/tabs/VatEntryTab";
 import { Outlet } from "react-router-dom"; // Needed for nested routes
 
 const queryClient = new QueryClient();
@@ -111,6 +112,7 @@ const App = () => {
                   path="expense-bookings"
                   element={<ExpenseBookingsTab />}
                 />
+                <Route path="vat-entry" element={<VatEntryTab />} />
                 {/* It might be good to have an index route that explicitly shows the cards */}
                 {/* <Route index element={<DashboardPageWithCards />} /> */}
               </Route>
