@@ -188,6 +188,15 @@ const Settings = () => {
     useState(false);
   const [canAddMenuCategory, setCanAddMenuCategory] = useState(false);
   const [canAddExpenseCategory, setCanAddExpenseCategory] = useState(false);
+  const [showOrders, setShowOrders] = useState(true);
+  const [showInsights, setShowInsights] = useState(true);
+  const [showReports, setShowReports] = useState(true);
+  const [showReportsView, setShowReportsView] = useState(true);
+  const [showDataInput, setShowDataInput] = useState(true);
+  const [showUserManagement, setShowUserManagement] = useState(true);
+  const [showAdminPanel, setShowAdminPanel] = useState(true);
+  const [showShareInvestments, setShowShareInvestments] = useState(true);
+  const [showVatEntry, setShowVatEntry] = useState(true);
   const [showCreateUserForm, setShowCreateUserForm] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
@@ -383,6 +392,51 @@ const Settings = () => {
       setCanAddExpenseCategory(JSON.parse(canAddExpense));
     }
 
+    const orders = localStorage.getItem("showOrders");
+    if (orders) {
+      setShowOrders(JSON.parse(orders));
+    }
+
+    const insights = localStorage.getItem("showInsights");
+    if (insights) {
+      setShowInsights(JSON.parse(insights));
+    }
+
+    const reports = localStorage.getItem("showReports");
+    if (reports) {
+      setShowReports(JSON.parse(reports));
+    }
+
+    const reportsView = localStorage.getItem("showReportsView");
+    if (reportsView) {
+      setShowReportsView(JSON.parse(reportsView));
+    }
+
+    const dataInput = localStorage.getItem("showDataInput");
+    if (dataInput) {
+      setShowDataInput(JSON.parse(dataInput));
+    }
+
+    const userManagement = localStorage.getItem("showUserManagement");
+    if (userManagement) {
+      setShowUserManagement(JSON.parse(userManagement));
+    }
+
+    const adminPanel = localStorage.getItem("showAdminPanel");
+    if (adminPanel) {
+      setShowAdminPanel(JSON.parse(adminPanel));
+    }
+
+    const shareInvestments = localStorage.getItem("showShareInvestments");
+    if (shareInvestments) {
+      setShowShareInvestments(JSON.parse(shareInvestments));
+    }
+
+    const vatEntry = localStorage.getItem("showVatEntry");
+    if (vatEntry) {
+      setShowVatEntry(JSON.parse(vatEntry));
+    }
+
     // Fetch logs if admin
     if (hasRole("super_admin")) {
       fetchLogs();
@@ -512,6 +566,21 @@ const Settings = () => {
       "canAddExpenseCategory",
       JSON.stringify(canAddExpenseCategory),
     );
+    localStorage.setItem("showOrders", JSON.stringify(showOrders));
+    localStorage.setItem("showInsights", JSON.stringify(showInsights));
+    localStorage.setItem("showReports", JSON.stringify(showReports));
+    localStorage.setItem("showReportsView", JSON.stringify(showReportsView));
+    localStorage.setItem("showDataInput", JSON.stringify(showDataInput));
+    localStorage.setItem(
+      "showUserManagement",
+      JSON.stringify(showUserManagement),
+    );
+    localStorage.setItem("showAdminPanel", JSON.stringify(showAdminPanel));
+    localStorage.setItem(
+      "showShareInvestments",
+      JSON.stringify(showShareInvestments),
+    );
+    localStorage.setItem("showVatEntry", JSON.stringify(showVatEntry));
   }, [
     canEditTransactions,
     canAddChargingCategory,
@@ -521,6 +590,15 @@ const Settings = () => {
     canAddExpenseBookingCategory,
     canAddMenuCategory,
     canAddExpenseCategory,
+    showOrders,
+    showInsights,
+    showReports,
+    showReportsView,
+    showDataInput,
+    showUserManagement,
+    showAdminPanel,
+    showShareInvestments,
+    showVatEntry,
   ]);
 
   const handleResetSettings = () => {
@@ -1102,6 +1180,82 @@ const Settings = () => {
                 id="add-expense-category"
                 checked={canAddExpenseCategory}
                 onCheckedChange={setCanAddExpenseCategory}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="show-orders">Show Orders Tab</Label>
+              <Switch
+                id="show-orders"
+                checked={showOrders}
+                onCheckedChange={setShowOrders}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="show-insights">Show Insights Tab</Label>
+              <Switch
+                id="show-insights"
+                checked={showInsights}
+                onCheckedChange={setShowInsights}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="show-reports">Show Reports Tab</Label>
+              <Switch
+                id="show-reports"
+                checked={showReports}
+                onCheckedChange={setShowReports}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="show-reports-view">Show Reports View Tab</Label>
+              <Switch
+                id="show-reports-view"
+                checked={showReportsView}
+                onCheckedChange={setShowReportsView}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="show-data-input">Show Data Input Tab</Label>
+              <Switch
+                id="show-data-input"
+                checked={showDataInput}
+                onCheckedChange={setShowDataInput}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="show-user-management">
+                Show User Management Tab
+              </Label>
+              <Switch
+                id="show-user-management"
+                checked={showUserManagement}
+                onCheckedChange={setShowUserManagement}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="show-admin-panel">Show Admin Panel Tab</Label>
+              <Switch
+                id="show-admin-panel"
+                checked={showAdminPanel}
+                onCheckedChange={setShowAdminPanel}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="show-share-investments">
+                Show Share Investments Tab
+              </Label>
+              <Switch
+                id="show-share-investments"
+                checked={showShareInvestments}
+                onCheckedChange={setShowShareInvestments}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="show-vat-entry">Show VAT Entry Tab</Label>
+              <Switch
+                id="show-vat-entry"
+                checked={showVatEntry}
+                onCheckedChange={setShowVatEntry}
               />
             </div>
           </CardContent>
