@@ -54,12 +54,20 @@ const VatEntryTab = () => {
 
       const { data: charging, error: chargingError } = await supabase
         .from("charging_sessions")
-        .select("id, total_amount as total, payment_mode, session_date as order_date")
+        .select("id, total_amount, payment_mode, session_date")
         .eq("user_id", user.id);
 
       if (chargingError) throw chargingError;
 
-      const allIncomes = [...(orders || []), ...(charging || [])];
+      const allIncomes = [
+        ...(orders || []),
+        ...(charging?.map((c) => ({
+          id: c.id,
+          total: c.total_amount,
+          payment_mode: c.payment_mode,
+          order_date: c.session_date,
+        })) || []),
+      ];
       setIncomes(allIncomes);
     } catch (error) {
       console.error("Error fetching incomes:", error);
