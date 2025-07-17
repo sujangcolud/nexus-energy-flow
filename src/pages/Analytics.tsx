@@ -39,6 +39,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useAuth } from "@/context/AuthContext";
 
 interface FinancialData {
   bankBalance: number;
@@ -55,6 +56,7 @@ interface FinancialData {
 }
 
 const Analytics = () => {
+  const { user } = useAuth();
   const [timeRange, setTimeRange] = useState("30");
   const [analyticsSettings, setAnalyticsSettings] = useState({
     showKeyMetrics: true,
@@ -83,252 +85,67 @@ const Analytics = () => {
     localStorage.setItem("analyticsSettings", JSON.stringify(newSettings));
   };
 
-  // Fetch all financial data with corrected column names
-  const { data: ordersData = [] } = useQuery({
-    queryKey: ["orders", timeRange],
+  const { data: financialData, isLoading } = useQuery({
+    queryKey: ["financialData", timeRange],
     queryFn: async () => {
       const date = new Date();
       date.setDate(date.getDate() - parseInt(timeRange));
+      const fromDate = date.toISOString().split("T")[0];
+      const toDate = new Date().toISOString().split("T")[0];
 
-      const { data, error } = await supabase
-        .from("orders")
-        .select("*")
-        .gte("created_at", date.toISOString());
-
-      if (error) throw error;
-      return data || [];
-    },
-  });
-
-  const { data: chargingData = [] } = useQuery({
-    queryKey: ["charging", timeRange],
-    queryFn: async () => {
-      const date = new Date();
-      date.setDate(date.getDate() - parseInt(timeRange));
-
-      const { data, error } = await supabase
-        .from("charging_sessions")
-        .select("*")
-        .gte("created_at", date.toISOString());
+      const { data, error } = await supabase.rpc('get_report_data', {
+        user_id_param: user!.id,
+        from_date: fromDate,
+        to_date: toDate,
+      });
 
       if (error) throw error;
-      return data || [];
-    },
-  });
-
-  const { data: expensesData = [] } = useQuery({
-    queryKey: ["expenses", timeRange],
-    queryFn: async () => {
-      const date = new Date();
-      date.setDate(date.getDate() - parseInt(timeRange));
-
-      const { data, error } = await supabase
-        .from("expenses")
-        .select("*")
-        .gte("created_at", date.toISOString());
-
-      if (error) throw error;
-      return data || [];
-    },
-  });
-
-  const { data: depositsData = [] } = useQuery({
-    queryKey: ["deposits", timeRange],
-    queryFn: async () => {
-      const date = new Date();
-      date.setDate(date.getDate() - parseInt(timeRange));
-
-      const { data, error } = await supabase
-        .from("deposits")
-        .select("*")
-        .gte("created_at", date.toISOString());
-
-      if (error) throw error;
-      return data || [];
-    },
-  });
-
-  const { data: withdrawalsData = [] } = useQuery({
-    queryKey: ["withdrawals", timeRange],
-    queryFn: async () => {
-      const date = new Date();
-      date.setDate(date.getDate() - parseInt(timeRange));
-
-      const { data, error } = await supabase
-        .from("withdrawals")
-        .select("*")
-        .gte("created_at", date.toISOString());
-
-      if (error) throw error;
-      return data || [];
-    },
-  });
-
-  const { data: cooperativeData = [] } = useQuery({
-    queryKey: ["cooperative", timeRange],
-    queryFn: async () => {
-      const date = new Date();
-      date.setDate(date.getDate() - parseInt(timeRange));
-
-      const { data, error } = await supabase
-        .from("cooperative_savings")
-        .select("*")
-        .gte("created_at", date.toISOString());
-
-      if (error) throw error;
-      return data || [];
-    },
-  });
-
-  // Fetch current balances
-  const { data: balancesData } = useQuery({
-    queryKey: ["balances"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("balances")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .single();
-
-      if (error && error.code !== "PGRST116") throw error;
       return data;
     },
+    enabled: !!user,
   });
 
-  // Calculate financial metrics with correct column names
-  const calculateFinancials = (): FinancialData => {
-    const restaurantIncome = ordersData.reduce(
-      (sum, order) => sum + (parseFloat(order.total) || 0),
+  const financials: FinancialData = {
+    bankBalance: financialData?.bank_balance || 0,
+    cashInHand: financialData?.cash_in_hand || 0,
+    esewaBalance: financialData?.esewa_balance || 0,
+    fonepayBalance: financialData?.fonepay_balance || 0,
+    cooperativeBalance: financialData?.total_cooperative_savings || 0,
+    totalIncome: financialData?.total_revenue || 0,
+    totalExpenses: financialData?.total_expenses || 0,
+    chargingIncome: (financialData?.charging || []).reduce(
+      (sum: number, session: any) => sum + session.total_amount,
       0,
-    );
-    const chargingIncome = chargingData.reduce(
-      (sum, session) => sum + (parseFloat(session.total_amount) || 0),
+    ),
+    restaurantIncome: (financialData?.orders || []).reduce(
+      (sum: number, order: any) => sum + order.total,
       0,
-    );
-    const totalExpenses = expensesData.reduce(
-      (sum, expense) => sum + (parseFloat(expense.amount) || 0),
-      0,
-    );
-
-    const cashInHand =
-      ordersData
-        .filter((i: any) => i.payment_mode === "Cash")
-        .reduce((sum: number, i: any) => sum + i.total, 0) +
-      chargingData
-        .filter((i: any) => i.payment_mode === "Cash")
-        .reduce((sum: number, i: any) => sum + i.total_amount, 0) -
-      expensesData
-        .filter((i: any) => i.payment_mode === "Cash")
-        .reduce((sum: number, i: any) => sum + i.amount, 0) -
-      cooperativeData
-        .filter((i: any) => i.contribution_method === "Cash")
-        .reduce((sum: number, i: any) => sum + i.contribution_amount, 0) -
-      depositsData
-        .filter((i: any) => i.deposit_method === "Cash")
-        .reduce((sum: number, i: any) => sum + i.amount, 0);
-
-    const esewaBalance =
-      ordersData
-        .filter((i: any) => i.payment_mode === "Esewa")
-        .reduce((sum: number, i: any) => sum + i.total, 0) +
-      chargingData
-        .filter((i: any) => i.payment_mode === "Esewa")
-        .reduce((sum: number, i: any) => sum + i.total_amount, 0) -
-      expensesData
-        .filter((i: any) => i.payment_mode === "Esewa")
-        .reduce((sum: number, i: any) => sum + i.amount, 0) -
-      cooperativeData
-        .filter((i: any) => i.contribution_method === "Esewa")
-        .reduce((sum: number, i: any) => sum + i.contribution_amount, 0) -
-      depositsData
-        .filter((i: any) => i.deposit_method === "Esewa")
-        .reduce((sum: number, i: any) => sum + i.amount, 0) +
-      withdrawalsData
-        .filter((i: any) => i.withdrawal_method === "Esewa")
-        .reduce((sum: number, i: any) => sum + i.amount, 0);
-
-    const fonepayBalance =
-      ordersData
-        .filter((i: any) => i.payment_mode === "Fonepay")
-        .reduce((sum: number, i: any) => sum + i.total, 0) +
-      chargingData
-        .filter((i: any) => i.payment_mode === "Fonepay")
-        .reduce((sum: number, i: any) => sum + i.total_amount, 0) -
-      expensesData
-        .filter((i: any) => i.payment_mode === "Fonepay")
-        .reduce((sum: number, i: any) => sum + i.amount, 0) -
-      cooperativeData
-        .filter((i: any) => i.contribution_method === "Fonepay")
-        .reduce((sum: number, i: any) => sum + i.contribution_amount, 0) -
-      depositsData
-        .filter((i: any) => i.deposit_method === "Fonepay")
-        .reduce((sum: number, i: any) => sum + i.amount, 0) +
-      withdrawalsData
-        .filter((i: any) => i.withdrawal_method === "Fonepay")
-        .reduce((sum: number, i: any) => sum + i.amount, 0);
-
-    const bankBalance =
-      depositsData
-        .filter((i: any) => i.deposit_method === "Bank")
-        .reduce((sum: number, i: any) => sum + i.amount, 0) -
-      withdrawalsData
-        .filter((i: any) => i.withdrawal_method === "Bank")
-        .reduce((sum: number, i: any) => sum + i.amount, 0) -
-      expensesData
-        .filter((i: any) => ["Cheque", "Bank"].includes(i.payment_mode))
-        .reduce((sum: number, i: any) => sum + i.amount, 0);
-
-    const cooperativeBalance = cooperativeData.reduce(
-      (sum, saving) => sum + (parseFloat(saving.contribution_amount) || 0),
-      0,
-    );
-
-    const totalIncome = restaurantIncome + chargingIncome;
-    const netProfit = totalIncome - totalExpenses;
-    const totalAssets =
-      (balancesData?.bank_balance ? parseFloat(balancesData.bank_balance) : bankBalance) +
-      (balancesData?.cash_in_hand ? parseFloat(balancesData.cash_in_hand) : cashInHand) +
-      (balancesData?.cooperative_balance ? parseFloat(balancesData.cooperative_balance) : cooperativeBalance);
-
-    return {
-      bankBalance: balancesData?.bank_balance ? parseFloat(balancesData.bank_balance) : bankBalance,
-      cashInHand: balancesData?.cash_in_hand ? parseFloat(balancesData.cash_in_hand) : cashInHand,
-      esewaBalance: balancesData?.esewa_balance ? parseFloat(balancesData.esewa_balance) : esewaBalance,
-      fonepayBalance: balancesData?.fonepay_balance ? parseFloat(balancesData.fonepay_balance) : fonepayBalance,
-      cooperativeBalance: balancesData?.cooperative_balance ? parseFloat(balancesData.cooperative_balance) : cooperativeBalance,
-      totalIncome,
-      totalExpenses,
-      chargingIncome,
-      restaurantIncome,
-      netProfit,
-      totalAssets,
-    };
+    ),
+    netProfit: (financialData?.total_revenue || 0) - (financialData?.total_expenses || 0),
+    totalAssets: (financialData?.bank_balance || 0) + (financialData?.cash_in_hand || 0) + (financialData?.total_cooperative_savings || 0),
   };
-
-  const financials = calculateFinancials();
 
   // Chart data for charging vs restaurant correlation
   const correlationData = Array.from({ length: 7 }, (_, i) => {
     const date = new Date();
     date.setDate(date.getDate() - (6 - i));
 
-    const dayCharging = chargingData
+    const dayCharging = (financialData?.charging || [])
       .filter(
-        (session) =>
+        (session: any) =>
           new Date(session.created_at).toDateString() === date.toDateString(),
       )
       .reduce(
-        (sum, session) => sum + (parseFloat(session.total_amount) || 0),
+        (sum: number, session: any) => sum + (parseFloat(session.total_amount) || 0),
         0,
       );
 
-    const dayRestaurant = ordersData
+    const dayRestaurant = (financialData?.orders || [])
       .filter(
-        (order) =>
+        (order: any) =>
           new Date(order.created_at).toDateString() === date.toDateString(),
       )
-      .reduce((sum, order) => sum + (parseFloat(order.total) || 0), 0);
+      .reduce((sum: number, order: any) => sum + (parseFloat(order.total) || 0), 0);
 
     return {
       date: date.toLocaleDateString("en-US", { weekday: "short" }),
@@ -358,6 +175,10 @@ const Analytics = () => {
     },
     { name: "Charging", value: financials.chargingIncome, color: "#8b5cf6" },
   ];
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="space-y-4 sm:space-y-6 mobile-container py-4 sm:py-6 lg:py-8">

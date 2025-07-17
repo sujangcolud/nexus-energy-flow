@@ -28,6 +28,7 @@ import {
   Calculator,
   Eye,
 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 
 interface AnalyticsData {
   totalRevenue: number;
@@ -83,8 +84,158 @@ interface AnalyticsData {
 
 const InsightsTab = () => {
   const { user } = useAuth();
-  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data: analytics, isLoading } = useQuery({
+    queryKey: ["insightsData"],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('get_report_data', {
+        user_id_param: user!.id,
+        from_date: new Date(0).toISOString().split("T")[0],
+        to_date: new Date().toISOString().split("T")[0],
+      });
+
+      if (error) throw error;
+
+      const totalRevenue = data.total_revenue || 0;
+      const totalExpenses = data.total_expenses || 0;
+      const netProfit = totalRevenue - totalExpenses;
+      const profitMargin = totalRevenue > 0 ? (netProfit / totalRevenue) * 100 : 0;
+      const orders = data.orders || [];
+      const chargingSessions = data.charging || [];
+      const expenses = data.expenses || [];
+
+      const itemsSales = orders.reduce(
+        (acc: any, order: any) => {
+          if (!acc[order.item_name]) {
+            acc[order.item_name] = { quantity: 0, revenue: 0 };
+          }
+          acc[order.item_name].quantity += order.quantity;
+          acc[order.item_name].revenue += order.total;
+          return acc;
+        },
+        {} as Record<string, { quantity: number; revenue: number }>,
+      );
+
+      const topSellingItems = Object.entries(itemsSales)
+        .map(([name, data]: [string, any]) => ({ name, ...data }))
+        .sort((a: any, b: any) => b.revenue - a.revenue)
+        .slice(0, 5);
+
+      const expenseCategoryAnalysis = expenses.reduce(
+        (acc: any, expense: any) => {
+          if (!acc[expense.category]) {
+            acc[expense.category] = {
+              amount: 0,
+              count: 0,
+              percentage: 0,
+              paymentModes: {},
+            };
+          }
+          acc[expense.category].amount += expense.amount;
+          acc[expense.category].count += 1;
+
+          if (!acc[expense.category].paymentModes[expense.payment_mode]) {
+            acc[expense.category].paymentModes[expense.payment_mode] = 0;
+          }
+          acc[expense.category].paymentModes[expense.payment_mode] +=
+            expense.amount;
+
+          return acc;
+        },
+        {} as Record<string, any>,
+      );
+
+      Object.keys(expenseCategoryAnalysis).forEach((category) => {
+        expenseCategoryAnalysis[category].percentage =
+          totalExpenses > 0
+            ? (expenseCategoryAnalysis[category].amount / totalExpenses) * 100
+            : 0;
+      });
+
+      const paymentMethodAnalysis = {
+        orders: orders.reduce(
+          (acc: any, order: any) => {
+            if (!acc[order.payment_mode]) {
+              acc[order.payment_mode] = { count: 0, revenue: 0 };
+            }
+            acc[order.payment_mode].count += 1;
+            acc[order.payment_mode].revenue += order.total;
+            return acc;
+          },
+          {} as Record<string, { count: number; revenue: number }>,
+        ),
+        charging: chargingSessions.reduce(
+          (acc: any, session: any) => {
+            if (!acc[session.payment_mode]) {
+              acc[session.payment_mode] = { count: 0, revenue: 0 };
+            }
+            acc[session.payment_mode].count += 1;
+            acc[session.payment_mode].revenue += session.total_amount;
+            return acc;
+          },
+          {} as Record<string, { count: number; revenue: number }>,
+        ),
+        expenses: expenses.reduce(
+          (acc: any, expense: any) => {
+            if (!acc[expense.payment_mode]) {
+              acc[expense.payment_mode] = { count: 0, amount: 0 };
+            }
+            acc[expense.payment_mode].count += 1;
+            acc[expense.payment_mode].amount += expense.amount;
+            return acc;
+          },
+          {} as Record<string, { count: number; amount: number }>,
+        ),
+        overall: {} as Record<string, { count: number; amount: number }>,
+      };
+
+      return {
+        totalRevenue,
+        totalExpenses,
+        netProfit,
+        ordersCount: orders.length,
+        chargingSessions: chargingSessions.length,
+        totalDeposits: (data.deposits || []).reduce(
+          (sum: number, deposit: any) => sum + deposit.amount,
+          0,
+        ),
+        totalWithdrawals: (data.withdrawals || []).reduce(
+          (sum: number, withdrawal: any) => sum + withdrawal.amount,
+          0,
+        ),
+        cooperativeSavings: data.total_cooperative_savings || 0,
+        breakEvenPoint: totalExpenses,
+        profitMargin,
+        fixedCosts: totalExpenses * 0.6,
+        variableCostRatio: 0.4,
+        staticExpenses: expenses
+          .filter(
+            (e: any) => e.category === "Utilities" || e.category === "Insurance",
+          )
+          .reduce((sum: number, e: any) => sum + e.amount, 0),
+        recurringExpenses: totalExpenses * 0.8,
+        topSellingItems,
+        categoryBreakdown: expenseCategoryAnalysis,
+        menuCategoryAnalysis: {},
+        paymentMethodAnalysis,
+        expenseCategoryAnalysis,
+        dailyAverage: {
+          revenue: totalRevenue / 30,
+          orders: orders.length / 30,
+          chargingSessions: chargingSessions.length / 30,
+        },
+        monthlyGrowth: {
+          revenue: 15.5,
+          orders: 12.3,
+        },
+        cashBalance: data.cash_in_hand || 0,
+        esewaBalance: data.esewa_balance || 0,
+        fonepayBalance: data.fonepay_balance || 0,
+        bankBalance: data.bank_balance || 0,
+        cooperativeBalance: data.total_cooperative_savings || 0,
+      };
+    },
+    enabled: !!user,
+  });
 
   const categoryColors = {
     "Food & Beverages": "from-orange-500 to-red-500",
@@ -112,290 +263,7 @@ const InsightsTab = () => {
     Credit: "from-violet-500 to-purple-500",
   };
 
-  useEffect(() => {
-    if (user) {
-      fetchAnalytics();
-    }
-  }, [user]);
-
-  const fetchAnalytics = async () => {
-    setLoading(true);
-    try {
-      // Fetch all data in parallel
-      const [
-        ordersData,
-        chargingData,
-        expensesData,
-        depositsData,
-        withdrawalsData,
-        cooperativeData,
-        balancesData,
-      ] = await Promise.all([
-        supabase.from("orders").select("*").eq("user_id", user!.id),
-        supabase.from("charging_sessions").select("*").eq("user_id", user!.id),
-        supabase.from("expenses").select("*").eq("user_id", user!.id),
-        supabase.from("deposits").select("*").eq("user_id", user!.id),
-        supabase.from("withdrawals").select("*").eq("user_id", user!.id),
-        supabase
-          .from("cooperative_savings")
-          .select("*")
-          .eq("user_id", user!.id),
-        supabase.from("balances").select("*").eq("user_id", user!.id).single(),
-      ]);
-
-      const orders = ordersData.data || [];
-      const chargingSessions = chargingData.data || [];
-      const expenses = expensesData.data || [];
-      const deposits = depositsData.data || [];
-      const withdrawals = withdrawalsData.data || [];
-      const cooperative = cooperativeData.data || [];
-      const balances = balancesData.data || {
-        cash_in_hand: 0,
-        esewa_balance: 0,
-        fonepay_balance: 0,
-        bank_balance: 0,
-        cooperative_balance: 0,
-      };
-
-      // Calculate analytics
-      const totalRevenue =
-        orders.reduce((sum, order) => sum + order.total, 0) +
-        chargingSessions.reduce(
-          (sum, session) => sum + session.total_amount,
-          0,
-        );
-      const totalExpenses = expenses.reduce(
-        (sum, expense) => sum + expense.amount,
-        0,
-      );
-      const totalDeposits = deposits.reduce(
-        (sum, deposit) => sum + deposit.amount,
-        0,
-      );
-      const totalWithdrawals = withdrawals.reduce(
-        (sum, withdrawal) => sum + withdrawal.amount,
-        0,
-      );
-      const cooperativeSavings = cooperative.reduce(
-        (sum, saving) => sum + saving.contribution_amount,
-        0,
-      );
-
-      const netProfit = totalRevenue - totalExpenses;
-      const profitMargin =
-        totalRevenue > 0 ? (netProfit / totalRevenue) * 100 : 0;
-
-      // Top selling items
-      const itemsSales = orders.reduce(
-        (acc, order) => {
-          if (!acc[order.item_name]) {
-            acc[order.item_name] = { quantity: 0, revenue: 0 };
-          }
-          acc[order.item_name].quantity += order.quantity;
-          acc[order.item_name].revenue += order.total;
-          return acc;
-        },
-        {} as Record<string, { quantity: number; revenue: number }>,
-      );
-
-      const topSellingItems = Object.entries(itemsSales)
-        .map(([name, data]) => ({ name, ...data }))
-        .sort((a, b) => b.revenue - a.revenue)
-        .slice(0, 5);
-
-      // Category analysis
-      const expenseCategoryAnalysis = expenses.reduce(
-        (acc, expense) => {
-          if (!acc[expense.category]) {
-            acc[expense.category] = {
-              amount: 0,
-              count: 0,
-              percentage: 0,
-              paymentModes: {},
-            };
-          }
-          acc[expense.category].amount += expense.amount;
-          acc[expense.category].count += 1;
-
-          if (!acc[expense.category].paymentModes[expense.payment_mode]) {
-            acc[expense.category].paymentModes[expense.payment_mode] = 0;
-          }
-          acc[expense.category].paymentModes[expense.payment_mode] +=
-            expense.amount;
-
-          return acc;
-        },
-        {} as Record<string, any>,
-      );
-
-      // Calculate percentages
-      Object.keys(expenseCategoryAnalysis).forEach((category) => {
-        expenseCategoryAnalysis[category].percentage =
-          totalExpenses > 0
-            ? (expenseCategoryAnalysis[category].amount / totalExpenses) * 100
-            : 0;
-      });
-
-      // Payment method analysis
-      const paymentMethodAnalysis = {
-        orders: orders.reduce(
-          (acc, order) => {
-            if (!acc[order.payment_mode]) {
-              acc[order.payment_mode] = { count: 0, revenue: 0 };
-            }
-            acc[order.payment_mode].count += 1;
-            acc[order.payment_mode].revenue += order.total;
-            return acc;
-          },
-          {} as Record<string, { count: number; revenue: number }>,
-        ),
-        charging: chargingSessions.reduce(
-          (acc, session) => {
-            if (!acc[session.payment_mode]) {
-              acc[session.payment_mode] = { count: 0, revenue: 0 };
-            }
-            acc[session.payment_mode].count += 1;
-            acc[session.payment_mode].revenue += session.total_amount;
-            return acc;
-          },
-          {} as Record<string, { count: number; revenue: number }>,
-        ),
-        expenses: expenses.reduce(
-          (acc, expense) => {
-            if (!acc[expense.payment_mode]) {
-              acc[expense.payment_mode] = { count: 0, amount: 0 };
-            }
-            acc[expense.payment_mode].count += 1;
-            acc[expense.payment_mode].amount += expense.amount;
-            return acc;
-          },
-          {} as Record<string, { count: number; amount: number }>,
-        ),
-        overall: {} as Record<string, { count: number; amount: number }>,
-      };
-
-      const cashBalance =
-        orders
-          .filter((i: any) => i.payment_mode === "Cash")
-          .reduce((sum: number, i: any) => sum + i.total, 0) +
-        chargingSessions
-          .filter((i: any) => i.payment_mode === "Cash")
-          .reduce((sum: number, i: any) => sum + i.total_amount, 0) -
-        expenses
-          .filter((i: any) => i.payment_mode === "Cash")
-          .reduce((sum: number, i: any) => sum + i.amount, 0) -
-        cooperative
-          .filter((i: any) => i.contribution_method === "Cash")
-          .reduce((sum: number, i: any) => sum + i.contribution_amount, 0) -
-        deposits
-          .filter((i: any) => i.deposit_method === "Cash")
-          .reduce((sum: number, i: any) => sum + i.amount, 0);
-
-      const esewaBalance =
-        orders
-          .filter((i: any) => i.payment_mode === "Esewa")
-          .reduce((sum: number, i: any) => sum + i.total, 0) +
-        chargingSessions
-          .filter((i: any) => i.payment_mode === "Esewa")
-          .reduce((sum: number, i: any) => sum + i.total_amount, 0) -
-        expenses
-          .filter((i: any) => i.payment_mode === "Esewa")
-          .reduce((sum: number, i: any) => sum + i.amount, 0) -
-        cooperative
-          .filter((i: any) => i.contribution_method === "Esewa")
-          .reduce((sum: number, i: any) => sum + i.contribution_amount, 0) -
-        deposits
-          .filter((i: any) => i.deposit_method === "Esewa")
-          .reduce((sum: number, i: any) => sum + i.amount, 0) +
-        withdrawals
-          .filter((i: any) => i.withdrawal_method === "Esewa")
-          .reduce((sum: number, i: any) => sum + i.amount, 0);
-
-      const fonepayBalance =
-        orders
-          .filter((i: any) => i.payment_mode === "Fonepay")
-          .reduce((sum: number, i: any) => sum + i.total, 0) +
-        chargingSessions
-          .filter((i: any) => i.payment_mode === "Fonepay")
-          .reduce((sum: number, i: any) => sum + i.total_amount, 0) -
-        expenses
-          .filter((i: any) => i.payment_mode === "Fonepay")
-          .reduce((sum: number, i: any) => sum + i.amount, 0) -
-        cooperative
-          .filter((i: any) => i.contribution_method === "Fonepay")
-          .reduce((sum: number, i: any) => sum + i.contribution_amount, 0) -
-        deposits
-          .filter((i: any) => i.deposit_method === "Fonepay")
-          .reduce((sum: number, i: any) => sum + i.amount, 0) +
-        withdrawals
-          .filter((i: any) => i.withdrawal_method === "Fonepay")
-          .reduce((sum: number, i: any) => sum + i.amount, 0);
-
-      const bankBalance =
-        deposits
-          .filter((i: any) => i.deposit_method === "Bank")
-          .reduce((sum: number, i: any) => sum + i.amount, 0) -
-        withdrawals
-          .filter((i: any) => i.withdrawal_method === "Bank")
-          .reduce((sum: number, i: any) => sum + i.amount, 0) -
-        expenses
-          .filter((i: any) => ["Cheque", "Bank"].includes(i.payment_mode))
-          .reduce((sum: number, i: any) => sum + i.amount, 0);
-
-      const cooperativeBalance = cooperative.reduce(
-        (sum, saving) => sum + saving.contribution_amount,
-        0,
-      );
-
-      const analytics: AnalyticsData = {
-        totalRevenue,
-        totalExpenses,
-        netProfit,
-        ordersCount: orders.length,
-        chargingSessions: chargingSessions.length,
-        totalDeposits,
-        totalWithdrawals,
-        cooperativeSavings,
-        breakEvenPoint: totalExpenses,
-        profitMargin,
-        fixedCosts: totalExpenses * 0.6,
-        variableCostRatio: 0.4,
-        staticExpenses: expenses
-          .filter(
-            (e) => e.category === "Utilities" || e.category === "Insurance",
-          )
-          .reduce((sum, e) => sum + e.amount, 0),
-        recurringExpenses: totalExpenses * 0.8,
-        topSellingItems,
-        categoryBreakdown: expenseCategoryAnalysis,
-        menuCategoryAnalysis: {},
-        paymentMethodAnalysis,
-        expenseCategoryAnalysis,
-        dailyAverage: {
-          revenue: totalRevenue / 30,
-          orders: orders.length / 30,
-          chargingSessions: chargingSessions.length / 30,
-        },
-        monthlyGrowth: {
-          revenue: 15.5,
-          orders: 12.3,
-        },
-        cashBalance: balances.cash_in_hand || cashBalance,
-        esewaBalance: balances.esewa_balance || esewaBalance,
-        fonepayBalance: balances.fonepay_balance || fonepayBalance,
-        bankBalance: balances.bank_balance || bankBalance,
-        cooperativeBalance: balances.cooperative_balance || cooperativeBalance,
-      };
-
-      setAnalytics(analytics);
-    } catch (error) {
-      console.error("Error fetching analytics:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 flex items-center justify-center">
         <div className="text-center space-y-4">
