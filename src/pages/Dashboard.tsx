@@ -106,7 +106,7 @@ const Dashboard = () => {
         p_closing_date: new Date().toISOString().slice(0, 10),
       });
       if (error) throw error;
-      alert("Daily closing completed successfully!");
+      toast.success("Daily closing completed successfully!");
     } catch (error) {
       console.error("Error during daily closing:", error);
       const errorMessage =
