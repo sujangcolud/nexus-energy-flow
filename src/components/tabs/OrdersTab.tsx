@@ -283,7 +283,7 @@ const OrdersTab = () => {
 
       const results = await Promise.all(orderPromises);
 
-      // Check if any insert failed
+      // Check if any RPC call failed
       const failed = results.find((result) => result.error);
       if (failed) {
         console.error(
@@ -293,6 +293,9 @@ const OrdersTab = () => {
         console.error("Failed result:", failed);
         throw failed.error;
       }
+
+      // Log successful results
+      console.log("All orders inserted successfully:", results);
 
       toast.success("Order placed successfully! 🎉");
       clearCart();
