@@ -9,6 +9,7 @@ import {
   getPaymentModeColor,
   type DailySummaryData,
 } from "@/lib/calculations";
+import BalanceDisplay from "@/components/ui/balance-display";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import {
