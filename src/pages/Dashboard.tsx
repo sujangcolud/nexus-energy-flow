@@ -63,7 +63,8 @@ import DataInputTab from "@/components/tabs/DataInputTab";
 import UserManagementTab from "@/components/tabs/UserManagementTab";
 import ShareInvestmentsTab from "@/components/tabs/ShareInvestmentsTab";
 import ExpenseBookingsTab from "@/components/tabs/ExpenseBookingsTab";
-import VatEntryTab from "@/components/tabs/VatEntryTab";
+import VATEntryTab from "@/components/tabs/VATEntryTab";
+import InventoryTab from "@/components/tabs/InventoryTab";
 import FileUploadTab from "@/components/tabs/FileUploadTab";
 
 const Dashboard = () => {
@@ -322,7 +323,7 @@ const Dashboard = () => {
         color: "bg-pink-600",
         bgColor: "bg-pink-50",
         description: "Upload files to the system",
-      }
+      },
     ];
 
     if (!userRole) return [];
