@@ -250,7 +250,10 @@ const OrdersTab = () => {
 
       // Check if any insert failed
       const failed = results.find((result) => result.error);
-      if (failed) throw failed.error;
+      if (failed) {
+        console.error("Order submission failed:", failed.error);
+        throw failed.error;
+      }
 
       toast.success("Order placed successfully! 🎉");
       clearCart();
@@ -312,11 +315,7 @@ const OrdersTab = () => {
   const currentMenuItemsToDisplay = filteredMenuItems();
   const totalOrders = orders.reduce((sum, order) => sum + order.total, 0);
 
-  const logAction = async (
-    action: string,
-    record_id: string,
-    details: any,
-  ) => {
+  const logAction = async (action: string, record_id: string, details: any) => {
     if (!user) return;
     await supabase.from("logs").insert({
       user_id: user.id,
@@ -1012,7 +1011,9 @@ const OrdersTab = () => {
                                     </AlertDialogDescription>
                                   </AlertDialogHeader>
                                   <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogCancel>
+                                      Cancel
+                                    </AlertDialogCancel>
                                     <AlertDialogAction
                                       onClick={() => handleDelete(order.id)}
                                     >
