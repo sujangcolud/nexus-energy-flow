@@ -177,15 +177,31 @@ const CalculationEngineTab = () => {
         user.role,
       );
 
-      // First check if table exists with a simple count
+      // First check if table exists and user can access it
+      console.log("Testing table access...");
       const { count, error: countError } = await supabase
         .from("custom_calculations")
         .select("*", { count: "exact", head: true });
 
       if (countError) {
         console.error("Table access error:", countError);
+
+        // Check if it's a table not found error
+        if (countError.code === "42P01") {
+          throw new Error(
+            "The custom_calculations table does not exist. Please run the database migration.",
+          );
+        }
+
+        // Check if it's a permission error
+        if (countError.code === "42501") {
+          throw new Error(
+            "Permission denied. Please check your database permissions.",
+          );
+        }
+
         throw new Error(
-          `Table access failed: ${countError.message || countError.details || "Unknown error"}`,
+          `Table access failed: ${countError.message || countError.details || countError.hint || "Unknown database error"}`,
         );
       }
 
