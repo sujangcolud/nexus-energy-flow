@@ -67,6 +67,10 @@ const Dashboard = () => {
     if (storedSettings) {
       setTabSettings(JSON.parse(storedSettings));
     }
+    const canDelete = JSON.parse(
+      localStorage.getItem("canDeleteTabs") || "false",
+    );
+    setCanDeleteTabs(canDelete);
   }, []);
 
   const handleSignOut = async () => {
@@ -323,11 +327,6 @@ const Dashboard = () => {
     const showVatEntry = JSON.parse(
       localStorage.getItem("showVatEntry") || "true",
     );
-
-    const canDelete = JSON.parse(
-      localStorage.getItem("canDeleteTabs") || "false",
-    );
-    setCanDeleteTabs(canDelete);
 
     const tabVisibility: Record<string, boolean> = {
       orders: showOrders,
