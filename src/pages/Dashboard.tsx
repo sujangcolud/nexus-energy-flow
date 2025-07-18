@@ -44,6 +44,7 @@ import {
   Bell,
   Search,
   TrendingUp,
+  Package,
   Trash,
 } from "lucide-react";
 import ChatBot from "@/components/ChatBot";
