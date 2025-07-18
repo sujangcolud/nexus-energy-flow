@@ -72,11 +72,19 @@ interface ChargingSession {
   payment_mode: string;
   session_date: string;
   created_at: string;
+  category: string;
+}
+
+interface Category {
+  id: string;
+  name: string;
+  created_at: string;
 }
 
 const ChargingTab = () => {
   const { user } = useAuth();
   const [sessions, setSessions] = useState<ChargingSession[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const { page, range, onPageChange, onRangeChange, itemsPerPage } =
@@ -85,6 +93,8 @@ const ChargingTab = () => {
   const [selectedSession, setSelectedSession] =
     useState<ChargingSession | null>(null);
   const [canEditTransactions, setCanEditTransactions] = useState(false);
+  const [canAddCategory, setCanAddCategory] = useState(false);
+  const [newCategory, setNewCategory] = useState("");
 
   // Form state
   const [startPercentage, setStartPercentage] = useState(0);
@@ -93,6 +103,7 @@ const ChargingTab = () => {
   const [kcal, setKcal] = useState(0);
   const [perUnitRate, setPerUnitRate] = useState(0);
   const [paymentMode, setPaymentMode] = useState("");
+  const [category, setCategory] = useState("");
 
   const paymentModes = ["Cash", "Esewa", "Fonepay", "Bank", "Cheque", "Credit"];
 
@@ -127,11 +138,30 @@ const ChargingTab = () => {
     }
   };
 
+  const fetchCategories = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("charging_categories")
+        .select("*")
+        .order("name", { ascending: true });
+      if (error) throw error;
+      setCategories(data || []);
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+      toast.error("Failed to load categories");
+    }
+  };
+
   useEffect(() => {
     fetchSessions();
+    fetchCategories();
     const canEdit = localStorage.getItem("canEditTransactions");
     if (canEdit) {
       setCanEditTransactions(JSON.parse(canEdit));
+    }
+    const canAdd = localStorage.getItem("canAddChargingCategory");
+    if (canAdd) {
+      setCanAddCategory(JSON.parse(canAdd));
     }
   }, [user, page, range]);
 
@@ -183,6 +213,7 @@ const ChargingTab = () => {
         total_amount: totalAmount,
         payment_mode: paymentMode,
         session_date: new Date().toISOString().split("T")[0],
+        category: category,
       });
 
       if (error) throw error;
@@ -196,6 +227,7 @@ const ChargingTab = () => {
       setKcal(0);
       setPerUnitRate(0);
       setPaymentMode("");
+      setCategory("");
 
       fetchSessions();
     } catch (error) {
@@ -203,6 +235,45 @@ const ChargingTab = () => {
       toast.error("Failed to save charging session");
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleAddCategory = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newCategory) {
+      toast.error("Please enter a category name");
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from("charging_categories")
+        .insert({ name: newCategory })
+        .select();
+
+      if (error) throw error;
+
+      toast.success(`Category "${newCategory}" added successfully`);
+      setNewCategory("");
+      fetchCategories();
+    } catch (error) {
+      console.error("Error adding category:", error);
+      toast.error("Failed to add category");
+    }
+  };
+
+  const handleDeleteCategory = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from("charging_categories")
+        .delete()
+        .eq("id", id);
+      if (error) throw error;
+      toast.success("Category deleted successfully");
+      fetchCategories();
+    } catch (error) {
+      console.error("Error deleting category:", error);
+      toast.error("Failed to delete category");
     }
   };
 
@@ -633,6 +704,27 @@ const ChargingTab = () => {
                     </Select>
                   </div>
                 </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700">
+                    Category
+                  </label>
+                  <Select
+                    value={category}
+                    onValueChange={setCategory}
+                    required
+                  >
+                    <SelectTrigger className="border-blue-200 focus:border-blue-500 focus:ring-blue-500">
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map((cat) => (
+                        <SelectItem key={cat.id} value={cat.name}>
+                          {cat.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
                 {/* Cost Calculation Display */}
                 {(startPercentage > 0 || kcal > 0) && (
@@ -747,6 +839,55 @@ const ChargingTab = () => {
             </CardContent>
           </Card>
         </div>
+
+        {canAddCategory && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Manage Categories */}
+            <Card className="bg-gradient-to-br from-white/90 to-red-50/90 backdrop-blur-sm border-0 shadow-2xl hover:shadow-3xl transition-all duration-300">
+              <CardHeader className="bg-gradient-to-r from-red-500 to-pink-600 text-white rounded-t-lg">
+                <CardTitle className="flex items-center gap-3 text-xl">
+                  <div className="p-2 bg-white/20 rounded-lg">
+                    <Zap className="h-6 w-6" />
+                  </div>
+                  Manage Categories
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <form onSubmit={handleAddCategory} className="space-y-4">
+                  <Input
+                    value={newCategory}
+                    onChange={(e) => setNewCategory(e.target.value)}
+                    placeholder="Enter new category"
+                    className="h-12"
+                  />
+                  <Button
+                    type="submit"
+                    className="w-full h-12 bg-gradient-to-r from-red-500 to-pink-500 text-white"
+                  >
+                    Add Category
+                  </Button>
+                </form>
+                <div className="mt-6 space-y-2">
+                  {categories.map((cat) => (
+                    <div
+                      key={cat.id}
+                      className="flex items-center justify-between bg-white p-3 rounded-lg shadow-sm"
+                    >
+                      <span className="font-medium">{cat.name}</span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDeleteCategory(cat.id)}
+                      >
+                        <Trash2 className="h-4 w-4 text-red-500" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         {/* Charging History */}
         <Card className="bg-gradient-to-br from-white/90 to-gray-50/90 backdrop-blur-sm border-0 shadow-2xl">

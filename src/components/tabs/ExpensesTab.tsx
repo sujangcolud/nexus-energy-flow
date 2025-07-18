@@ -74,8 +74,15 @@ interface Expense {
   expense_date: string;
 }
 
+interface Category {
+  id: string;
+  name: string;
+  created_at: string;
+}
+
 const ExpensesTab = () => {
   const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
     description: "",
@@ -84,6 +91,7 @@ const ExpensesTab = () => {
     category: "",
     remarks: "",
   });
+  const [newCategory, setNewCategory] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { user } = useAuth();
   const { page, range, onPageChange, onRangeChange, itemsPerPage } =
@@ -91,19 +99,7 @@ const ExpensesTab = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
   const [canEditTransactions, setCanEditTransactions] = useState(false);
-
-  const categories = [
-    "Food & Beverages",
-    "Transportation",
-    "Utilities",
-    "Office Supplies",
-    "Marketing",
-    "Equipment",
-    "Maintenance",
-    "Insurance",
-    "Legal & Professional",
-    "Other",
-  ];
+  const [canAddCategory, setCanAddCategory] = useState(false);
 
   const paymentModes = [
     "Cash",
@@ -130,11 +126,30 @@ const ExpensesTab = () => {
 
   useEffect(() => {
     fetchExpenses();
+    fetchCategories();
     const canEdit = localStorage.getItem("canEditTransactions");
     if (canEdit) {
       setCanEditTransactions(JSON.parse(canEdit));
     }
+    const canAdd = localStorage.getItem("canAddExpenseCategory");
+    if (canAdd) {
+      setCanAddCategory(JSON.parse(canAdd));
+    }
   }, [user, page, range]);
+
+  const fetchCategories = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("expense_categories")
+        .select("*")
+        .order("name", { ascending: true });
+      if (error) throw error;
+      setCategories(data || []);
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+      toast.error("Failed to load categories");
+    }
+  };
 
   const fetchExpenses = async () => {
     if (!user) return;
@@ -280,6 +295,45 @@ const ExpensesTab = () => {
     } catch (error) {
       console.error("Error updating expense:", error);
       toast.error("Failed to update expense");
+    }
+  };
+
+  const handleAddCategory = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newCategory) {
+      toast.error("Please enter a category name");
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from("expense_categories")
+        .insert({ name: newCategory })
+        .select();
+
+      if (error) throw error;
+
+      toast.success(`Category "${newCategory}" added successfully`);
+      setNewCategory("");
+      fetchCategories();
+    } catch (error) {
+      console.error("Error adding category:", error);
+      toast.error("Failed to add category");
+    }
+  };
+
+  const handleDeleteCategory = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from("expense_categories")
+        .delete()
+        .eq("id", id);
+      if (error) throw error;
+      toast.success("Category deleted successfully");
+      fetchCategories();
+    } catch (error) {
+      console.error("Error deleting category:", error);
+      toast.error("Failed to delete category");
     }
   };
 
@@ -547,12 +601,12 @@ const ExpensesTab = () => {
                       </SelectTrigger>
                       <SelectContent>
                         {categories.map((category) => (
-                          <SelectItem key={category} value={category}>
+                          <SelectItem key={category.id} value={category.name}>
                             <div className="flex items-center gap-2">
                               <div
-                                className={`w-3 h-3 rounded-full bg-gradient-to-r ${categoryColors[category as keyof typeof categoryColors]}`}
+                                className={`w-3 h-3 rounded-full bg-gradient-to-r ${categoryColors[category.name as keyof typeof categoryColors]}`}
                               ></div>
-                              {category}
+                              {category.name}
                             </div>
                           </SelectItem>
                         ))}
@@ -693,6 +747,54 @@ const ExpensesTab = () => {
             </CardContent>
           </Card>
         </div>
+        {canAddCategory && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Manage Categories */}
+            <Card className="bg-gradient-to-br from-white/90 to-red-50/90 backdrop-blur-sm border-0 shadow-2xl hover:shadow-3xl transition-all duration-300">
+              <CardHeader className="bg-gradient-to-r from-red-500 to-pink-600 text-white rounded-t-lg">
+                <CardTitle className="flex items-center gap-3 text-xl">
+                  <div className="p-2 bg-white/20 rounded-lg">
+                    <Tag className="h-6 w-6" />
+                  </div>
+                  Manage Categories
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <form onSubmit={handleAddCategory} className="space-y-4">
+                  <Input
+                    value={newCategory}
+                    onChange={(e) => setNewCategory(e.target.value)}
+                    placeholder="Enter new category"
+                    className="h-12"
+                  />
+                  <Button
+                    type="submit"
+                    className="w-full h-12 bg-gradient-to-r from-red-500 to-pink-500 text-white"
+                  >
+                    Add Category
+                  </Button>
+                </form>
+                <div className="mt-6 space-y-2">
+                  {categories.map((cat) => (
+                    <div
+                      key={cat.id}
+                      className="flex items-center justify-between bg-white p-3 rounded-lg shadow-sm"
+                    >
+                      <span className="font-medium">{cat.name}</span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDeleteCategory(cat.id)}
+                      >
+                        <Trash2 className="h-4 w-4 text-red-500" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         {/* Expense History */}
         <Card className="bg-gradient-to-br from-white/90 to-gray-50/90 backdrop-blur-sm border-0 shadow-2xl">
