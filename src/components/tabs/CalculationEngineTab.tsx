@@ -161,6 +161,13 @@ const CalculationEngineTab = () => {
     if (!user) return;
 
     try {
+      console.log(
+        "Fetching calculations for user:",
+        user.id,
+        "with role:",
+        user.role,
+      );
+
       const { data, error } = await supabase
         .from("custom_calculations")
         .select("*")
@@ -168,10 +175,25 @@ const CalculationEngineTab = () => {
         .eq("is_active", true)
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
+      console.log("Supabase response:", { data, error });
+
+      if (error) {
+        console.error("Supabase error details:", {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code,
+          fullError: error,
+        });
+        throw error;
+      }
       setCalculations(data || []);
     } catch (error) {
       console.error("Error fetching calculations:", error);
+      console.error("Error type:", typeof error);
+      console.error("Error constructor:", error?.constructor?.name);
+      console.error("Error keys:", Object.keys(error || {}));
+
       let errorMessage = "Failed to load calculations";
 
       if (error && typeof error === "object") {
@@ -183,6 +205,8 @@ const CalculationEngineTab = () => {
           errorMessage = error.error_description;
         } else if (error.hint) {
           errorMessage = error.hint;
+        } else if (error.code) {
+          errorMessage = `Database error (${error.code})`;
         } else {
           // Convert error object to readable string
           errorMessage = JSON.stringify(error, null, 2);
