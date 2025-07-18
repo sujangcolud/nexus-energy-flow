@@ -69,60 +69,56 @@ const VatEntryTab = () => {
 
     setLoading(true);
     try {
-      let ordersQuery = supabase
-        .from("orders")
-        .select("id, total, payment_mode, order_date")
-        .eq("user_id", user.id);
-      let chargingQuery = supabase
-        .from("charging_sessions")
-        .select("id, total_amount, payment_mode, session_date")
-        .eq("user_id", user.id);
-
-      if (startDate) {
-        ordersQuery = ordersQuery.gte("order_date", startDate);
-        chargingQuery = chargingQuery.gte("session_date", startDate);
-      }
-      if (endDate) {
-        ordersQuery = ordersQuery.lte("order_date", endDate);
-        chargingQuery = chargingQuery.lte("session_date", endDate);
-      }
-      if (paymentMethod !== "all") {
-        ordersQuery = ordersQuery.eq("payment_mode", paymentMethod);
-        chargingQuery = chargingQuery.eq("payment_mode", paymentMethod);
-      }
-
-      const { data: orders, error: ordersError } = await ordersQuery;
-      if (ordersError) throw ordersError;
-
-      const orderIds = orders?.map((o) => o.id) || [];
-      const { data: orderItems, error: orderItemsError } = await supabase
-        .from("order_items")
-        .select("*")
-        .in("order_id", orderIds);
-      if (orderItemsError) throw orderItemsError;
-
-      const { data: charging, error: chargingError } = await chargingQuery;
-      if (chargingError) throw chargingError;
-
       let allIncomes: Income[] = [];
-      if (category === "all" || category === "orders") {
-        allIncomes.push(
-          ...((orders?.map((o) => ({
-            ...o,
-            items: orderItems?.filter((oi) => oi.order_id === o.id) || [],
-          })) as Income[]) || [])
-        );
-      }
-      if (category === "all" || category === "charging") {
-        allIncomes.push(
-          ...((charging?.map((c) => ({
-            id: c.id,
-            total: c.total_amount,
-            payment_mode: c.payment_mode,
-            order_date: c.session_date,
-            items: [],
-          })) as Income[]) || [])
-        );
+
+      const fetchOrders = async () => {
+        let query = supabase
+          .from("orders")
+          .select("id, total, payment_mode, order_date")
+          .eq("user_id", user.id);
+        if (startDate) query = query.gte("order_date", startDate);
+        if (endDate) query = query.lte("order_date", endDate);
+        if (paymentMethod !== "all") query = query.eq("payment_mode", paymentMethod);
+        const { data, error } = await query;
+        if (error) throw error;
+        const orderIds = data?.map((o) => o.id) || [];
+        const { data: orderItems, error: orderItemsError } = await supabase
+          .from("order_items")
+          .select("*")
+          .in("order_id", orderIds);
+        if (orderItemsError) throw orderItemsError;
+        return data?.map((o) => ({
+          ...o,
+          items: orderItems?.filter((oi) => oi.order_id === o.id) || [],
+        })) as Income[] || [];
+      };
+
+      const fetchCharging = async () => {
+        let query = supabase
+          .from("charging_sessions")
+          .select("id, total_amount, payment_mode, session_date")
+          .eq("user_id", user.id);
+        if (startDate) query = query.gte("session_date", startDate);
+        if (endDate) query = query.lte("session_date", endDate);
+        if (paymentMethod !== "all") query = query.eq("payment_mode", paymentMethod);
+        const { data, error } = await query;
+        if (error) throw error;
+        return data?.map((c) => ({
+          id: c.id,
+          total: c.total_amount,
+          payment_mode: c.payment_mode,
+          order_date: c.session_date,
+          items: [],
+        })) as Income[] || [];
+      };
+
+      if (category === "all") {
+        const [orders, charging] = await Promise.all([fetchOrders(), fetchCharging()]);
+        allIncomes = [...orders, ...charging];
+      } else if (category === "orders") {
+        allIncomes = await fetchOrders();
+      } else if (category === "charging") {
+        allIncomes = await fetchCharging();
       }
 
       setIncomes(allIncomes);
