@@ -29,6 +29,7 @@ interface Income {
   total: number;
   payment_mode: string;
   order_date: string;
+  items: any[];
 }
 
 const VatEntryTab = () => {
@@ -70,7 +71,7 @@ const VatEntryTab = () => {
     try {
       let ordersQuery = supabase
         .from("orders")
-        .select("id, total, payment_mode, order_date")
+        .select("id, total, payment_mode, order_date, order_items:order_items(*)")
         .eq("user_id", user.id);
       let chargingQuery = supabase
         .from("charging_sessions")
@@ -96,18 +97,19 @@ const VatEntryTab = () => {
       const { data: charging, error: chargingError } = await chargingQuery;
       if (chargingError) throw chargingError;
 
-      let allIncomes = [];
+      let allIncomes: Income[] = [];
       if (category === "all" || category === "orders") {
-        allIncomes.push(...(orders || []));
+        allIncomes.push(...((orders?.map(o => ({...o, items: o.order_items})) as Income[]) || []));
       }
       if (category === "all" || category === "charging") {
         allIncomes.push(
-          ...(charging?.map((c) => ({
+          ...((charging?.map((c) => ({
             id: c.id,
             total: c.total_amount,
             payment_mode: c.payment_mode,
             order_date: c.session_date,
-          })) || [])
+            items: [],
+          })) as Income[]) || [])
         );
       }
 
@@ -126,7 +128,7 @@ const VatEntryTab = () => {
     return { base, vat };
   };
 
-  const generateBill = (income: Income) => {
+  const openBillDialog = (income: Income) => {
     setSelectedIncome(income);
     setIsBillOpen(true);
   };
@@ -139,13 +141,28 @@ const VatEntryTab = () => {
     if (!selectedIncome) return;
 
     const { base, vat } = calculateVAT(selectedIncome.total);
+    const totals = {
+      subTotal: base.toFixed(2),
+      totalVAT: vat.toFixed(2),
+      grandTotal: selectedIncome.total.toFixed(2),
+    };
+
+    const itemsHtml = selectedIncome.items
+      .map(
+        (item: any) =>
+          `<tr class="item">
+        <td>${item.item_name} (${item.quantity} ${item.unit || "pcs"} @ NPR ${item.price})</td>
+        <td>NPR ${(item.quantity * item.price * 1.13).toFixed(2)}</td>
+      </tr>`
+      )
+      .join("");
 
     const html = `
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>VAT Invoice - Nepal</title>
+  <title>VAT Invoice - ${selectedIncome.id}</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -163,12 +180,6 @@ const VatEntryTab = () => {
       font-size: 32px;
       line-height: 32px;
       color: #333;
-    }
-    .info {
-      margin-bottom: 40px;
-    }
-    .info div {
-      margin-bottom: 5px;
     }
     table {
       width: 100%;
@@ -189,9 +200,6 @@ const VatEntryTab = () => {
       background: #eee;
       border-bottom: 1px solid #ddd;
       font-weight: bold;
-    }
-    table tr.details td {
-      padding-bottom: 20px;
     }
     table tr.item td {
       border-bottom: 1px solid #eee;
@@ -221,9 +229,9 @@ const VatEntryTab = () => {
                 VAT INVOICE
               </td>
               <td>
-                Invoice #: INV-${selectedIncome.id.slice(0, 8)}<br />
-                Created: ${new Date().toISOString().split("T")[0]}<br />
-                IRN: IRN-${selectedIncome.id.slice(0, 8)}
+                Invoice #: ${selectedIncome.id}<br />
+                Date: ${new Date(selectedIncome.order_date).toLocaleDateString()}<br />
+                IRN: ${`IRN-${selectedIncome.id}`}
               </td>
             </tr>
           </table>
@@ -236,16 +244,16 @@ const VatEntryTab = () => {
               <td>
                 <strong>Seller:</strong><br />
                 ${sellerInfo.name}<br />
-                PAN/VAT: ${sellerInfo.pan}<br />
                 ${sellerInfo.address}<br />
-                ${sellerInfo.contactNumber}
+                PAN/VAT: ${sellerInfo.vatRegistrationNumber}<br />
+                Contact: ${sellerInfo.contactNumber}
               </td>
               <td>
                 <strong>Buyer:</strong><br />
-                ${billData.buyerName || "Walk-in Customer"}<br />
-                PAN/VAT: ${billData.buyerPan}<br />
-                ${billData.buyerAddress}<br />
-                ${billData.buyerContact}
+                ${billData.buyerName || "N/A"}<br />
+                ${billData.buyerAddress || "N/A"}<br />
+                PAN/VAT: ${billData.buyerPan || "N/A"}<br />
+                Contact: ${billData.buyerContact || "N/A"}
               </td>
             </tr>
           </table>
@@ -261,47 +269,37 @@ const VatEntryTab = () => {
       </tr>
       <tr class="heading">
         <td>Item</td>
-        <td>Price</td>
+        <td>Amount</td>
       </tr>
-      ${selectedIncome.items
-        .map(
-          (item: any) =>
-            `<tr class="item">
-              <td>${item.description} (${item.quantity} pcs @ NPR ${item.unitPrice})</td>
-              <td>NPR ${item.totalPriceWithVAT.toFixed(2)}</td>
-            </tr>`,
-        )
-        .join("")}
+      ${itemsHtml}
       <tr class="item last">
         <td>Subtotal</td>
-        <td>NPR ${base.toFixed(2)}</td>
+        <td>NPR ${totals.subTotal}</td>
       </tr>
       <tr class="item">
-        <td>VAT 13%</td>
-        <td>NPR ${vat.toFixed(2)}</td>
+        <td>VAT (13%)</td>
+        <td>NPR ${totals.totalVAT}</td>
       </tr>
       <tr class="total">
         <td></td>
-        <td>Grand Total: NPR ${selectedIncome.total.toFixed(2)}</td>
+        <td>Grand Total: NPR ${totals.grandTotal}</td>
       </tr>
     </table>
     <div class="footer">
-      Prepared By: ${billData.preparedBy || user?.email} | Approved By: ${
-      billData.approvedBy || "Finance Officer"
-    }<br />
-      Thank you for your business! Goods once sold are not returnable.<br />
-      (QR Code & IRD E-billing ready)
+      Prepared By: ${billData.preparedBy || user?.email} | Approved By: ${billData.approvedBy || "Admin"}<br />
+      Thank you for your business.<br />
+      Goods once sold are not returnable.<br />
     </div>
   </div>
 </body>
 </html>
-    `;
+`;
 
     const blob = new Blob([html], { type: "text/html" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `invoice-${selectedIncome.id.slice(0, 8)}.html`;
+    a.download = `invoice-${selectedIncome.id}.html`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -410,8 +408,8 @@ const VatEntryTab = () => {
                     <TableCell>{base.toFixed(2)}</TableCell>
                     <TableCell>{vat.toFixed(2)}</TableCell>
                     <TableCell>
-                      <Button onClick={() => generateBill(income)}>
-                        Generate Bill
+                      <Button onClick={() => openBillDialog(income)}>
+                        Generate
                       </Button>
                     </TableCell>
                   </TableRow>
