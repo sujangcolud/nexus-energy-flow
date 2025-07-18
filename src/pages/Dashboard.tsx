@@ -347,11 +347,7 @@ const Dashboard = () => {
     };
 
     return allItems.filter(
-      (item) =>
-        item.roles.includes(userRole) &&
-        (tabSettings[item.id] ?? true) &&
-        hasTabAccess(item.id) &&
-        (tabVisibility[item.id] ?? true),
+      (item) => item.roles.includes(userRole) && (tabSettings[item.id] ?? true),
     );
   };
 
