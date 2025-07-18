@@ -286,6 +286,7 @@ const OrdersTab = () => {
           total: typeof orderData.total,
           payment_mode: typeof orderData.payment_mode,
           order_date: typeof orderData.order_date,
+          date: typeof orderData.date,
         });
         return supabase.from("orders").insert(orderData);
       });
