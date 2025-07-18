@@ -486,6 +486,22 @@ const InsightsTab = () => {
           </Card>
         </div>
 
+        {/* Balance Overview */}
+        <BalanceDisplay
+          cashBalance={analytics.cashBalance || 0}
+          bankBalance={analytics.fonepayBalance || 0}
+          cooperativeBalance={analytics.cooperativeBalance || 0}
+          esewaBalance={analytics.esewaBalance || 0}
+          totalBalance={
+            (analytics.cashBalance || 0) +
+            (analytics.fonepayBalance || 0) +
+            (analytics.cooperativeBalance || 0) +
+            (analytics.esewaBalance || 0)
+          }
+          size="md"
+          showDetails={true}
+        />
+
         {/* Financial Overview */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
           <Card className="bg-gradient-to-br from-white/90 to-emerald-50/90 backdrop-blur-sm border-0 shadow-2xl">
