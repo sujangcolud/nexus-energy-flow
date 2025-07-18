@@ -98,21 +98,10 @@ const VatEntryTab = () => {
       if (chargingError) throw chargingError;
 
       let allIncomes = [];
-      let allIncomes = [];
-      if (category === "orders") {
+      if (category === "all" || category === "orders") {
         allIncomes.push(...(orders?.map(o => ({...o, item_name: o.order_items[0]?.menu_items.name || 'N/A'})) || []));
-      } else if (category === "charging") {
-        allIncomes.push(
-          ...(charging?.map((c) => ({
-            id: c.id,
-            total: c.total_amount,
-            payment_mode: c.payment_mode,
-            order_date: c.session_date,
-            item_name: c.vehicle_id || 'N/A',
-          })) || [])
-        );
-      } else {
-        allIncomes.push(...(orders?.map(o => ({...o, item_name: o.order_items[0]?.menu_items.name || 'N/A'})) || []));
+      }
+      if (category === "all" || category === "charging") {
         allIncomes.push(
           ...(charging?.map((c) => ({
             id: c.id,
@@ -124,14 +113,13 @@ const VatEntryTab = () => {
         );
       }
 
-      let filteredIncomes = allIncomes;
       if (paymentMethod !== "all") {
-        filteredIncomes = filteredIncomes.filter(
+        allIncomes = allIncomes.filter(
           (income) => income.payment_mode === paymentMethod
         );
       }
 
-      setIncomes(filteredIncomes);
+      setIncomes(allIncomes);
     } catch (error) {
       console.error("Error fetching incomes:", error);
       toast.error("Failed to load incomes");
