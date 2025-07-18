@@ -52,7 +52,7 @@ import {
   Signal,
 } from "lucide-react";
 import { toast } from "sonner";
-import { useMobile } from "@/hooks/use-mobile";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const MobileDashboard = () => {
   const { user, signOut, userRole } = useAuth();
