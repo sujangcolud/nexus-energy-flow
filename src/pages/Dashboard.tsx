@@ -47,6 +47,7 @@ import {
   Package,
   Trash,
 } from "lucide-react";
+import { toast } from "sonner";
 import ChatBot from "@/components/ChatBot";
 
 // Tab components are now rendered by routes, but their types/icons might be needed for nav items.
