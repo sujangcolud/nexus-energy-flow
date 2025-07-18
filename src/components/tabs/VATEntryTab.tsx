@@ -140,7 +140,9 @@ const VATEntryTab = () => {
       setIncomeEntries(combinedEntries);
     } catch (error) {
       console.error("Error fetching income entries:", error);
-      toast.error("Failed to load income entries");
+      const errorMessage =
+        error?.message || error?.details || "Failed to load income entries";
+      toast.error(`Error loading income entries: ${errorMessage}`);
     }
   };
 
