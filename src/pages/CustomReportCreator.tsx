@@ -22,54 +22,22 @@ import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
 import { Plus, Trash2 } from "lucide-react";
 
+interface CustomCalculation {
+  heading: string;
+  formula: {
+    table: string;
+    column: string;
+    operator: string;
+  }[];
+}
+
 const CustomReportCreator = () => {
   const { user } = useAuth();
   const [reportName, setReportName] = useState("");
-  const [calculationString, setCalculationString] = useState("");
-  const [columns, setColumns] = useState<string[]>([]);
+  const [customCalculations, setCustomCalculations] = useState<CustomCalculation[]>([]);
   const [allColumns, setAllColumns] = useState<Record<string, string[]>>({});
-
-  const calculationHeadings = [
-    "Revenue vs. Expenses (Last 12 Months)",
-    "Profitability Trend (Last 12 Months)",
-    "Income Breakdown",
-    "Expense Categorization",
-    "Deposits vs. Withdrawals (Last 12 Months)",
-    "New User Growth",
-    "User Role Distribution",
-    "Top 5 Spenders",
-    "Popular Products/Services",
-    "Sales by Payment Mode",
-    "Cooperative Savings Trend",
-    "Menu Item Availability",
-    "Financial Analytics",
-    "Key Metrics",
-    "Charging & Restaurant Income Correlation",
-    "Balance Distribution",
-    "Daily Income Trend",
-    "Income Sources",
-    "Summary Statistics",
-    "Business Analytics",
-    "Financial Summary",
-    "Top Performing Items",
-    "Expense Category Analysis",
-    "Payment Method Insights",
-    "Performance Metrics",
-    "Reports Generator",
-    "Order Report",
-    "Expense Report",
-    "Charging Report",
-    "Deposit Report",
-    "Withdrawal Report",
-    "Cooperative Savings Report",
-    "Complete Business Report",
-    "Reports Viewer",
-    "Transaction Summary",
-    "Financial Breakdown",
-    "Daily Performance Analysis",
-    "Payment Method Analysis",
-    "Expense Categories",
-  ];
+  const [currentFormula, setCurrentFormula] = useState<{table: string, column: string, operator: string}[]>([]);
+  const [currentHeading, setCurrentHeading] = useState("");
 
   useEffect(() => {
     const fetchAllColumns = async () => {
@@ -77,24 +45,30 @@ const CustomReportCreator = () => {
       if (error) {
         console.error("Error fetching all columns:", error);
       } else {
-        const formattedColumns: string[] = [];
-        for (const table in data) {
-          data[table].forEach((column: string) => {
-            formattedColumns.push(`${table}.${column}`);
-          });
-        }
-        setColumns(formattedColumns);
+        setAllColumns(data);
       }
     };
     fetchAllColumns();
   }, []);
 
-  const handleAddColumn = (column: string) => {
-    setCalculationString(prev => prev ? `${prev} + ${column}` : column);
+  const handleAddFormulaPart = () => {
+    setCurrentFormula([...currentFormula, { table: "", column: "", operator: "" }]);
   };
 
-  const handleAddOperator = (operator: string) => {
-    setCalculationString(prev => `${prev} ${operator} `);
+  const handleFormulaPartChange = (index: number, field: string, value: string) => {
+    const newFormula = [...currentFormula];
+    newFormula[index] = { ...newFormula[index], [field]: value };
+    setCurrentFormula(newFormula);
+  };
+
+  const handleSaveCalculation = () => {
+    if (!currentHeading || currentFormula.length === 0) {
+      toast.error("Please fill in all fields for the custom calculation.");
+      return;
+    }
+    setCustomCalculations([...customCalculations, { heading: currentHeading, formula: currentFormula }]);
+    setCurrentHeading("");
+    setCurrentFormula([]);
   };
 
   const handleSaveLogic = async () => {
@@ -117,54 +91,96 @@ const CustomReportCreator = () => {
               id="reportName"
               value={reportName}
               onChange={(e) => setReportName(e.target.value)}
-              placeholder="e.g., 'Total revenue from cash orders'"
+              placeholder="e.g., 'My Awesome Report'"
             />
           </div>
 
-          <div>
-            <Label>Calculation Headings</Label>
-            <div className="flex flex-wrap gap-2 mt-2">
-              {calculationHeadings.map(heading => (
-                <Button key={heading} variant="outline" size="sm">{heading}</Button>
-              ))}
-            </div>
-          </div>
+          <Card>
+            <CardHeader>
+              <CardTitle>Custom Calculations</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="heading">Heading</Label>
+                <Input
+                  id="heading"
+                  value={currentHeading}
+                  onChange={(e) => setCurrentHeading(e.target.value)}
+                  placeholder="e.g., 'Total Revenue'"
+                />
+              </div>
 
-          <div>
-            <Label>Calculation</Label>
-            <div className="flex items-center gap-2 mt-2">
-              <Input
-                value={calculationString}
-                readOnly
-                placeholder="Column1 + Column2"
-              />
-              <Button variant="outline" size="icon" onClick={() => setCalculationString("")}>
-                <Trash2 className="h-4 w-4" />
+              {currentFormula.map((part, index) => (
+                <div key={index} className="grid grid-cols-4 gap-2 items-center">
+                  <Select
+                    value={part.table}
+                    onValueChange={(value) => handleFormulaPartChange(index, "table", value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select table" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.keys(allColumns).map((table) => (
+                        <SelectItem key={table} value={table}>
+                          {table}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select
+                    value={part.column}
+                    onValueChange={(value) => handleFormulaPartChange(index, "column", value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select column" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {(allColumns[part.table] || []).map((col) => (
+                        <SelectItem key={col} value={col}>
+                          {col}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select
+                    value={part.operator}
+                    onValueChange={(value) => handleFormulaPartChange(index, "operator", value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Operator" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="+">+</SelectItem>
+                      <SelectItem value="-">-</SelectItem>
+                      <SelectItem value="*">*</SelectItem>
+                      <SelectItem value="/">/</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button variant="outline" size="icon" onClick={() => setCurrentFormula(currentFormula.filter((_, i) => i !== index))}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+              <Button onClick={handleAddFormulaPart} variant="outline" size="sm">
+                <Plus className="h-4 w-4 mr-2" />
+                Add Part
               </Button>
-            </div>
-          </div>
+              <Button onClick={handleSaveCalculation}>Save Calculation</Button>
+            </CardContent>
+          </Card>
 
           <div>
-            <Label>Columns</Label>
-            <div className="flex flex-wrap gap-2 mt-2">
-              {columns.map(column => (
-                <Button key={column} variant="outline" size="sm" onClick={() => handleAddColumn(column)}>{column}</Button>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <Label>Operators</Label>
-            <div className="flex gap-2 mt-2">
-              <Button variant="outline" size="sm" onClick={() => handleAddOperator('+')}>+</Button>
-              <Button variant="outline" size="sm" onClick={() => handleAddOperator('-')}>-</Button>
-              <Button variant="outline" size="sm" onClick={() => handleAddOperator('*')}>*</Button>
-              <Button variant="outline" size="sm" onClick={() => handleAddOperator('/')}>/</Button>
-            </div>
+            <Label>Saved Calculations</Label>
+            {customCalculations.map((calc, index) => (
+              <div key={index} className="p-2 border rounded-md mt-2">
+                <p className="font-bold">{calc.heading}</p>
+                <p>{calc.formula.map(p => `${p.table}.${p.column} ${p.operator}`).join(' ')}</p>
+              </div>
+            ))}
           </div>
         </CardContent>
         <CardFooter>
-          <Button onClick={handleSaveLogic}>Save Logic</Button>
+          <Button onClick={handleSaveLogic}>Save Report Logic</Button>
         </CardFooter>
       </Card>
     </div>
