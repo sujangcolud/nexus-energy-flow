@@ -172,8 +172,25 @@ const CalculationEngineTab = () => {
       setCalculations(data || []);
     } catch (error) {
       console.error("Error fetching calculations:", error);
-      const errorMessage =
-        error?.message || error?.details || "Failed to load calculations";
+      let errorMessage = "Failed to load calculations";
+
+      if (error && typeof error === "object") {
+        if (error.message) {
+          errorMessage = error.message;
+        } else if (error.details) {
+          errorMessage = error.details;
+        } else if (error.error_description) {
+          errorMessage = error.error_description;
+        } else if (error.hint) {
+          errorMessage = error.hint;
+        } else {
+          // Convert error object to readable string
+          errorMessage = JSON.stringify(error, null, 2);
+        }
+      } else if (typeof error === "string") {
+        errorMessage = error;
+      }
+
       toast.error(`Error fetching calculations: ${errorMessage}`);
     } finally {
       setLoading(false);
