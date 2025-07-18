@@ -247,6 +247,8 @@ const OrdersTab = () => {
     try {
       console.log("Submitting orders for user:", user.id);
       console.log("Current session user:", session.user.id);
+      console.log("Full user object:", user);
+      console.log("Full session object:", session);
       console.log("Cart items:", cart);
       console.log("Payment mode:", paymentMode);
 
