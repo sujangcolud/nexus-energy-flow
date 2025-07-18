@@ -252,7 +252,7 @@ const MobileDashboard = () => {
         path: "vat-entry",
         label: "VAT",
         icon: FileText,
-        roles: ["data_entry", "super_admin"],
+        roles: ["user", "data_entry", "reports_viewer", "super_admin"],
         color: "from-lime-500 to-lime-600",
         bgColor: "bg-lime-50",
         description: "VAT entries",
