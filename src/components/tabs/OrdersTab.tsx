@@ -361,6 +361,9 @@ const OrdersTab = () => {
         errorMessage = "Database field error detected. Migration needed.";
       } else if (error?.code === "PGRST202") {
         errorMessage = "Database function not found. Using fallback method...";
+      } else if (error?.code === "PGRST204") {
+        errorMessage =
+          "Database schema error. Please run the latest migration or refresh the page.";
       } else if (error?.message) {
         errorMessage = `Failed to place order: ${error.message}`;
       }
