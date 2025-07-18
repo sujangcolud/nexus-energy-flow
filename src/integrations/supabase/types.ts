@@ -536,6 +536,39 @@ export type Database = {
         };
         Relationships: [];
       };
+      payment_modes: {
+        Row: {
+          id: string;
+          name: string;
+          table_type: string;
+          description: string | null;
+          is_active: boolean | null;
+          created_at: string | null;
+          updated_at: string | null;
+          user_id: string | null;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          table_type: string;
+          description?: string | null;
+          is_active?: boolean | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+          user_id?: string | null;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          table_type?: string;
+          description?: string | null;
+          is_active?: boolean | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+          user_id?: string | null;
+        };
+        Relationships: [];
+      };
       profiles: {
         Row: {
           created_at: string | null;
