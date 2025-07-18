@@ -103,3 +103,70 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  /* Mobile responsive utilities */
+  .mobile-container {
+    @apply px-4 sm:px-6 lg:px-8;
+  }
+
+  .mobile-grid {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6;
+  }
+
+  .mobile-text {
+    @apply text-sm sm:text-base;
+  }
+
+  .mobile-heading {
+    @apply text-xl sm:text-2xl lg:text-3xl;
+  }
+
+  .mobile-card {
+    @apply p-4 sm:p-6;
+  }
+
+  .mobile-button {
+    @apply px-3 py-2 sm:px-4 sm:py-2 text-sm sm:text-base;
+  }
+
+  /* Touch-friendly sizing */
+  .touch-target {
+    @apply min-h-[44px] min-w-[44px];
+  }
+
+  /* Responsive font sizes */
+  .responsive-text-xs {
+    @apply text-xs sm:text-sm;
+  }
+  .responsive-text-sm {
+    @apply text-sm sm:text-base;
+  }
+  .responsive-text-base {
+    @apply text-base sm:text-lg;
+  }
+  .responsive-text-lg {
+    @apply text-lg sm:text-xl;
+  }
+  .responsive-text-xl {
+    @apply text-xl sm:text-2xl;
+  }
+  .responsive-text-2xl {
+    @apply text-2xl sm:text-3xl;
+  }
+  .responsive-text-3xl {
+    @apply text-3xl sm:text-4xl;
+  }
+}
+
+/* Scrollable content on mobile */
+@media (max-width: 640px) {
+  .mobile-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .mobile-scroll::-webkit-scrollbar {
+    display: none;
+  }
+}

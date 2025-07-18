@@ -64,17 +64,27 @@ interface Saving {
   member_id: string;
   cycle_period: string | null;
   contribution_date: string;
+  category: string;
+}
+
+interface Category {
+  id: string;
+  name: string;
+  created_at: string;
 }
 
 const CooperativeSavingsTab = () => {
   const [savings, setSavings] = useState<Saving[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
     contributionAmount: "",
     memberId: "",
     cyclePeriod: "",
     remarks: "",
+    category: "",
   });
+  const [newCategory, setNewCategory] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { user } = useAuth();
   const { page, range, onPageChange, onRangeChange, itemsPerPage } =
@@ -82,6 +92,7 @@ const CooperativeSavingsTab = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedSaving, setSelectedSaving] = useState<Saving | null>(null);
   const [canEditTransactions, setCanEditTransactions] = useState(false);
+  const [canAddCategory, setCanAddCategory] = useState(false);
 
   const cyclePeriods = [
     "Weekly",
@@ -105,11 +116,30 @@ const CooperativeSavingsTab = () => {
 
   useEffect(() => {
     fetchSavings();
+    fetchCategories();
     const canEdit = localStorage.getItem("canEditTransactions");
     if (canEdit) {
       setCanEditTransactions(JSON.parse(canEdit));
     }
+    const canAdd = localStorage.getItem("canAddSavingsCategory");
+    if (canAdd) {
+      setCanAddCategory(JSON.parse(canAdd));
+    }
   }, [user, page, range]);
+
+  const fetchCategories = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("savings_categories")
+        .select("*")
+        .order("name", { ascending: true });
+      if (error) throw error;
+      setCategories(data || []);
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+      toast.error("Failed to load categories");
+    }
+  };
 
   const fetchSavings = async () => {
     if (!user) return;
@@ -172,6 +202,7 @@ const CooperativeSavingsTab = () => {
           member_id: formData.memberId,
           cycle_period: formData.cyclePeriod,
           contribution_date: new Date().toISOString().split("T")[0],
+          category: formData.category,
         },
       ]);
 
@@ -183,6 +214,7 @@ const CooperativeSavingsTab = () => {
         memberId: "",
         cyclePeriod: "",
         remarks: "",
+        category: "",
       });
       fetchSavings();
     } catch (error) {
@@ -190,6 +222,45 @@ const CooperativeSavingsTab = () => {
       toast.error("Failed to record cooperative saving");
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleAddCategory = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newCategory) {
+      toast.error("Please enter a category name");
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from("savings_categories")
+        .insert({ name: newCategory })
+        .select();
+
+      if (error) throw error;
+
+      toast.success(`Category "${newCategory}" added successfully`);
+      setNewCategory("");
+      fetchCategories();
+    } catch (error) {
+      console.error("Error adding category:", error);
+      toast.error("Failed to add category");
+    }
+  };
+
+  const handleDeleteCategory = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from("savings_categories")
+        .delete()
+        .eq("id", id);
+      if (error) throw error;
+      toast.success("Category deleted successfully");
+      fetchCategories();
+    } catch (error) {
+      console.error("Error deleting category:", error);
+      toast.error("Failed to delete category");
     }
   };
 
@@ -523,6 +594,35 @@ const CooperativeSavingsTab = () => {
 
                 <div className="space-y-2">
                   <Label
+                    htmlFor="category"
+                    className="text-sm font-medium text-gray-700 flex items-center gap-2"
+                  >
+                    <Users className="h-4 w-4 text-blue-600" />
+                    Category *
+                  </Label>
+                  <select
+                    id="category"
+                    value={formData.category}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        category: e.target.value,
+                      })
+                    }
+                    required
+                    className="w-full h-12 border border-purple-200 rounded-md px-3 bg-white focus:border-purple-500 focus:ring-purple-500"
+                  >
+                    <option value="">Select category</option>
+                    {categories.map((cat) => (
+                      <option key={cat.id} value={cat.name}>
+                        {cat.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label
                     htmlFor="remarks"
                     className="text-sm font-medium text-gray-700"
                   >
@@ -626,6 +726,55 @@ const CooperativeSavingsTab = () => {
             </CardContent>
           </Card>
         </div>
+
+        {canAddCategory && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Manage Categories */}
+            <Card className="bg-gradient-to-br from-white/90 to-red-50/90 backdrop-blur-sm border-0 shadow-2xl hover:shadow-3xl transition-all duration-300">
+              <CardHeader className="bg-gradient-to-r from-red-500 to-pink-600 text-white rounded-t-lg">
+                <CardTitle className="flex items-center gap-3 text-xl">
+                  <div className="p-2 bg-white/20 rounded-lg">
+                    <PiggyBank className="h-6 w-6" />
+                  </div>
+                  Manage Categories
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <form onSubmit={handleAddCategory} className="space-y-4">
+                  <Input
+                    value={newCategory}
+                    onChange={(e) => setNewCategory(e.target.value)}
+                    placeholder="Enter new category"
+                    className="h-12"
+                  />
+                  <Button
+                    type="submit"
+                    className="w-full h-12 bg-gradient-to-r from-red-500 to-pink-500 text-white"
+                  >
+                    Add Category
+                  </Button>
+                </form>
+                <div className="mt-6 space-y-2">
+                  {categories.map((cat) => (
+                    <div
+                      key={cat.id}
+                      className="flex items-center justify-between bg-white p-3 rounded-lg shadow-sm"
+                    >
+                      <span className="font-medium">{cat.name}</span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDeleteCategory(cat.id)}
+                      >
+                        <Trash2 className="h-4 w-4 text-red-500" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         {/* Savings History */}
         <Card className="bg-gradient-to-br from-white/90 to-gray-50/90 backdrop-blur-sm border-0 shadow-2xl">

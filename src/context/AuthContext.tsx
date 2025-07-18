@@ -112,16 +112,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log("Auth state changed:", event, session);
       setSession(session);
-
-      if (session?.user) {
-        // Fetch user profile after a short delay to avoid potential race conditions
-        setTimeout(() => {
-          fetchUserProfile(session.user.id);
-        }, 100);
-      } else {
-        setUser(null);
-      }
-
       setLoading(false);
     });
 
@@ -129,16 +119,19 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     supabase.auth.getSession().then(({ data: { session } }) => {
       console.log("Initial session check:", session);
       setSession(session);
-      if (session?.user) {
-        setTimeout(() => {
-          fetchUserProfile(session.user.id);
-        }, 100);
-      }
       setLoading(false);
     });
 
     return () => subscription.unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (session?.user) {
+      fetchUserProfile(session.user.id);
+    } else {
+      setUser(null);
+    }
+  }, [session]);
 
   const login = async (email: string, password: string) => {
     console.log("Attempting login for:", email);
