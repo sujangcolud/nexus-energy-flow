@@ -27,6 +27,7 @@ import UserManagementTab from "./components/tabs/UserManagementTab";
 import ShareInvestmentsTab from "./components/tabs/ShareInvestmentsTab";
 import VATEntryTab from "./components/tabs/VATEntryTab";
 import InventoryTab from "./components/tabs/InventoryTab";
+import FileUploadTab from "./components/tabs/FileUploadTab";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import AdminPanel from "./pages/AdminPanel";
 import CustomReportCreator from "./pages/CustomReportCreator";
