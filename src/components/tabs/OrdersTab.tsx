@@ -234,8 +234,12 @@ const OrdersTab = () => {
 
     setSubmitting(true);
     try {
-      const orderPromises = cart.map((item) =>
-        supabase.from("orders").insert({
+      console.log("Submitting orders for user:", user.id);
+      console.log("Cart items:", cart);
+      console.log("Payment mode:", paymentMode);
+
+      const orderPromises = cart.map((item) => {
+        const orderData = {
           user_id: user.id,
           item_name: item.name,
           quantity: item.quantity,
@@ -243,8 +247,10 @@ const OrdersTab = () => {
           total: item.price * item.quantity,
           payment_mode: paymentMode,
           order_date: new Date().toISOString().split("T")[0],
-        }),
-      );
+        };
+        console.log("Order data:", orderData);
+        return supabase.from("orders").insert(orderData);
+      });
 
       const results = await Promise.all(orderPromises);
 
