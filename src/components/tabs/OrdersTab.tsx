@@ -253,14 +253,23 @@ const OrdersTab = () => {
       const orderPromises = cart.map((item) => {
         const orderData = {
           user_id: user.id,
-          item_name: item.name,
-          quantity: item.quantity,
-          rate: item.price,
-          total: item.price * item.quantity,
-          payment_mode: paymentMode,
+          item_name: String(item.name),
+          quantity: Number(item.quantity),
+          rate: Number(item.price),
+          total: Number(item.price * item.quantity),
+          payment_mode: String(paymentMode),
           order_date: new Date().toISOString().split("T")[0],
         };
-        console.log("Order data:", orderData);
+        console.log("Order data with types:", orderData);
+        console.log("Order data types:", {
+          user_id: typeof orderData.user_id,
+          item_name: typeof orderData.item_name,
+          quantity: typeof orderData.quantity,
+          rate: typeof orderData.rate,
+          total: typeof orderData.total,
+          payment_mode: typeof orderData.payment_mode,
+          order_date: typeof orderData.order_date,
+        });
         return supabase.from("orders").insert(orderData);
       });
 
