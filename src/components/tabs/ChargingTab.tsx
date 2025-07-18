@@ -203,6 +203,8 @@ const ChargingTab = () => {
     try {
       const totalAmount = calculateTotalAmount();
 
+      const sessionDate = new Date().toISOString().split("T")[0];
+
       const { error } = await supabase.from("charging_sessions").insert({
         user_id: user.id,
         start_percentage: startPercentage,
@@ -212,7 +214,8 @@ const ChargingTab = () => {
         per_unit_rate: perUnitRate,
         total_amount: totalAmount,
         payment_mode: paymentMode,
-        session_date: new Date().toISOString().split("T")[0],
+        session_date: sessionDate,
+        date: sessionDate, // Add date field for compatibility
         category: category,
       });
 
@@ -285,11 +288,7 @@ const ChargingTab = () => {
     sessions.length > 0 ? totalSessionCost / sessions.length : 0;
   const totalKcal = sessions.reduce((sum, session) => sum + session.kcal, 0);
 
-  const logAction = async (
-    action: string,
-    record_id: string,
-    details: any,
-  ) => {
+  const logAction = async (action: string, record_id: string, details: any) => {
     if (!user) return;
     await supabase.from("logs").insert({
       user_id: user.id,
@@ -708,11 +707,7 @@ const ChargingTab = () => {
                   <label className="text-sm font-medium text-gray-700">
                     Category
                   </label>
-                  <Select
-                    value={category}
-                    onValueChange={setCategory}
-                    required
-                  >
+                  <Select value={category} onValueChange={setCategory} required>
                     <SelectTrigger className="border-blue-200 focus:border-blue-500 focus:ring-blue-500">
                       <SelectValue placeholder="Select category" />
                     </SelectTrigger>
@@ -1063,7 +1058,9 @@ const ChargingTab = () => {
                                     </AlertDialogDescription>
                                   </AlertDialogHeader>
                                   <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogCancel>
+                                      Cancel
+                                    </AlertDialogCancel>
                                     <AlertDialogAction
                                       onClick={() => handleDelete(session.id)}
                                     >
