@@ -251,7 +251,11 @@ const OrdersTab = () => {
       // Check if any insert failed
       const failed = results.find((result) => result.error);
       if (failed) {
-        console.error("Order submission failed:", failed.error);
+        console.error(
+          "Order submission failed:",
+          JSON.stringify(failed.error, null, 2),
+        );
+        console.error("Failed result:", failed);
         throw failed.error;
       }
 
