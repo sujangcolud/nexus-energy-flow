@@ -236,19 +236,49 @@ const CalculationEngineTab = () => {
       let errorMessage = "Failed to load calculations";
 
       if (error && typeof error === "object") {
-        if (error.message) {
-          errorMessage = error.message;
-        } else if (error.details) {
-          errorMessage = error.details;
-        } else if (error.error_description) {
-          errorMessage = error.error_description;
-        } else if (error.hint) {
-          errorMessage = error.hint;
-        } else if (error.code) {
-          errorMessage = `Database error (${error.code})`;
+        // Try multiple ways to access error properties
+        const msg = error.message || error["message"] || null;
+        const details = error.details || error["details"] || null;
+        const hint = error.hint || error["hint"] || null;
+        const code = error.code || error["code"] || null;
+
+        console.log("Extracted error properties:", {
+          msg,
+          details,
+          hint,
+          code,
+        });
+
+        if (msg && typeof msg === "string" && msg.trim() !== "") {
+          errorMessage = msg;
+        } else if (
+          details &&
+          typeof details === "string" &&
+          details.trim() !== ""
+        ) {
+          errorMessage = details;
+        } else if (hint && typeof hint === "string" && hint.trim() !== "") {
+          errorMessage = hint;
+        } else if (code && typeof code === "string" && code.trim() !== "") {
+          if (code === "42P01") {
+            errorMessage =
+              "Table 'custom_calculations' does not exist. Please run the database migration.";
+          } else if (code === "42501") {
+            errorMessage =
+              "Permission denied. Please check your database permissions.";
+          } else if (code === "PGRST204") {
+            errorMessage =
+              "Database schema error. Please refresh the page or run migrations.";
+          } else {
+            errorMessage = `Database error (${code})`;
+          }
         } else {
-          // Convert error object to readable string
-          errorMessage = JSON.stringify(error, null, 2);
+          // Last resort: stringify the error object
+          try {
+            errorMessage = JSON.stringify(error, null, 2);
+          } catch (e) {
+            errorMessage = `Error object could not be serialized: ${String(error)}`;
+          }
         }
       } else if (typeof error === "string") {
         errorMessage = error;
