@@ -1,17 +1,39 @@
+import { useState, useEffect } from "react";
+import { useAuth } from "@/context/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { toast } from "sonner";
+import {
+  Users,
+  UserPlus,
+  Shield,
+  Database,
+  BarChart3,
+  UserCheck,
+  Eye,
+  EyeOff,
+  FileText,
+} from "lucide-react";
 
-import { useState, useEffect } from 'react';
-import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { toast } from 'sonner';
-import { Users, UserPlus, Shield, Database, BarChart3, UserCheck, Eye, EyeOff, FileText } from 'lucide-react';
-
-type AppRole = 'user' | 'data_entry' | 'reports_viewer' | 'super_admin';
+type AppRole = "user" | "data_entry" | "reports_viewer" | "super_admin";
 
 interface UserWithRole {
   id: string;
@@ -34,31 +56,40 @@ const UserManagementTab = () => {
   const [isCreating, setIsCreating] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [logs, setLogs] = useState<any[]>([]);
-  
+
   const [newUser, setNewUser] = useState<NewUserData>({
-    email: '',
-    password: '',
-    firstName: '',
-    lastName: '',
-    role: 'user'
+    email: "",
+    password: "",
+    firstName: "",
+    lastName: "",
+    role: "user",
   });
 
   const fetchUsersAndRoles = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase.rpc('get_all_users_with_roles');
+      const { data, error } = await supabase.rpc("get_all_users_with_roles");
       if (error) throw error;
-      
+
       // Filter out 'super_user' and map to valid AppRole types
-      const filteredUsers = (data || []).map(user => ({
-        ...user,
-        role: user.role === 'super_user' ? 'super_admin' as AppRole : user.role as AppRole
-      })).filter(user => ['user', 'data_entry', 'reports_viewer', 'super_admin'].includes(user.role));
-      
+      const filteredUsers = (data || [])
+        .map((user) => ({
+          ...user,
+          role:
+            user.role === "super_user"
+              ? ("super_admin" as AppRole)
+              : (user.role as AppRole),
+        }))
+        .filter((user) =>
+          ["user", "data_entry", "reports_viewer", "super_admin"].includes(
+            user.role,
+          ),
+        );
+
       setUsers(filteredUsers);
     } catch (error) {
-      console.error('Error fetching users and roles:', error);
-      toast.error('Failed to load users.');
+      console.error("Error fetching users and roles:", error);
+      toast.error("Failed to load users.");
     } finally {
       setLoading(false);
     }
@@ -79,55 +110,103 @@ const UserManagementTab = () => {
       setLogs(data || []);
     } catch (error) {
       console.error("Error fetching logs:", error);
-      toast.error("Failed to load logs.");
+
+      let errorMessage = "Failed to load logs";
+      if (error && typeof error === "object") {
+        const msg = error.message || error["message"] || null;
+        const details = error.details || error["details"] || null;
+        const hint = error.hint || error["hint"] || null;
+        const code = error.code || error["code"] || null;
+
+        if (msg && typeof msg === "string" && msg.trim() !== "") {
+          errorMessage = msg;
+        } else if (
+          details &&
+          typeof details === "string" &&
+          details.trim() !== ""
+        ) {
+          errorMessage = details;
+        } else if (hint && typeof hint === "string" && hint.trim() !== "") {
+          errorMessage = hint;
+        } else if (code && typeof code === "string" && code.trim() !== "") {
+          if (code === "42P01") {
+            errorMessage =
+              "Logs table does not exist. Please run the database migration.";
+          } else if (code === "42501") {
+            errorMessage =
+              "Permission denied. Please check your database permissions.";
+          } else if (code === "PGRST204") {
+            errorMessage =
+              "Database schema error. Please refresh the page or run migrations.";
+          } else {
+            errorMessage = `Database error (${code})`;
+          }
+        } else {
+          try {
+            errorMessage = JSON.stringify(error, null, 2);
+          } catch (e) {
+            errorMessage = `Error object could not be serialized: ${String(error)}`;
+          }
+        }
+      } else if (typeof error === "string") {
+        errorMessage = error;
+      }
+
+      toast.error(`Error fetching logs: ${errorMessage}`);
     }
   };
 
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!newUser.email || !newUser.password || !newUser.firstName || !newUser.lastName) {
-      toast.error('Please fill in all required fields.');
+
+    if (
+      !newUser.email ||
+      !newUser.password ||
+      !newUser.firstName ||
+      !newUser.lastName
+    ) {
+      toast.error("Please fill in all required fields.");
       return;
     }
 
     setIsCreating(true);
-    
+
     try {
       // Call the edge function to create user with admin privileges
-      const { data, error } = await supabase.functions.invoke('create-user', {
+      const { data, error } = await supabase.functions.invoke("create-user", {
         body: {
           email: newUser.email,
           password: newUser.password,
           firstName: newUser.firstName,
           lastName: newUser.lastName,
-          role: newUser.role
-        }
+          role: newUser.role,
+        },
       });
 
       if (error) {
-        console.error('Error creating user:', error);
-        toast.error(error.message || 'Failed to create user.');
+        console.error("Error creating user:", error);
+        toast.error(error.message || "Failed to create user.");
         return;
       }
 
-      toast.success(`User ${newUser.email} created successfully with role: ${newUser.role}`);
-      
+      toast.success(
+        `User ${newUser.email} created successfully with role: ${newUser.role}`,
+      );
+
       // Reset form
       setNewUser({
-        email: '',
-        password: '',
-        firstName: '',
-        lastName: '',
-        role: 'user'
+        email: "",
+        password: "",
+        firstName: "",
+        lastName: "",
+        role: "user",
       });
-      
+
       // Refresh users list
       fetchUsersAndRoles();
-      
     } catch (error: any) {
-      console.error('Error creating user:', error);
-      toast.error(error.message || 'Failed to create user.');
+      console.error("Error creating user:", error);
+      toast.error(error.message || "Failed to create user.");
     } finally {
       setIsCreating(false);
     }
@@ -135,32 +214,36 @@ const UserManagementTab = () => {
 
   const handleRoleChange = async (userId: string, newRole: AppRole) => {
     try {
-      const { error } = await supabase.rpc('update_user_role', { user_id_to_update: userId, new_role: newRole });
+      const { error } = await supabase.rpc("update_user_role", {
+        user_id_to_update: userId,
+        new_role: newRole,
+      });
       if (error) throw error;
-      toast.success('User role updated successfully.');
+      toast.success("User role updated successfully.");
       fetchUsersAndRoles();
     } catch (error: any) {
-      console.error('Error updating role:', error);
-      toast.error(error.message || 'Failed to update role.');
+      console.error("Error updating role:", error);
+      toast.error(error.message || "Failed to update role.");
     }
   };
 
   const generatePassword = () => {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
-    let password = '';
+    const chars =
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
+    let password = "";
     for (let i = 0; i < 12; i++) {
       password += chars.charAt(Math.floor(Math.random() * chars.length));
     }
-    setNewUser(prev => ({ ...prev, password }));
+    setNewUser((prev) => ({ ...prev, password }));
   };
 
   const getRoleIcon = (role: AppRole) => {
     switch (role) {
-      case 'super_admin':
+      case "super_admin":
         return <Shield className="h-4 w-4 text-purple-600" />;
-      case 'data_entry':
+      case "data_entry":
         return <Database className="h-4 w-4 text-blue-600" />;
-      case 'reports_viewer':
+      case "reports_viewer":
         return <BarChart3 className="h-4 w-4 text-green-600" />;
       default:
         return <UserCheck className="h-4 w-4 text-gray-600" />;
@@ -169,16 +252,16 @@ const UserManagementTab = () => {
 
   const getRoleDescription = (role: AppRole) => {
     switch (role) {
-      case 'super_admin':
-        return 'Full access to all features and user management';
-      case 'data_entry':
-        return 'Can manage orders, charging, expenses, deposits, withdrawals, and savings';
-      case 'reports_viewer':
-        return 'Can view reports, analytics, and import bulk data';
-      case 'user':
-        return 'Basic user access';
+      case "super_admin":
+        return "Full access to all features and user management";
+      case "data_entry":
+        return "Can manage orders, charging, expenses, deposits, withdrawals, and savings";
+      case "reports_viewer":
+        return "Can view reports, analytics, and import bulk data";
+      case "user":
+        return "Basic user access";
       default:
-        return '';
+        return "";
     }
   };
 
@@ -206,7 +289,12 @@ const UserManagementTab = () => {
                   type="text"
                   placeholder="John"
                   value={newUser.firstName}
-                  onChange={(e) => setNewUser(prev => ({ ...prev, firstName: e.target.value }))}
+                  onChange={(e) =>
+                    setNewUser((prev) => ({
+                      ...prev,
+                      firstName: e.target.value,
+                    }))
+                  }
                   required
                 />
               </div>
@@ -217,12 +305,17 @@ const UserManagementTab = () => {
                   type="text"
                   placeholder="Doe"
                   value={newUser.lastName}
-                  onChange={(e) => setNewUser(prev => ({ ...prev, lastName: e.target.value }))}
+                  onChange={(e) =>
+                    setNewUser((prev) => ({
+                      ...prev,
+                      lastName: e.target.value,
+                    }))
+                  }
                   required
                 />
               </div>
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="email">Email Address</Label>
               <Input
@@ -230,11 +323,13 @@ const UserManagementTab = () => {
                 type="email"
                 placeholder="user@example.com"
                 value={newUser.email}
-                onChange={(e) => setNewUser(prev => ({ ...prev, email: e.target.value }))}
+                onChange={(e) =>
+                  setNewUser((prev) => ({ ...prev, email: e.target.value }))
+                }
                 required
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <div className="flex gap-2">
@@ -244,7 +339,12 @@ const UserManagementTab = () => {
                     type={showPassword ? "text" : "password"}
                     placeholder="Enter password"
                     value={newUser.password}
-                    onChange={(e) => setNewUser(prev => ({ ...prev, password: e.target.value }))}
+                    onChange={(e) =>
+                      setNewUser((prev) => ({
+                        ...prev,
+                        password: e.target.value,
+                      }))
+                    }
                     required
                   />
                   <Button
@@ -254,7 +354,11 @@ const UserManagementTab = () => {
                     className="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7 p-0"
                     onClick={() => setShowPassword(!showPassword)}
                   >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
                   </Button>
                 </div>
                 <Button
@@ -266,10 +370,15 @@ const UserManagementTab = () => {
                 </Button>
               </div>
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="role">Role</Label>
-              <Select value={newUser.role} onValueChange={(value: AppRole) => setNewUser(prev => ({ ...prev, role: value }))}>
+              <Select
+                value={newUser.role}
+                onValueChange={(value: AppRole) =>
+                  setNewUser((prev) => ({ ...prev, role: value }))
+                }
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -281,10 +390,10 @@ const UserManagementTab = () => {
                 </SelectContent>
               </Select>
             </div>
-            
+
             <Button type="submit" disabled={isCreating} className="w-full">
               <UserPlus className="h-4 w-4 mr-2" />
-              {isCreating ? 'Creating User...' : 'Create User'}
+              {isCreating ? "Creating User..." : "Create User"}
             </Button>
           </form>
         </CardContent>
@@ -301,21 +410,28 @@ const UserManagementTab = () => {
                 <Shield className="h-4 w-4 text-purple-600" />
                 <span className="font-semibold">Super Admin</span>
               </div>
-              <p className="text-sm text-gray-600">Full access to all features and user management</p>
+              <p className="text-sm text-gray-600">
+                Full access to all features and user management
+              </p>
             </div>
             <div className="p-4 border rounded-lg">
               <div className="flex items-center gap-2 mb-2">
                 <Database className="h-4 w-4 text-blue-600" />
                 <span className="font-semibold">Data Entry</span>
               </div>
-              <p className="text-sm text-gray-600">Can manage orders, charging, expenses, deposits, withdrawals, and savings</p>
+              <p className="text-sm text-gray-600">
+                Can manage orders, charging, expenses, deposits, withdrawals,
+                and savings
+              </p>
             </div>
             <div className="p-4 border rounded-lg col-span-1 md:col-span-2">
               <div className="flex items-center gap-2 mb-2">
                 <BarChart3 className="h-4 w-4 text-green-600" />
                 <span className="font-semibold">Reports Viewer</span>
               </div>
-              <p className="text-sm text-gray-600">Can view reports, analytics, and import bulk data</p>
+              <p className="text-sm text-gray-600">
+                Can view reports, analytics, and import bulk data
+              </p>
             </div>
           </div>
         </CardContent>
@@ -336,7 +452,11 @@ const UserManagementTab = () => {
             </TableHeader>
             <TableBody>
               {loading ? (
-                <TableRow><TableCell colSpan={3} className="text-center">Loading users...</TableCell></TableRow>
+                <TableRow>
+                  <TableCell colSpan={3} className="text-center">
+                    Loading users...
+                  </TableCell>
+                </TableRow>
               ) : (
                 users.map((u) => (
                   <TableRow key={u.id}>
@@ -346,7 +466,9 @@ const UserManagementTab = () => {
                         {getRoleIcon(u.role)}
                         <Select
                           value={u.role}
-                          onValueChange={(newRole: AppRole) => handleRoleChange(u.id, newRole)}
+                          onValueChange={(newRole: AppRole) =>
+                            handleRoleChange(u.id, newRole)
+                          }
                           disabled={u.id === user?.id}
                         >
                           <SelectTrigger className="w-[180px]">
@@ -354,9 +476,15 @@ const UserManagementTab = () => {
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="user">User</SelectItem>
-                            <SelectItem value="data_entry">Data Entry</SelectItem>
-                            <SelectItem value="reports_viewer">Reports Viewer</SelectItem>
-                            <SelectItem value="super_admin">Super Admin</SelectItem>
+                            <SelectItem value="data_entry">
+                              Data Entry
+                            </SelectItem>
+                            <SelectItem value="reports_viewer">
+                              Reports Viewer
+                            </SelectItem>
+                            <SelectItem value="super_admin">
+                              Super Admin
+                            </SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
