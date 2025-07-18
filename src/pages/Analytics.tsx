@@ -176,47 +176,68 @@ const Analytics = () => {
     },
   });
 
-  // Calculate financial metrics with correct column names
+  // Calculate financial metrics using the new daily summary logic
   const calculateFinancials = (): FinancialData => {
-    // Restaurant income using correct column name 'total'
-    const restaurantIncome = ordersData.reduce(
-      (sum, order) => sum + (parseFloat(order.total) || 0),
-      0,
+    // Prepare data for daily summary calculation
+    const summaryData: DailySummaryData = {
+      orders: ordersData.map((order) => ({
+        total: parseFloat(order.total) || 0,
+        payment_mode: order.payment_mode,
+        order_date:
+          order.order_date ||
+          order.created_at?.split("T")[0] ||
+          new Date().toISOString().split("T")[0],
+      })),
+      charging: chargingData.map((session) => ({
+        total_amount: parseFloat(session.total_amount) || 0,
+        payment_mode: session.payment_mode,
+        session_date:
+          session.session_date ||
+          session.created_at?.split("T")[0] ||
+          new Date().toISOString().split("T")[0],
+      })),
+      expenses: expensesData.map((expense) => ({
+        amount: parseFloat(expense.amount) || 0,
+        payment_mode: expense.payment_mode,
+        expense_date:
+          expense.expense_date ||
+          expense.created_at?.split("T")[0] ||
+          new Date().toISOString().split("T")[0],
+      })),
+      deposits: depositsData.map((deposit) => ({
+        amount: parseFloat(deposit.amount) || 0,
+        mode: deposit.mode,
+        deposit_date:
+          deposit.deposit_date ||
+          deposit.created_at?.split("T")[0] ||
+          new Date().toISOString().split("T")[0],
+      })),
+      savings: cooperativeData.map((saving) => ({
+        contribution_amount: parseFloat(saving.contribution_amount) || 0,
+        contribution_date:
+          saving.contribution_date ||
+          saving.created_at?.split("T")[0] ||
+          new Date().toISOString().split("T")[0],
+      })),
+      withdrawals: withdrawalsData.map((withdrawal) => ({
+        amount: parseFloat(withdrawal.amount) || 0,
+        withdrawal_date:
+          withdrawal.withdrawal_date ||
+          withdrawal.created_at?.split("T")[0] ||
+          new Date().toISOString().split("T")[0],
+        purpose: withdrawal.purpose || "general",
+      })),
+    };
+
+    // Calculate aggregated summary for the entire time range
+    const today = new Date().toISOString().split("T")[0];
+    const aggregatedSummary = calculateDailySummary(
+      summaryData,
+      today,
+      balancesData?.deposits_to_esewa || 0,
+      balancesData?.deposits_to_fonepay || 0,
+      balancesData?.total_withdrawals_cash || 0,
     );
-
-    // Charging income using correct column name 'total_amount'
-    const chargingIncome = chargingData.reduce(
-      (sum, session) => sum + (parseFloat(session.total_amount) || 0),
-      0,
-    );
-
-    // Total deposits to bank
-    const totalDeposits = depositsData.reduce(
-      (sum, deposit) => sum + (parseFloat(deposit.amount) || 0),
-      0,
-    );
-
-    // Total withdrawals from bank
-    const totalWithdrawals = withdrawalsData.reduce(
-      (sum, withdrawal) => sum + (parseFloat(withdrawal.amount) || 0),
-      0,
-    );
-
-    // Total expenses using correct column name
-    const totalExpenses = expensesData.reduce(
-      (sum, expense) => sum + (parseFloat(expense.amount) || 0),
-      0,
-    );
-
-    // Bank expenses (non-cash expenses) using correct column 'payment_mode'
-    const bankExpenses = expensesData
-      .filter((expense) => expense.payment_mode !== "cash")
-      .reduce((sum, expense) => sum + (parseFloat(expense.amount) || 0), 0);
-
-    // Cash expenses
-    const cashExpenses = expensesData
-      .filter((expense) => expense.payment_mode === "cash")
-      .reduce((sum, expense) => sum + (parseFloat(expense.amount) || 0), 0);
 
     // Cash orders (restaurant income paid in cash) using correct column 'payment_mode'
     const cashOrders = ordersData
