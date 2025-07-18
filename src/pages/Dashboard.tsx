@@ -575,78 +575,78 @@ const Dashboard = () => {
               {navItems.map((item, index) => {
                 const Icon = item.icon;
                 return (
-                  <Link key={item.id} to={item.path} className="block group">
-                    <Card
-                      className={`relative cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-105 ${item.bgColor} border border-slate-200 h-full`}
-                    >
-                      {canDeleteTabs && (
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button
-                              variant="destructive"
-                              size="icon"
-                              className="absolute top-2 right-2 h-6 w-6"
+                  <Card
+                    key={item.id}
+                    onClick={() => navigate(item.path)}
+                    className={`relative cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-105 ${item.bgColor} border border-slate-200 h-full`}
+                  >
+                    {canDeleteTabs && (
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            variant="destructive"
+                            size="icon"
+                            className="absolute top-2 right-2 h-6 w-6"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                            }}
+                          >
+                            <Trash className="h-4 w-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>
+                              Are you sure you want to delete this tab?
+                            </AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This action cannot be undone. This will
+                              permanently delete the tab from your dashboard.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              Cancel
+                            </AlertDialogCancel>
+                            <AlertDialogAction
                               onClick={(e) => {
-                                e.preventDefault();
                                 e.stopPropagation();
+                                const newSettings = {
+                                  ...tabSettings,
+                                  [item.id]: false,
+                                };
+                                localStorage.setItem(
+                                  "tabSettings",
+                                  JSON.stringify(newSettings),
+                                );
+                                window.location.reload();
                               }}
                             >
-                              <Trash className="h-4 w-4" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>
-                                Are you sure you want to delete this tab?
-                              </AlertDialogTitle>
-                              <AlertDialogDescription>
-                                This action cannot be undone. This will
-                                permanently delete the tab from your dashboard.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                Cancel
-                              </AlertDialogCancel>
-                              <AlertDialogAction
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  const newSettings = {
-                                    ...tabSettings,
-                                    [item.id]: false,
-                                  };
-                                  localStorage.setItem(
-                                    "tabSettings",
-                                    JSON.stringify(newSettings),
-                                  );
-                                  window.location.reload();
-                                }}
-                              >
-                                Delete
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      )}
-                      <CardContent className="flex flex-col items-center justify-center p-6 space-y-4 h-full">
-                        <div
-                          className={`p-4 rounded-lg transition-all duration-300 ${item.color} text-white shadow-sm group-hover:shadow-md`}
-                        >
-                          <Icon className="h-8 w-8" />
-                        </div>
-                        <div className="text-center space-y-2">
-                          <p className="font-semibold text-lg text-slate-800">
-                            {item.label}
-                          </p>
-                          <p className="text-sm text-slate-600">
-                            {item.description}
-                          </p>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </Link>
+                              Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    )}
+                    <CardContent className="flex flex-col items-center justify-center p-6 space-y-4 h-full">
+                      <div
+                        className={`p-4 rounded-lg transition-all duration-300 ${item.color} text-white shadow-sm group-hover:shadow-md`}
+                      >
+                        <Icon className="h-8 w-8" />
+                      </div>
+                      <div className="text-center space-y-2">
+                        <p className="font-semibold text-lg text-slate-800">
+                          {item.label}
+                        </p>
+                        <p className="text-sm text-slate-600">
+                          {item.description}
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
                 );
               })}
             </div>
