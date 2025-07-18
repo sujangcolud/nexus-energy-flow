@@ -90,12 +90,22 @@ const CustomReportCreator = () => {
   };
 
   const handleGenerateReport = async () => {
-    // This is a placeholder for the actual report generation logic
-    const mockData = customCalculations.map(calc => ({
-      heading: calc.heading,
-      value: Math.random() * 1000,
-    }));
-    setReportData(mockData);
+    if (customCalculations.length === 0) {
+      toast.error("Please add at least one custom calculation.");
+      return;
+    }
+
+    const { data, error } = await supabase.rpc('execute_dynamic_report', {
+      custom_calculations: customCalculations,
+      filters: filters
+    });
+
+    if (error) {
+      console.error("Error generating report:", error);
+      toast.error("Error generating report: " + error.message);
+    } else {
+      setReportData(data);
+    }
   };
 
   return (
