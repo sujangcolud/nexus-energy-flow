@@ -76,11 +76,17 @@ const Dashboard = () => {
   const { hasTabAccess } = useUserPermissions();
   const location = useLocation();
   const navigate = useNavigate();
+  const isMobile = useMobile();
   const [isChatBotOpen, setIsChatBotOpen] = useState(false);
   const [canDeleteTabs, setCanDeleteTabs] = useState(false);
   const [tabSettings, setTabSettings] = useState<Record<string, boolean>>({});
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [tabToDelete, setTabToDelete] = useState<string | null>(null);
+
+  // Use mobile dashboard on mobile devices
+  if (isMobile) {
+    return <MobileDashboard />;
+  }
 
   useEffect(() => {
     const storedSettings = localStorage.getItem("tabSettings");
