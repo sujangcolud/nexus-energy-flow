@@ -160,7 +160,9 @@ const VATEntryTab = () => {
       setVatEntries(data || []);
     } catch (error) {
       console.error("Error fetching VAT entries:", error);
-      toast.error("Failed to load VAT entries");
+      const errorMessage =
+        error?.message || error?.details || "Failed to load VAT entries";
+      toast.error(`Error loading VAT entries: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
