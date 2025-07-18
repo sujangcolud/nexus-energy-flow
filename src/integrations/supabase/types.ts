@@ -149,6 +149,42 @@ export type Database = {
         };
         Relationships: [];
       };
+      custom_calculations: {
+        Row: {
+          id: string;
+          name: string;
+          description: string | null;
+          calculation_config: Json;
+          result_cache: Json | null;
+          is_active: boolean | null;
+          created_at: string | null;
+          updated_at: string | null;
+          user_id: string | null;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          description?: string | null;
+          calculation_config: Json;
+          result_cache?: Json | null;
+          is_active?: boolean | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+          user_id?: string | null;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          description?: string | null;
+          calculation_config?: Json;
+          result_cache?: Json | null;
+          is_active?: boolean | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+          user_id?: string | null;
+        };
+        Relationships: [];
+      };
       cooperative_savings: {
         Row: {
           contribution_amount: number;
