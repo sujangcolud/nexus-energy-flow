@@ -76,7 +76,7 @@ const Dashboard = () => {
   const { hasTabAccess } = useUserPermissions();
   const location = useLocation();
   const navigate = useNavigate();
-  const isMobile = useMobile();
+  const isMobile = useIsMobile();
   const [isChatBotOpen, setIsChatBotOpen] = useState(false);
   const [canDeleteTabs, setCanDeleteTabs] = useState(false);
   const [tabSettings, setTabSettings] = useState<Record<string, boolean>>({});
