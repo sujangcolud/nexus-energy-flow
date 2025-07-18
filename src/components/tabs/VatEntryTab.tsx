@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -40,6 +40,11 @@ const VatEntryTab = () => {
   const [endDate, setEndDate] = useState(new Date().toISOString().slice(0, 10));
   const [category, setCategory] = useState("all");
   const [paymentMethod, setPaymentMethod] = useState("all");
+
+  const prevStartDate = useRef(startDate);
+  const prevEndDate = useRef(endDate);
+  const prevCategory = useRef(category);
+  const prevPaymentMethod = useRef(paymentMethod);
   const [isBillOpen, setIsBillOpen] = useState(false);
   const [selectedIncome, setSelectedIncome] = useState<Income | null>(null);
   const [billData, setBillData] = useState({
@@ -61,7 +66,18 @@ const VatEntryTab = () => {
   });
 
   useEffect(() => {
-    fetchIncomes();
+    if (
+      prevStartDate.current !== startDate ||
+      prevEndDate.current !== endDate ||
+      prevCategory.current !== category ||
+      prevPaymentMethod.current !== paymentMethod
+    ) {
+      fetchIncomes();
+      prevStartDate.current = startDate;
+      prevEndDate.current = endDate;
+      prevCategory.current = category;
+      prevPaymentMethod.current = paymentMethod;
+    }
   }, [user, startDate, endDate, category, paymentMethod]);
 
   const fetchIncomes = async () => {
