@@ -108,30 +108,7 @@ const App = () => {
                 <Route path="reports" element={<UnifiedReportsTab />} />
                 <Route path="bulk-import" element={<UnifiedBulkImportTab />} />
                 <Route path="user-management" element={<UserManagementTab />} />
-                <Route
-                  path="admin-panel"
-                  element={
-                    <ProtectedRoute allowedRoles={["super_admin"]}>
-                      <AdminPanel />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="custom-reports/create"
-                  element={
-                    <ProtectedRoute allowedRoles={["super_admin"]}>
-                      <CustomReportCreator />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="file-upload"
-                  element={
-                    <ProtectedRoute allowedRoles={["super_admin"]}>
-                      <FileUploadTab />
-                    </ProtectedRoute>
-                  }
-                />
+
                 <Route
                   path="calculation-engine"
                   element={
