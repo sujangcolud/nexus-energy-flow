@@ -329,6 +329,111 @@ export type Database = {
         };
         Relationships: [];
       };
+      inventory: {
+        Row: {
+          id: string;
+          item_name: string;
+          description: string | null;
+          category: string | null;
+          quantity: number | null;
+          unit_cost: number | null;
+          total_cost: number | null;
+          supplier: string | null;
+          purchase_date: string | null;
+          expiry_date: string | null;
+          location: string | null;
+          minimum_stock: number | null;
+          is_active: boolean | null;
+          expense_id: string | null;
+          created_at: string | null;
+          updated_at: string | null;
+          user_id: string | null;
+        };
+        Insert: {
+          id?: string;
+          item_name: string;
+          description?: string | null;
+          category?: string | null;
+          quantity?: number | null;
+          unit_cost?: number | null;
+          total_cost?: number | null;
+          supplier?: string | null;
+          purchase_date?: string | null;
+          expiry_date?: string | null;
+          location?: string | null;
+          minimum_stock?: number | null;
+          is_active?: boolean | null;
+          expense_id?: string | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+          user_id?: string | null;
+        };
+        Update: {
+          id?: string;
+          item_name?: string;
+          description?: string | null;
+          category?: string | null;
+          quantity?: number | null;
+          unit_cost?: number | null;
+          total_cost?: number | null;
+          supplier?: string | null;
+          purchase_date?: string | null;
+          expiry_date?: string | null;
+          location?: string | null;
+          minimum_stock?: number | null;
+          is_active?: boolean | null;
+          expense_id?: string | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+          user_id?: string | null;
+        };
+        Relationships: [];
+      };
+      inventory_transactions: {
+        Row: {
+          id: string;
+          inventory_id: string | null;
+          transaction_type: string;
+          quantity: number;
+          unit_cost: number | null;
+          total_cost: number | null;
+          reference_type: string | null;
+          reference_id: string | null;
+          notes: string | null;
+          transaction_date: string | null;
+          created_at: string | null;
+          user_id: string | null;
+        };
+        Insert: {
+          id?: string;
+          inventory_id?: string | null;
+          transaction_type: string;
+          quantity: number;
+          unit_cost?: number | null;
+          total_cost?: number | null;
+          reference_type?: string | null;
+          reference_id?: string | null;
+          notes?: string | null;
+          transaction_date?: string | null;
+          created_at?: string | null;
+          user_id?: string | null;
+        };
+        Update: {
+          id?: string;
+          inventory_id?: string | null;
+          transaction_type?: string;
+          quantity?: number;
+          unit_cost?: number | null;
+          total_cost?: number | null;
+          reference_type?: string | null;
+          reference_id?: string | null;
+          notes?: string | null;
+          transaction_date?: string | null;
+          created_at?: string | null;
+          user_id?: string | null;
+        };
+        Relationships: [];
+      };
       logs: {
         Row: {
           id: string;
