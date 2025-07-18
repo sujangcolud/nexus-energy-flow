@@ -114,6 +114,14 @@ const App = () => {
                   }
                 />
                 <Route
+                  path="custom-reports/create"
+                  element={
+                    <ProtectedRoute allowedRoles={["super_admin"]}>
+                      <CustomReportCreator />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
                   path="super-admin"
                   element={
                     <ProtectedRoute allowedRoles={["super_admin"]}>
