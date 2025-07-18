@@ -320,7 +320,7 @@ const Dashboard = () => {
         path: "vat-entry",
         label: "VAT Entry",
         icon: FileText,
-        component: VatEntryTab,
+        component: VATEntryTab,
         roles: ["data_entry", "super_admin"],
         color: "bg-lime-600",
         bgColor: "bg-lime-50",
