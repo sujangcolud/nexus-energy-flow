@@ -246,7 +246,9 @@ Thank you for your business!
       fetchVATEntries();
     } catch (error) {
       console.error("Error generating bill:", error);
-      toast.error("Failed to generate bill");
+      const errorMessage =
+        error?.message || error?.details || "Failed to generate bill";
+      toast.error(`Error generating bill: ${errorMessage}`);
     }
   };
 
