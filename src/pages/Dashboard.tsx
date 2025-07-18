@@ -81,6 +81,20 @@ const Dashboard = () => {
     }
   };
 
+  const handleDailyClosing = async () => {
+    try {
+      const { error } = await supabase.rpc("daily_closing", {
+        user_id_param: user.id,
+        closing_date: new Date().toISOString().slice(0, 10),
+      });
+      if (error) throw error;
+      alert("Daily closing completed successfully!");
+    } catch (error) {
+      console.error("Error during daily closing:", error);
+      alert("Failed to complete daily closing.");
+    }
+  };
+
   // Define role-based navigation items with clean color schemes
   const getNavItems = () => {
     const allItems = [
@@ -498,6 +512,15 @@ const Dashboard = () => {
                 <Bell className="h-4 w-4" />
               </Button>
 
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleDailyClosing}
+                className="flex items-center gap-2 hover:bg-blue-50 hover:border-blue-300 transition-colors"
+              >
+                <Database className="h-4 w-4" />
+                Daily Closing
+              </Button>
               <Button
                 variant="outline"
                 size="sm"
