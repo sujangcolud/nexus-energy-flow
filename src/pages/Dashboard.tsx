@@ -192,6 +192,28 @@ const Dashboard = () => {
         bgColor: "bg-emerald-50",
         description: "Manage share investments",
       },
+      {
+        id: "vat_entry",
+        path: "vat-entry",
+        label: "VAT Entry",
+        icon: Receipt,
+        component: VATEntryTab,
+        roles: ["data_entry", "super_admin"],
+        color: "bg-indigo-600",
+        bgColor: "bg-indigo-50",
+        description: "VAT management and bill generation",
+      },
+      {
+        id: "inventory",
+        path: "inventory",
+        label: "Inventory",
+        icon: Package,
+        component: InventoryTab,
+        roles: ["data_entry", "super_admin"],
+        color: "bg-teal-600",
+        bgColor: "bg-teal-50",
+        description: "Inventory tracking and management",
+      },
       // Add Analytics page - accessible to all users
       {
         id: "analytics",
