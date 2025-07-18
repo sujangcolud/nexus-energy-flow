@@ -278,7 +278,25 @@ const OrdersTab = () => {
         console.log("Order params for RPC:", orderParams);
 
         // Use RPC function to bypass trigger issues
-        return supabase.rpc("insert_order_safe", orderParams);
+        return supabase.rpc("insert_order_safe", orderParams).then((result) => {
+          // If RPC function doesn't exist, fall back to direct insert
+          if (result.error && result.error.code === "42883") {
+            console.log(
+              "RPC function not found, falling back to direct insert",
+            );
+            const directOrderData = {
+              user_id: orderParams.p_user_id,
+              item_name: orderParams.p_item_name,
+              quantity: orderParams.p_quantity,
+              rate: orderParams.p_rate,
+              total: orderParams.p_total,
+              payment_mode: orderParams.p_payment_mode,
+              order_date: orderParams.p_order_date,
+            };
+            return supabase.from("orders").insert(directOrderData);
+          }
+          return result;
+        });
       });
 
       const results = await Promise.all(orderPromises);
