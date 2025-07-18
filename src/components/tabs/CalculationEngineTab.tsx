@@ -425,16 +425,30 @@ const CalculationEngineTab = () => {
       let errorMessage = "Failed to execute calculation";
 
       if (error && typeof error === "object") {
-        if (error.message) {
-          errorMessage = error.message;
-        } else if (error.details) {
-          errorMessage = error.details;
-        } else if (error.error_description) {
-          errorMessage = error.error_description;
-        } else if (error.hint) {
-          errorMessage = error.hint;
+        // Try multiple ways to access error properties
+        const msg = error.message || error["message"] || null;
+        const details = error.details || error["details"] || null;
+        const hint = error.hint || error["hint"] || null;
+        const code = error.code || error["code"] || null;
+
+        if (msg && typeof msg === "string" && msg.trim() !== "") {
+          errorMessage = msg;
+        } else if (
+          details &&
+          typeof details === "string" &&
+          details.trim() !== ""
+        ) {
+          errorMessage = details;
+        } else if (hint && typeof hint === "string" && hint.trim() !== "") {
+          errorMessage = hint;
+        } else if (code && typeof code === "string" && code.trim() !== "") {
+          errorMessage = `Database error (${code})`;
         } else {
-          errorMessage = JSON.stringify(error, null, 2);
+          try {
+            errorMessage = JSON.stringify(error, null, 2);
+          } catch (e) {
+            errorMessage = `Error object could not be serialized: ${String(error)}`;
+          }
         }
       } else if (typeof error === "string") {
         errorMessage = error;
