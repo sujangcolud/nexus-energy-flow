@@ -257,6 +257,7 @@ const OrdersTab = () => {
 
     setSubmitting(true);
     try {
+<<<<<<< HEAD
       console.log("Submitting orders for user:", user.id);
       console.log("Current session user:", session.user.id);
       console.log("Full user object:", user);
@@ -326,8 +327,31 @@ const OrdersTab = () => {
             return supabase.from("orders").insert(directOrderData);
           });
       });
+=======
+      const total = getCartTotal();
+      const { data: order, error: orderError } = await supabase
+        .from("orders")
+        .insert({
+          user_id: user.id,
+          total,
+          order_date: new Date().toISOString().split("T")[0],
+        })
+        .select()
+        .single();
 
-      const results = await Promise.all(orderPromises);
+      if (orderError) throw orderError;
+
+      const orderItemsPromises = cart.map((item) =>
+        supabase.from("order_items").insert({
+          order_id: order.id,
+          item_name: item.name,
+          quantity: item.quantity,
+          price: item.price,
+        }),
+      );
+>>>>>>> origin/main
+
+      const results = await Promise.all(orderItemsPromises);
 
       // Check if any RPC call failed
       const failed = results.find((result) => result.error);
