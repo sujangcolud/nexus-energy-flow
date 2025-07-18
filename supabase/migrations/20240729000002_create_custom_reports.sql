@@ -1,17 +1,36 @@
-CREATE OR REPLACE FUNCTION get_table_columns(table_names TEXT[])
-RETURNS TEXT[] AS $$
+-- Create the custom_reports table
+CREATE TABLE custom_reports (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id),
+  name TEXT NOT NULL,
+  data_sources TEXT[] NOT NULL,
+  joins JSONB,
+  calculation_type TEXT NOT NULL,
+  calculation_column TEXT NOT NULL,
+  filters JSONB,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Create the get_all_table_columns function
+CREATE OR REPLACE FUNCTION get_all_table_columns()
+RETURNS JSON AS $$
 DECLARE
-  cols TEXT[];
+  result JSON;
 BEGIN
-  SELECT array_agg(column_name::TEXT)
-  INTO cols
-  FROM information_schema.columns
-  WHERE table_name = ANY(table_names);
+  SELECT json_object_agg(table_name, columns)
+  INTO result
+  FROM (
+    SELECT table_name, array_agg(column_name::TEXT) as columns
+    FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name IN ('orders', 'charging_sessions', 'expenses', 'deposits', 'withdrawals', 'cooperative_savings')
+    GROUP BY table_name
+  ) AS tables;
 
-  RETURN cols;
+  RETURN result;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
+-- Create the execute_custom_report function
 CREATE OR REPLACE FUNCTION execute_custom_report(report_id UUID)
 RETURNS NUMERIC AS $$
 DECLARE
