@@ -123,6 +123,14 @@ const App = () => {
                   }
                 />
                 <Route
+                  path="file-upload"
+                  element={
+                    <ProtectedRoute allowedRoles={["super_admin"]}>
+                      <FileUploadTab />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
                   path="super-admin"
                   element={
                     <ProtectedRoute allowedRoles={["super_admin"]}>
