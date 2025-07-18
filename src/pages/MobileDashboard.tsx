@@ -59,7 +59,7 @@ const MobileDashboard = () => {
   const { hasTabAccess } = useUserPermissions();
   const location = useLocation();
   const navigate = useNavigate();
-  const isMobile = useMobile();
+  const isMobile = useIsMobile();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [tabSettings, setTabSettings] = useState<Record<string, boolean>>({});
   const [currentTime, setCurrentTime] = useState(new Date());
