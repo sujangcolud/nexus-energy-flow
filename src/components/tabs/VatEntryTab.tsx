@@ -35,6 +35,9 @@ const VatEntryTab = () => {
   const [incomes, setIncomes] = useState<Income[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+  const [startDate, setStartDate] = useState(new Date().toISOString().slice(0, 10));
+  const [endDate, setEndDate] = useState(new Date().toISOString().slice(0, 10));
+  const [category, setCategory] = useState("all");
   const [isBillOpen, setIsBillOpen] = useState(false);
   const [selectedIncome, setSelectedIncome] = useState<Income | null>(null);
   const [billData, setBillData] = useState({
@@ -57,36 +60,52 @@ const VatEntryTab = () => {
 
   useEffect(() => {
     fetchIncomes();
-  }, [user]);
+  }, [user, startDate, endDate, category]);
 
   const fetchIncomes = async () => {
     if (!user) return;
 
     setLoading(true);
     try {
-      const { data: orders, error: ordersError } = await supabase
+      let ordersQuery = supabase
         .from("orders")
         .select("id, total, payment_mode, order_date")
         .eq("user_id", user.id);
-
-      if (ordersError) throw ordersError;
-
-      const { data: charging, error: chargingError } = await supabase
+      let chargingQuery = supabase
         .from("charging_sessions")
         .select("id, total_amount, payment_mode, session_date")
         .eq("user_id", user.id);
 
+      if (startDate) {
+        ordersQuery = ordersQuery.gte("order_date", startDate);
+        chargingQuery = chargingQuery.gte("session_date", startDate);
+      }
+      if (endDate) {
+        ordersQuery = ordersQuery.lte("order_date", endDate);
+        chargingQuery = chargingQuery.lte("session_date", endDate);
+      }
+
+      const { data: orders, error: ordersError } = await ordersQuery;
+      if (ordersError) throw ordersError;
+
+      const { data: charging, error: chargingError } = await chargingQuery;
       if (chargingError) throw chargingError;
 
-      const allIncomes = [
-        ...(orders || []),
-        ...(charging?.map((c) => ({
-          id: c.id,
-          total: c.total_amount,
-          payment_mode: c.payment_mode,
-          order_date: c.session_date,
-        })) || []),
-      ];
+      let allIncomes = [];
+      if (category === "all" || category === "orders") {
+        allIncomes.push(...(orders || []));
+      }
+      if (category === "all" || category === "charging") {
+        allIncomes.push(
+          ...(charging?.map((c) => ({
+            id: c.id,
+            total: c.total_amount,
+            payment_mode: c.payment_mode,
+            order_date: c.session_date,
+          })) || [])
+        );
+      }
+
       setIncomes(allIncomes);
     } catch (error) {
       console.error("Error fetching incomes:", error);
@@ -289,6 +308,39 @@ const VatEntryTab = () => {
           <CardTitle>VAT Entry</CardTitle>
         </CardHeader>
         <CardContent>
+          <div className="flex space-x-4 mb-4">
+            <div>
+              <Label htmlFor="start-date">Start Date</Label>
+              <Input
+                id="start-date"
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+              />
+            </div>
+            <div>
+              <Label htmlFor="end-date">End Date</Label>
+              <Input
+                id="end-date"
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+              />
+            </div>
+            <div>
+              <Label htmlFor="category">Category</Label>
+              <select
+                id="category"
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                className="w-full p-2 border rounded"
+              >
+                <option value="all">All</option>
+                <option value="orders">Orders</option>
+                <option value="charging">Charging</option>
+              </select>
+            </div>
+          </div>
           <Table>
             <TableHeader>
               <TableRow>
