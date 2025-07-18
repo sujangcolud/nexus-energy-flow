@@ -274,8 +274,6 @@ const OrdersTab = () => {
           total: Number(item.price * item.quantity),
           payment_mode: String(paymentMode),
           order_date: currentDate,
-          // Add the date field that the trigger is expecting
-          date: currentDate,
         };
         console.log("Order data with types:", orderData);
         console.log("Order data types:", {
