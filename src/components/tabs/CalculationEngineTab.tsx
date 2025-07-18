@@ -177,6 +177,20 @@ const CalculationEngineTab = () => {
         user.role,
       );
 
+      // First check if table exists with a simple count
+      const { count, error: countError } = await supabase
+        .from("custom_calculations")
+        .select("*", { count: "exact", head: true });
+
+      if (countError) {
+        console.error("Table access error:", countError);
+        throw new Error(
+          `Table access failed: ${countError.message || countError.details || "Unknown error"}`,
+        );
+      }
+
+      console.log("Table accessible, total records:", count);
+
       const { data, error } = await supabase
         .from("custom_calculations")
         .select("*")
