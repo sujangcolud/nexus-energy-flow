@@ -578,7 +578,7 @@ const Dashboard = () => {
                   <Card
                     key={item.id}
                     onClick={() => navigate(item.path)}
-                    className={`relative cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-105 ${item.bgColor} border border-slate-200 h-full`}
+                    className={`relative cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-105 ${item.bgColor} border border-slate-200 h-full group`}
                   >
                     {canDeleteTabs && (
                       <AlertDialog>
