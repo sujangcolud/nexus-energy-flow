@@ -582,6 +582,163 @@ const Analytics = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Detailed Balance Calculations */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <DollarSign className="h-5 w-5" />
+              Daily Summary Balance Calculations
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Income Breakdown */}
+              <div className="space-y-3">
+                <h4 className="font-semibold text-green-700 border-b border-green-200 pb-1">
+                  Income Sources
+                </h4>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span>Orders (Restaurant):</span>
+                    <span className="font-medium">
+                      {formatCurrency(financials.restaurantIncome)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Charging Sessions:</span>
+                    <span className="font-medium">
+                      {formatCurrency(financials.chargingIncome)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between border-t pt-1">
+                    <span className="font-semibold">Total Income:</span>
+                    <span className="font-bold text-green-600">
+                      {formatCurrency(financials.totalIncome)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Balance Breakdown */}
+              <div className="space-y-3">
+                <h4 className="font-semibold text-blue-700 border-b border-blue-200 pb-1">
+                  Current Balances
+                </h4>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span>Cash Balance:</span>
+                    <span className="font-medium">
+                      {formatCurrency(financials.cashInHand)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Bank/Fonepay:</span>
+                    <span className="font-medium">
+                      {formatCurrency(financials.bankBalance)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Cooperative:</span>
+                    <span className="font-medium">
+                      {formatCurrency(financials.cooperativeBalance)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between border-t pt-1">
+                    <span className="font-semibold">Total Assets:</span>
+                    <span className="font-bold text-blue-600">
+                      {formatCurrency(financials.totalAssets)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Expenses */}
+              <div className="space-y-3">
+                <h4 className="font-semibold text-red-700 border-b border-red-200 pb-1">
+                  Expenses
+                </h4>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span>Total Expenses:</span>
+                    <span className="font-medium text-red-600">
+                      {formatCurrency(financials.totalExpenses)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Net Profit:</span>
+                    <span
+                      className={`font-medium ${financials.netProfit >= 0 ? "text-green-600" : "text-red-600"}`}
+                    >
+                      {formatCurrency(financials.netProfit)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Payment Mode Distribution */}
+              <div className="space-y-3">
+                <h4 className="font-semibold text-purple-700 border-b border-purple-200 pb-1">
+                  Payment Modes
+                </h4>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="flex items-center gap-1">
+                      <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
+                      Cash
+                    </span>
+                    <span className="font-medium">
+                      {formatCurrency(financials.cashInHand)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="flex items-center gap-1">
+                      <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                      Fonepay/Bank
+                    </span>
+                    <span className="font-medium">
+                      {formatCurrency(financials.bankBalance)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="flex items-center gap-1">
+                      <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                      Esewa
+                    </span>
+                    <span className="font-medium">NRs. 0.00</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+              <p className="text-sm text-gray-600 mb-2">
+                <strong>Calculation Logic:</strong> These calculations follow
+                the daily summary specification:
+              </p>
+              <ul className="text-xs text-gray-500 space-y-1">
+                <li>
+                  • Cash Balance = Total Cash Income - Cash Expenses - Cash
+                  Savings + Cash Withdrawals - Deposits to Digital
+                </li>
+                <li>
+                  • Fonepay Balance = Fonepay Income - Fonepay Expenses -
+                  Fonepay Savings + Deposits to Fonepay
+                </li>
+                <li>
+                  • Cooperative Balance = Total Savings - Cooperative
+                  Withdrawals
+                </li>
+                <li>
+                  • Total Balance = Cash + Fonepay + Cooperative + Esewa
+                  Balances
+                </li>
+              </ul>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };
