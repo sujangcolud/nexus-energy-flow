@@ -58,6 +58,10 @@ const App = () => {
             <Routes>
               <Route path="/" element={<Index />} />
               <Route
+                path="/poss"
+                element={<Navigate to="/dashboard" replace />}
+              />
+              <Route
                 path="/dashboard"
                 element={
                   <ProtectedRoute>
