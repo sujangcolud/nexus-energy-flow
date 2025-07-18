@@ -273,6 +273,8 @@ const OrdersTab = () => {
           total: Number(item.price * item.quantity),
           payment_mode: String(paymentMode),
           order_date: new Date().toISOString().split("T")[0],
+          // Add a 'date' field as well in case there's a trigger expecting it
+          date: new Date().toISOString().split("T")[0],
         };
         console.log("Order data with types:", orderData);
         console.log("Order data types:", {
@@ -283,6 +285,7 @@ const OrdersTab = () => {
           total: typeof orderData.total,
           payment_mode: typeof orderData.payment_mode,
           order_date: typeof orderData.order_date,
+          date: typeof orderData.date,
         });
         return supabase.from("orders").insert(orderData);
       });
