@@ -185,7 +185,9 @@ const InventoryTab = () => {
       fetchTransactions();
     } catch (error) {
       console.error("Error recording stock out:", error);
-      toast.error("Failed to record stock out");
+      const errorMessage =
+        error?.message || error?.details || "Failed to record stock out";
+      toast.error(`Error recording stock out: ${errorMessage}`);
     }
   };
 
