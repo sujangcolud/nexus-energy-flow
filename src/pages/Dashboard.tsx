@@ -48,7 +48,9 @@ import {
   Trash,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useMobile } from "@/hooks/use-mobile";
 import ChatBot from "@/components/ChatBot";
+import MobileDashboard from "./MobileDashboard";
 
 // Tab components are now rendered by routes, but their types/icons might be needed for nav items.
 import OrdersTab from "@/components/tabs/OrdersTab";
