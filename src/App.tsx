@@ -93,6 +93,8 @@ const App = () => {
                   path="share-investments"
                   element={<ShareInvestmentsTab />}
                 />
+                <Route path="vat-entry" element={<VATEntryTab />} />
+                <Route path="inventory" element={<InventoryTab />} />
                 {/* TODO: Add role-based protection for menu if needed at route level, or handle in MenuManagementTab */}
                 <Route path="menu" element={<MenuManagementTab />} />
                 <Route path="insights" element={<InsightsTab />} />
