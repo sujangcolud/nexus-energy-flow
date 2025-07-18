@@ -346,9 +346,20 @@ const Dashboard = () => {
       "vat-entry": showVatEntry,
     };
 
-    return allItems.filter(
+    const filteredItems = allItems.filter(
       (item) => item.roles.includes(userRole) && (tabSettings[item.id] ?? true),
     );
+
+    console.log("User role:", userRole);
+    console.log("Total items:", allItems.length);
+    console.log("Tab settings:", tabSettings);
+    console.log(
+      "Filtered items:",
+      filteredItems.length,
+      filteredItems.map((i) => i.label),
+    );
+
+    return filteredItems;
   };
 
   const navItems = getNavItems();
