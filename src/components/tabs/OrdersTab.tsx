@@ -157,16 +157,27 @@ const OrdersTab = () => {
 
   const fetchMenuItems = async () => {
     try {
+      console.log("Fetching menu items...");
       const { data, error } = await supabase
         .from("menu_items")
         .select("*")
         .eq("is_available", true)
         .order("category", { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        console.error(
+          "Menu items fetch error:",
+          JSON.stringify(error, null, 2),
+        );
+        throw error;
+      }
+      console.log("Menu items loaded:", data?.length || 0, "items");
       setMenuItems(data || []);
     } catch (error) {
-      console.error("Error fetching menu items:", error);
+      console.error(
+        "Error fetching menu items:",
+        JSON.stringify(error, null, 2),
+      );
       toast.error("Failed to load menu items");
     }
   };
