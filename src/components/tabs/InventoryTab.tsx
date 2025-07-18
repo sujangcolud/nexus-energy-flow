@@ -257,7 +257,9 @@ const InventoryTab = () => {
       fetchTransactions();
     } catch (error) {
       console.error("Error adding manual item:", error);
-      toast.error("Failed to add inventory item");
+      const errorMessage =
+        error?.message || error?.details || "Failed to add inventory item";
+      toast.error(`Error adding manual item: ${errorMessage}`);
     }
   };
 
