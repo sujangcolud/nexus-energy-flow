@@ -229,9 +229,6 @@ const CalculationEngineTab = () => {
       setCalculations(data || []);
     } catch (error) {
       console.error("Error fetching calculations:", error);
-      console.error("Error type:", typeof error);
-      console.error("Error constructor:", error?.constructor?.name);
-      console.error("Error keys:", Object.keys(error || {}));
 
       let errorMessage = "Failed to load calculations";
 
