@@ -307,9 +307,19 @@ const OrdersTab = () => {
     } catch (error) {
       console.error("Error submitting order:", JSON.stringify(error, null, 2));
       console.error("Error details:", error);
-      toast.error(
-        `Failed to place order: ${error?.message || "Unknown error"}`,
-      );
+      console.error("Error code:", error?.code);
+      console.error("Error message:", error?.message);
+
+      // Provide more specific error messages based on the error code
+      let errorMessage = "Failed to place order";
+      if (error?.code === "42703") {
+        errorMessage =
+          "Database configuration error. The fix has been applied, please try again.";
+      } else if (error?.message) {
+        errorMessage = `Failed to place order: ${error.message}`;
+      }
+
+      toast.error(errorMessage);
     } finally {
       setSubmitting(false);
     }
