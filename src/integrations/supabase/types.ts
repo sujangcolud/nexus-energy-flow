@@ -633,6 +633,28 @@ export type Database = {
         };
         Returns: undefined;
       };
+      insert_order_safe: {
+        Args: {
+          p_user_id: string;
+          p_item_name: string;
+          p_quantity: number;
+          p_rate: number;
+          p_total: number;
+          p_payment_mode: string;
+          p_order_date: string;
+        };
+        Returns: {
+          id: string;
+          user_id: string;
+          item_name: string;
+          quantity: number;
+          rate: number;
+          total: number;
+          payment_mode: string;
+          order_date: string;
+          created_at: string;
+        }[];
+      };
     };
     Enums: {
       app_role:
