@@ -2,6 +2,13 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  calculateDailySummary,
+  formatCurrency,
+  calculatePercentage,
+  getPaymentModeColor,
+  type DailySummaryData,
+} from "@/lib/calculations";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import {
