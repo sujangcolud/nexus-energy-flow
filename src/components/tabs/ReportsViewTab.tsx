@@ -55,6 +55,7 @@ import {
   endOfMonth,
   addMonths,
 } from "date-fns";
+import { useQuery } from "@tanstack/react-query";
 
 const ReportsViewTab = () => {
   const [searchParams] = useSearchParams();
@@ -72,6 +73,22 @@ const ReportsViewTab = () => {
 
   const formatCurrency = (amount: number) =>
     `NRs. ${typeof amount === "number" ? amount.toFixed(2) : "0.00"}`;
+
+  const { data: formulaData, isLoading: formulasLoading } = useQuery({
+    queryKey: ["formulas"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("formulas").select("*").eq("user_id", user!.id);
+      if (error) throw error;
+      const formulas: Record<string, number> = {};
+      for (const f of data) {
+        const { data: result, error: rpcError } = await supabase.rpc('execute_formula', { heading_param: f.heading });
+        if (rpcError) throw rpcError;
+        formulas[f.heading] = result;
+      }
+      return formulas;
+    },
+    enabled: !!user,
+  });
 
   const fetchReportData = async () => {
     if (!user) return;
@@ -120,11 +137,11 @@ const ReportsViewTab = () => {
   const cashFlow = totals.deposits - totals.withdrawals;
 
   // Custom reports
-  const cashInHand = reportData.cash_in_hand || 0;
-  const esewaBalance = reportData.esewa_balance || 0;
-  const fonepayBalance = reportData.fonepay_balance || 0;
-  const bankBalance = reportData.bank_balance || 0;
-  const cooperativeSavings = reportData.total_cooperative_savings || 0;
+  const cashInHand = formulaData?.cashInHand || 0;
+  const esewaBalance = formulaData?.esewaBalance || 0;
+  const fonepayBalance = formulaData?.fonepayBalance || 0;
+  const bankBalance = formulaData?.bankBalance || 0;
+  const cooperativeSavings = formulaData?.cooperativeSavings || 0;
 
   // Payment method analysis
   const paymentAnalysis = (() => {
@@ -406,6 +423,10 @@ const ReportsViewTab = () => {
     Maintenance: "from-red-500 to-pink-500",
     Insurance: "from-indigo-500 to-blue-500",
   };
+
+  if (isLoading || formulasLoading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-blue-50 to-indigo-50 relative overflow-hidden">

@@ -95,6 +95,16 @@ const InsightsTab = () => {
 
       if (error) throw error;
 
+      const { data: formulaData, error: formulaError } = await supabase.from("formulas").select("*").eq("user_id", user!.id);
+      if (formulaError) throw formulaError;
+
+      const formulas: Record<string, number> = {};
+      for (const f of formulaData) {
+        const { data: result, error: rpcError } = await supabase.rpc('execute_formula', { heading_param: f.heading });
+        if (rpcError) throw rpcError;
+        formulas[f.heading] = result;
+      }
+
       const totalRevenue = data.total_revenue || 0;
       const totalExpenses = data.total_expenses || 0;
       const netProfit = totalRevenue - totalExpenses;
@@ -227,11 +237,11 @@ const InsightsTab = () => {
           revenue: 15.5,
           orders: 12.3,
         },
-        cashBalance: data.cash_in_hand || 0,
-        esewaBalance: data.esewa_balance || 0,
-        fonepayBalance: data.fonepay_balance || 0,
-        bankBalance: data.bank_balance || 0,
-        cooperativeBalance: data.total_cooperative_savings || 0,
+        cashBalance: formulas.cashInHand || data.cash_in_hand || 0,
+        esewaBalance: formulas.esewaBalance || data.esewa_balance || 0,
+        fonepayBalance: formulas.fonepayBalance || data.fonepay_balance || 0,
+        bankBalance: formulas.bankBalance || data.bank_balance || 0,
+        cooperativeBalance: formulas.cooperativeSavings || data.total_cooperative_savings || 0,
       };
     },
     enabled: !!user,
@@ -758,3 +768,5 @@ const InsightsTab = () => {
 };
 
 export default InsightsTab;
+
+[end of src/components/tabs/InsightsTab.tsx]

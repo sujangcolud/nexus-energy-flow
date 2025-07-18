@@ -31,6 +31,7 @@ import Analytics from "./pages/Analytics";
 import ExpenseBookingsTab from "./components/tabs/ExpenseBookingsTab";
 import VatEntryTab from "./components/tabs/VatEntryTab";
 import CustomReportCreator from "./pages/CustomReportCreator";
+import FormulaCreator from "./pages/FormulaCreator";
 import { Outlet } from "react-router-dom"; // Needed for nested routes
 
 const queryClient = new QueryClient();
@@ -115,6 +116,7 @@ const App = () => {
                 />
                 <Route path="vat-entry" element={<VatEntryTab />} />
                 <Route path="custom-reports/create" element={<CustomReportCreator />} />
+                <Route path="formula-creator" element={<FormulaCreator />} />
                 {/* It might be good to have an index route that explicitly shows the cards */}
                 {/* <Route index element={<DashboardPageWithCards />} /> */}
               </Route>

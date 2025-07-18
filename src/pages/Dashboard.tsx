@@ -280,6 +280,16 @@ const Dashboard = () => {
         color: "bg-gray-600",
         bgColor: "bg-gray-50",
         description: "Create custom reports",
+      },
+      {
+        id: "formula_creator",
+        path: "formula-creator",
+        label: "Formula Creator",
+        icon: Calculator,
+        roles: ["super_admin"],
+        color: "bg-blue-gray-600",
+        bgColor: "bg-blue-gray-50",
+        description: "Create custom formulas",
       }
     ];
 

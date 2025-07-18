@@ -100,19 +100,30 @@ const Analytics = () => {
       });
 
       if (error) throw error;
-      return data;
+
+      const { data: formulaData, error: formulaError } = await supabase.from("formulas").select("*").eq("user_id", user!.id);
+      if (formulaError) throw formulaError;
+
+      const formulas: Record<string, number> = {};
+      for (const f of formulaData) {
+        const { data: result, error: rpcError } = await supabase.rpc('execute_formula', { heading_param: f.heading });
+        if (rpcError) throw rpcError;
+        formulas[f.heading] = result;
+      }
+
+      return { ...data, ...formulas };
     },
     enabled: !!user,
   });
 
   const financials: FinancialData = {
-    bankBalance: financialData?.bank_balance || 0,
-    cashInHand: financialData?.cash_in_hand || 0,
-    esewaBalance: financialData?.esewa_balance || 0,
-    fonepayBalance: financialData?.fonepay_balance || 0,
-    cooperativeBalance: financialData?.total_cooperative_savings || 0,
-    totalIncome: financialData?.total_revenue || 0,
-    totalExpenses: financialData?.total_expenses || 0,
+    bankBalance: financialData?.bankBalance || 0,
+    cashInHand: financialData?.cashInHand || 0,
+    esewaBalance: financialData?.esewaBalance || 0,
+    fonepayBalance: financialData?.fonepayBalance || 0,
+    cooperativeBalance: financialData?.cooperativeSavings || 0,
+    totalIncome: financialData?.totalRevenue || 0,
+    totalExpenses: financialData?.totalExpenses || 0,
     chargingIncome: (financialData?.charging || []).reduce(
       (sum: number, session: any) => sum + session.total_amount,
       0,
@@ -121,8 +132,8 @@ const Analytics = () => {
       (sum: number, order: any) => sum + order.total,
       0,
     ),
-    netProfit: (financialData?.total_revenue || 0) - (financialData?.total_expenses || 0),
-    totalAssets: (financialData?.bank_balance || 0) + (financialData?.cash_in_hand || 0) + (financialData?.total_cooperative_savings || 0),
+    netProfit: (financialData?.totalRevenue || 0) - (financialData?.totalExpenses || 0),
+    totalAssets: (financialData?.bankBalance || 0) + (financialData?.cashInHand || 0) + (financialData?.cooperativeSavings || 0),
   };
 
   // Chart data for charging vs restaurant correlation
