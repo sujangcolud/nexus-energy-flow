@@ -171,6 +171,13 @@ const allItems = [
     description: "Manage share investments",
     defaultRoles: ["data_entry", "super_admin"] as AppRole[],
   },
+  {
+    id: "file_upload",
+    label: "File Upload",
+    icon: "📤",
+    description: "Upload files to the system",
+    defaultRoles: ["super_admin"] as AppRole[],
+  },
 ];
 
 const Settings = () => {

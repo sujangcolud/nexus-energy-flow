@@ -4,6 +4,17 @@ import { useUserPermissions } from "@/hooks/useUserPermissions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
   Outlet,
   useLocation,
   NavLink,
@@ -52,6 +63,7 @@ import UserManagementTab from "@/components/tabs/UserManagementTab";
 import ShareInvestmentsTab from "@/components/tabs/ShareInvestmentsTab";
 import ExpenseBookingsTab from "@/components/tabs/ExpenseBookingsTab";
 import VatEntryTab from "@/components/tabs/VatEntryTab";
+import FileUploadTab from "@/components/tabs/FileUploadTab";
 
 const Dashboard = () => {
   const { user, signOut, userRole } = useAuth();
@@ -294,6 +306,17 @@ const Dashboard = () => {
         color: "bg-gray-600",
         bgColor: "bg-gray-50",
         description: "Create custom reports",
+      },
+      {
+        id: "file_upload",
+        path: "file-upload",
+        label: "File Upload",
+        icon: Upload,
+        component: FileUploadTab,
+        roles: ["super_admin"],
+        color: "bg-pink-600",
+        bgColor: "bg-pink-50",
+        description: "Upload files to the system",
       }
     ];
 
@@ -557,26 +580,55 @@ const Dashboard = () => {
                       className={`relative cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-105 ${item.bgColor} border border-slate-200 h-full`}
                     >
                       {canDeleteTabs && (
-                        <Button
-                          variant="destructive"
-                          size="icon"
-                          className="absolute top-2 right-2 h-6 w-6"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            const newSettings = {
-                              ...tabSettings,
-                              [item.id]: false,
-                            };
-                            localStorage.setItem(
-                              "tabSettings",
-                              JSON.stringify(newSettings),
-                            );
-                            window.location.reload();
-                          }}
-                        >
-                          <Trash className="h-4 w-4" />
-                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              variant="destructive"
+                              size="icon"
+                              className="absolute top-2 right-2 h-6 w-6"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                              }}
+                            >
+                              <Trash className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>
+                                Are you sure you want to delete this tab?
+                              </AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This action cannot be undone. This will
+                                permanently delete the tab from your dashboard.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                Cancel
+                              </AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  const newSettings = {
+                                    ...tabSettings,
+                                    [item.id]: false,
+                                  };
+                                  localStorage.setItem(
+                                    "tabSettings",
+                                    JSON.stringify(newSettings),
+                                  );
+                                  window.location.reload();
+                                }}
+                              >
+                                Delete
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       )}
                       <CardContent className="flex flex-col items-center justify-center p-6 space-y-4 h-full">
                         <div
