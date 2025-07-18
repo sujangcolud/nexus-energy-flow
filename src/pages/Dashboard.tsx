@@ -74,6 +74,8 @@ const Dashboard = () => {
   const [isChatBotOpen, setIsChatBotOpen] = useState(false);
   const [canDeleteTabs, setCanDeleteTabs] = useState(false);
   const [tabSettings, setTabSettings] = useState<Record<string, boolean>>({});
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [tabToDelete, setTabToDelete] = useState<string | null>(null);
 
   useEffect(() => {
     const storedSettings = localStorage.getItem("tabSettings");
@@ -593,55 +595,19 @@ const Dashboard = () => {
                     className={`relative cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-105 ${item.bgColor} border border-slate-200 h-full group`}
                   >
                     {canDeleteTabs && (
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button
-                            variant="destructive"
-                            size="icon"
-                            className="absolute top-2 right-2 h-6 w-6"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                            }}
-                          >
-                            <Trash className="h-4 w-4" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>
-                              Are you sure you want to delete this tab?
-                            </AlertDialogTitle>
-                            <AlertDialogDescription>
-                              This action cannot be undone. This will
-                              permanently delete the tab from your dashboard.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              Cancel
-                            </AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                const newSettings = {
-                                  ...tabSettings,
-                                  [item.id]: false,
-                                };
-                                localStorage.setItem(
-                                  "tabSettings",
-                                  JSON.stringify(newSettings),
-                                );
-                                window.location.reload();
-                              }}
-                            >
-                              Delete
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
+                      <Button
+                        variant="destructive"
+                        size="icon"
+                        className="absolute top-2 right-2 h-6 w-6"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setTabToDelete(item.id);
+                          setShowDeleteDialog(true);
+                        }}
+                      >
+                        <Trash className="h-4 w-4" />
+                      </Button>
                     )}
                     <CardContent className="flex flex-col items-center justify-center p-6 space-y-4 h-full">
                       <div
@@ -730,6 +696,39 @@ const Dashboard = () => {
         isOpen={isChatBotOpen}
         onToggle={() => setIsChatBotOpen(!isChatBotOpen)}
       />
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Are you sure you want to delete this tab?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the tab
+              from your dashboard.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (tabToDelete) {
+                  const newSettings = {
+                    ...tabSettings,
+                    [tabToDelete]: false,
+                  };
+                  localStorage.setItem(
+                    "tabSettings",
+                    JSON.stringify(newSettings),
+                  );
+                  window.location.reload();
+                }
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
