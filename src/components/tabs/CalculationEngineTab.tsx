@@ -239,12 +239,7 @@ const CalculationEngineTab = () => {
         const hint = error.hint || error["hint"] || null;
         const code = error.code || error["code"] || null;
 
-        console.log("Extracted error properties:", {
-          msg,
-          details,
-          hint,
-          code,
-        });
+        // console.log("Extracted error properties:", { msg, details, hint, code });
 
         if (msg && typeof msg === "string" && msg.trim() !== "") {
           errorMessage = msg;
