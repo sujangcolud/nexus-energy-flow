@@ -287,6 +287,7 @@ const OrdersTab = () => {
             console.log(
               "RPC function not found, falling back to direct insert",
             );
+            console.log("RPC error:", result.error);
             const directOrderData = {
               user_id: orderParams.p_user_id,
               item_name: orderParams.p_item_name,
@@ -296,6 +297,7 @@ const OrdersTab = () => {
               payment_mode: orderParams.p_payment_mode,
               order_date: orderParams.p_order_date,
             };
+            console.log("Attempting direct insert with data:", directOrderData);
             return supabase.from("orders").insert(directOrderData);
           }
           return result;
