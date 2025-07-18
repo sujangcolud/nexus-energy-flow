@@ -168,9 +168,6 @@ const VATEntryTab = () => {
     if (!user || !selectedEntry) return;
 
     try {
-      const vatAmount = (selectedEntry.amount * nepalVATRate) / 100;
-      const totalWithVAT = selectedEntry.amount + vatAmount;
-
       const { error } = await supabase.from("vat_entries").insert({
         user_id: user.id,
         entry_type: selectedEntry.type,
@@ -180,7 +177,10 @@ const VATEntryTab = () => {
         vat_rate: nepalVATRate,
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error creating VAT entry:", error);
+        throw error;
+      }
 
       toast.success("VAT entry created successfully!");
       setVatDialogOpen(false);
@@ -188,7 +188,9 @@ const VATEntryTab = () => {
       fetchVATEntries();
     } catch (error) {
       console.error("Error creating VAT entry:", error);
-      toast.error("Failed to create VAT entry");
+      const errorMessage =
+        error?.message || error?.details || "Failed to create VAT entry";
+      toast.error(`Error creating VAT entry: ${errorMessage}`);
     }
   };
 
