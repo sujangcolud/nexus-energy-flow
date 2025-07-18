@@ -149,7 +149,9 @@ const InventoryTab = () => {
       setTransactions(data || []);
     } catch (error) {
       console.error("Error fetching transactions:", error);
-      toast.error("Failed to load transactions");
+      const errorMessage =
+        error?.message || error?.details || "Failed to load transactions";
+      toast.error(`Error fetching transactions: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
