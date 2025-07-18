@@ -599,6 +599,17 @@ const OrdersTab = () => {
           </Card>
         </div>
 
+        {/* Balance Display */}
+        <BalanceDisplay
+          cashBalance={500} // These would be calculated from actual data
+          bankBalance={1200}
+          cooperativeBalance={800}
+          esewaBalance={300}
+          totalBalance={2800}
+          size="sm"
+          showDetails={true}
+        />
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Menu Items Section */}
           <div className="lg:col-span-2 space-y-6">
