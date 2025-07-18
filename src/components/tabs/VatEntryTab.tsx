@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -40,11 +40,6 @@ const VatEntryTab = () => {
   const [endDate, setEndDate] = useState(new Date().toISOString().slice(0, 10));
   const [category, setCategory] = useState("all");
   const [paymentMethod, setPaymentMethod] = useState("all");
-
-  const prevStartDate = useRef(startDate);
-  const prevEndDate = useRef(endDate);
-  const prevCategory = useRef(category);
-  const prevPaymentMethod = useRef(paymentMethod);
   const [isBillOpen, setIsBillOpen] = useState(false);
   const [selectedIncome, setSelectedIncome] = useState<Income | null>(null);
   const [billData, setBillData] = useState({
@@ -66,18 +61,7 @@ const VatEntryTab = () => {
   });
 
   useEffect(() => {
-    if (
-      prevStartDate.current !== startDate ||
-      prevEndDate.current !== endDate ||
-      prevCategory.current !== category ||
-      prevPaymentMethod.current !== paymentMethod
-    ) {
-      fetchIncomes();
-      prevStartDate.current = startDate;
-      prevEndDate.current = endDate;
-      prevCategory.current = category;
-      prevPaymentMethod.current = paymentMethod;
-    }
+    fetchIncomes();
   }, [user, startDate, endDate, category, paymentMethod]);
 
   const fetchIncomes = async () => {
@@ -94,7 +78,9 @@ const VatEntryTab = () => {
           .eq("user_id", user.id);
         if (startDate) query = query.gte("order_date", startDate);
         if (endDate) query = query.lte("order_date", endDate);
-        if (paymentMethod !== "all") query = query.eq("payment_mode", paymentMethod);
+        if (paymentMethod !== "all") {
+          query = query.eq("payment_mode", paymentMethod);
+        }
         const { data, error } = await query;
         if (error) throw error;
         const orderIds = data?.map((o) => o.id) || [];
@@ -116,7 +102,9 @@ const VatEntryTab = () => {
           .eq("user_id", user.id);
         if (startDate) query = query.gte("session_date", startDate);
         if (endDate) query = query.lte("session_date", endDate);
-        if (paymentMethod !== "all") query = query.eq("payment_mode", paymentMethod);
+        if (paymentMethod !== "all") {
+          query = query.eq("payment_mode", paymentMethod);
+        }
         const { data, error } = await query;
         if (error) throw error;
         return data?.map((c) => ({
