@@ -111,7 +111,7 @@ const Dashboard = () => {
       console.error("Error during daily closing:", error);
       const errorMessage =
         error?.message || error?.details || "Failed to complete daily closing";
-      alert(`Error during daily closing: ${errorMessage}`);
+      toast.error(`Error during daily closing: ${errorMessage}`);
     }
   };
 
