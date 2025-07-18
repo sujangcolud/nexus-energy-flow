@@ -69,6 +69,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import useTableControls from "@/hooks/useTableControls";
+import BalanceDisplay from "@/components/ui/balance-display";
 
 interface Order {
   id: string;
