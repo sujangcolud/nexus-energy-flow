@@ -285,7 +285,8 @@ const OrdersTab = () => {
           payment_mode: typeof orderData.payment_mode,
           order_date: typeof orderData.order_date,
         });
-        return supabase.from("orders").insert(orderData);
+        // Try upsert method which might handle triggers differently
+        return supabase.from("orders").upsert(orderData);
       });
 
       const results = await Promise.all(orderPromises);
