@@ -189,18 +189,6 @@ const Dashboard = () => {
         description: "Financial analytics & insights",
       },
 
-      // Reports and Analytics - accessible to reports_viewer, super_admin
-      {
-        id: "reports",
-        path: "reports",
-        label: "Reports",
-        icon: FileText,
-        component: ReportsTab,
-        roles: ["user", "data_entry", "reports_viewer", "super_admin"],
-        color: "bg-violet-600",
-        bgColor: "bg-violet-50",
-        description: "Generate business reports",
-      },
       {
         id: "reports-view",
         path: "reports-view",
