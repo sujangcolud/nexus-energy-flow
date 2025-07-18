@@ -86,10 +86,6 @@ const VatEntryTab = () => {
         ordersQuery = ordersQuery.lte("order_date", endDate);
         chargingQuery = chargingQuery.lte("session_date", endDate);
       }
-      if (paymentMethod !== "all") {
-        ordersQuery = ordersQuery.eq("payment_mode", paymentMethod);
-        chargingQuery = chargingQuery.eq("payment_mode", paymentMethod);
-      }
 
       const { data: orders, error: ordersError } = await ordersQuery;
       if (ordersError) throw ordersError;
@@ -97,9 +93,9 @@ const VatEntryTab = () => {
       const { data: charging, error: chargingError } = await chargingQuery;
       if (chargingError) throw chargingError;
 
-      let allIncomes = [];
+      let allIncomes: Income[] = [];
       if (category === "all" || category === "orders") {
-        allIncomes.push(...(orders?.map(o => ({...o, item_name: o.order_items[0]?.menu_items.name || 'N/A'})) || []));
+        allIncomes.push(...(orders?.map(o => ({...o, item_name: o.order_items[0]?.menu_items.name || 'N/A'} as Income)) || []));
       }
       if (category === "all" || category === "charging") {
         allIncomes.push(
@@ -109,7 +105,7 @@ const VatEntryTab = () => {
             payment_mode: c.payment_mode,
             order_date: c.session_date,
             item_name: c.vehicle_id || 'N/A',
-          })) || [])
+          } as Income)) || [])
         );
       }
 
@@ -271,15 +267,10 @@ const VatEntryTab = () => {
         <td>Item</td>
         <td>Price</td>
       </tr>
-      ${selectedIncome.items
-        .map(
-          (item: any) =>
-            `<tr class="item">
-              <td>${item.description} (${item.quantity} pcs @ NPR ${item.unitPrice})</td>
-              <td>NPR ${item.totalPriceWithVAT.toFixed(2)}</td>
-            </tr>`,
-        )
-        .join("")}
+      <tr class="item">
+        <td>${selectedIncome.item_name}</td>
+        <td>NPR ${selectedIncome.total.toFixed(2)}</td>
+      </tr>
       <tr class="item last">
         <td>Subtotal</td>
         <td>NPR ${base.toFixed(2)}</td>
@@ -494,7 +485,7 @@ const VatEntryTab = () => {
                     <td>Amount</td>
                   </tr>
                   <tr class="item">
-                    <td>Service Charge</td>
+                    <td>${selectedIncome.item_name}</td>
                     <td>NPR ${selectedIncome.total.toFixed(2)}</td>
                   </tr>
                   <tr class="item last">
