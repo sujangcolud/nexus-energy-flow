@@ -71,7 +71,7 @@ const VatEntryTab = () => {
     try {
       let ordersQuery = supabase
         .from("orders")
-        .select("id, total, payment_mode, order_date, order_items:order_items(*)")
+        .select("id, total, payment_mode, order_date")
         .eq("user_id", user.id);
       let chargingQuery = supabase
         .from("charging_sessions")
@@ -94,12 +94,24 @@ const VatEntryTab = () => {
       const { data: orders, error: ordersError } = await ordersQuery;
       if (ordersError) throw ordersError;
 
+      const orderIds = orders?.map((o) => o.id) || [];
+      const { data: orderItems, error: orderItemsError } = await supabase
+        .from("order_items")
+        .select("*")
+        .in("order_id", orderIds);
+      if (orderItemsError) throw orderItemsError;
+
       const { data: charging, error: chargingError } = await chargingQuery;
       if (chargingError) throw chargingError;
 
       let allIncomes: Income[] = [];
       if (category === "all" || category === "orders") {
-        allIncomes.push(...((orders?.map(o => ({...o, items: o.order_items})) as Income[]) || []));
+        allIncomes.push(
+          ...((orders?.map((o) => ({
+            ...o,
+            items: orderItems?.filter((oi) => oi.order_id === o.id) || [],
+          })) as Income[]) || [])
+        );
       }
       if (category === "all" || category === "charging") {
         allIncomes.push(
