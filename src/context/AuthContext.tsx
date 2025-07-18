@@ -44,6 +44,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   const [user, setUser] = useState<AppUser | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
 
   const fetchUserProfile = async (userId: string) => {
     try {
@@ -120,18 +121,19 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       console.log("Initial session check:", session);
       setSession(session);
       setLoading(false);
+      setInitialLoadComplete(true);
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
   useEffect(() => {
-    if (session?.user) {
+    if (initialLoadComplete && session?.user && !user) {
       fetchUserProfile(session.user.id);
-    } else {
+    } else if (initialLoadComplete && !session?.user) {
       setUser(null);
     }
-  }, [session]);
+  }, [session, initialLoadComplete, user]);
 
   const login = async (email: string, password: string) => {
     console.log("Attempting login for:", email);
