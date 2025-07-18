@@ -78,6 +78,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { UserOptions } from "jspdf-autotable";
+import BalanceSheetTab from "./BalanceSheetTab";
 
 interface jsPDFWithAutoTable extends jsPDF {
   autoTable: (options: UserOptions) => jsPDF;
@@ -148,6 +149,7 @@ const ReportsTab = () => {
     "Withdrawal Report",
     "Cooperative Savings Report",
     "Complete Business Report",
+    "Balance Sheet",
   ];
 
   const expenseCategories = [
@@ -170,6 +172,7 @@ const ReportsTab = () => {
     "Withdrawal Report": "from-purple-500 to-indigo-500",
     "Cooperative Savings Report": "from-teal-500 to-cyan-500",
     "Complete Business Report": "from-violet-500 to-purple-500",
+    "Balance Sheet": "from-pink-500 to-rose-500",
   };
 
   useEffect(() => {
@@ -271,6 +274,15 @@ const ReportsTab = () => {
         case "Complete Business Report":
           reportData = await generateCompleteReport(dateFrom, dateTo);
           break;
+        case "Balance Sheet":
+          await supabase.rpc("generate_balance_sheet", {
+            user_id_param: user.id,
+            date_from: dateFrom,
+            date_to: dateTo,
+          });
+          toast.success("Balance Sheet generated successfully! 📊");
+          fetchReports();
+          return;
         default:
           toast.error("Report type not implemented yet");
           return;
@@ -760,6 +772,12 @@ const ReportsTab = () => {
             >
               Static Expenses
             </TabsTrigger>
+            <TabsTrigger
+              value="balance-sheet"
+              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-pink-500 data-[state=active]:to-rose-500 data-[state=active]:text-white"
+            >
+              Balance Sheet
+            </TabsTrigger>
           </TabsList>
 
           {/* Generate Reports Tab */}
@@ -1231,6 +1249,9 @@ const ReportsTab = () => {
                 )}
               </CardContent>
             </Card>
+          </TabsContent>
+          <TabsContent value="balance-sheet">
+            <BalanceSheetTab />
           </TabsContent>
         </Tabs>
 
