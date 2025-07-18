@@ -264,64 +264,7 @@ const Analytics = () => {
       balancesData?.total_withdrawals_cash || 0,
     );
 
-<<<<<<< HEAD
     // Use actual balances from balances table if available, otherwise use calculated values
-=======
-    // Charging income using correct column name 'total_amount'
-    const chargingIncome = chargingData.reduce(
-      (sum, session) => sum + (parseFloat(session.total_amount) || 0),
-      0,
-    );
-
-    // Total deposits to bank
-    const totalDeposits = depositsData.reduce(
-      (sum, deposit) => sum + (parseFloat(deposit.amount) || 0),
-      0,
-    );
-
-    // Total withdrawals from bank
-    const totalWithdrawals = withdrawalsData.reduce(
-      (sum, withdrawal) => sum + (parseFloat(withdrawal.amount) || 0),
-      0,
-    );
-
-    // Total expenses using correct column name
-    const totalExpenses = expensesData.reduce(
-      (sum, expense) => sum + (parseFloat(expense.amount) || 0),
-      0,
-    );
-
-    // Bank expenses (non-cash expenses) using correct column 'payment_mode'
-    const bankExpenses = expensesData
-      .filter((expense) => expense.payment_mode !== "cash")
-      .reduce((sum, expense) => sum + (parseFloat(expense.amount) || 0), 0);
-
-    // Cash expenses
-    const cashExpenses = expensesData
-      .filter((expense) => expense.payment_mode === "cash")
-      .reduce((sum, expense) => sum + (parseFloat(expense.amount) || 0), 0);
-
-    // Cash orders using correct column 'payment_mode'
-    const cashOrders = ordersData
-      .filter((order) => order.payment_mode === "cash")
-      .reduce((sum, order) => sum + (parseFloat(order.total) || 0), 0);
-
-    // Cash from charging using correct column 'payment_mode'
-    const cashFromCharging = chargingData
-      .filter((session) => session.payment_mode === "cash")
-      .reduce(
-        (sum, session) => sum + (parseFloat(session.total_amount) || 0),
-        0,
-      );
-
-    // Cooperative savings using correct column name 'contribution_amount'
-    const cooperativeSavings = cooperativeData.reduce(
-      (sum, saving) => sum + (parseFloat(saving.contribution_amount) || 0),
-      0,
-    );
-
-    // Use actual balances from balances table if available
->>>>>>> origin/main
     const actualBankBalance = balancesData?.bank_balance
       ? parseFloat(balancesData.bank_balance)
       : aggregatedSummary.fonepay_balance; // Bank balance maps to fonepay balance
