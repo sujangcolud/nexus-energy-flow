@@ -248,6 +248,51 @@ export type Database = {
         };
         Relationships: [];
       };
+      expense_bookings: {
+        Row: {
+          id: string;
+          description: string;
+          amount: number;
+          category: string | null;
+          vendor: string | null;
+          due_date: string | null;
+          status: string | null;
+          notes: string | null;
+          expense_id: string | null;
+          created_at: string | null;
+          updated_at: string | null;
+          user_id: string | null;
+        };
+        Insert: {
+          id?: string;
+          description: string;
+          amount: number;
+          category?: string | null;
+          vendor?: string | null;
+          due_date?: string | null;
+          status?: string | null;
+          notes?: string | null;
+          expense_id?: string | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+          user_id?: string | null;
+        };
+        Update: {
+          id?: string;
+          description?: string;
+          amount?: number;
+          category?: string | null;
+          vendor?: string | null;
+          due_date?: string | null;
+          status?: string | null;
+          notes?: string | null;
+          expense_id?: string | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+          user_id?: string | null;
+        };
+        Relationships: [];
+      };
       expenses: {
         Row: {
           amount: number;
