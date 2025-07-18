@@ -97,8 +97,8 @@ const Dashboard = () => {
   const handleDailyClosing = async () => {
     try {
       const { error } = await supabase.rpc("daily_closing", {
-        user_id_param: user.id,
-        closing_date: new Date().toISOString().slice(0, 10),
+        p_user_id: user.id,
+        p_closing_date: new Date().toISOString().slice(0, 10),
       });
       if (error) throw error;
       alert("Daily closing completed successfully!");
