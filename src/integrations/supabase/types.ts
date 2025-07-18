@@ -74,6 +74,39 @@ export type Database = {
         };
         Relationships: [];
       };
+      categories: {
+        Row: {
+          id: string;
+          name: string;
+          table_type: string;
+          description: string | null;
+          is_active: boolean | null;
+          created_at: string | null;
+          updated_at: string | null;
+          user_id: string | null;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          table_type: string;
+          description?: string | null;
+          is_active?: boolean | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+          user_id?: string | null;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          table_type?: string;
+          description?: string | null;
+          is_active?: boolean | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+          user_id?: string | null;
+        };
+        Relationships: [];
+      };
       charging_sessions: {
         Row: {
           created_at: string | null;
