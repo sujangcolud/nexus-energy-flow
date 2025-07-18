@@ -38,6 +38,7 @@ const VatEntryTab = () => {
   const [startDate, setStartDate] = useState(new Date().toISOString().slice(0, 10));
   const [endDate, setEndDate] = useState(new Date().toISOString().slice(0, 10));
   const [category, setCategory] = useState("all");
+  const [paymentMethod, setPaymentMethod] = useState("all");
   const [isBillOpen, setIsBillOpen] = useState(false);
   const [selectedIncome, setSelectedIncome] = useState<Income | null>(null);
   const [billData, setBillData] = useState({
@@ -60,7 +61,7 @@ const VatEntryTab = () => {
 
   useEffect(() => {
     fetchIncomes();
-  }, [user, startDate, endDate, category]);
+  }, [user, startDate, endDate, category, paymentMethod]);
 
   const fetchIncomes = async () => {
     if (!user) return;
@@ -83,6 +84,10 @@ const VatEntryTab = () => {
       if (endDate) {
         ordersQuery = ordersQuery.lte("order_date", endDate);
         chargingQuery = chargingQuery.lte("session_date", endDate);
+      }
+      if (paymentMethod !== "all") {
+        ordersQuery = ordersQuery.eq("payment_mode", paymentMethod);
+        chargingQuery = chargingQuery.eq("payment_mode", paymentMethod);
       }
 
       const { data: orders, error: ordersError } = await ordersQuery;
@@ -338,6 +343,21 @@ const VatEntryTab = () => {
                 <option value="all">All</option>
                 <option value="orders">Orders</option>
                 <option value="charging">Charging</option>
+              </select>
+            </div>
+            <div>
+              <Label htmlFor="payment-method">Payment Method</Label>
+              <select
+                id="payment-method"
+                value={paymentMethod}
+                onChange={(e) => setPaymentMethod(e.target.value)}
+                className="w-full p-2 border rounded"
+              >
+                <option value="all">All</option>
+                <option value="cash">Cash</option>
+                <option value="card">Card</option>
+                <option value="esewa">eSewa</option>
+                <option value="fonepay">Fonepay</option>
               </select>
             </div>
           </div>
