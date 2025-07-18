@@ -280,7 +280,10 @@ const OrdersTab = () => {
         // Use RPC function to bypass trigger issues
         return supabase.rpc("insert_order_safe", orderParams).then((result) => {
           // If RPC function doesn't exist, fall back to direct insert
-          if (result.error && result.error.code === "42883") {
+          if (
+            result.error &&
+            (result.error.code === "PGRST202" || result.error.code === "42883")
+          ) {
             console.log(
               "RPC function not found, falling back to direct insert",
             );
