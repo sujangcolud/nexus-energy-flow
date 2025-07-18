@@ -264,8 +264,11 @@ const OrdersTab = () => {
       setPaymentMode("");
       fetchOrders();
     } catch (error) {
-      console.error("Error submitting order:", error);
-      toast.error("Failed to place order");
+      console.error("Error submitting order:", JSON.stringify(error, null, 2));
+      console.error("Error details:", error);
+      toast.error(
+        `Failed to place order: ${error?.message || "Unknown error"}`,
+      );
     } finally {
       setSubmitting(false);
     }
