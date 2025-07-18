@@ -128,7 +128,9 @@ const InventoryTab = () => {
       setInventory(data || []);
     } catch (error) {
       console.error("Error fetching inventory:", error);
-      toast.error("Failed to load inventory");
+      const errorMessage =
+        error?.message || error?.details || "Failed to load inventory";
+      toast.error(`Error fetching inventory: ${errorMessage}`);
     }
   };
 
