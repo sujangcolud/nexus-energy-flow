@@ -239,51 +239,30 @@ const Analytics = () => {
       balancesData?.total_withdrawals_cash || 0,
     );
 
-    // Cash orders (restaurant income paid in cash) using correct column 'payment_mode'
-    const cashOrders = ordersData
-      .filter((order) => order.payment_mode === "cash")
-      .reduce((sum, order) => sum + (parseFloat(order.total) || 0), 0);
-
-    // Cash from charging using correct column 'payment_mode'
-    const cashFromCharging = chargingData
-      .filter((session) => session.payment_mode === "cash")
-      .reduce(
-        (sum, session) => sum + (parseFloat(session.total_amount) || 0),
-        0,
-      );
-
-    // Cooperative savings using correct column name 'contribution_amount'
-    const cooperativeSavings = cooperativeData.reduce(
-      (sum, saving) => sum + (parseFloat(saving.contribution_amount) || 0),
-      0,
-    );
-
-    // Use actual balances from balances table if available
+    // Use actual balances from balances table if available, otherwise use calculated values
     const actualBankBalance = balancesData?.bank_balance
       ? parseFloat(balancesData.bank_balance)
-      : totalDeposits - totalWithdrawals - bankExpenses;
+      : aggregatedSummary.fonepay_balance; // Bank balance maps to fonepay balance
+
     const actualCashInHand = balancesData?.cash_in_hand
       ? parseFloat(balancesData.cash_in_hand)
-      : cashOrders + cashFromCharging - cashExpenses;
+      : aggregatedSummary.cash_balance;
+
     const actualCooperativeBalance = balancesData?.cooperative_balance
       ? parseFloat(balancesData.cooperative_balance)
-      : cooperativeSavings;
-
-    const totalIncome = restaurantIncome + chargingIncome;
-    const netProfit = totalIncome - totalExpenses;
-    const totalAssets =
-      actualBankBalance + actualCashInHand + actualCooperativeBalance;
+      : aggregatedSummary.cooperative_balance;
 
     return {
       bankBalance: actualBankBalance,
       cashInHand: actualCashInHand,
       cooperativeBalance: actualCooperativeBalance,
-      totalIncome,
-      totalExpenses,
-      chargingIncome,
-      restaurantIncome,
-      netProfit,
-      totalAssets,
+      totalIncome: aggregatedSummary.total_income,
+      totalExpenses: aggregatedSummary.total_expenses,
+      chargingIncome: aggregatedSummary.total_income_from_charging,
+      restaurantIncome: aggregatedSummary.total_income_from_orders,
+      netProfit:
+        aggregatedSummary.total_income - aggregatedSummary.total_expenses,
+      totalAssets: aggregatedSummary.total_balance,
     };
   };
 
