@@ -263,10 +263,7 @@ const MobileDashboard = () => {
     if (!userRole) return [];
 
     return allItems.filter(
-      (item) =>
-        item.roles.includes(userRole) &&
-        (tabSettings[item.id] ?? true) &&
-        hasTabAccess(item.id),
+      (item) => item.roles.includes(userRole) && (tabSettings[item.id] ?? true),
     );
   };
 
