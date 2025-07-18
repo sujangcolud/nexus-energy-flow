@@ -29,6 +29,7 @@ interface Income {
   total: number;
   payment_mode: string;
   order_date: string;
+  item_name: string;
 }
 
 const VatEntryTab = () => {
@@ -70,11 +71,11 @@ const VatEntryTab = () => {
     try {
       let ordersQuery = supabase
         .from("orders")
-        .select("id, total, payment_mode, order_date")
+        .select("id, total, payment_mode, order_date, order_items(menu_items(name))")
         .eq("user_id", user.id);
       let chargingQuery = supabase
         .from("charging_sessions")
-        .select("id, total_amount, payment_mode, session_date")
+        .select("id, total_amount, payment_mode, session_date, vehicle_id")
         .eq("user_id", user.id);
 
       if (startDate) {
@@ -97,21 +98,40 @@ const VatEntryTab = () => {
       if (chargingError) throw chargingError;
 
       let allIncomes = [];
-      if (category === "all" || category === "orders") {
-        allIncomes.push(...(orders || []));
-      }
-      if (category === "all" || category === "charging") {
+      let allIncomes = [];
+      if (category === "orders") {
+        allIncomes.push(...(orders?.map(o => ({...o, item_name: o.order_items[0]?.menu_items.name || 'N/A'})) || []));
+      } else if (category === "charging") {
         allIncomes.push(
           ...(charging?.map((c) => ({
             id: c.id,
             total: c.total_amount,
             payment_mode: c.payment_mode,
             order_date: c.session_date,
+            item_name: c.vehicle_id || 'N/A',
+          })) || [])
+        );
+      } else {
+        allIncomes.push(...(orders?.map(o => ({...o, item_name: o.order_items[0]?.menu_items.name || 'N/A'})) || []));
+        allIncomes.push(
+          ...(charging?.map((c) => ({
+            id: c.id,
+            total: c.total_amount,
+            payment_mode: c.payment_mode,
+            order_date: c.session_date,
+            item_name: c.vehicle_id || 'N/A',
           })) || [])
         );
       }
 
-      setIncomes(allIncomes);
+      let filteredIncomes = allIncomes;
+      if (paymentMethod !== "all") {
+        filteredIncomes = filteredIncomes.filter(
+          (income) => income.payment_mode === paymentMethod
+        );
+      }
+
+      setIncomes(filteredIncomes);
     } catch (error) {
       console.error("Error fetching incomes:", error);
       toast.error("Failed to load incomes");
@@ -365,6 +385,7 @@ const VatEntryTab = () => {
             <TableHeader>
               <TableRow>
                 <TableHead>Date</TableHead>
+                <TableHead>Item Name</TableHead>
                 <TableHead>Payment Mode</TableHead>
                 <TableHead>Total Amount</TableHead>
                 <TableHead>Base Amount</TableHead>
@@ -374,7 +395,7 @@ const VatEntryTab = () => {
             </TableHeader>
             <TableBody>
               <TableRow>
-                <TableCell colSpan={2} className="font-bold">
+                <TableCell colSpan={3} className="font-bold">
                   Total
                 </TableCell>
                 <TableCell className="font-bold">
@@ -405,6 +426,7 @@ const VatEntryTab = () => {
                 return (
                   <TableRow key={income.id}>
                     <TableCell>{income.order_date}</TableCell>
+                    <TableCell>{income.item_name}</TableCell>
                     <TableCell>{income.payment_mode}</TableCell>
                     <TableCell>{income.total.toFixed(2)}</TableCell>
                     <TableCell>{base.toFixed(2)}</TableCell>
