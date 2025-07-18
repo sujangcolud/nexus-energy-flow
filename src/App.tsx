@@ -29,6 +29,7 @@ import VATEntryTab from "./components/tabs/VATEntryTab";
 import InventoryTab from "./components/tabs/InventoryTab";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import AdminPanel from "./pages/AdminPanel";
+import CustomReportCreator from "./pages/CustomReportCreator";
 import Settings from "./pages/Settings";
 import Analytics from "./pages/Analytics";
 import { Outlet } from "react-router-dom"; // Needed for nested routes
