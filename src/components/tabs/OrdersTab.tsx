@@ -266,27 +266,19 @@ const OrdersTab = () => {
 
       const orderPromises = cart.map((item) => {
         const currentDate = new Date().toISOString().split("T")[0];
-        const orderData = {
-          user_id: user.id,
-          item_name: String(item.name),
-          quantity: Number(item.quantity),
-          rate: Number(item.price),
-          total: Number(item.price * item.quantity),
-          payment_mode: String(paymentMode),
-          order_date: currentDate,
+        const orderParams = {
+          p_user_id: user.id,
+          p_item_name: String(item.name),
+          p_quantity: Number(item.quantity),
+          p_rate: Number(item.price),
+          p_total: Number(item.price * item.quantity),
+          p_payment_mode: String(paymentMode),
+          p_order_date: currentDate,
         };
-        console.log("Order data with types:", orderData);
-        console.log("Order data types:", {
-          user_id: typeof orderData.user_id,
-          item_name: typeof orderData.item_name,
-          quantity: typeof orderData.quantity,
-          rate: typeof orderData.rate,
-          total: typeof orderData.total,
-          payment_mode: typeof orderData.payment_mode,
-          order_date: typeof orderData.order_date,
-        });
-        // Try upsert method which might handle triggers differently
-        return supabase.from("orders").upsert(orderData);
+        console.log("Order params for RPC:", orderParams);
+
+        // Use RPC function to bypass trigger issues
+        return supabase.rpc("insert_order_safe", orderParams);
       });
 
       const results = await Promise.all(orderPromises);
