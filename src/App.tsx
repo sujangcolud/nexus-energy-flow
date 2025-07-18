@@ -28,7 +28,6 @@ import ShareInvestmentsTab from "./components/tabs/ShareInvestmentsTab";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import Settings from "./pages/Settings";
 import Analytics from "./pages/Analytics";
-import ExpenseBookingsTab from "./components/tabs/ExpenseBookingsTab";
 import { Outlet } from "react-router-dom"; // Needed for nested routes
 
 const queryClient = new QueryClient();
@@ -90,6 +89,7 @@ const App = () => {
                 <Route path="reports" element={<ReportsTab />} />
                 <Route path="reports-view" element={<ReportsViewTab />} />
                 <Route path="data-input" element={<DataInputTab />} />
+                <Route path="user-management" element={<UserManagementTab />} />
                 <Route path="analytics" element={<Analytics />} />
                 <Route
                   path="super-admin"
@@ -99,18 +99,7 @@ const App = () => {
                     </ProtectedRoute>
                   }
                 />
-                <Route
-                  path="settings"
-                  element={
-                    <ProtectedRoute allowedRoles={["super_admin"]}>
-                      <Settings />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="expense-bookings"
-                  element={<ExpenseBookingsTab />}
-                />
+                <Route path="settings" element={<Settings />} />
                 {/* It might be good to have an index route that explicitly shows the cards */}
                 {/* <Route index element={<DashboardPageWithCards />} /> */}
               </Route>
