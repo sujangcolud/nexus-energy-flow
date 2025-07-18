@@ -333,11 +333,14 @@ const OrdersTab = () => {
       // Provide more specific error messages based on the error code
       let errorMessage = "Failed to place order";
       if (error?.code === "42703") {
-        errorMessage =
-          "Database configuration error. The fix has been applied, please try again.";
+        errorMessage = "Database field error detected. Migration needed.";
+      } else if (error?.code === "PGRST202") {
+        errorMessage = "Database function not found. Using fallback method...";
       } else if (error?.message) {
         errorMessage = `Failed to place order: ${error.message}`;
       }
+
+      console.log("Final error message:", errorMessage);
 
       toast.error(errorMessage);
     } finally {
