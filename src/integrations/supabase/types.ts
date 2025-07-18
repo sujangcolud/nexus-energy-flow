@@ -38,6 +38,42 @@ export type Database = {
         };
         Relationships: [];
       };
+      balances: {
+        Row: {
+          id: string;
+          user_id: string;
+          cash_in_hand: number | null;
+          bank_balance: number | null;
+          esewa_balance: number | null;
+          fonepay_balance: number | null;
+          cooperative_balance: number | null;
+          created_at: string | null;
+          updated_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          cash_in_hand?: number | null;
+          bank_balance?: number | null;
+          esewa_balance?: number | null;
+          fonepay_balance?: number | null;
+          cooperative_balance?: number | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          cash_in_hand?: number | null;
+          bank_balance?: number | null;
+          esewa_balance?: number | null;
+          fonepay_balance?: number | null;
+          cooperative_balance?: number | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+        };
+        Relationships: [];
+      };
       charging_sessions: {
         Row: {
           created_at: string | null;
