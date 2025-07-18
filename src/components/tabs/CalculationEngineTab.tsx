@@ -242,8 +242,24 @@ const CalculationEngineTab = () => {
       fetchCalculations();
     } catch (error) {
       console.error("Error saving calculation:", error);
-      const errorMessage =
-        error?.message || error?.details || "Failed to save calculation";
+      let errorMessage = "Failed to save calculation";
+
+      if (error && typeof error === "object") {
+        if (error.message) {
+          errorMessage = error.message;
+        } else if (error.details) {
+          errorMessage = error.details;
+        } else if (error.error_description) {
+          errorMessage = error.error_description;
+        } else if (error.hint) {
+          errorMessage = error.hint;
+        } else {
+          errorMessage = JSON.stringify(error, null, 2);
+        }
+      } else if (typeof error === "string") {
+        errorMessage = error;
+      }
+
       toast.error(`Error saving calculation: ${errorMessage}`);
     }
   };
@@ -299,8 +315,24 @@ const CalculationEngineTab = () => {
       fetchCalculations();
     } catch (error) {
       console.error("Error executing calculation:", error);
-      const errorMessage =
-        error?.message || error?.details || "Failed to execute calculation";
+      let errorMessage = "Failed to execute calculation";
+
+      if (error && typeof error === "object") {
+        if (error.message) {
+          errorMessage = error.message;
+        } else if (error.details) {
+          errorMessage = error.details;
+        } else if (error.error_description) {
+          errorMessage = error.error_description;
+        } else if (error.hint) {
+          errorMessage = error.hint;
+        } else {
+          errorMessage = JSON.stringify(error, null, 2);
+        }
+      } else if (typeof error === "string") {
+        errorMessage = error;
+      }
+
       toast.error(`Error executing calculation: ${errorMessage}`);
     }
   };
@@ -358,8 +390,24 @@ const CalculationEngineTab = () => {
       fetchCalculations();
     } catch (error) {
       console.error("Error deleting calculation:", error);
-      const errorMessage =
-        error?.message || error?.details || "Failed to delete calculation";
+      let errorMessage = "Failed to delete calculation";
+
+      if (error && typeof error === "object") {
+        if (error.message) {
+          errorMessage = error.message;
+        } else if (error.details) {
+          errorMessage = error.details;
+        } else if (error.error_description) {
+          errorMessage = error.error_description;
+        } else if (error.hint) {
+          errorMessage = error.hint;
+        } else {
+          errorMessage = JSON.stringify(error, null, 2);
+        }
+      } else if (typeof error === "string") {
+        errorMessage = error;
+      }
+
       toast.error(`Error deleting calculation: ${errorMessage}`);
     }
   };
