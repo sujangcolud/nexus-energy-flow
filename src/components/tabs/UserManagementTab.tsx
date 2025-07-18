@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from 'sonner';
-import { Users, UserPlus, Shield, Database, BarChart3, UserCheck, Eye, EyeOff, FileText } from 'lucide-react';
+import { Users, UserPlus, Shield, Database, BarChart3, UserCheck, Eye, EyeOff } from 'lucide-react';
 
 type AppRole = 'user' | 'data_entry' | 'reports_viewer' | 'super_admin';
 
@@ -33,7 +33,6 @@ const UserManagementTab = () => {
   const [loading, setLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [logs, setLogs] = useState<any[]>([]);
   
   const [newUser, setNewUser] = useState<NewUserData>({
     email: '',
@@ -66,22 +65,7 @@ const UserManagementTab = () => {
 
   useEffect(() => {
     fetchUsersAndRoles();
-    fetchLogs();
   }, []);
-
-  const fetchLogs = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("logs")
-        .select("*")
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      setLogs(data || []);
-    } catch (error) {
-      console.error("Error fetching logs:", error);
-      toast.error("Failed to load logs.");
-    }
-  };
 
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -369,41 +353,6 @@ const UserManagementTab = () => {
                   </TableRow>
                 ))
               )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FileText className="h-5 w-5" />
-            Activity Logs
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>User</TableHead>
-                <TableHead>Action</TableHead>
-                <TableHead>Table</TableHead>
-                <TableHead>Record ID</TableHead>
-                <TableHead>Timestamp</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {logs.map((log) => (
-                <TableRow key={log.id}>
-                  <TableCell>{log.user_id}</TableCell>
-                  <TableCell>{log.action}</TableCell>
-                  <TableCell>{log.table_name}</TableCell>
-                  <TableCell>{log.record_id}</TableCell>
-                  <TableCell>
-                    {new Date(log.created_at).toLocaleString()}
-                  </TableCell>
-                </TableRow>
-              ))}
             </TableBody>
           </Table>
         </CardContent>

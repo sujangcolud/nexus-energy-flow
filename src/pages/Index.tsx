@@ -1,46 +1,30 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/context/AuthContext";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { toast } from "sonner";
-import {
-  Building2,
-  Zap,
-  Shield,
-  Star,
-  ChevronRight,
-  Eye,
-  EyeOff,
-  ArrowRight,
-} from "lucide-react";
+
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/context/AuthContext';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { toast } from 'sonner';
+import { Building2, Zap, Shield } from 'lucide-react';
 
 const Index = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState("login");
-  const [showPassword, setShowPassword] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
+  const [activeTab, setActiveTab] = useState('login');
   const { login, signup, user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
 
   // Redirect if already logged in
   useEffect(() => {
     if (user && !authLoading) {
-      console.log("User is logged in, redirecting to dashboard");
-      navigate("/dashboard");
+      console.log('User is logged in, redirecting to dashboard');
+      navigate('/dashboard');
     }
   }, [user, authLoading, navigate]);
 
@@ -52,15 +36,15 @@ const Index = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-
+    
     try {
-      console.log("Starting login process");
+      console.log('Starting login process');
       await login(email, password);
-      toast.success("Welcome back!");
-      console.log("Login successful, should redirect soon");
+      toast.success('Welcome back!');
+      console.log('Login successful, should redirect soon');
     } catch (error: any) {
-      console.error("Login error:", error);
-      toast.error(error.message || "Login failed. Please try again.");
+      console.error('Login error:', error);
+      toast.error(error.message || 'Login failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -69,17 +53,15 @@ const Index = () => {
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-
+    
     try {
-      console.log("Starting signup process");
+      console.log('Starting signup process');
       await signup(email, password, firstName, lastName);
-      toast.success(
-        "Account created! Please check your email to verify your account.",
-      );
-      setActiveTab("login");
+      toast.success('Account created! Please check your email to verify your account.');
+      setActiveTab('login');
     } catch (error: any) {
-      console.error("Signup error:", error);
-      toast.error(error.message || "Signup failed. Please try again.");
+      console.error('Signup error:', error);
+      toast.error(error.message || 'Signup failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -89,312 +71,183 @@ const Index = () => {
     {
       icon: Building2,
       title: "Business Management",
-      description:
-        "Comprehensive tools for managing orders, expenses, and financial data",
-      color: "bg-blue-600",
+      description: "Comprehensive tools for managing orders, expenses, and financial data"
     },
     {
       icon: Zap,
       title: "Energy Tracking",
-      description:
-        "Monitor charging sessions and energy consumption with detailed analytics",
-      color: "bg-yellow-600",
+      description: "Monitor charging sessions and energy consumption with detailed analytics"
     },
     {
       icon: Shield,
       title: "Role-Based Access",
-      description:
-        "Secure access control with different permission levels for team members",
-      color: "bg-green-600",
-    },
+      description: "Secure access control with different permission levels for team members"
+    }
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100">
-      <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 lg:p-8">
-        <div className="w-full max-w-6xl mx-auto">
-          {/* Header */}
-          <div className="text-center mb-12">
-            <div className="inline-flex items-center gap-3 mb-6">
-              <div className="p-3 bg-slate-600 rounded-lg shadow-lg">
-                <Building2 className="h-8 w-8 text-white" />
-              </div>
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-800">
-                Energy Palace Nexus
-              </h1>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-pink-50 flex items-center justify-center p-4">
+      <div className="w-full max-w-6xl mx-auto">
+        <div className="text-center mb-12">
+          <div className="inline-flex items-center gap-3 mb-6">
+            <div className="p-3 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl shadow-lg">
+              <Building2 className="h-8 w-8 text-white" />
             </div>
-            <p className="text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed">
-              Professional business management platform for energy operations
-              and financial tracking
-            </p>
-            <div className="flex justify-center mt-4">
-              <div className="flex items-center gap-1">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <Star
-                    key={i}
-                    className="h-4 w-4 text-yellow-500 fill-current"
-                  />
-                ))}
-                <span className="ml-2 text-slate-600 text-sm">
-                  Trusted by businesses worldwide
-                </span>
-              </div>
-            </div>
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+              Energy Palace Nexus Point
+            </h1>
           </div>
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            Comprehensive business management platform for energy operations, financial tracking, and data analytics
+          </p>
+        </div>
 
-          <div className="grid lg:grid-cols-2 gap-12 items-start max-w-6xl mx-auto">
-            {/* Auth Form */}
-            <div className="order-2 lg:order-1">
-              <Card
-                className="shadow-lg border border-slate-200 bg-white hover:shadow-xl transition-shadow duration-300"
-                onMouseEnter={() => setIsHovered(true)}
-                onMouseLeave={() => setIsHovered(false)}
-              >
-                <CardHeader className="space-y-4">
-                  <CardTitle className="text-2xl font-semibold text-center text-slate-800 flex items-center justify-center gap-2">
-                    Access Your Dashboard
-                    <ArrowRight
-                      className={`h-5 w-5 transition-transform duration-300 text-slate-600 ${isHovered ? "translate-x-1" : ""}`}
-                    />
-                  </CardTitle>
-                  <CardDescription className="text-center text-slate-600">
-                    Sign in to your account or create a new one
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Tabs
-                    value={activeTab}
-                    onValueChange={setActiveTab}
-                    className="space-y-6"
-                  >
-                    <TabsList className="grid w-full grid-cols-2 bg-slate-100">
-                      <TabsTrigger
-                        value="login"
-                        className="data-[state=active]:bg-white data-[state=active]:text-slate-800 text-slate-600"
-                      >
-                        Sign In
-                      </TabsTrigger>
-                      <TabsTrigger
-                        value="signup"
-                        className="data-[state=active]:bg-white data-[state=active]:text-slate-800 text-slate-600"
-                      >
-                        Sign Up
-                      </TabsTrigger>
-                    </TabsList>
-
-                    <TabsContent value="login" className="space-y-6">
-                      <form onSubmit={handleLogin} className="space-y-6">
-                        <div className="space-y-3">
-                          <Label
-                            htmlFor="login-email"
-                            className="text-slate-700 font-medium"
-                          >
-                            Email Address
-                          </Label>
-                          <Input
-                            id="login-email"
-                            type="email"
-                            placeholder="Enter your email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                            className="h-12 border-slate-300 focus:border-slate-500 focus:ring-slate-500"
-                          />
-                        </div>
-                        <div className="space-y-3">
-                          <Label
-                            htmlFor="login-password"
-                            className="text-slate-700 font-medium"
-                          >
-                            Password
-                          </Label>
-                          <div className="relative">
-                            <Input
-                              id="login-password"
-                              type={showPassword ? "text" : "password"}
-                              placeholder="Enter your password"
-                              value={password}
-                              onChange={(e) => setPassword(e.target.value)}
-                              required
-                              className="h-12 border-slate-300 focus:border-slate-500 focus:ring-slate-500 pr-12"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => setShowPassword(!showPassword)}
-                              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700 transition-colors"
-                            >
-                              {showPassword ? (
-                                <EyeOff className="h-5 w-5" />
-                              ) : (
-                                <Eye className="h-5 w-5" />
-                              )}
-                            </button>
-                          </div>
-                        </div>
-                        <Button
-                          type="submit"
-                          className="w-full h-12 bg-slate-800 hover:bg-slate-700 text-white font-medium transition-colors"
-                          disabled={loading}
-                        >
-                          {loading ? (
-                            <div className="flex items-center gap-2">
-                              <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                              Signing In...
-                            </div>
-                          ) : (
-                            <div className="flex items-center gap-2">
-                              Sign In
-                              <ChevronRight className="h-5 w-5" />
-                            </div>
-                          )}
-                        </Button>
-                      </form>
-                    </TabsContent>
-
-                    <TabsContent value="signup" className="space-y-6">
-                      <form onSubmit={handleSignup} className="space-y-6">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          <div className="space-y-3">
-                            <Label
-                              htmlFor="firstName"
-                              className="text-slate-700 font-medium"
-                            >
-                              First Name
-                            </Label>
-                            <Input
-                              id="firstName"
-                              type="text"
-                              placeholder="First name"
-                              value={firstName}
-                              onChange={(e) => setFirstName(e.target.value)}
-                              required
-                              className="h-12 border-slate-300 focus:border-slate-500 focus:ring-slate-500"
-                            />
-                          </div>
-                          <div className="space-y-3">
-                            <Label
-                              htmlFor="lastName"
-                              className="text-slate-700 font-medium"
-                            >
-                              Last Name
-                            </Label>
-                            <Input
-                              id="lastName"
-                              type="text"
-                              placeholder="Last name"
-                              value={lastName}
-                              onChange={(e) => setLastName(e.target.value)}
-                              required
-                              className="h-12 border-slate-300 focus:border-slate-500 focus:ring-slate-500"
-                            />
-                          </div>
-                        </div>
-                        <div className="space-y-3">
-                          <Label
-                            htmlFor="signup-email"
-                            className="text-slate-700 font-medium"
-                          >
-                            Email Address
-                          </Label>
-                          <Input
-                            id="signup-email"
-                            type="email"
-                            placeholder="Enter your email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                            className="h-12 border-slate-300 focus:border-slate-500 focus:ring-slate-500"
-                          />
-                        </div>
-                        <div className="space-y-3">
-                          <Label
-                            htmlFor="signup-password"
-                            className="text-slate-700 font-medium"
-                          >
-                            Password
-                          </Label>
-                          <div className="relative">
-                            <Input
-                              id="signup-password"
-                              type={showPassword ? "text" : "password"}
-                              placeholder="Create a strong password"
-                              value={password}
-                              onChange={(e) => setPassword(e.target.value)}
-                              required
-                              className="h-12 border-slate-300 focus:border-slate-500 focus:ring-slate-500 pr-12"
-                              minLength={6}
-                            />
-                            <button
-                              type="button"
-                              onClick={() => setShowPassword(!showPassword)}
-                              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700 transition-colors"
-                            >
-                              {showPassword ? (
-                                <EyeOff className="h-5 w-5" />
-                              ) : (
-                                <Eye className="h-5 w-5" />
-                              )}
-                            </button>
-                          </div>
-                        </div>
-                        <Button
-                          type="submit"
-                          className="w-full h-12 bg-slate-800 hover:bg-slate-700 text-white font-medium transition-colors"
-                          disabled={loading}
-                        >
-                          {loading ? (
-                            <div className="flex items-center gap-2">
-                              <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                              Creating Account...
-                            </div>
-                          ) : (
-                            <div className="flex items-center gap-2">
-                              Create Account
-                              <ChevronRight className="h-5 w-5" />
-                            </div>
-                          )}
-                        </Button>
-                      </form>
-                    </TabsContent>
-                  </Tabs>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Features */}
-            <div className="space-y-8 order-1 lg:order-2">
-              <div className="text-center lg:text-left">
-                <h2 className="text-3xl font-bold text-slate-800 mb-4">
-                  Business Intelligence Platform
-                </h2>
-                <p className="text-lg text-slate-600 leading-relaxed">
-                  Streamline your operations with our comprehensive suite of
-                  business tools
-                </p>
-              </div>
-
-              <div className="space-y-6">
-                {features.map((feature, index) => (
-                  <div
-                    key={index}
-                    className="flex items-start gap-4 p-6 bg-white rounded-lg border border-slate-200 shadow-sm hover:shadow-md transition-shadow duration-300"
-                  >
-                    <div
-                      className={`p-3 ${feature.color} rounded-lg shadow-sm`}
+        <div className="grid lg:grid-cols-2 gap-12 items-center">
+          {/* Auth Form */}
+          <Card className="shadow-2xl border-0 bg-white/80 backdrop-blur-sm">
+            <CardHeader className="space-y-4">
+              <CardTitle className="text-2xl font-bold text-center text-gray-800">
+                Access Your Account
+              </CardTitle>
+              <CardDescription className="text-center text-gray-600">
+                Sign in to your dashboard or create a new account
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="login">Sign In</TabsTrigger>
+                  <TabsTrigger value="signup">Sign Up</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="login">
+                  <form onSubmit={handleLogin} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="login-email">Email Address</Label>
+                      <Input
+                        id="login-email"
+                        type="email"
+                        placeholder="Enter your email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                        className="h-12"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="login-password">Password</Label>
+                      <Input
+                        id="login-password"
+                        type="password"
+                        placeholder="Enter your password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                        className="h-12"
+                      />
+                    </div>
+                    <Button 
+                      type="submit" 
+                      className="w-full h-12 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold shadow-lg transition-all duration-200 transform hover:scale-[1.02]"
+                      disabled={loading}
                     >
-                      <feature.icon className="h-6 w-6 text-white" />
+                      {loading ? 'Signing In...' : 'Sign In'}
+                    </Button>
+                  </form>
+                </TabsContent>
+                
+                <TabsContent value="signup">
+                  <form onSubmit={handleSignup} className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="firstName">First Name</Label>
+                        <Input
+                          id="firstName"
+                          type="text"
+                          placeholder="First name"
+                          value={firstName}
+                          onChange={(e) => setFirstName(e.target.value)}
+                          required
+                          className="h-12"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="lastName">Last Name</Label>
+                        <Input
+                          id="lastName"
+                          type="text"
+                          placeholder="Last name"
+                          value={lastName}
+                          onChange={(e) => setLastName(e.target.value)}
+                          required
+                          className="h-12"
+                        />
+                      </div>
                     </div>
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-lg text-slate-800 mb-2">
-                        {feature.title}
-                      </h3>
-                      <p className="text-slate-600 leading-relaxed">
-                        {feature.description}
-                      </p>
+                    <div className="space-y-2">
+                      <Label htmlFor="signup-email">Email Address</Label>
+                      <Input
+                        id="signup-email"
+                        type="email"
+                        placeholder="Enter your email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                        className="h-12"
+                      />
                     </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="signup-password">Password</Label>
+                      <Input
+                        id="signup-password"
+                        type="password"
+                        placeholder="Create a password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                        className="h-12"
+                        minLength={6}
+                      />
+                    </div>
+                    <Button 
+                      type="submit" 
+                      className="w-full h-12 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold shadow-lg transition-all duration-200 transform hover:scale-[1.02]"
+                      disabled={loading}
+                    >
+                      {loading ? 'Creating Account...' : 'Create Account'}
+                    </Button>
+                  </form>
+                </TabsContent>
+              </Tabs>
+            </CardContent>
+          </Card>
+
+          {/* Features */}
+          <div className="space-y-8">
+            <div className="text-center lg:text-left">
+              <h2 className="text-3xl font-bold text-gray-800 mb-4">
+                Powerful Business Management
+              </h2>
+              <p className="text-lg text-gray-600">
+                Streamline your operations with our comprehensive suite of business tools
+              </p>
+            </div>
+            
+            <div className="space-y-6">
+              {features.map((feature, index) => (
+                <div
+                  key={index}
+                  className="flex items-start gap-4 p-6 bg-white/60 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 hover:shadow-xl transition-all duration-300"
+                >
+                  <div className="p-3 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg">
+                    <feature.icon className="h-6 w-6 text-white" />
                   </div>
-                ))}
-              </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-800 mb-2">{feature.title}</h3>
+                    <p className="text-gray-600">{feature.description}</p>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
