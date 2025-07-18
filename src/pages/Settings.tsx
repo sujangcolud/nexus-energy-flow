@@ -171,13 +171,6 @@ const allItems = [
     description: "Manage share investments",
     defaultRoles: ["data_entry", "super_admin"] as AppRole[],
   },
-  {
-    id: "file_upload",
-    label: "File Upload",
-    icon: "📤",
-    description: "Upload files to the system",
-    defaultRoles: ["super_admin"] as AppRole[],
-  },
 ];
 
 const Settings = () => {
@@ -195,16 +188,6 @@ const Settings = () => {
     useState(false);
   const [canAddMenuCategory, setCanAddMenuCategory] = useState(false);
   const [canAddExpenseCategory, setCanAddExpenseCategory] = useState(false);
-  const [canDeleteTabs, setCanDeleteTabs] = useState(false);
-  const [showOrders, setShowOrders] = useState(true);
-  const [showInsights, setShowInsights] = useState(true);
-  const [showReports, setShowReports] = useState(true);
-  const [showReportsView, setShowReportsView] = useState(true);
-  const [showDataInput, setShowDataInput] = useState(true);
-  const [showUserManagement, setShowUserManagement] = useState(true);
-  const [showAdminPanel, setShowAdminPanel] = useState(true);
-  const [showShareInvestments, setShowShareInvestments] = useState(true);
-  const [showVatEntry, setShowVatEntry] = useState(true);
   const [showCreateUserForm, setShowCreateUserForm] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
@@ -400,56 +383,6 @@ const Settings = () => {
       setCanAddExpenseCategory(JSON.parse(canAddExpense));
     }
 
-    const canDelete = localStorage.getItem("canDeleteTabs");
-    if (canDelete) {
-      setCanDeleteTabs(JSON.parse(canDelete));
-    }
-
-    const orders = localStorage.getItem("showOrders");
-    if (orders) {
-      setShowOrders(JSON.parse(orders));
-    }
-
-    const insights = localStorage.getItem("showInsights");
-    if (insights) {
-      setShowInsights(JSON.parse(insights));
-    }
-
-    const reports = localStorage.getItem("showReports");
-    if (reports) {
-      setShowReports(JSON.parse(reports));
-    }
-
-    const reportsView = localStorage.getItem("showReportsView");
-    if (reportsView) {
-      setShowReportsView(JSON.parse(reportsView));
-    }
-
-    const dataInput = localStorage.getItem("showDataInput");
-    if (dataInput) {
-      setShowDataInput(JSON.parse(dataInput));
-    }
-
-    const userManagement = localStorage.getItem("showUserManagement");
-    if (userManagement) {
-      setShowUserManagement(JSON.parse(userManagement));
-    }
-
-    const adminPanel = localStorage.getItem("showAdminPanel");
-    if (adminPanel) {
-      setShowAdminPanel(JSON.parse(adminPanel));
-    }
-
-    const shareInvestments = localStorage.getItem("showShareInvestments");
-    if (shareInvestments) {
-      setShowShareInvestments(JSON.parse(shareInvestments));
-    }
-
-    const vatEntry = localStorage.getItem("showVatEntry");
-    if (vatEntry) {
-      setShowVatEntry(JSON.parse(vatEntry));
-    }
-
     // Fetch logs if admin
     if (hasRole("super_admin")) {
       fetchLogs();
@@ -579,25 +512,8 @@ const Settings = () => {
       "canAddExpenseCategory",
       JSON.stringify(canAddExpenseCategory),
     );
-    localStorage.setItem("showOrders", JSON.stringify(showOrders));
-    localStorage.setItem("showInsights", JSON.stringify(showInsights));
-    localStorage.setItem("showReports", JSON.stringify(showReports));
-    localStorage.setItem("showReportsView", JSON.stringify(showReportsView));
-    localStorage.setItem("showDataInput", JSON.stringify(showDataInput));
-    localStorage.setItem(
-      "showUserManagement",
-      JSON.stringify(showUserManagement),
-    );
-    localStorage.setItem("showAdminPanel", JSON.stringify(showAdminPanel));
-    localStorage.setItem(
-      "showShareInvestments",
-      JSON.stringify(showShareInvestments),
-    );
-    localStorage.setItem("showVatEntry", JSON.stringify(showVatEntry));
-    localStorage.setItem("canDeleteTabs", JSON.stringify(canDeleteTabs));
   }, [
     canEditTransactions,
-    canDeleteTabs,
     canAddChargingCategory,
     canAddSavingsCategory,
     canAddWithdrawalCategory,
@@ -605,15 +521,6 @@ const Settings = () => {
     canAddExpenseBookingCategory,
     canAddMenuCategory,
     canAddExpenseCategory,
-    showOrders,
-    showInsights,
-    showReports,
-    showReportsView,
-    showDataInput,
-    showUserManagement,
-    showAdminPanel,
-    showShareInvestments,
-    showVatEntry,
   ]);
 
   const handleResetSettings = () => {
@@ -1197,16 +1104,9 @@ const Settings = () => {
                 onCheckedChange={setCanAddExpenseCategory}
               />
             </div>
-            <div className="flex items-center justify-between">
-              <Label htmlFor="delete-tabs">Enable Tab Deletion</Label>
-              <Switch
-                id="delete-tabs"
-                checked={canDeleteTabs}
-                onCheckedChange={setCanDeleteTabs}
-              />
-            </div>
           </CardContent>
         </Card>
+
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
           <Card className="bg-gradient-to-br from-orange-50 to-red-50 border-0 shadow-lg hover:shadow-xl transition-all duration-300">

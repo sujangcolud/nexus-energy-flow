@@ -92,7 +92,6 @@ interface ReportData {
   created_at: string;
 }
 
-
 interface StaticExpense {
   id: string;
   description: string;
@@ -139,7 +138,6 @@ const ReportsTab = () => {
     "Withdrawal Report",
     "Cooperative Savings Report",
     "Complete Business Report",
-    "Balance Sheet",
   ];
 
   const expenseCategories = [
@@ -162,7 +160,6 @@ const ReportsTab = () => {
     "Withdrawal Report": "from-purple-500 to-indigo-500",
     "Cooperative Savings Report": "from-teal-500 to-cyan-500",
     "Complete Business Report": "from-violet-500 to-purple-500",
-    "Balance Sheet": "from-pink-500 to-rose-500",
   };
 
   useEffect(() => {
@@ -194,7 +191,6 @@ const ReportsTab = () => {
       setLoading(false);
     }
   };
-
 
   const fetchStaticExpenses = async () => {
     if (!user) return;
@@ -246,15 +242,6 @@ const ReportsTab = () => {
         case "Complete Business Report":
           reportData = await generateCompleteReport(dateFrom, dateTo);
           break;
-        case "Balance Sheet":
-          await supabase.rpc("generate_balance_sheet", {
-            user_id_param: user.id,
-            date_from: dateFrom,
-            date_to: dateTo,
-          });
-          toast.success("Balance Sheet generated successfully! 📊");
-          fetchReports();
-          return;
         default:
           toast.error("Report type not implemented yet");
           return;
@@ -589,21 +576,6 @@ const ReportsTab = () => {
     }
   };
 
-  const executeCustomReport = async (reportId: string) => {
-    try {
-      const { data, error } = await supabase.rpc("execute_custom_report", {
-        report_id: reportId,
-      });
-
-      if (error) throw error;
-
-      toast.success(`Custom report executed successfully! Result: ${data}`);
-    } catch (error) {
-      console.error("Error executing custom report:", error);
-      toast.error("Failed to execute custom report");
-    }
-  };
-
   const totalStaticExpenses = staticExpenses.reduce(
     (sum, expense) => sum + expense.amount,
     0,
@@ -719,7 +691,7 @@ const ReportsTab = () => {
         </div>
 
         <Tabs defaultValue="generate" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 bg-white/80 backdrop-blur-sm border border-violet-200">
+          <TabsList className="grid w-full grid-cols-3 bg-white/80 backdrop-blur-sm border border-violet-200">
             <TabsTrigger
               value="generate"
               className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-500 data-[state=active]:to-blue-500 data-[state=active]:text-white"
@@ -731,12 +703,6 @@ const ReportsTab = () => {
               className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-indigo-500 data-[state=active]:text-white"
             >
               View Reports
-            </TabsTrigger>
-            <TabsTrigger
-              value="custom"
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-pink-500 data-[state=active]:text-white"
-            >
-              Custom Reports
             </TabsTrigger>
             <TabsTrigger
               value="static"
@@ -1033,7 +999,6 @@ const ReportsTab = () => {
               </CardContent>
             </Card>
           </TabsContent>
-
 
           {/* Static Expenses Tab */}
           <TabsContent value="static">

@@ -44,7 +44,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   const [user, setUser] = useState<AppUser | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
 
   const fetchUserProfile = async (userId: string) => {
     try {
@@ -113,6 +112,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log("Auth state changed:", event, session);
       setSession(session);
+
+      if (session?.user) {
+        // Fetch user profile after a short delay to avoid potential race conditions
+        setTimeout(() => {
+          fetchUserProfile(session.user.id);
+        }, 100);
+      } else {
+        setUser(null);
+      }
+
       setLoading(false);
     });
 
@@ -120,20 +129,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     supabase.auth.getSession().then(({ data: { session } }) => {
       console.log("Initial session check:", session);
       setSession(session);
+      if (session?.user) {
+        setTimeout(() => {
+          fetchUserProfile(session.user.id);
+        }, 100);
+      }
       setLoading(false);
-      setInitialLoadComplete(true);
     });
 
     return () => subscription.unsubscribe();
   }, []);
-
-  useEffect(() => {
-    if (initialLoadComplete && session?.user && !user) {
-      fetchUserProfile(session.user.id);
-    } else if (initialLoadComplete && !session?.user) {
-      setUser(null);
-    }
-  }, [session, initialLoadComplete, user]);
 
   const login = async (email: string, password: string) => {
     console.log("Attempting login for:", email);

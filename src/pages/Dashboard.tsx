@@ -1,20 +1,8 @@
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useUserPermissions } from "@/hooks/useUserPermissions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import {
   Outlet,
   useLocation,
@@ -44,7 +32,6 @@ import {
   Bell,
   Search,
   TrendingUp,
-  Trash,
 } from "lucide-react";
 import ChatBot from "@/components/ChatBot";
 
@@ -63,8 +50,6 @@ import DataInputTab from "@/components/tabs/DataInputTab";
 import UserManagementTab from "@/components/tabs/UserManagementTab";
 import ShareInvestmentsTab from "@/components/tabs/ShareInvestmentsTab";
 import ExpenseBookingsTab from "@/components/tabs/ExpenseBookingsTab";
-import VatEntryTab from "@/components/tabs/VatEntryTab";
-import FileUploadTab from "@/components/tabs/FileUploadTab";
 
 const Dashboard = () => {
   const { user, signOut, userRole } = useAuth();
@@ -72,41 +57,12 @@ const Dashboard = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [isChatBotOpen, setIsChatBotOpen] = useState(false);
-  const [canDeleteTabs, setCanDeleteTabs] = useState(false);
-  const [tabSettings, setTabSettings] = useState<Record<string, boolean>>({});
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [tabToDelete, setTabToDelete] = useState<string | null>(null);
-
-  useEffect(() => {
-    const storedSettings = localStorage.getItem("tabSettings");
-    if (storedSettings) {
-      setTabSettings(JSON.parse(storedSettings));
-    }
-    const canDelete = JSON.parse(
-      localStorage.getItem("canDeleteTabs") || "false",
-    );
-    setCanDeleteTabs(canDelete);
-  }, []);
 
   const handleSignOut = async () => {
     try {
       await signOut();
     } catch (error) {
       console.error("Error signing out:", error);
-    }
-  };
-
-  const handleDailyClosing = async () => {
-    try {
-      const { error } = await supabase.rpc("daily_closing", {
-        p_user_id: user.id,
-        p_closing_date: new Date().toISOString().slice(0, 10),
-      });
-      if (error) throw error;
-      alert("Daily closing completed successfully!");
-    } catch (error) {
-      console.error("Error during daily closing:", error);
-      alert("Failed to complete daily closing.");
     }
   };
 
@@ -203,6 +159,18 @@ const Dashboard = () => {
         description: "Financial analytics & insights",
       },
 
+      // Reports and Analytics - accessible to reports_viewer, super_admin
+      {
+        id: "reports",
+        path: "reports",
+        label: "Reports",
+        icon: FileText,
+        component: ReportsTab,
+        roles: ["reports_viewer", "super_admin"],
+        color: "bg-violet-600",
+        bgColor: "bg-violet-50",
+        description: "Generate business reports",
+      },
       {
         id: "reports-view",
         path: "reports-view",
@@ -291,38 +259,6 @@ const Dashboard = () => {
         bgColor: "bg-cyan-50",
         description: "Manage expense bookings",
       },
-      {
-        id: "vat_entry",
-        path: "vat-entry",
-        label: "VAT Entry",
-        icon: FileText,
-        component: VatEntryTab,
-        roles: ["data_entry", "super_admin"],
-        color: "bg-lime-600",
-        bgColor: "bg-lime-50",
-        description: "Manage VAT entries",
-      },
-      {
-        id: "custom_report_creator",
-        path: "custom-reports/create",
-        label: "Custom Reports",
-        icon: Settings,
-        roles: ["super_admin"],
-        color: "bg-gray-600",
-        bgColor: "bg-gray-50",
-        description: "Create custom reports",
-      },
-      {
-        id: "file_upload",
-        path: "file-upload",
-        label: "File Upload",
-        icon: Upload,
-        component: FileUploadTab,
-        roles: ["super_admin"],
-        color: "bg-pink-600",
-        bgColor: "bg-pink-50",
-        description: "Upload files to the system",
-      }
     ];
 
     if (!userRole) return [];
@@ -330,50 +266,11 @@ const Dashboard = () => {
     const storedSettings = localStorage.getItem("tabSettings");
     const tabSettings = storedSettings ? JSON.parse(storedSettings) : {};
 
-    const showOrders = JSON.parse(localStorage.getItem("showOrders") || "true");
-    const showInsights = JSON.parse(
-      localStorage.getItem("showInsights") || "true",
-    );
-    const showReports = JSON.parse(
-      localStorage.getItem("showReports") || "true",
-    );
-    const showReportsView = JSON.parse(
-      localStorage.getItem("showReportsView") || "true",
-    );
-    const showDataInput = JSON.parse(
-      localStorage.getItem("showDataInput") || "true",
-    );
-    const showUserManagement = JSON.parse(
-      localStorage.getItem("showUserManagement") || "true",
-    );
-    const showAdminPanel = JSON.parse(
-      localStorage.getItem("showAdminPanel") || "true",
-    );
-    const showShareInvestments = JSON.parse(
-      localStorage.getItem("showShareInvestments") || "true",
-    );
-    const showVatEntry = JSON.parse(
-      localStorage.getItem("showVatEntry") || "true",
-    );
-
-    const tabVisibility: Record<string, boolean> = {
-      orders: showOrders,
-      insights: showInsights,
-      reports: showReports,
-      "reports-view": showReportsView,
-      "data-input": showDataInput,
-      "user-management": showUserManagement,
-      "admin-panel": showAdminPanel,
-      "share-investments": showShareInvestments,
-      "vat-entry": showVatEntry,
-    };
-
     return allItems.filter(
       (item) =>
         item.roles.includes(userRole) &&
         (tabSettings[item.id] ?? true) &&
-        hasTabAccess(item.id) &&
-        (tabVisibility[item.id] ?? true),
+        hasTabAccess(item.id),
     );
   };
 
@@ -529,15 +426,6 @@ const Dashboard = () => {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={handleDailyClosing}
-                className="flex items-center gap-2 hover:bg-blue-50 hover:border-blue-300 transition-colors"
-              >
-                <Database className="h-4 w-4" />
-                Daily Closing
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
                 onClick={handleSignOut}
                 className="flex items-center gap-2 hover:bg-red-50 hover:border-red-300 transition-colors"
               >
@@ -589,42 +477,27 @@ const Dashboard = () => {
               {navItems.map((item, index) => {
                 const Icon = item.icon;
                 return (
-                  <Card
-                    key={item.id}
-                    onClick={() => navigate(item.path)}
-                    className={`relative cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-105 ${item.bgColor} border border-slate-200 h-full group`}
-                  >
-                    {canDeleteTabs && (
-                      <Button
-                        variant="destructive"
-                        size="icon"
-                        className="absolute top-2 right-2 h-6 w-6"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setTabToDelete(item.id);
-                          setShowDeleteDialog(true);
-                        }}
-                      >
-                        <Trash className="h-4 w-4" />
-                      </Button>
-                    )}
-                    <CardContent className="flex flex-col items-center justify-center p-6 space-y-4 h-full">
-                      <div
-                        className={`p-4 rounded-lg transition-all duration-300 ${item.color} text-white shadow-sm group-hover:shadow-md`}
-                      >
-                        <Icon className="h-8 w-8" />
-                      </div>
-                      <div className="text-center space-y-2">
-                        <p className="font-semibold text-lg text-slate-800">
-                          {item.label}
-                        </p>
-                        <p className="text-sm text-slate-600">
-                          {item.description}
-                        </p>
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <Link key={item.id} to={item.path} className="block group">
+                    <Card
+                      className={`cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-105 ${item.bgColor} border border-slate-200 h-full`}
+                    >
+                      <CardContent className="flex flex-col items-center justify-center p-6 space-y-4 h-full">
+                        <div
+                          className={`p-4 rounded-lg transition-all duration-300 ${item.color} text-white shadow-sm group-hover:shadow-md`}
+                        >
+                          <Icon className="h-8 w-8" />
+                        </div>
+                        <div className="text-center space-y-2">
+                          <p className="font-semibold text-lg text-slate-800">
+                            {item.label}
+                          </p>
+                          <p className="text-sm text-slate-600">
+                            {item.description}
+                          </p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Link>
                 );
               })}
             </div>
@@ -696,39 +569,6 @@ const Dashboard = () => {
         isOpen={isChatBotOpen}
         onToggle={() => setIsChatBotOpen(!isChatBotOpen)}
       />
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              Are you sure you want to delete this tab?
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the tab
-              from your dashboard.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                if (tabToDelete) {
-                  const newSettings = {
-                    ...tabSettings,
-                    [tabToDelete]: false,
-                  };
-                  localStorage.setItem(
-                    "tabSettings",
-                    JSON.stringify(newSettings),
-                  );
-                  window.location.reload();
-                }
-              }}
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 };

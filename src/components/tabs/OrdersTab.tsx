@@ -234,29 +234,19 @@ const OrdersTab = () => {
 
     setSubmitting(true);
     try {
-      const total = getCartTotal();
-      const { data: order, error: orderError } = await supabase
-        .from("orders")
-        .insert({
+      const orderPromises = cart.map((item) =>
+        supabase.from("orders").insert({
           user_id: user.id,
-          total,
-          order_date: new Date().toISOString().split("T")[0],
-        })
-        .select()
-        .single();
-
-      if (orderError) throw orderError;
-
-      const orderItemsPromises = cart.map((item) =>
-        supabase.from("order_items").insert({
-          order_id: order.id,
           item_name: item.name,
           quantity: item.quantity,
-          price: item.price,
+          rate: item.price,
+          total: item.price * item.quantity,
+          payment_mode: paymentMode,
+          order_date: new Date().toISOString().split("T")[0],
         }),
       );
 
-      const results = await Promise.all(orderItemsPromises);
+      const results = await Promise.all(orderPromises);
 
       // Check if any insert failed
       const failed = results.find((result) => result.error);
