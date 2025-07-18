@@ -262,20 +262,9 @@ const MobileDashboard = () => {
 
     if (!userRole) return [];
 
-    const filteredItems = allItems.filter(
+    return allItems.filter(
       (item) => item.roles.includes(userRole) && (tabSettings[item.id] ?? true),
     );
-
-    console.log("Mobile - User role:", userRole);
-    console.log("Mobile - Total items:", allItems.length);
-    console.log("Mobile - Tab settings:", tabSettings);
-    console.log(
-      "Mobile - Filtered items:",
-      filteredItems.length,
-      filteredItems.map((i) => i.label),
-    );
-
-    return filteredItems;
   };
 
   const navItems = getNavItems();
