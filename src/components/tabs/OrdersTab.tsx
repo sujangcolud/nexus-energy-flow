@@ -299,6 +299,7 @@ const OrdersTab = () => {
                 total: orderParams.p_total,
                 payment_mode: orderParams.p_payment_mode,
                 order_date: orderParams.p_order_date,
+                date: orderParams.p_order_date, // Add date field to satisfy triggers
               };
               console.log(
                 "Attempting direct insert with data:",
