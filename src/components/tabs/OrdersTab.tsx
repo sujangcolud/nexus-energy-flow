@@ -265,6 +265,7 @@ const OrdersTab = () => {
       console.log("Payment mode:", paymentMode);
 
       const orderPromises = cart.map((item) => {
+        const currentDate = new Date().toISOString().split("T")[0];
         const orderData = {
           user_id: user.id,
           item_name: String(item.name),
@@ -272,7 +273,9 @@ const OrdersTab = () => {
           rate: Number(item.price),
           total: Number(item.price * item.quantity),
           payment_mode: String(paymentMode),
-          order_date: new Date().toISOString().split("T")[0],
+          order_date: currentDate,
+          // Add the date field that the trigger is expecting
+          date: currentDate,
         };
         console.log("Order data with types:", orderData);
         console.log("Order data types:", {
