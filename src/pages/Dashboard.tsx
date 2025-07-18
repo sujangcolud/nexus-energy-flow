@@ -108,7 +108,9 @@ const Dashboard = () => {
       alert("Daily closing completed successfully!");
     } catch (error) {
       console.error("Error during daily closing:", error);
-      alert("Failed to complete daily closing.");
+      const errorMessage =
+        error?.message || error?.details || "Failed to complete daily closing";
+      alert(`Error during daily closing: ${errorMessage}`);
     }
   };
 
