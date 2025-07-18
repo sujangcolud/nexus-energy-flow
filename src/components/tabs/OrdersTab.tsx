@@ -232,9 +232,21 @@ const OrdersTab = () => {
       return;
     }
 
+    // Check current session
+    const {
+      data: { session },
+      error: sessionError,
+    } = await supabase.auth.getSession();
+    if (sessionError || !session) {
+      console.error("Authentication error:", sessionError);
+      toast.error("Authentication expired. Please log in again.");
+      return;
+    }
+
     setSubmitting(true);
     try {
       console.log("Submitting orders for user:", user.id);
+      console.log("Current session user:", session.user.id);
       console.log("Cart items:", cart);
       console.log("Payment mode:", paymentMode);
 
