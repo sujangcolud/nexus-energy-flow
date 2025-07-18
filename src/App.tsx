@@ -132,6 +132,14 @@ const App = () => {
                   }
                 />
                 <Route
+                  path="calculation-engine"
+                  element={
+                    <ProtectedRoute allowedRoles={["super_admin"]}>
+                      <CalculationEngineTab />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
                   path="super-admin"
                   element={
                     <ProtectedRoute allowedRoles={["super_admin"]}>
