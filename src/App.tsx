@@ -105,6 +105,14 @@ const App = () => {
                 <Route path="user-management" element={<UserManagementTab />} />
                 <Route path="analytics" element={<Analytics />} />
                 <Route
+                  path="admin-panel"
+                  element={
+                    <ProtectedRoute allowedRoles={["super_admin"]}>
+                      <AdminPanel />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
                   path="super-admin"
                   element={
                     <ProtectedRoute allowedRoles={["super_admin"]}>
