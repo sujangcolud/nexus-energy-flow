@@ -208,7 +208,7 @@ const Dashboard = () => {
         label: "Reports",
         icon: FileText,
         component: ReportsTab,
-        roles: ["reports_viewer", "super_admin"],
+        roles: ["user", "data_entry", "reports_viewer", "super_admin"],
         color: "bg-violet-600",
         bgColor: "bg-violet-50",
         description: "Generate business reports",
