@@ -160,6 +160,15 @@ const CalculationEngineTab = () => {
   const fetchCalculations = async () => {
     if (!user) return;
 
+    // Check if user has required role
+    if (user.role !== "super_admin") {
+      toast.error(
+        "Access denied. Super admin role required to access calculations.",
+      );
+      setLoading(false);
+      return;
+    }
+
     try {
       console.log(
         "Fetching calculations for user:",
