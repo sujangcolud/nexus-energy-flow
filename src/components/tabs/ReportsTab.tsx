@@ -78,7 +78,6 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { UserOptions } from "jspdf-autotable";
-import BalanceSheetTab from "./BalanceSheetTab";
 
 interface jsPDFWithAutoTable extends jsPDF {
   autoTable: (options: UserOptions) => jsPDF;
@@ -745,12 +744,6 @@ const ReportsTab = () => {
             >
               Static Expenses
             </TabsTrigger>
-            <TabsTrigger
-              value="balance-sheet"
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-pink-500 data-[state=active]:to-rose-500 data-[state=active]:text-white"
-            >
-              Balance Sheet
-            </TabsTrigger>
           </TabsList>
 
           {/* Generate Reports Tab */}
@@ -1144,9 +1137,6 @@ const ReportsTab = () => {
                 )}
               </CardContent>
             </Card>
-          </TabsContent>
-          <TabsContent value="balance-sheet">
-            <BalanceSheetTab />
           </TabsContent>
         </Tabs>
 
