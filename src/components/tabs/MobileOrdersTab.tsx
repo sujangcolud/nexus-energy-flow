@@ -143,6 +143,8 @@ const MobileOrdersTab = () => {
     try {
       const total = formData.quantity * formData.rate;
 
+      const orderDate = formData.order_date.toISOString().split("T")[0];
+
       const { error } = await supabase.from("orders").insert({
         user_id: user.id,
         item_name: formData.item_name,
@@ -150,7 +152,8 @@ const MobileOrdersTab = () => {
         rate: formData.rate,
         total,
         payment_mode: formData.payment_mode,
-        order_date: formData.order_date.toISOString().split("T")[0],
+        order_date: orderDate,
+        date: orderDate, // Add date field for compatibility
       });
 
       if (error) throw error;
