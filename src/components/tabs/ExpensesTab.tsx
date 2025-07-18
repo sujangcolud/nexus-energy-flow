@@ -197,7 +197,10 @@ const ExpensesTab = () => {
         },
       ]);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Expense submission failed:", error);
+        throw error;
+      }
 
       toast.success("Expense added successfully!");
       setFormData({
@@ -232,11 +235,7 @@ const ExpensesTab = () => {
     ([, a], [, b]) => b - a,
   )[0];
 
-  const logAction = async (
-    action: string,
-    record_id: string,
-    details: any,
-  ) => {
+  const logAction = async (action: string, record_id: string, details: any) => {
     if (!user) return;
     await supabase.from("logs").insert({
       user_id: user.id,
@@ -875,7 +874,9 @@ const ExpensesTab = () => {
                                     </AlertDialogDescription>
                                   </AlertDialogHeader>
                                   <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogCancel>
+                                      Cancel
+                                    </AlertDialogCancel>
                                     <AlertDialogAction
                                       onClick={() => handleDelete(expense.id)}
                                     >
