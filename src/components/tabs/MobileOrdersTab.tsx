@@ -170,7 +170,16 @@ const MobileOrdersTab = () => {
       fetchOrders();
     } catch (error) {
       console.error("Error adding order:", error);
-      toast.error("Failed to add order");
+
+      let errorMessage = "Failed to add order";
+      if (error?.code === "PGRST204") {
+        errorMessage =
+          "Database schema error. Please run the latest migration or refresh the page.";
+      } else if (error?.message) {
+        errorMessage = `Failed to add order: ${error.message}`;
+      }
+
+      toast.error(errorMessage);
     }
   };
 
