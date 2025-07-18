@@ -656,6 +656,59 @@ export type Database = {
         };
         Relationships: [];
       };
+      vat_entries: {
+        Row: {
+          id: string;
+          entry_type: string;
+          entry_id: string;
+          item_name: string;
+          amount: number;
+          vat_rate: number | null;
+          vat_amount: number | null;
+          total_with_vat: number | null;
+          bill_generated: boolean | null;
+          bill_number: string | null;
+          bill_date: string | null;
+          customer_pan: string | null;
+          customer_name: string | null;
+          created_at: string | null;
+          updated_at: string | null;
+          user_id: string | null;
+        };
+        Insert: {
+          id?: string;
+          entry_type: string;
+          entry_id: string;
+          item_name: string;
+          amount: number;
+          vat_rate?: number | null;
+          bill_generated?: boolean | null;
+          bill_number?: string | null;
+          bill_date?: string | null;
+          customer_pan?: string | null;
+          customer_name?: string | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+          user_id?: string | null;
+        };
+        Update: {
+          id?: string;
+          entry_type?: string;
+          entry_id?: string;
+          item_name?: string;
+          amount?: number;
+          vat_rate?: number | null;
+          bill_generated?: boolean | null;
+          bill_number?: string | null;
+          bill_date?: string | null;
+          customer_pan?: string | null;
+          customer_name?: string | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+          user_id?: string | null;
+        };
+        Relationships: [];
+      };
       user_roles: {
         Row: {
           created_at: string | null;
