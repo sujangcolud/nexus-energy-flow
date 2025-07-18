@@ -438,75 +438,94 @@ const VatEntryTab = () => {
             <DialogTitle>VAT Bill</DialogTitle>
           </DialogHeader>
           {selectedIncome && (
-            <div className="p-4" id="bill-content">
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div>
-                  <h2 className="font-bold">Buyer Details</h2>
-                  <div className="space-y-2">
-                    <Input
-                      placeholder="Buyer Name"
-                      value={billData.buyerName}
-                      onChange={(e) =>
-                        setBillData({ ...billData, buyerName: e.target.value })
-                      }
-                    />
-                    <Input
-                      placeholder="Buyer Address"
-                      value={billData.buyerAddress}
-                      onChange={(e) =>
-                        setBillData({
-                          ...billData,
-                          buyerAddress: e.target.value,
-                        })
-                      }
-                    />
-                    <Input
-                      placeholder="Buyer Contact"
-                      value={billData.buyerContact}
-                      onChange={(e) =>
-                        setBillData({
-                          ...billData,
-                          buyerContact: e.target.value,
-                        })
-                      }
-                    />
-                    <Input
-                      placeholder="Buyer Email"
-                      value={billData.buyerEmail}
-                      onChange={(e) =>
-                        setBillData({ ...billData, buyerEmail: e.target.value })
-                      }
-                    />
-                    <Input
-                      placeholder="Buyer PAN"
-                      value={billData.buyerPan}
-                      onChange={(e) =>
-                        setBillData({ ...billData, buyerPan: e.target.value })
-                      }
-                    />
-                  </div>
+            <div
+              className="invoice-box"
+              dangerouslySetInnerHTML={{
+                __html: `
+                <table cellpadding="0" cellspacing="0">
+                  <tr class="top">
+                    <td colspan="2">
+                      <table>
+                        <tr>
+                          <td class="title">
+                            VAT INVOICE
+                          </td>
+                          <td>
+                            Invoice #: ${selectedIncome.id.slice(0, 8)}<br />
+                            Date: ${selectedIncome.order_date}<br />
+                            IRN: IRN-${selectedIncome.id.slice(0, 8)}
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                  <tr class="information">
+                    <td colspan="2">
+                      <table>
+                        <tr>
+                          <td>
+                            <strong>Seller:</strong><br />
+                            ${sellerInfo.name}<br />
+                            ${sellerInfo.address}<br />
+                            PAN/VAT: ${sellerInfo.pan}<br />
+                            Contact: ${sellerInfo.contactNumber}
+                          </td>
+                          <td>
+                            <strong>Buyer:</strong><br />
+                            ${billData.buyerName || "Walk-in Customer"}<br />
+                            ${billData.buyerAddress}<br />
+                            PAN/VAT: ${billData.buyerPan}<br />
+                            Contact: ${billData.buyerContact}
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                  <tr class="heading">
+                    <td>Payment Method</td>
+                    <td>${selectedIncome.payment_mode}</td>
+                  </tr>
+                  <tr class="details">
+                    <td>Paid</td>
+                    <td>NPR ${selectedIncome.total.toFixed(2)}</td>
+                  </tr>
+                  <tr class="heading">
+                    <td>Item</td>
+                    <td>Amount</td>
+                  </tr>
+                  <tr class="item">
+                    <td>Service Charge</td>
+                    <td>NPR ${selectedIncome.total.toFixed(2)}</td>
+                  </tr>
+                  <tr class="item last">
+                    <td>Subtotal</td>
+                    <td>NPR ${calculateVAT(selectedIncome.total).base.toFixed(
+                      2,
+                    )}</td>
+                  </tr>
+                  <tr class="item">
+                    <td>VAT (13%)</td>
+                    <td>NPR ${calculateVAT(selectedIncome.total).vat.toFixed(
+                      2,
+                    )}</td>
+                  </tr>
+                  <tr class="total">
+                    <td></td>
+                    <td>Grand Total: NPR ${selectedIncome.total.toFixed(2)}</td>
+                  </tr>
+                </table>
+                <div class="footer">
+                  Prepared By: ${
+                    billData.preparedBy || user?.email
+                  } | Approved By: ${
+                  billData.approvedBy || "Finance Officer"
+                }<br />
+                  Thank you for your business.<br />
+                  Goods once sold are not returnable.<br />
                 </div>
-                <div>
-                  <h2 className="font-bold">Additional Details</h2>
-                  <div className="space-y-2">
-                    <Input
-                      placeholder="Prepared By"
-                      value={billData.preparedBy}
-                      onChange={(e) =>
-                        setBillData({ ...billData, preparedBy: e.target.value })
-                      }
-                    />
-                    <Input
-                      placeholder="Approved By"
-                      value={billData.approvedBy}
-                      onChange={(e) =>
-                        setBillData({ ...billData, approvedBy: e.target.value })
-                      }
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
+              `,
+              }}
+            />
           )}
           <DialogFooter>
             <Button onClick={handlePrint}>Print</Button>
