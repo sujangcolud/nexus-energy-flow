@@ -215,6 +215,36 @@ export type Database = {
         };
         Relationships: [];
       };
+      logs: {
+        Row: {
+          id: string;
+          user_id: string;
+          action: string;
+          table_name: string;
+          record_id: string;
+          details: Json | null;
+          created_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          action: string;
+          table_name: string;
+          record_id: string;
+          details?: Json | null;
+          created_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          action?: string;
+          table_name?: string;
+          record_id?: string;
+          details?: Json | null;
+          created_at?: string | null;
+        };
+        Relationships: [];
+      };
       menu_items: {
         Row: {
           category: string;
