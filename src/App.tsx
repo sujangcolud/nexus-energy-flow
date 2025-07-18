@@ -20,17 +20,16 @@ import WithdrawalsTab from "./components/tabs/WithdrawalsTab";
 import CooperativeSavingsTab from "./components/tabs/CooperativeSavingsTab";
 import MenuManagementTab from "./components/tabs/MenuManagementTab"; // Consider admin roles for this route
 import InsightsTab from "./components/tabs/InsightsTab";
+import ReportsTab from "./components/tabs/ReportsTab";
 import ReportsViewTab from "./components/tabs/ReportsViewTab";
-import AdminPanel from "./pages/AdminPanel";
 import DataInputTab from "./components/tabs/DataInputTab";
 import UserManagementTab from "./components/tabs/UserManagementTab";
 import ShareInvestmentsTab from "./components/tabs/ShareInvestmentsTab";
+import VATEntryTab from "./components/tabs/VATEntryTab";
+import InventoryTab from "./components/tabs/InventoryTab";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import Settings from "./pages/Settings";
 import Analytics from "./pages/Analytics";
-import ExpenseBookingsTab from "./components/tabs/ExpenseBookingsTab";
-import VatEntryTab from "./components/tabs/VatEntryTab";
-import CustomReportCreator from "./pages/CustomReportCreator";
 import { Outlet } from "react-router-dom"; // Needed for nested routes
 
 const queryClient = new QueryClient();
@@ -97,9 +96,10 @@ const App = () => {
                 {/* TODO: Add role-based protection for menu if needed at route level, or handle in MenuManagementTab */}
                 <Route path="menu" element={<MenuManagementTab />} />
                 <Route path="insights" element={<InsightsTab />} />
-                <Route path="admin-panel" element={<AdminPanel />} />
+                <Route path="reports" element={<ReportsTab />} />
                 <Route path="reports-view" element={<ReportsViewTab />} />
                 <Route path="data-input" element={<DataInputTab />} />
+                <Route path="user-management" element={<UserManagementTab />} />
                 <Route path="analytics" element={<Analytics />} />
                 <Route
                   path="super-admin"
@@ -109,20 +109,7 @@ const App = () => {
                     </ProtectedRoute>
                   }
                 />
-                <Route
-                  path="settings"
-                  element={
-                    <ProtectedRoute allowedRoles={["super_admin"]}>
-                      <Settings />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="expense-bookings"
-                  element={<ExpenseBookingsTab />}
-                />
-                <Route path="vat-entry" element={<VatEntryTab />} />
-                <Route path="custom-reports/create" element={<CustomReportCreator />} />
+                <Route path="settings" element={<Settings />} />
                 {/* It might be good to have an index route that explicitly shows the cards */}
                 {/* <Route index element={<DashboardPageWithCards />} /> */}
               </Route>
