@@ -212,8 +212,11 @@ const ExpensesTab = () => {
       });
       fetchExpenses();
     } catch (error) {
-      console.error("Error adding expense:", error);
-      toast.error("Failed to add expense");
+      console.error("Error adding expense:", JSON.stringify(error, null, 2));
+      console.error("Error details:", error);
+      toast.error(
+        `Failed to add expense: ${error?.message || "Unknown error"}`,
+      );
     } finally {
       setIsSubmitting(false);
     }
