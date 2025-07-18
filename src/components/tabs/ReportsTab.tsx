@@ -93,14 +93,6 @@ interface ReportData {
   created_at: string;
 }
 
-interface CustomReportData {
-  id: string;
-  name: string;
-  data_source: string;
-  calculation_type: string;
-  filters: any;
-  created_at: string;
-}
 
 interface StaticExpense {
   id: string;
@@ -115,7 +107,6 @@ const ReportsTab = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [reports, setReports] = useState<ReportData[]>([]);
-  const [customReports, setCustomReports] = useState<CustomReportData[]>([]);
   const [staticExpenses, setStaticExpenses] = useState<StaticExpense[]>([]);
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
@@ -177,7 +168,6 @@ const ReportsTab = () => {
 
   useEffect(() => {
     fetchReports();
-    fetchCustomReports();
     fetchStaticExpenses();
   }, [user, currentPage]);
 
@@ -206,23 +196,6 @@ const ReportsTab = () => {
     }
   };
 
-  const fetchCustomReports = async () => {
-    if (!user) return;
-
-    try {
-      const { data, error } = await supabase
-        .from("custom_reports")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-      setCustomReports(data || []);
-    } catch (error) {
-      console.error("Error fetching custom reports:", error);
-      toast.error("Failed to load custom reports");
-    }
-  };
 
   const fetchStaticExpenses = async () => {
     if (!user) return;
@@ -1068,84 +1041,6 @@ const ReportsTab = () => {
             </Card>
           </TabsContent>
 
-          {/* Custom Reports Tab */}
-          <TabsContent value="custom">
-            <Card className="bg-gradient-to-br from-white/90 to-purple-50/90 backdrop-blur-sm border-0 shadow-2xl">
-              <CardHeader className="bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-t-lg">
-                <CardTitle className="flex items-center gap-3 text-xl">
-                  <div className="p-2 bg-white/20 rounded-lg">
-                    <Settings className="h-6 w-6" />
-                  </div>
-                  Custom Reports
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-0">
-                {loading ? (
-                  <div className="text-center py-10">
-                    <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full animate-spin mx-auto flex items-center justify-center mb-4">
-                      <FileText className="h-8 w-8 text-white" />
-                    </div>
-                    <p className="text-gray-600">Loading custom reports...</p>
-                  </div>
-                ) : customReports.length === 0 ? (
-                  <div className="text-center py-12">
-                    <FileText className="h-16 w-16 mx-auto text-gray-300 mb-4" />
-                    <p className="text-xl font-semibold text-gray-700 mb-2">
-                      No custom reports created yet
-                    </p>
-                    <p className="text-gray-500">
-                      Create your first custom report to see it here.
-                    </p>
-                  </div>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow className="bg-gradient-to-r from-gray-50 to-purple-50">
-                          <TableHead className="font-semibold text-gray-700">
-                            Report Name
-                          </TableHead>
-                          <TableHead className="font-semibold text-gray-700">
-                            Data Source
-                          </TableHead>
-                          <TableHead className="font-semibold text-gray-700">
-                            Calculation
-                          </TableHead>
-                          <TableHead className="font-semibold text-gray-700">
-                            Actions
-                          </TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {customReports.map((report, index) => (
-                          <TableRow
-                            key={report.id}
-                            className="hover:bg-gradient-to-r hover:from-purple-50 hover:to-pink-50 transition-all duration-200"
-                            style={{ animationDelay: `${index * 50}ms` }}
-                          >
-                            <TableCell>{report.name}</TableCell>
-                            <TableCell>{report.data_source}</TableCell>
-                            <TableCell>{report.calculation_type}</TableCell>
-                            <TableCell>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="hover:bg-green-50 hover:border-green-300"
-                                onClick={() => executeCustomReport(report.id)}
-                              >
-                                <BarChart3 className="h-4 w-4 mr-1" />
-                                Execute
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
 
           {/* Static Expenses Tab */}
           <TabsContent value="static">
