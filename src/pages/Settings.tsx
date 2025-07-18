@@ -188,6 +188,7 @@ const Settings = () => {
     useState(false);
   const [canAddMenuCategory, setCanAddMenuCategory] = useState(false);
   const [canAddExpenseCategory, setCanAddExpenseCategory] = useState(false);
+  const [canDeleteTabs, setCanDeleteTabs] = useState(false);
   const [showOrders, setShowOrders] = useState(true);
   const [showInsights, setShowInsights] = useState(true);
   const [showReports, setShowReports] = useState(true);
@@ -392,6 +393,11 @@ const Settings = () => {
       setCanAddExpenseCategory(JSON.parse(canAddExpense));
     }
 
+    const canDelete = localStorage.getItem("canDeleteTabs");
+    if (canDelete) {
+      setCanDeleteTabs(JSON.parse(canDelete));
+    }
+
     const orders = localStorage.getItem("showOrders");
     if (orders) {
       setShowOrders(JSON.parse(orders));
@@ -581,8 +587,10 @@ const Settings = () => {
       JSON.stringify(showShareInvestments),
     );
     localStorage.setItem("showVatEntry", JSON.stringify(showVatEntry));
+    localStorage.setItem("canDeleteTabs", JSON.stringify(canDeleteTabs));
   }, [
     canEditTransactions,
+    canDeleteTabs,
     canAddChargingCategory,
     canAddSavingsCategory,
     canAddWithdrawalCategory,
@@ -1180,6 +1188,14 @@ const Settings = () => {
                 id="add-expense-category"
                 checked={canAddExpenseCategory}
                 onCheckedChange={setCanAddExpenseCategory}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="delete-tabs">Enable Tab Deletion</Label>
+              <Switch
+                id="delete-tabs"
+                checked={canDeleteTabs}
+                onCheckedChange={setCanDeleteTabs}
               />
             </div>
           </CardContent>

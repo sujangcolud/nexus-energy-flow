@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useUserPermissions } from "@/hooks/useUserPermissions";
 import { Button } from "@/components/ui/button";
@@ -32,6 +32,7 @@ import {
   Bell,
   Search,
   TrendingUp,
+  Trash,
 } from "lucide-react";
 import ChatBot from "@/components/ChatBot";
 
@@ -58,6 +59,15 @@ const Dashboard = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [isChatBotOpen, setIsChatBotOpen] = useState(false);
+  const [canDeleteTabs, setCanDeleteTabs] = useState(false);
+  const [tabSettings, setTabSettings] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    const storedSettings = localStorage.getItem("tabSettings");
+    if (storedSettings) {
+      setTabSettings(JSON.parse(storedSettings));
+    }
+  }, []);
 
   const handleSignOut = async () => {
     try {
@@ -314,6 +324,11 @@ const Dashboard = () => {
       localStorage.getItem("showVatEntry") || "true",
     );
 
+    const canDelete = JSON.parse(
+      localStorage.getItem("canDeleteTabs") || "false",
+    );
+    setCanDeleteTabs(canDelete);
+
     const tabVisibility: Record<string, boolean> = {
       orders: showOrders,
       insights: showInsights,
@@ -540,8 +555,30 @@ const Dashboard = () => {
                 return (
                   <Link key={item.id} to={item.path} className="block group">
                     <Card
-                      className={`cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-105 ${item.bgColor} border border-slate-200 h-full`}
+                      className={`relative cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-105 ${item.bgColor} border border-slate-200 h-full`}
                     >
+                      {canDeleteTabs && (
+                        <Button
+                          variant="destructive"
+                          size="icon"
+                          className="absolute top-2 right-2 h-6 w-6"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            const newSettings = {
+                              ...tabSettings,
+                              [item.id]: false,
+                            };
+                            localStorage.setItem(
+                              "tabSettings",
+                              JSON.stringify(newSettings),
+                            );
+                            window.location.reload();
+                          }}
+                        >
+                          <Trash className="h-4 w-4" />
+                        </Button>
+                      )}
                       <CardContent className="flex flex-col items-center justify-center p-6 space-y-4 h-full">
                         <div
                           className={`p-4 rounded-lg transition-all duration-300 ${item.color} text-white shadow-sm group-hover:shadow-md`}
