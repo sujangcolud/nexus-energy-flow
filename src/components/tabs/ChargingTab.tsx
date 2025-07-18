@@ -383,7 +383,19 @@ const ChargingTab = () => {
       fetchSessions();
     } catch (error) {
       console.error("Error updating session:", error);
-      toast.error("Failed to update session");
+
+      let errorMessage = "Failed to update session";
+      if (error && typeof error === "object") {
+        if (error.message) {
+          errorMessage = error.message;
+        } else if (error.details) {
+          errorMessage = error.details;
+        } else {
+          errorMessage = JSON.stringify(error, null, 2);
+        }
+      }
+
+      toast.error(errorMessage);
     }
   };
 
