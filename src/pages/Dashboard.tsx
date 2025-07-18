@@ -109,12 +109,29 @@ const Dashboard = () => {
 
   const handleDailyClosing = async () => {
     try {
-      const { error } = await supabase.rpc("daily_closing", {
+      console.log("Starting daily closing for user:", user.id);
+      console.log("Closing date:", new Date().toISOString().slice(0, 10));
+
+      const { data, error } = await supabase.rpc("daily_closing", {
         p_user_id: user.id,
         p_closing_date: new Date().toISOString().slice(0, 10),
       });
-      if (error) throw error;
+
+      console.log("Daily closing response:", { data, error });
+
+      if (error) {
+        console.error("Daily closing RPC error:", {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code,
+          fullError: error,
+        });
+        throw error;
+      }
+
       toast.success("Daily closing completed successfully!");
+      console.log("Daily closing result:", data);
     } catch (error) {
       console.error("Error during daily closing:", error);
       let errorMessage = "Failed to complete daily closing";
