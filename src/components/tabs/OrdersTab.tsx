@@ -338,7 +338,7 @@ const OrdersTab = () => {
           "Order submission failed:",
           JSON.stringify(failed.error, null, 2),
         );
-        console.error("Failed result:", failed);
+        console.error("Failed result:", JSON.stringify(failed, null, 2));
         throw failed.error;
       }
 
