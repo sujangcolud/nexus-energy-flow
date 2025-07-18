@@ -364,6 +364,17 @@ const OrdersTab = () => {
       } else if (error?.code === "PGRST204") {
         errorMessage =
           "Database schema error. Please run the latest migration or refresh the page.";
+
+        // Auto-diagnose and attempt to fix PGRST204 errors
+        import("@/utils/debugSchemaCache").then(({ autoFixPGRST204 }) => {
+          autoFixPGRST204().then((result) => {
+            if (result.success) {
+              toast.success(result.message);
+            } else {
+              console.error("PGRST204 Diagnostic:", result.message);
+            }
+          });
+        });
       } else if (error?.message) {
         errorMessage = `Failed to place order: ${error.message}`;
       }
