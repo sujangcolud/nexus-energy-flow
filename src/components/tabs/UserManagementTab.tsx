@@ -89,7 +89,16 @@ const UserManagementTab = () => {
       setUsers(filteredUsers);
     } catch (error) {
       console.error("Error fetching users and roles:", error);
-      toast.error("Failed to load users.");
+
+      let errorMessage = "Failed to load users";
+      if (error && typeof error === "object") {
+        const msg = error.message || error["message"] || null;
+        if (msg && typeof msg === "string" && msg.trim() !== "") {
+          errorMessage = msg;
+        }
+      }
+
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
