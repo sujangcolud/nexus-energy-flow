@@ -155,7 +155,6 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
         supabase
           .from("daily_summary")
           .select("*")
-          .eq("user_id", user.id)
           .eq("summary_date", selectedDate)
           .single(),
       ]);
@@ -268,7 +267,6 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
 
       // Insert or update daily summary
       const dailySummaryData = {
-        user_id: user.id,
         summary_date: selectedDate,
         total_income: totalIncome,
         total_income_from_orders: transactionSummary.orders.total,
@@ -291,7 +289,7 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
 
       const { error } = await supabase
         .from("daily_summary")
-        .upsert(dailySummaryData, { onConflict: "user_id,summary_date" });
+        .upsert(dailySummaryData, { onConflict: "summary_date" });
 
       if (error) throw error;
 
