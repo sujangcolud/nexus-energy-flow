@@ -610,6 +610,9 @@ const Dashboard = () => {
             {/* Financial Summary Widget */}
             <FinancialSummaryWidget className="mb-8" />
 
+            {/* All-Time Summary Widget */}
+            <AllTimeSummaryWidget className="mb-8" />
+
             {/* Quick Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
               <Card className="bg-blue-50 border border-blue-200 shadow-sm hover:shadow-md transition-shadow">
