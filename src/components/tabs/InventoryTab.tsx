@@ -129,10 +129,29 @@ const InventoryTab = () => {
       if (error) throw error;
       setInventory(data || []);
     } catch (error) {
-      console.error("Error fetching inventory:", error);
-      const errorMessage =
-        error?.message || error?.details || "Failed to load inventory";
-      toast.error(`Error fetching inventory: ${errorMessage}`);
+      logError("fetching inventory", error);
+
+      // Handle auth-specific errors first
+      handleSupabaseError(error);
+
+      // Handle schema errors gracefully
+      if (
+        error?.code === "PGRST204" ||
+        error?.code === "PGRST200" ||
+        extractErrorMessage(error).includes("schema cache") ||
+        extractErrorMessage(error).includes("table") ||
+        extractErrorMessage(error).includes("relation")
+      ) {
+        console.warn("Inventory table not found, setting empty inventory");
+        setInventory([]);
+        toast.error("Inventory table not found. Please contact administrator.");
+      } else if (
+        !error?.message?.includes("refresh_token_not_found") &&
+        !error?.message?.includes("Invalid Refresh Token")
+      ) {
+        const errorMessage = extractErrorMessage(error);
+        toast.error(`Error fetching inventory: ${errorMessage}`);
+      }
     }
   };
 
