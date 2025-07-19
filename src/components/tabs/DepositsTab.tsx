@@ -898,41 +898,11 @@ const DepositsTab = () => {
               Deposit History
             </CardTitle>
             <div className="flex items-center gap-2">
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-[300px] justify-start text-left font-normal hover:bg-gradient-to-r hover:from-green-50 hover:to-teal-50",
-                      !range && "text-muted-foreground",
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {range?.from ? (
-                      range.to ? (
-                        <>
-                          {format(range.from, "LLL dd, y")} -{" "}
-                          {format(range.to, "LLL dd, y")}
-                        </>
-                      ) : (
-                        format(range.from, "LLL dd, y")
-                      )
-                    ) : (
-                      <span>Pick a date range</span>
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="end">
-                  <Calendar
-                    initialFocus
-                    mode="range"
-                    defaultMonth={range?.from}
-                    selected={range}
-                    onSelect={onRangeChange}
-                    numberOfMonths={2}
-                  />
-                </PopoverContent>
-              </Popover>
+              <MobileDateRange
+                range={range}
+                onRangeChange={onRangeChange}
+                className={isMobile ? "w-full" : "w-[300px]"}
+              />
             </div>
           </CardHeader>
           <CardContent className="p-0">
