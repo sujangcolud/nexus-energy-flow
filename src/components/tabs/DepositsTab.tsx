@@ -571,19 +571,16 @@ const DepositsTab = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Add Deposit Form */}
-          <Card className="bg-gradient-to-br from-white/90 to-green-50/90 backdrop-blur-sm border-0 shadow-2xl hover:shadow-3xl transition-all duration-300">
-            <CardHeader className="bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-t-lg">
-              <CardTitle className="flex items-center gap-3 text-xl">
-                <div className="p-2 bg-white/20 rounded-lg">
-                  <ArrowUpCircle className="h-6 w-6" />
-                </div>
-                Record New Deposit
-                <Sparkles className="h-5 w-5 animate-pulse" />
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-6">
-              <form onSubmit={handleSubmit} className="space-y-6">
+                    {/* Add Deposit Form */}
+          <MobileForm
+            title="Record New Deposit"
+            icon={<ArrowUpCircle />}
+            onSubmit={handleSubmit}
+            submitText="Record Deposit"
+            isSubmitting={isSubmitting}
+            submitIcon={<ArrowUpCircle className="h-5 w-5" />}
+            className="bg-gradient-to-br from-white/90 to-green-50/90 backdrop-blur-sm hover:shadow-3xl transition-all duration-300"
+          >
                 <div className="space-y-2">
                   <Label
                     htmlFor="amount"
@@ -897,7 +894,7 @@ const DepositsTab = () => {
             <CardTitle className="text-2xl font-bold bg-gradient-to-r from-gray-700 to-gray-900 bg-clip-text text-transparent">
               Deposit History
             </CardTitle>
-            <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2">
               <MobileDateRange
                 range={range}
                 onRangeChange={onRangeChange}
