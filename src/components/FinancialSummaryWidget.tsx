@@ -274,12 +274,23 @@ const FinancialSummaryWidget: React.FC<FinancialSummaryWidgetProps> = ({
         .reduce((sum, e) => sum + (e.amount || 0), 0);
       const esewaBalance = totalIncomeEsewa - expensesEsewa + depositsToEsewa;
 
-      // fonepay_balance: total_income_fonepay - total_expenses_fonepay - total_savings_fonepay + deposits_to_fonepay
+      // Fonepay Balance: Total Income in Fonepay - Withdrawals from fonepay - withdrawals from bank
       const expensesFonepay = expenses
-        .filter((e) => e.payment_mode?.toLowerCase() === "fonepay")
+        .filter(
+          (e) =>
+            e.payment_mode?.toLowerCase() === "fonepay" ||
+            e.payment_mode?.toLowerCase() === "bank",
+        )
         .reduce((sum, e) => sum + (e.amount || 0), 0);
+      const withdrawalsBank = withdrawals
+        .filter(
+          (w) =>
+            w.mode?.toLowerCase() === "bank" ||
+            w.mode?.toLowerCase() === "fonepay",
+        )
+        .reduce((sum, w) => sum + (w.amount || 0), 0);
       const fonepayBalance =
-        totalIncomeFonepay - expensesFonepay + depositsToFonepay;
+        totalIncomeFonepay - expensesFonepay - withdrawalsBank;
 
       // cooperative_balance: total_savings - total_withdrawals_cooperative
       const cooperativeWithdrawals = 0; // Assuming no cooperative withdrawals for today's calculation
