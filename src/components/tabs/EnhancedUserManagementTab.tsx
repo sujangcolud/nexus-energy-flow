@@ -254,25 +254,64 @@ const EnhancedUserManagementTab = () => {
       return;
     }
 
-    const user = users.find((u) => u.id === userId);
-    if (!user) return;
+    const targetUser = users.find((u) => u.id === userId);
+    if (!targetUser) {
+      toast.error("User not found");
+      return;
+    }
 
-    if (!isRoleTransitionAllowed(user.role, newRole, userRole!)) {
+    if (!isRoleTransitionAllowed(targetUser.role, newRole, userRole!)) {
       toast.error("You don't have permission to assign this role");
       return;
     }
 
+    // Prevent users from changing their own role
+    if (userId === user?.id) {
+      toast.error("You cannot change your own role");
+      return;
+    }
+
     try {
-      await supabase.rpc("set_user_role", {
+      console.log(
+        `Attempting to update user ${targetUser.email} from ${targetUser.role} to ${newRole}`,
+      );
+
+      const { data, error } = await supabase.rpc("set_user_role", {
         target_user_id: userId,
         new_role: newRole,
       });
 
-      toast.success(`User role updated to ${newRole}`);
+      if (error) {
+        console.error("RPC Error details:", error);
+        throw error;
+      }
+
+      console.log("Role update successful:", data);
+      toast.success(
+        `User ${targetUser.email} role updated to ${newRole.replace("_", " ").toUpperCase()}`,
+      );
       await fetchUsersAndRoles();
     } catch (error) {
       logError("updating user role", error);
-      toast.error(`Error updating user role: ${extractErrorMessage(error)}`);
+
+      // Provide more specific error messages
+      let errorMessage = extractErrorMessage(error);
+
+      if (
+        errorMessage.includes("Access denied") ||
+        errorMessage.includes("Super admin role required")
+      ) {
+        errorMessage =
+          "Access denied. You need super admin privileges to update user roles.";
+      } else if (
+        errorMessage.includes("function") &&
+        errorMessage.includes("not found")
+      ) {
+        errorMessage =
+          "Database function not available. Please contact administrator.";
+      }
+
+      toast.error(`Error updating role: ${errorMessage}`);
     }
   };
 
