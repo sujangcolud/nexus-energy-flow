@@ -64,6 +64,10 @@ import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import useTableControls from "@/hooks/useTableControls";
+import { useIsMobile } from "@/hooks/use-mobile";
+import MobileDateRange from "@/components/ui/mobile-date-range";
+import MobileTable from "@/components/ui/mobile-table";
+import MobileForm from "@/components/ui/mobile-form";
 
 interface Deposit {
   id: string;
@@ -106,6 +110,7 @@ const DepositsTab = () => {
   const [selectedDeposit, setSelectedDeposit] = useState<Deposit | null>(null);
   const [canEditTransactions, setCanEditTransactions] = useState(false);
   const [canAddCategory, setCanAddCategory] = useState(false);
+  const isMobile = useIsMobile();
 
   const depositModes = [
     "Cash",
