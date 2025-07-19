@@ -70,7 +70,6 @@ const FinancialSummaryWidget: React.FC<FinancialSummaryWidgetProps> = ({
         .from("daily_summary")
         .select("*")
         .eq("summary_date", today)
-        .eq("user_id", user.id)
         .single();
 
       if (error && error.code !== "PGRST116") {
