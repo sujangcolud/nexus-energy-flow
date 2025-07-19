@@ -282,8 +282,8 @@ const DepositsTab = () => {
       });
       fetchDeposits();
     } catch (error) {
-      console.error("Error adding deposit:", error);
-      toast.error("Failed to add deposit");
+      logError("adding deposit", error);
+      toast.error(`Failed to add deposit: ${extractErrorMessage(error)}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -367,8 +367,8 @@ const DepositsTab = () => {
       logAction("delete", id, { id });
       fetchDeposits();
     } catch (error) {
-      console.error("Error deleting deposit:", error);
-      toast.error("Failed to delete deposit");
+      logError("deleting deposit", error);
+      toast.error(`Failed to delete deposit: ${extractErrorMessage(error)}`);
     }
   };
 
@@ -388,8 +388,8 @@ const DepositsTab = () => {
       setIsEditDialogOpen(false);
       fetchDeposits();
     } catch (error) {
-      console.error("Error updating deposit:", error);
-      toast.error("Failed to update deposit");
+      logError("updating deposit", error);
+      toast.error(`Failed to update deposit: ${extractErrorMessage(error)}`);
     }
   };
 
