@@ -459,6 +459,27 @@ const EnhancedUserManagementTab = () => {
               <Shield className="h-3 w-3 mr-1" />
               Super Admin Access
             </Badge>
+            {currentUserDbRole && (
+              <Badge
+                variant={
+                  currentUserDbRole === "super_admin"
+                    ? "default"
+                    : "destructive"
+                }
+                className="ml-2"
+              >
+                DB Role: {currentUserDbRole}
+              </Badge>
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={verifyCurrentUserRole}
+              className="ml-2"
+            >
+              <Shield className="h-4 w-4 mr-2" />
+              Verify Role
+            </Button>
             <Button
               variant="outline"
               size="sm"
