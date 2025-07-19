@@ -59,6 +59,11 @@ const App = () => {
     setChatBotOpen((prev) => !prev);
   };
 
+  // Set up global error handler for refresh token errors
+  useEffect(() => {
+    setupGlobalErrorHandler();
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
