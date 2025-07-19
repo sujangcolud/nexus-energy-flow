@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { extractErrorMessage, logError } from "@/utils/errorHandling";
 import {
   Receipt,
   Calendar as CalendarIcon,
@@ -146,8 +147,8 @@ const ExpensesTab = () => {
       if (error) throw error;
       setCategories(data || []);
     } catch (error) {
-      console.error("Error fetching categories:", error);
-      toast.error("Failed to load categories");
+      logError("fetching categories", error);
+      toast.error(`Failed to load categories: ${extractErrorMessage(error)}`);
     }
   };
 
@@ -319,8 +320,8 @@ const ExpensesTab = () => {
       setNewCategory("");
       fetchCategories();
     } catch (error) {
-      console.error("Error adding category:", error);
-      toast.error("Failed to add category");
+      logError("adding category", error);
+      toast.error(`Failed to add category: ${extractErrorMessage(error)}`);
     }
   };
 
