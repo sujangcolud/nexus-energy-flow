@@ -83,21 +83,44 @@ const UserManagementTab = () => {
         ({ data, error } = await supabase.rpc("get_users_from_auth"));
       }
 
-      // If both fail, try direct query
+      // If both fail, try direct queries with manual joining
       if (error) {
-        console.warn("Fallback function failed, trying direct query:", error);
-        ({ data, error } = await supabase.from("profiles").select(`
-            id,
-            email,
-            user_roles!inner(role)
-          `));
+        console.warn("Fallback function failed, trying direct queries:", error);
 
-        if (data) {
-          data = data.map((user: any) => ({
-            id: user.id,
-            email: user.email,
-            role: user.user_roles?.role || "user",
-          }));
+        // Get profiles first
+        const { data: profilesData, error: profilesError } = await supabase
+          .from("profiles")
+          .select("id, email");
+
+        if (profilesError) {
+          console.error("Profiles query failed:", profilesError);
+          error = profilesError;
+        } else {
+          // Get user roles separately
+          const { data: rolesData, error: rolesError } = await supabase
+            .from("user_roles")
+            .select("user_id, role");
+
+          if (rolesError) {
+            console.warn(
+              "User roles query failed, using default roles:",
+              rolesError,
+            );
+          }
+
+          // Manually join the data
+          data = (profilesData || []).map((profile: any) => {
+            const userRole = rolesData?.find(
+              (role: any) => role.user_id === profile.id,
+            );
+            return {
+              id: profile.id,
+              email: profile.email,
+              role: userRole?.role || "user",
+            };
+          });
+
+          error = null; // Clear error since we got profiles data
         }
       }
 
