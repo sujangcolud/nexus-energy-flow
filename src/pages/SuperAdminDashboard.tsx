@@ -257,7 +257,7 @@ const SuperAdminDashboard = () => {
                     Total Revenue
                   </p>
                   <p className="text-2xl font-bold text-blue-800">
-                    $
+                    NRs.
                     {monthlyFinancialSummary
                       .reduce((acc, item) => acc + item.revenue, 0)
                       .toLocaleString()}
@@ -593,7 +593,7 @@ const SuperAdminDashboard = () => {
                       </span>
                     </div>
                     <span className="font-bold text-orange-600">
-                      ${Number(spender.total_spent).toFixed(2)}
+                      NRs. {Number(spender.total_spent).toFixed(2)}
                     </span>
                   </div>
                 ))}
