@@ -262,7 +262,7 @@ const DepositsTab = () => {
           receiver_name: formData.receiver_name,
           payment_mode: formData.mode,
           deposited_to: formData.deposited_to,
-          category: formData.category,
+          category: "General",
         },
       ]);
 
@@ -277,7 +277,6 @@ const DepositsTab = () => {
         sender_name: "",
         receiver_name: "",
         deposited_to: "",
-        category: "",
       });
       fetchDeposits();
     } catch (error) {
@@ -681,33 +680,6 @@ const DepositsTab = () => {
                       {depositedTo.map((mode) => (
                         <SelectItem key={mode} value={mode}>
                           {mode}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="category"
-                    className="text-sm font-medium text-gray-700"
-                  >
-                    Category *
-                  </Label>
-                  <Select
-                    value={formData.category}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, category: value })
-                    }
-                    required
-                  >
-                    <SelectTrigger className="h-12">
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.map((cat) => (
-                        <SelectItem key={cat.id} value={cat.name}>
-                          {cat.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
