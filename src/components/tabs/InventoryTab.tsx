@@ -89,6 +89,7 @@ const InventoryTab = () => {
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [transactions, setTransactions] = useState<InventoryTransaction[]>([]);
   const [loading, setLoading] = useState(true);
+  const [hasSchemaError, setHasSchemaError] = useState(false);
   const [stockOutDialogOpen, setStockOutDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
   const [stockOutForm, setStockOutForm] = useState({
