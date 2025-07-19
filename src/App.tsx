@@ -140,7 +140,10 @@ const App = () => {
             </Routes>
           </AuthProvider>
         </BrowserRouter>
-        <ChatBot isOpen={isChatBotOpen} onToggle={handleToggleChatBot} />
+        <EnhancedChatBot
+          isOpen={isChatBotOpen}
+          onToggle={handleToggleChatBot}
+        />
       </TooltipProvider>
     </QueryClientProvider>
   );
