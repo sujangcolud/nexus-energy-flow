@@ -89,6 +89,9 @@ const CooperativeSavingsTab = () => {
   });
   const [newCategory, setNewCategory] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [transactionDate, setTransactionDate] = useState(
+    format(new Date(), "yyyy-MM-dd"),
+  );
   const { user } = useAuth();
   const { page, range, onPageChange, onRangeChange, itemsPerPage } =
     useTableControls();
