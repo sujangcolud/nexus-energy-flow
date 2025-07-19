@@ -20,6 +20,8 @@ import {
   LineChart,
 } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
+import { extractErrorMessage, logError } from "@/utils/errorHandling";
+import { toast } from "sonner";
 import {
   Activity,
   TrendingUp,
@@ -176,7 +178,10 @@ const SuperAdminDashboard = () => {
         setCooperativeSavingsTrend(cooperativeSavingsTrendResult.data);
         setMenuItemAvailability(menuItemAvailabilityResult.data);
       } catch (error) {
-        console.error("Error fetching dashboard data:", error);
+        logError("fetching dashboard data", error);
+        toast.error(
+          `Error fetching dashboard data: ${extractErrorMessage(error)}`,
+        );
       } finally {
         setLoading(false);
       }
