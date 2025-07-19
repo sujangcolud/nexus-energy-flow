@@ -50,8 +50,14 @@ export const handleSupabaseError = (error: any): void => {
     return;
   }
 
-  // Log other errors
-  console.error("Supabase error:", error);
+  // Log other errors using the standard error handling utility
+  logError("supabase operation", error);
+  const errorMessage = extractErrorMessage(error);
+
+  // Show generic error message for non-auth errors
+  if (errorMessage !== "An unknown error occurred") {
+    toast.error(`Error: ${errorMessage}`);
+  }
 };
 
 /**
