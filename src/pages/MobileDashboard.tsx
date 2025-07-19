@@ -593,6 +593,12 @@ const MobileDashboard = () => {
           </div>
         )}
       </main>
+
+      {/* Daily Closing System */}
+      <DailyClosingSystem
+        isOpen={isDailyClosingOpen}
+        onClose={() => setIsDailyClosingOpen(false)}
+      />
     </div>
   );
 };
