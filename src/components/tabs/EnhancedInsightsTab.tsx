@@ -222,69 +222,22 @@ const EnhancedInsightsTab = () => {
     const profitMargin =
       totalRevenue > 0 ? (netProfit / totalRevenue) * 100 : 0;
 
-    // Calculate balances using correct formulas from daily_summary table
+    // Get latest balances (current balances from most recent day)
     const latestSummary = summaries[0] || {};
 
-    // Use the calculation formulas provided:
+    // Calculate current balances using latest daily summary:
     // cash_balance: total_cash_income - total_expenses_cash - total_savings_cash + total_withdrawals_cash - deposits_to_esewa - deposits_to_fonepay
-    const cashBalance = summaries.reduce((sum, s) => {
-      const totalCashIncome = s.total_income_cash || 0;
-      const totalExpensesCash = s.total_expenses_cash || 0;
-      const totalSavingsCash = s.total_savings_cash || 0;
-      const totalWithdrawalsCash = 0; // This column might not exist in current schema
-      const depositsToEsewa = s.total_deposits_esewa || 0;
-      const depositsToFonepay = s.total_deposits_fonepay || 0;
-
-      return (
-        sum +
-        (totalCashIncome -
-          totalExpensesCash -
-          totalSavingsCash +
-          totalWithdrawalsCash -
-          depositsToEsewa -
-          depositsToFonepay)
-      );
-    }, 0);
+    const cashBalance = latestSummary.cash_balance || 0;
 
     // esewa_balance: total_income_esewa - total_expenses_esewa - total_savings_esewa + deposits_to_esewa
-    const esewaBalance = summaries.reduce((sum, s) => {
-      const totalIncomeEsewa = s.total_income_esewa || 0;
-      const totalExpensesEsewa = s.total_expenses_esewa || 0;
-      const totalSavingsEsewa = s.total_savings_esewa || 0;
-      const depositsToEsewa = s.total_deposits_esewa || 0;
-
-      return (
-        sum +
-        (totalIncomeEsewa -
-          totalExpensesEsewa -
-          totalSavingsEsewa +
-          depositsToEsewa)
-      );
-    }, 0);
+    const esewaBalance = latestSummary.esewa_balance || 0;
 
     // fonepay_balance: total_income_fonepay - total_expenses_fonepay - total_savings_fonepay + deposits_to_fonepay
-    const fonepayBalance = summaries.reduce((sum, s) => {
-      const totalIncomeFonepay = s.total_income_fonepay || 0;
-      const totalExpensesFonepay = s.total_expenses_fonepay || 0;
-      const totalSavingsFonepay = s.total_savings_fonepay || 0;
-      const depositsToFonepay = s.total_deposits_fonepay || 0;
-
-      return (
-        sum +
-        (totalIncomeFonepay -
-          totalExpensesFonepay -
-          totalSavingsFonepay +
-          depositsToFonepay)
-      );
-    }, 0);
+    const fonepayBalance = latestSummary.fonepay_balance || 0;
 
     // cooperative_balance: total_savings - total_withdrawals_cooperative
-    const cooperativeBalance = summaries.reduce((sum, s) => {
-      const totalSavings = s.total_savings || 0;
-      const totalWithdrawalsCooperative = s.total_withdrawals_cooperative || 0;
-
-      return sum + (totalSavings - totalWithdrawalsCooperative);
-    }, 0);
+    const cooperativeBalance =
+      latestSummary.cooperative_balance || cooperativeSavings;
 
     // Averages
     const daysCount = summaries.length || 1;
