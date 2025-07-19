@@ -540,29 +540,69 @@ Thank you for your business!
             <DialogHeader>
               <DialogTitle>Create VAT Entry</DialogTitle>
             </DialogHeader>
-            {selectedEntry && (
-              <div className="space-y-4">
-                <div className="p-4 bg-gray-50 rounded-lg">
-                  <h4 className="font-medium text-gray-800 mb-2">
-                    {selectedEntry.item_name}
-                  </h4>
-                  <p className="text-sm text-gray-600">
-                    Base Amount: NPR {selectedEntry.amount.toFixed(2)}
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    VAT ({nepalVATRate}%): NPR{" "}
-                    {((selectedEntry.amount * nepalVATRate) / 100).toFixed(2)}
-                  </p>
-                  <p className="text-sm font-semibold text-blue-600">
-                    Total with VAT: NPR{" "}
-                    {(
-                      selectedEntry.amount +
-                      (selectedEntry.amount * nepalVATRate) / 100
-                    ).toFixed(2)}
-                  </p>
-                </div>
-              </div>
-            )}
+            {selectedEntry &&
+              (() => {
+                const vatCalculation = calculateVATFromInclusive(
+                  selectedEntry.amount,
+                  nepalVATRate,
+                );
+                return (
+                  <div className="space-y-4">
+                    <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                      <h4 className="font-medium text-gray-800 mb-3">
+                        {selectedEntry.item_name}
+                      </h4>
+                      <div className="text-sm space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-600">
+                            Total Amount (VAT Inclusive):
+                          </span>
+                          <span className="font-semibold text-blue-600">
+                            NPR {selectedEntry.amount.toFixed(2)}
+                          </span>
+                        </div>
+                        <div className="h-px bg-gray-200 my-2"></div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-600">
+                            Base Amount (Excluding VAT):
+                          </span>
+                          <span className="text-gray-800">
+                            NPR {vatCalculation.baseAmount.toFixed(2)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-600">
+                            VAT Amount ({nepalVATRate}%):
+                          </span>
+                          <span className="text-green-600 font-medium">
+                            NPR {vatCalculation.vatAmount.toFixed(2)}
+                          </span>
+                        </div>
+                        <div className="h-px bg-gray-200 my-2"></div>
+                        <div className="flex justify-between items-center text-sm">
+                          <span className="text-gray-500">Verification:</span>
+                          <span className="text-gray-500">
+                            {vatCalculation.baseAmount.toFixed(2)} +{" "}
+                            {vatCalculation.vatAmount.toFixed(2)} ={" "}
+                            {vatCalculation.totalWithVAT.toFixed(2)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-3 bg-amber-50 rounded-lg border border-amber-200">
+                      <div className="flex items-start gap-2">
+                        <AlertCircle className="h-4 w-4 text-amber-600 mt-0.5" />
+                        <div className="text-sm text-amber-800">
+                          <strong>Note:</strong> This entry assumes the amount
+                          you entered (NPR {selectedEntry.amount.toFixed(2)})
+                          already includes VAT. The VAT component will be
+                          extracted for proper accounting.
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
             <DialogFooter>
               <Button variant="outline" onClick={() => setVatDialogOpen(false)}>
                 Cancel
