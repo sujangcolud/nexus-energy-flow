@@ -188,6 +188,7 @@ const InventoryTab = () => {
           "Inventory transactions table not found, setting empty transactions",
         );
         setTransactions([]);
+        setHasSchemaError(true);
         toast.error(
           "Inventory transactions table not found. Please contact administrator.",
         );
