@@ -177,33 +177,44 @@ const EnhancedInsightsTab = () => {
   const calculateAnalyticsFromSummaries = (
     summaries: DailySummaryData[],
   ): AnalyticsData => {
-    // Overall totals
-    const totalRevenue = summaries.reduce(
-      (sum, s) => sum + (s.total_income || 0),
-      0,
-    );
-    const totalExpenses = summaries.reduce(
-      (sum, s) => sum + (s.total_expenses || 0),
-      0,
-    );
-    const totalDeposits = summaries.reduce(
-      (sum, s) => sum + (s.total_deposits || 0),
-      0,
-    );
-    const totalWithdrawals = summaries.reduce(
-      (sum, s) => sum + (s.total_withdrawals || 0),
-      0,
-    );
-    const cooperativeSavings = summaries.reduce(
-      (sum, s) => sum + (s.total_savings || 0),
-      0,
-    );
+    // Calculate totals using exact formulas:
+
+    // total_income_from_orders: SUM(total) from orders table
     const totalIncomeFromOrders = summaries.reduce(
       (sum, s) => sum + (s.total_income_from_orders || 0),
       0,
     );
+
+    // total_income_from_charging: SUM(amount) from charging_sessions table
     const totalIncomeFromCharging = summaries.reduce(
       (sum, s) => sum + (s.total_income_from_charging || 0),
+      0,
+    );
+
+    // total_income: total_income_from_orders + total_income_from_charging
+    const totalRevenue = totalIncomeFromOrders + totalIncomeFromCharging;
+
+    // total_expenses: SUM(amount) from expenses table
+    const totalExpenses = summaries.reduce(
+      (sum, s) => sum + (s.total_expenses || 0),
+      0,
+    );
+
+    // total_deposits: SUM(amount) from deposits table
+    const totalDeposits = summaries.reduce(
+      (sum, s) => sum + (s.total_deposits || 0),
+      0,
+    );
+
+    // total_withdrawals: SUM(amount) from withdrawals table
+    const totalWithdrawals = summaries.reduce(
+      (sum, s) => sum + (s.total_withdrawals || 0),
+      0,
+    );
+
+    // total_savings: SUM(contribution_amount) from cooperative_savings table
+    const cooperativeSavings = summaries.reduce(
+      (sum, s) => sum + (s.total_savings || 0),
       0,
     );
 
@@ -211,12 +222,22 @@ const EnhancedInsightsTab = () => {
     const profitMargin =
       totalRevenue > 0 ? (netProfit / totalRevenue) * 100 : 0;
 
-    // Get latest balances from most recent summary
+    // Get latest balances (current balances from most recent day)
     const latestSummary = summaries[0] || {};
+
+    // Calculate current balances using latest daily summary:
+    // cash_balance: total_cash_income - total_expenses_cash - total_savings_cash + total_withdrawals_cash - deposits_to_esewa - deposits_to_fonepay
     const cashBalance = latestSummary.cash_balance || 0;
+
+    // esewa_balance: total_income_esewa - total_expenses_esewa - total_savings_esewa + deposits_to_esewa
     const esewaBalance = latestSummary.esewa_balance || 0;
+
+    // fonepay_balance: total_income_fonepay - total_expenses_fonepay - total_savings_fonepay + deposits_to_fonepay
     const fonepayBalance = latestSummary.fonepay_balance || 0;
-    const cooperativeBalance = cooperativeSavings; // Use total cooperative savings as balance
+
+    // cooperative_balance: total_savings - total_withdrawals_cooperative
+    const cooperativeBalance =
+      latestSummary.cooperative_balance || cooperativeSavings;
 
     // Averages
     const daysCount = summaries.length || 1;

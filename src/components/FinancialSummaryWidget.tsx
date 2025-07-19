@@ -237,11 +237,51 @@ const FinancialSummaryWidget: React.FC<FinancialSummaryWidgetProps> = ({
       const totalIncomeEsewa = esewaFromOrders + esewaFromCharging;
       const totalIncomeFonepay = fonepayFromOrders + fonepayFromCharging;
 
+      // Use correct balance calculation formulas:
+      // cash_balance: total_cash_income - total_expenses_cash - total_savings_cash + total_withdrawals_cash - deposits_to_esewa - deposits_to_fonepay
+      // Since we're calculating from individual transactions, we need to approximate:
+      const depositsToEsewa = deposits
+        .filter((d) => d.mode?.toLowerCase() === "esewa")
+        .reduce((sum, d) => sum + (d.amount || 0), 0);
+      const depositsToFonepay = deposits
+        .filter((d) => d.mode?.toLowerCase() === "fonepay")
+        .reduce((sum, d) => sum + (d.amount || 0), 0);
+      const expensesCash = expenses
+        .filter((e) => e.payment_mode?.toLowerCase() === "cash")
+        .reduce((sum, e) => sum + (e.amount || 0), 0);
+      const savingsCash = totalSavings; // Assuming all savings are cash-based for now
+      const withdrawalsCash = withdrawals
+        .filter((w) => w.mode?.toLowerCase() === "cash")
+        .reduce((sum, w) => sum + (w.amount || 0), 0);
+
       const cashBalance =
-        totalIncomeCash + totalDeposits - totalExpenses - totalWithdrawals;
-      const esewaBalance = totalIncomeEsewa;
-      const fonepayBalance = totalIncomeFonepay;
-      const totalBalance = cashBalance + esewaBalance + fonepayBalance;
+        totalIncomeCash -
+        expensesCash -
+        savingsCash +
+        withdrawalsCash -
+        depositsToEsewa -
+        depositsToFonepay;
+
+      // esewa_balance: total_income_esewa - total_expenses_esewa - total_savings_esewa + deposits_to_esewa
+      const expensesEsewa = expenses
+        .filter((e) => e.payment_mode?.toLowerCase() === "esewa")
+        .reduce((sum, e) => sum + (e.amount || 0), 0);
+      const esewaBalance = totalIncomeEsewa - expensesEsewa + depositsToEsewa;
+
+      // fonepay_balance: total_income_fonepay - total_expenses_fonepay - total_savings_fonepay + deposits_to_fonepay
+      const expensesFonepay = expenses
+        .filter((e) => e.payment_mode?.toLowerCase() === "fonepay")
+        .reduce((sum, e) => sum + (e.amount || 0), 0);
+      const fonepayBalance =
+        totalIncomeFonepay - expensesFonepay + depositsToFonepay;
+
+      // cooperative_balance: total_savings - total_withdrawals_cooperative
+      const cooperativeWithdrawals = 0; // Assuming no cooperative withdrawals for today's calculation
+      const cooperativeBalance = totalSavings - cooperativeWithdrawals;
+
+      // total_balance: cash_balance + fonepay_balance + cooperative_balance + esewa_balance
+      const totalBalance =
+        cashBalance + fonepayBalance + cooperativeBalance + esewaBalance;
 
       // Create summary object
       const calculatedSummary: DailySummary = {

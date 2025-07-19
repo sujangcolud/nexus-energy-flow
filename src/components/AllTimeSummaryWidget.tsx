@@ -94,23 +94,42 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
         return;
       }
 
-      // Calculate all-time totals
-      const totalIncome = summaries.reduce(
-        (sum, s) => sum + (s.total_income || 0),
+      // Calculate all-time totals using exact formulas:
+
+      // total_income_from_orders: SUM(total) from orders table
+      const totalIncomeFromOrders = summaries.reduce(
+        (sum, s) => sum + (s.total_income_from_orders || 0),
         0,
       );
+
+      // total_income_from_charging: SUM(amount) from charging_sessions table
+      const totalIncomeFromCharging = summaries.reduce(
+        (sum, s) => sum + (s.total_income_from_charging || 0),
+        0,
+      );
+
+      // total_income: total_income_from_orders + total_income_from_charging
+      const totalIncome = totalIncomeFromOrders + totalIncomeFromCharging;
+
+      // total_expenses: SUM(amount) from expenses table
       const totalExpenses = summaries.reduce(
         (sum, s) => sum + (s.total_expenses || 0),
         0,
       );
+
+      // total_deposits: SUM(amount) from deposits table
       const totalDeposits = summaries.reduce(
         (sum, s) => sum + (s.total_deposits || 0),
         0,
       );
+
+      // total_withdrawals: SUM(amount) from withdrawals table
       const totalWithdrawals = summaries.reduce(
         (sum, s) => sum + (s.total_withdrawals || 0),
         0,
       );
+
+      // total_savings: SUM(contribution_amount) from cooperative_savings table
       const cooperativeSavings = summaries.reduce(
         (sum, s) => sum + (s.total_savings || 0),
         0,
@@ -119,8 +138,10 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
       // Calculate net profit
       const netProfit = totalIncome - totalExpenses;
 
-      // Get latest balances from most recent summary
+      // Get current balances from latest daily summary (most recent day)
       const latestSummary = summaries[0] || {};
+
+      // Current balances are calculated in daily_summary using the specified formulas
       const currentBalances = {
         cash: latestSummary.cash_balance || 0,
         esewa: latestSummary.esewa_balance || 0,
@@ -128,29 +149,39 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
         total: latestSummary.total_balance || 0,
       };
 
-      // Calculate income breakdown
+      // Calculate cooperative balance: total_savings - total_withdrawals_cooperative
+      const cooperativeBalanceCalc =
+        latestSummary.cooperative_balance || cooperativeSavings;
+
+      // Calculate income breakdown using exact formulas
       const incomeBreakdown = {
-        fromOrders: summaries.reduce(
-          (sum, s) => sum + (s.total_income_from_orders || 0),
-          0,
-        ),
-        fromCharging: summaries.reduce(
-          (sum, s) => sum + (s.total_income_from_charging || 0),
-          0,
-        ),
+        fromOrders: totalIncomeFromOrders,
+        fromCharging: totalIncomeFromCharging,
       };
 
-      // Calculate payment method breakdown
+      // Calculate payment method breakdown:
+      // total_income_cash: Sum of cash income from orders and charging
+      const totalIncomeCash = summaries.reduce(
+        (sum, s) => sum + (s.total_income_cash || 0),
+        0,
+      );
+
+      // total_income_esewa: Sum of esewa income from orders and charging
+      const totalIncomeEsewa = summaries.reduce(
+        (sum, s) => sum + (s.total_income_esewa || 0),
+        0,
+      );
+
+      // total_income_fonepay: Sum of fonepay income from orders and charging
+      const totalIncomeFonepay = summaries.reduce(
+        (sum, s) => sum + (s.total_income_fonepay || 0),
+        0,
+      );
+
       const paymentMethodBreakdown = {
-        cash: summaries.reduce((sum, s) => sum + (s.total_income_cash || 0), 0),
-        esewa: summaries.reduce(
-          (sum, s) => sum + (s.total_income_esewa || 0),
-          0,
-        ),
-        fonepay: summaries.reduce(
-          (sum, s) => sum + (s.total_income_fonepay || 0),
-          0,
-        ),
+        cash: totalIncomeCash,
+        esewa: totalIncomeEsewa,
+        fonepay: totalIncomeFonepay,
       };
 
       const allTimeSummary: AllTimeSummaryData = {
@@ -158,7 +189,7 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
         totalExpenses,
         totalDeposits,
         totalWithdrawals,
-        cooperativeSavings,
+        cooperativeSavings: cooperativeBalanceCalc, // Use calculated cooperative balance
         netProfit,
         currentBalances,
         incomeBreakdown,
