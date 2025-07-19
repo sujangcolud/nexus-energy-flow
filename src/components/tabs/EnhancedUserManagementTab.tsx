@@ -106,6 +106,9 @@ const EnhancedUserManagementTab = () => {
   const [selectedUser, setSelectedUser] = useState<UserWithRole | null>(null);
   const [userPermissions, setUserPermissions] = useState<UserPermissions[]>([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [currentUserDbRole, setCurrentUserDbRole] = useState<string | null>(
+    null,
+  );
 
   const [newUser, setNewUser] = useState<NewUserData>({
     email: "",
