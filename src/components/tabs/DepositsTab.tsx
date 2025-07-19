@@ -571,7 +571,7 @@ const DepositsTab = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    {/* Add Deposit Form */}
+          {/* Add Deposit Form */}
           <MobileForm
             title="Record New Deposit"
             icon={<ArrowUpCircle />}
@@ -581,197 +581,177 @@ const DepositsTab = () => {
             submitIcon={<ArrowUpCircle className="h-5 w-5" />}
             className="bg-gradient-to-br from-white/90 to-green-50/90 backdrop-blur-sm hover:shadow-3xl transition-all duration-300"
           >
+            <div className="space-y-2">
+              <Label
+                htmlFor="amount"
+                className="text-sm font-medium text-gray-700 flex items-center gap-2"
+              >
+                <DollarSign className="h-4 w-4 text-green-600" />
+                Amount (NRs.) *
+              </Label>
+              <Input
+                id="amount"
+                type="number"
+                step="0.01"
+                value={formData.amount}
+                onChange={(e) =>
+                  setFormData({ ...formData, amount: e.target.value })
+                }
+                placeholder="0.00"
+                required
+                className="border-green-200 focus:border-green-500 focus:ring-green-500 h-12 text-lg"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label
+                  htmlFor="mode"
+                  className="text-sm font-medium text-gray-700 flex items-center gap-2"
+                >
+                  <CreditCard className="h-4 w-4 text-blue-600" />
+                  Deposit Mode *
+                </Label>
+                <Select
+                  value={formData.mode}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, mode: value })
+                  }
+                  required
+                >
+                  <SelectTrigger className="border-blue-200 focus:border-blue-500 focus:ring-blue-500 h-12">
+                    <SelectValue placeholder="Select mode" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {depositModes.map((mode) => (
+                      <SelectItem key={mode} value={mode}>
+                        <div className="flex items-center gap-2">
+                          <div
+                            className={`w-3 h-3 rounded-full bg-gradient-to-r ${modeColors[mode as keyof typeof modeColors]}`}
+                          ></div>
+                          {mode}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label
+                  htmlFor="depositedBy"
+                  className="text-sm font-medium text-gray-700 flex items-center gap-2"
+                >
+                  <User className="h-4 w-4 text-purple-600" />
+                  Deposited By *
+                </Label>
+                <Input
+                  id="depositedBy"
+                  value={formData.depositedBy}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      depositedBy: e.target.value,
+                    })
+                  }
+                  placeholder="Enter depositor name"
+                  required
+                  className="border-purple-200 focus:border-purple-500 focus:ring-purple-500 h-12"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label
+                htmlFor="deposited_to"
+                className="text-sm font-medium text-gray-700"
+              >
+                Deposited To *
+              </Label>
+              <Select
+                value={formData.deposited_to}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, deposited_to: value })
+                }
+                required
+              >
+                <SelectTrigger className="h-12">
+                  <SelectValue placeholder="Select where to deposit" />
+                </SelectTrigger>
+                <SelectContent>
+                  {depositedTo.map((mode) => (
+                    <SelectItem key={mode} value={mode}>
+                      {mode}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {formData.mode === "Esewa" && (
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label
-                    htmlFor="amount"
-                    className="text-sm font-medium text-gray-700 flex items-center gap-2"
+                    htmlFor="senderName"
+                    className="text-sm font-medium text-gray-700"
                   >
-                    <DollarSign className="h-4 w-4 text-green-600" />
-                    Amount (NRs.) *
+                    Sender Name
                   </Label>
                   <Input
-                    id="amount"
-                    type="number"
-                    step="0.01"
-                    value={formData.amount}
+                    id="senderName"
+                    value={formData.sender_name}
                     onChange={(e) =>
-                      setFormData({ ...formData, amount: e.target.value })
+                      setFormData({
+                        ...formData,
+                        sender_name: e.target.value,
+                      })
                     }
-                    placeholder="0.00"
-                    required
-                    className="border-green-200 focus:border-green-500 focus:ring-green-500 h-12 text-lg"
+                    placeholder="Enter sender name"
+                    className="border-gray-200 focus:border-gray-500 focus:ring-gray-500 h-12"
                   />
                 </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label
-                      htmlFor="mode"
-                      className="text-sm font-medium text-gray-700 flex items-center gap-2"
-                    >
-                      <CreditCard className="h-4 w-4 text-blue-600" />
-                      Deposit Mode *
-                    </Label>
-                    <Select
-                      value={formData.mode}
-                      onValueChange={(value) =>
-                        setFormData({ ...formData, mode: value })
-                      }
-                      required
-                    >
-                      <SelectTrigger className="border-blue-200 focus:border-blue-500 focus:ring-blue-500 h-12">
-                        <SelectValue placeholder="Select mode" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {depositModes.map((mode) => (
-                          <SelectItem key={mode} value={mode}>
-                            <div className="flex items-center gap-2">
-                              <div
-                                className={`w-3 h-3 rounded-full bg-gradient-to-r ${modeColors[mode as keyof typeof modeColors]}`}
-                              ></div>
-                              {mode}
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label
-                      htmlFor="depositedBy"
-                      className="text-sm font-medium text-gray-700 flex items-center gap-2"
-                    >
-                      <User className="h-4 w-4 text-purple-600" />
-                      Deposited By *
-                    </Label>
-                    <Input
-                      id="depositedBy"
-                      value={formData.depositedBy}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          depositedBy: e.target.value,
-                        })
-                      }
-                      placeholder="Enter depositor name"
-                      required
-                      className="border-purple-200 focus:border-purple-500 focus:ring-purple-500 h-12"
-                    />
-                  </div>
-                </div>
-
                 <div className="space-y-2">
                   <Label
-                    htmlFor="deposited_to"
+                    htmlFor="receiverName"
                     className="text-sm font-medium text-gray-700"
                   >
-                    Deposited To *
+                    Receiver Name
                   </Label>
-                  <Select
-                    value={formData.deposited_to}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, deposited_to: value })
-                    }
-                    required
-                  >
-                    <SelectTrigger className="h-12">
-                      <SelectValue placeholder="Select where to deposit" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {depositedTo.map((mode) => (
-                        <SelectItem key={mode} value={mode}>
-                          {mode}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {formData.mode === "Esewa" && (
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label
-                        htmlFor="senderName"
-                        className="text-sm font-medium text-gray-700"
-                      >
-                        Sender Name
-                      </Label>
-                      <Input
-                        id="senderName"
-                        value={formData.sender_name}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            sender_name: e.target.value,
-                          })
-                        }
-                        placeholder="Enter sender name"
-                        className="border-gray-200 focus:border-gray-500 focus:ring-gray-500 h-12"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label
-                        htmlFor="receiverName"
-                        className="text-sm font-medium text-gray-700"
-                      >
-                        Receiver Name
-                      </Label>
-                      <Input
-                        id="receiverName"
-                        value={formData.receiver_name}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            receiver_name: e.target.value,
-                          })
-                        }
-                        placeholder="Enter receiver name"
-                        className="border-gray-200 focus:border-gray-500 focus:ring-gray-500 h-12"
-                      />
-                    </div>
-                  </div>
-                )}
-
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="remarks"
-                    className="text-sm font-medium text-gray-700"
-                  >
-                    Remarks (Optional)
-                  </Label>
-                  <Textarea
-                    id="remarks"
-                    value={formData.remarks}
+                  <Input
+                    id="receiverName"
+                    value={formData.receiver_name}
                     onChange={(e) =>
-                      setFormData({ ...formData, remarks: e.target.value })
+                      setFormData({
+                        ...formData,
+                        receiver_name: e.target.value,
+                      })
                     }
-                    placeholder="Additional notes or reference information"
-                    rows={3}
-                    className="border-gray-200 focus:border-gray-500 focus:ring-gray-500"
+                    placeholder="Enter receiver name"
+                    className="border-gray-200 focus:border-gray-500 focus:ring-gray-500 h-12"
                   />
                 </div>
+              </div>
+            )}
 
-                <Button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full h-12 bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 hover:from-green-600 hover:via-emerald-600 hover:to-teal-600 text-white font-semibold shadow-lg transition-all duration-300 transform hover:scale-105"
-                >
-                  {isSubmitting ? (
-                    <div className="flex items-center gap-2">
-                      <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                      Recording Deposit...
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2">
-                      <ArrowUpCircle className="h-5 w-5" />
-                      Record Deposit
-                    </div>
-                  )}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
+            <div className="space-y-2">
+              <Label
+                htmlFor="remarks"
+                className="text-sm font-medium text-gray-700"
+              >
+                Remarks (Optional)
+              </Label>
+              <Textarea
+                id="remarks"
+                value={formData.remarks}
+                onChange={(e) =>
+                  setFormData({ ...formData, remarks: e.target.value })
+                }
+                placeholder="Additional notes or reference information"
+                rows={3}
+                className="border-gray-200 focus:border-gray-500 focus:ring-gray-500"
+              />
+            </div>
+          </MobileForm>
 
           {/* Deposit Mode Breakdown */}
           <Card className="bg-gradient-to-br from-white/90 to-teal-50/90 backdrop-blur-sm border-0 shadow-2xl hover:shadow-3xl transition-all duration-300">
@@ -894,7 +874,7 @@ const DepositsTab = () => {
             <CardTitle className="text-2xl font-bold bg-gradient-to-r from-gray-700 to-gray-900 bg-clip-text text-transparent">
               Deposit History
             </CardTitle>
-                        <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2">
               <MobileDateRange
                 range={range}
                 onRangeChange={onRangeChange}
