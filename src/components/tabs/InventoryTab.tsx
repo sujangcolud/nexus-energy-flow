@@ -231,10 +231,26 @@ const InventoryTab = () => {
       fetchInventory();
       fetchTransactions();
     } catch (error) {
-      console.error("Error recording stock out:", error);
-      const errorMessage =
-        error?.message || error?.details || "Failed to record stock out";
-      toast.error(`Error recording stock out: ${errorMessage}`);
+      logError("recording stock out", error);
+      handleSupabaseError(error);
+
+      if (
+        !error?.message?.includes("refresh_token_not_found") &&
+        !error?.message?.includes("Invalid Refresh Token")
+      ) {
+        const errorMessage = extractErrorMessage(error);
+        if (
+          error?.code === "PGRST204" ||
+          errorMessage.includes("schema cache")
+        ) {
+          toast.error(
+            "Database schema issue. Please refresh the page and try again.",
+          );
+          setHasSchemaError(true);
+        } else {
+          toast.error(`Error recording stock out: ${errorMessage}`);
+        }
+      }
     }
   };
 
