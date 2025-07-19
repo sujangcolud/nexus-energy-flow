@@ -1,3 +1,9 @@
+import { useState, useEffect, useCallback } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/context/AuthContext";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
@@ -16,9 +22,12 @@ import {
   Database,
   BarChart3,
   Clock,
+  Eye,
 } from "lucide-react";
 import { toast } from "sonner";
 import { extractErrorMessage, logError } from "@/utils/errorHandling";
+import AllTimeSummaryModal from "./AllTimeSummaryModal";
+import { DateRange } from "react-day-picker";
 
 interface AllTimeSummaryData {
   totalIncome: number;
@@ -58,18 +67,27 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
   const [summaryData, setSummaryData] = useState<AllTimeSummaryData | null>(
     null,
   );
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const fetchAllTimeSummary = async () => {
+  const fetchAllTimeSummary = useCallback(async (dateRange?: DateRange) => {
     if (!user) return;
 
     try {
       console.log("📊 Fetching all-time summary from daily_summary table...");
 
-      // Fetch all daily summaries
-      const { data: summariesData, error } = await supabase
+      let query = supabase
         .from("daily_summary")
         .select("*")
         .order("summary_date", { ascending: false });
+
+      if (dateRange?.from) {
+        query = query.gte("summary_date", dateRange.from.toISOString().split("T")[0]);
+      }
+      if (dateRange?.to) {
+        query = query.lt("summary_date", dateRange.to.toISOString().split("T")[0]);
+      }
+
+      const { data: summariesData, error } = await query;
 
       if (error) {
         logError("fetching all-time summary", error);
@@ -302,7 +320,7 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
         `Error loading all-time summary: ${extractErrorMessage(error)}`,
       );
     }
-  };
+  }, [user]);
 
   const refreshSummary = async () => {
     setRefreshing(true);
@@ -328,7 +346,16 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
     };
 
     loadData();
-  }, [user]);
+  }, [user, fetchAllTimeSummary]);
+
+  const handleDateRangeChange = async (dateRange: DateRange) => {
+    setLoading(true);
+    try {
+      await fetchAllTimeSummary(dateRange);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -369,6 +396,12 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
 
   return (
     <div className={`space-y-6 ${className}`}>
+      <AllTimeSummaryModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        summaryData={summaryData}
+        onDateRangeChange={handleDateRangeChange}
+      />
       {/* Header with Refresh Button */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -381,18 +414,29 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
             {summaryData.dataPoints} days of data
           </Badge>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={refreshSummary}
-          disabled={refreshing}
-          className="flex items-center gap-2"
-        >
-          <RefreshCw
-            className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
-          />
-          Refresh
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsModalOpen(true)}
+            className="flex items-center gap-2"
+          >
+            <Eye className="h-4 w-4" />
+            View Details
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={refreshSummary}
+            disabled={refreshing}
+            className="flex items-center gap-2"
+          >
+            <RefreshCw
+              className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
+            />
+            Refresh
+          </Button>
+        </div>
       </div>
 
       {/* Main Summary Cards */}
