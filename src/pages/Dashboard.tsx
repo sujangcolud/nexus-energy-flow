@@ -53,6 +53,7 @@ import { extractErrorMessage, logError } from "@/utils/errorHandling";
 import ChatBot from "@/components/ChatBot";
 import MobileDashboard from "./MobileDashboard";
 import FinancialSummaryWidget from "@/components/FinancialSummaryWidget";
+import DailyClosingSystem from "@/components/DailyClosingSystem";
 
 // Tab components are now rendered by routes, but their types/icons might be needed for nav items.
 import OrdersTab from "@/components/tabs/OrdersTab";
@@ -84,6 +85,7 @@ const Dashboard = () => {
   const [tabSettings, setTabSettings] = useState<Record<string, boolean>>({});
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [tabToDelete, setTabToDelete] = useState<string | null>(null);
+  const [isDailyClosingOpen, setIsDailyClosingOpen] = useState(false);
 
   useEffect(() => {
     const storedSettings = localStorage.getItem("tabSettings");
@@ -104,30 +106,8 @@ const Dashboard = () => {
     }
   };
 
-  const handleDailyClosing = async () => {
-    try {
-      console.log("Starting daily closing for user:", user.id);
-      console.log("Closing date:", new Date().toISOString().slice(0, 10));
-
-      const { data, error } = await supabase.rpc("daily_closing", {
-        p_user_id: user.id,
-        p_closing_date: new Date().toISOString().slice(0, 10),
-      });
-
-      console.log("Daily closing response:", { data, error });
-
-      if (error) {
-        logError("daily closing RPC", error);
-        throw error;
-      }
-
-      toast.success("Daily closing completed successfully!");
-      console.log("Daily closing result:", data);
-    } catch (error) {
-      logError("daily closing", error);
-      const errorMessage = extractErrorMessage(error);
-      toast.error(`Error during daily closing: ${errorMessage}`);
-    }
+  const handleDailyClosing = () => {
+    setIsDailyClosingOpen(true);
   };
 
   // Define role-based navigation items with clean color schemes
@@ -683,6 +663,12 @@ const Dashboard = () => {
       <ChatBot
         isOpen={isChatBotOpen}
         onToggle={() => setIsChatBotOpen(!isChatBotOpen)}
+      />
+
+      {/* Daily Closing System */}
+      <DailyClosingSystem
+        isOpen={isDailyClosingOpen}
+        onClose={() => setIsDailyClosingOpen(false)}
       />
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
