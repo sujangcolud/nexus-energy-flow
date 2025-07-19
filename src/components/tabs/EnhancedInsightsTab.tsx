@@ -72,6 +72,7 @@ interface AnalyticsData {
   esewaBalance: number;
   fonepayBalance: number;
   cooperativeBalance: number;
+  totalBalance: number;
 
   // Enhanced metrics from daily summary
   totalIncomeFromOrders: number;
