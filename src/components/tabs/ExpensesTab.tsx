@@ -668,6 +668,14 @@ const ExpensesTab = () => {
                   />
                 </div>
 
+                {/* Transaction Date Picker */}
+                <TransactionDatePicker
+                  selectedDate={transactionDate}
+                  onDateChange={setTransactionDate}
+                  label="Expense Date"
+                  showBackdateWarning={true}
+                />
+
                 <Button
                   type="submit"
                   disabled={isSubmitting}
