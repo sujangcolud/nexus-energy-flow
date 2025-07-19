@@ -96,7 +96,6 @@ const DepositsTab = () => {
     sender_name: "",
     receiver_name: "",
     deposited_to: "",
-    category: "",
   });
   const [newCategory, setNewCategory] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
