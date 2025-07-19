@@ -169,10 +169,33 @@ const InventoryTab = () => {
       if (error) throw error;
       setTransactions(data || []);
     } catch (error) {
-      console.error("Error fetching transactions:", error);
-      const errorMessage =
-        error?.message || error?.details || "Failed to load transactions";
-      toast.error(`Error fetching transactions: ${errorMessage}`);
+      logError("fetching inventory transactions", error);
+
+      // Handle auth-specific errors first
+      handleSupabaseError(error);
+
+      // Handle schema errors gracefully
+      if (
+        error?.code === "PGRST204" ||
+        error?.code === "PGRST200" ||
+        extractErrorMessage(error).includes("schema cache") ||
+        extractErrorMessage(error).includes("table") ||
+        extractErrorMessage(error).includes("relation")
+      ) {
+        console.warn(
+          "Inventory transactions table not found, setting empty transactions",
+        );
+        setTransactions([]);
+        toast.error(
+          "Inventory transactions table not found. Please contact administrator.",
+        );
+      } else if (
+        !error?.message?.includes("refresh_token_not_found") &&
+        !error?.message?.includes("Invalid Refresh Token")
+      ) {
+        const errorMessage = extractErrorMessage(error);
+        toast.error(`Error fetching transactions: ${errorMessage}`);
+      }
     } finally {
       setLoading(false);
     }
