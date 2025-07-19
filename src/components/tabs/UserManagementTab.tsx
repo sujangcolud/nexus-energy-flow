@@ -23,6 +23,10 @@ import {
 import { toast } from "sonner";
 import { extractErrorMessage, logError } from "@/utils/errorHandling";
 import {
+  handleSupabaseError,
+  withSupabaseErrorHandling,
+} from "@/utils/supabaseErrorHandler";
+import {
   Users,
   UserPlus,
   Shield,
