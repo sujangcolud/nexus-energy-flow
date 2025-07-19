@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import ChatBot from "@/components/ChatBot";
+import EnhancedChatBot from "@/components/EnhancedChatBot";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -122,11 +122,7 @@ const App = () => {
 
                 <Route
                   path="calculation-engine"
-                  element={
-                    <ProtectedRoute allowedRoles={["super_admin"]}>
-                      <CalculationEngineTab />
-                    </ProtectedRoute>
-                  }
+                  element={<CalculationEngineTab />}
                 />
                 <Route
                   path="super-admin"
@@ -142,9 +138,12 @@ const App = () => {
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
+            <EnhancedChatBot
+              isOpen={isChatBotOpen}
+              onToggle={handleToggleChatBot}
+            />
           </AuthProvider>
         </BrowserRouter>
-        <ChatBot isOpen={isChatBotOpen} onToggle={handleToggleChatBot} />
       </TooltipProvider>
     </QueryClientProvider>
   );

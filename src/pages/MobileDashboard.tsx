@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { extractErrorMessage, logError } from "@/utils/errorHandling";
 import DailyClosingSystem from "@/components/DailyClosingSystem";
+import BatchDailyClosingSystem from "@/components/BatchDailyClosingSystem";
 import {
   Sheet,
   SheetContent,
@@ -66,6 +67,7 @@ const MobileDashboard = () => {
   const [tabSettings, setTabSettings] = useState<Record<string, boolean>>({});
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isDailyClosingOpen, setIsDailyClosingOpen] = useState(false);
+  const [isBatchClosingOpen, setIsBatchClosingOpen] = useState(false);
 
   // Update time every minute
   useEffect(() => {
@@ -383,6 +385,14 @@ const MobileDashboard = () => {
                     </Button>
                     <Button
                       variant="ghost"
+                      onClick={() => setIsBatchClosingOpen(true)}
+                      className="w-full justify-start gap-3 h-12"
+                    >
+                      <Calendar className="h-5 w-5" />
+                      Batch Closing
+                    </Button>
+                    <Button
+                      variant="ghost"
                       onClick={() => navigate("/dashboard/settings")}
                       className="w-full justify-start gap-3 h-12"
                     >
@@ -598,6 +608,12 @@ const MobileDashboard = () => {
       <DailyClosingSystem
         isOpen={isDailyClosingOpen}
         onClose={() => setIsDailyClosingOpen(false)}
+      />
+
+      {/* Batch Daily Closing System */}
+      <BatchDailyClosingSystem
+        isOpen={isBatchClosingOpen}
+        onClose={() => setIsBatchClosingOpen(false)}
       />
     </div>
   );

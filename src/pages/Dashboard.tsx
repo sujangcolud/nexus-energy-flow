@@ -46,14 +46,16 @@ import {
   TrendingUp,
   Package,
   Trash,
+  Calendar,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { extractErrorMessage, logError } from "@/utils/errorHandling";
-import ChatBot from "@/components/ChatBot";
+import EnhancedChatBot from "@/components/EnhancedChatBot";
 import MobileDashboard from "./MobileDashboard";
 import FinancialSummaryWidget from "@/components/FinancialSummaryWidget";
 import DailyClosingSystem from "@/components/DailyClosingSystem";
+import BatchDailyClosingSystem from "@/components/BatchDailyClosingSystem";
 
 // Tab components are now rendered by routes, but their types/icons might be needed for nav items.
 import OrdersTab from "@/components/tabs/OrdersTab";
@@ -86,6 +88,7 @@ const Dashboard = () => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [tabToDelete, setTabToDelete] = useState<string | null>(null);
   const [isDailyClosingOpen, setIsDailyClosingOpen] = useState(false);
+  const [isBatchClosingOpen, setIsBatchClosingOpen] = useState(false);
 
   useEffect(() => {
     const storedSettings = localStorage.getItem("tabSettings");
@@ -503,6 +506,15 @@ const Dashboard = () => {
               <Button
                 variant="outline"
                 size="sm"
+                onClick={() => setIsBatchClosingOpen(true)}
+                className="flex items-center gap-2 hover:bg-green-50 hover:border-green-300 transition-colors"
+              >
+                <Calendar className="h-4 w-4" />
+                Batch Closing
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={handleSignOut}
                 className="flex items-center gap-2 hover:bg-red-50 hover:border-red-300 transition-colors"
               >
@@ -659,8 +671,8 @@ const Dashboard = () => {
         )}
       </main>
 
-      {/* ChatBot Component */}
-      <ChatBot
+      {/* Enhanced ChatBot Component */}
+      <EnhancedChatBot
         isOpen={isChatBotOpen}
         onToggle={() => setIsChatBotOpen(!isChatBotOpen)}
       />
@@ -669,6 +681,12 @@ const Dashboard = () => {
       <DailyClosingSystem
         isOpen={isDailyClosingOpen}
         onClose={() => setIsDailyClosingOpen(false)}
+      />
+
+      {/* Batch Daily Closing System */}
+      <BatchDailyClosingSystem
+        isOpen={isBatchClosingOpen}
+        onClose={() => setIsBatchClosingOpen(false)}
       />
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
