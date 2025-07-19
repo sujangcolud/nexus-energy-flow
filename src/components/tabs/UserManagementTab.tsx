@@ -68,7 +68,34 @@ const UserManagementTab = () => {
   const fetchUsersAndRoles = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase.rpc("get_all_users_with_roles");
+      // Try the main RPC function first
+      let data, error;
+      ({ data, error } = await supabase.rpc("get_all_users_with_roles"));
+
+      // If that fails, try the fallback function
+      if (error) {
+        console.warn("Primary function failed, trying fallback:", error);
+        ({ data, error } = await supabase.rpc("get_users_from_auth"));
+      }
+
+      // If both fail, try direct query
+      if (error) {
+        console.warn("Fallback function failed, trying direct query:", error);
+        ({ data, error } = await supabase.from("profiles").select(`
+            id,
+            email,
+            user_roles!inner(role)
+          `));
+
+        if (data) {
+          data = data.map((user: any) => ({
+            id: user.id,
+            email: user.email,
+            role: user.user_roles?.role || "user",
+          }));
+        }
+      }
+
       if (error) throw error;
 
       // Filter out 'super_user' and map to valid AppRole types
