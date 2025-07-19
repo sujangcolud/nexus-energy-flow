@@ -377,6 +377,33 @@ const InventoryTab = () => {
             Track your inventory with auto-population from expenses and manual
             management
           </p>
+
+          {/* Schema Error Notice */}
+          {hasSchemaError && (
+            <div className="mt-6 max-w-3xl mx-auto">
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <AlertTriangle className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                  <div className="text-sm text-amber-800">
+                    <strong>Database Setup Required:</strong> The inventory
+                    tables are not properly configured. Please contact your
+                    administrator to run the database setup scripts.
+                    <div className="mt-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => window.location.reload()}
+                        className="text-amber-700 border-amber-300 hover:bg-amber-100"
+                      >
+                        <RefreshCw className="h-4 w-4 mr-2" />
+                        Retry Connection
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Inventory Summary */}
