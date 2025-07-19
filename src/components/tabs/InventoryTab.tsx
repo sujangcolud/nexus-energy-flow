@@ -30,6 +30,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { extractErrorMessage, logError } from "@/utils/errorHandling";
+import { handleSupabaseError } from "@/utils/supabaseErrorHandler";
 import {
   Package,
   Plus,
