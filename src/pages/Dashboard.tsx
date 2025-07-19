@@ -51,7 +51,7 @@ import {
 import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { extractErrorMessage, logError } from "@/utils/errorHandling";
-import ChatBot from "@/components/ChatBot";
+import EnhancedChatBot from "@/components/EnhancedChatBot";
 import MobileDashboard from "./MobileDashboard";
 import FinancialSummaryWidget from "@/components/FinancialSummaryWidget";
 import DailyClosingSystem from "@/components/DailyClosingSystem";
