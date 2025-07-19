@@ -22,6 +22,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { extractErrorMessage, logError } from "@/utils/errorHandling";
 import {
   Receipt,
   FileText,
@@ -139,9 +140,8 @@ const VATEntryTab = () => {
       );
       setIncomeEntries(combinedEntries);
     } catch (error) {
-      console.error("Error fetching income entries:", error);
-      const errorMessage =
-        error?.message || error?.details || "Failed to load income entries";
+      logError("fetching income entries", error);
+      const errorMessage = extractErrorMessage(error);
       toast.error(`Error loading income entries: ${errorMessage}`);
     }
   };
@@ -159,9 +159,8 @@ const VATEntryTab = () => {
       if (error) throw error;
       setVatEntries(data || []);
     } catch (error) {
-      console.error("Error fetching VAT entries:", error);
-      const errorMessage =
-        error?.message || error?.details || "Failed to load VAT entries";
+      logError("fetching VAT entries", error);
+      const errorMessage = extractErrorMessage(error);
       toast.error(`Error loading VAT entries: ${errorMessage}`);
     } finally {
       setLoading(false);
@@ -182,7 +181,7 @@ const VATEntryTab = () => {
       });
 
       if (error) {
-        console.error("Error creating VAT entry:", error);
+        logError("creating VAT entry", error);
         throw error;
       }
 
@@ -191,9 +190,8 @@ const VATEntryTab = () => {
       setSelectedEntry(null);
       fetchVATEntries();
     } catch (error) {
-      console.error("Error creating VAT entry:", error);
-      const errorMessage =
-        error?.message || error?.details || "Failed to create VAT entry";
+      logError("creating VAT entry", error);
+      const errorMessage = extractErrorMessage(error);
       toast.error(`Error creating VAT entry: ${errorMessage}`);
     }
   };
