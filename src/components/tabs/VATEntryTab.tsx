@@ -341,10 +341,23 @@ Thank you for your business!
             </h1>
             <Sparkles className="h-8 w-8 text-purple-500 animate-bounce" />
           </div>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-4">
             Manage VAT entries and generate bills according to Nepal VAT
             regulations
           </p>
+          <div className="max-w-3xl mx-auto">
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                <div className="text-sm text-amber-800">
+                  <strong>VAT Calculation Mode:</strong> All amounts entered are
+                  treated as VAT-inclusive. The system automatically extracts
+                  the {nepalVATRate}% VAT component for proper accounting and
+                  bill generation.
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* VAT Summary */}
