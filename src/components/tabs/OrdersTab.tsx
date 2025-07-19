@@ -342,7 +342,17 @@ const OrdersTab = () => {
       // Provide more specific error messages based on the error code
       let errorMessage = "Failed to place order";
       if (error?.code === "42703") {
-        errorMessage = "Database field error detected. Migration needed.";
+        errorMessage =
+          "Database column error. Please run the column fix in Supabase SQL Editor.";
+
+        // Show detailed instructions for 42703
+        console.error("\n=== 42703 COLUMN ERROR ===");
+        console.error(`Column error: ${error?.message}`);
+        console.error("\nTo fix this:");
+        console.error("1. Go to your Supabase dashboard");
+        console.error("2. Open SQL Editor");
+        console.error("3. Run the fix_amount_column_error.sql file");
+        console.error("4. Refresh this page");
       } else if (error?.code === "PGRST202") {
         errorMessage = "Database function not found. Using fallback method...";
       } else if (error?.code === "PGRST204") {
