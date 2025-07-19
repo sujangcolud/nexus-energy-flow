@@ -596,6 +596,14 @@ const CooperativeSavingsTab = () => {
                   </div>
                 </div>
 
+                {/* Transaction Date */}
+                <TransactionDatePicker
+                  selectedDate={transactionDate}
+                  onDateChange={setTransactionDate}
+                  label="Contribution Date"
+                  className="mb-4"
+                />
+
                 <div className="space-y-2">
                   <Label
                     htmlFor="remarks"
