@@ -49,6 +49,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { extractErrorMessage, logError } from "@/utils/errorHandling";
 import ChatBot from "@/components/ChatBot";
 import MobileDashboard from "./MobileDashboard";
 
@@ -115,40 +116,15 @@ const Dashboard = () => {
       console.log("Daily closing response:", { data, error });
 
       if (error) {
-        console.error("Daily closing RPC error:", {
-          message: error.message,
-          details: error.details,
-          hint: error.hint,
-          code: error.code,
-          fullError: error,
-        });
+        logError("daily closing RPC", error);
         throw error;
       }
 
       toast.success("Daily closing completed successfully!");
       console.log("Daily closing result:", data);
     } catch (error) {
-      console.error("Error during daily closing:", error);
-      let errorMessage = "Failed to complete daily closing";
-
-      if (error && typeof error === "object") {
-        if (error.message) {
-          errorMessage = error.message;
-        } else if (error.details) {
-          errorMessage = error.details;
-        } else if (error.error_description) {
-          errorMessage = error.error_description;
-        } else if (error.hint) {
-          errorMessage = error.hint;
-        } else if (error.code) {
-          errorMessage = `Database error (${error.code})`;
-        } else {
-          errorMessage = JSON.stringify(error, null, 2);
-        }
-      } else if (typeof error === "string") {
-        errorMessage = error;
-      }
-
+      logError("daily closing", error);
+      const errorMessage = extractErrorMessage(error);
       toast.error(`Error during daily closing: ${errorMessage}`);
     }
   };
