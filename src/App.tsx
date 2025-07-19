@@ -138,12 +138,12 @@ const App = () => {
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
+            <EnhancedChatBot
+              isOpen={isChatBotOpen}
+              onToggle={handleToggleChatBot}
+            />
           </AuthProvider>
         </BrowserRouter>
-        <EnhancedChatBot
-          isOpen={isChatBotOpen}
-          onToggle={handleToggleChatBot}
-        />
       </TooltipProvider>
     </QueryClientProvider>
   );
