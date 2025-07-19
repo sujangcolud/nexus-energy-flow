@@ -138,78 +138,20 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
       // Calculate net profit
       const netProfit = totalIncome - totalExpenses;
 
-      // Calculate current balances using correct formulas:
-      // cash_balance: total_cash_income - total_expenses_cash - total_savings_cash + total_withdrawals_cash - deposits_to_esewa - deposits_to_fonepay
-      const cashBalance = summaries.reduce((sum, s) => {
-        const totalCashIncome = s.total_income_cash || 0;
-        const totalExpensesCash = s.total_expenses_cash || 0;
-        const totalSavingsCash = s.total_savings_cash || 0;
-        const totalWithdrawalsCash = 0; // This column might not exist in current schema
-        const depositsToEsewa = s.total_deposits_esewa || 0;
-        const depositsToFonepay = s.total_deposits_fonepay || 0;
+      // Get current balances from latest daily summary (most recent day)
+      const latestSummary = summaries[0] || {};
 
-        return (
-          sum +
-          (totalCashIncome -
-            totalExpensesCash -
-            totalSavingsCash +
-            totalWithdrawalsCash -
-            depositsToEsewa -
-            depositsToFonepay)
-        );
-      }, 0);
-
-      // esewa_balance: total_income_esewa - total_expenses_esewa - total_savings_esewa + deposits_to_esewa
-      const esewaBalance = summaries.reduce((sum, s) => {
-        const totalIncomeEsewa = s.total_income_esewa || 0;
-        const totalExpensesEsewa = s.total_expenses_esewa || 0;
-        const totalSavingsEsewa = s.total_savings_esewa || 0;
-        const depositsToEsewa = s.total_deposits_esewa || 0;
-
-        return (
-          sum +
-          (totalIncomeEsewa -
-            totalExpensesEsewa -
-            totalSavingsEsewa +
-            depositsToEsewa)
-        );
-      }, 0);
-
-      // fonepay_balance: total_income_fonepay - total_expenses_fonepay - total_savings_fonepay + deposits_to_fonepay
-      const fonepayBalance = summaries.reduce((sum, s) => {
-        const totalIncomeFonepay = s.total_income_fonepay || 0;
-        const totalExpensesFonepay = s.total_expenses_fonepay || 0;
-        const totalSavingsFonepay = s.total_savings_fonepay || 0;
-        const depositsToFonepay = s.total_deposits_fonepay || 0;
-
-        return (
-          sum +
-          (totalIncomeFonepay -
-            totalExpensesFonepay -
-            totalSavingsFonepay +
-            depositsToFonepay)
-        );
-      }, 0);
-
-      // cooperative_balance: total_savings - total_withdrawals_cooperative
-      const cooperativeBalanceCalc = summaries.reduce((sum, s) => {
-        const totalSavings = s.total_savings || 0;
-        const totalWithdrawalsCooperative =
-          s.total_withdrawals_cooperative || 0;
-
-        return sum + (totalSavings - totalWithdrawalsCooperative);
-      }, 0);
-
-      // total_balance: cash_balance + fonepay_balance + cooperative_balance + esewa_balance
-      const totalBalance =
-        cashBalance + fonepayBalance + cooperativeBalanceCalc + esewaBalance;
-
+      // Current balances are calculated in daily_summary using the specified formulas
       const currentBalances = {
-        cash: cashBalance,
-        esewa: esewaBalance,
-        fonepay: fonepayBalance,
-        total: totalBalance,
+        cash: latestSummary.cash_balance || 0,
+        esewa: latestSummary.esewa_balance || 0,
+        fonepay: latestSummary.fonepay_balance || 0,
+        total: latestSummary.total_balance || 0,
       };
+
+      // Calculate cooperative balance: total_savings - total_withdrawals_cooperative
+      const cooperativeBalanceCalc =
+        latestSummary.cooperative_balance || cooperativeSavings;
 
       // Calculate income breakdown
       const incomeBreakdown = {
