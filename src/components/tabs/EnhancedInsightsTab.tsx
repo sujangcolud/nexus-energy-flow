@@ -384,6 +384,10 @@ const EnhancedInsightsTab = () => {
     // If we're losing money, break-even is total expenses needed to be covered
     const breakEvenPoint = totalExpenses > 0 ? totalExpenses : 0;
 
+    // Total Balance of all: Cash Balance + Bank Balance (fonepay) + Cooperative Balance + Esewa Balance
+    const totalBalance =
+      cashBalance + fonepayBalance + cooperativeBalance + esewaBalance;
+
     return {
       totalRevenue,
       totalExpenses,
