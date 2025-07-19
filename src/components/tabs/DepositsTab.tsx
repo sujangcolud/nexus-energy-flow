@@ -76,10 +76,8 @@ interface Deposit {
   deposited_by: string;
   deposit_date: string;
   remarks: string;
-  sender_name: string;
-  receiver_name: string;
-  deposited_to: string;
-  category: string;
+  user_id: string;
+  created_at: string;
 }
 
 interface Category {
