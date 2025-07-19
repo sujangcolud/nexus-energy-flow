@@ -83,11 +83,6 @@ const Dashboard = () => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [tabToDelete, setTabToDelete] = useState<string | null>(null);
 
-  // Use mobile dashboard on mobile devices
-  if (isMobile) {
-    return <MobileDashboard />;
-  }
-
   useEffect(() => {
     const storedSettings = localStorage.getItem("tabSettings");
     if (storedSettings) {
