@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { extractErrorMessage, logError } from "@/utils/errorHandling";
 import {
   PiggyBank,
   Calendar as CalendarIcon,
@@ -64,7 +65,8 @@ interface Saving {
   member_id: string;
   cycle_period: string | null;
   contribution_date: string;
-  category: string;
+  user_id: string;
+  created_at: string;
 }
 
 interface Category {
@@ -135,8 +137,8 @@ const CooperativeSavingsTab = () => {
       if (error) throw error;
       setCategories(data || []);
     } catch (error) {
-      console.error("Error fetching categories:", error);
-      toast.error("Failed to load categories");
+      logError("fetching categories", error);
+      toast.error(`Error loading categories: ${extractErrorMessage(error)}`);
     }
   };
 
@@ -168,8 +170,10 @@ const CooperativeSavingsTab = () => {
 
       setSavings(data || []);
     } catch (error) {
-      console.error("Error fetching cooperative savings:", error);
-      toast.error("Failed to load cooperative savings");
+      logError("fetching cooperative savings", error);
+      toast.error(
+        `Error loading cooperative savings: ${extractErrorMessage(error)}`,
+      );
     } finally {
       setLoading(false);
     }
@@ -201,7 +205,6 @@ const CooperativeSavingsTab = () => {
           member_id: formData.memberId,
           cycle_period: formData.cyclePeriod,
           contribution_date: new Date().toISOString().split("T")[0],
-          category: "General",
         },
       ]);
 
@@ -216,8 +219,10 @@ const CooperativeSavingsTab = () => {
       });
       fetchSavings();
     } catch (error) {
-      console.error("Error recording cooperative saving:", error);
-      toast.error("Failed to record cooperative saving");
+      logError("recording cooperative saving", error);
+      toast.error(
+        `Error recording cooperative saving: ${extractErrorMessage(error)}`,
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -242,8 +247,8 @@ const CooperativeSavingsTab = () => {
       setNewCategory("");
       fetchCategories();
     } catch (error) {
-      console.error("Error adding category:", error);
-      toast.error("Failed to add category");
+      logError("adding category", error);
+      toast.error(`Error adding category: ${extractErrorMessage(error)}`);
     }
   };
 
@@ -257,8 +262,8 @@ const CooperativeSavingsTab = () => {
       toast.success("Category deleted successfully");
       fetchCategories();
     } catch (error) {
-      console.error("Error deleting category:", error);
-      toast.error("Failed to delete category");
+      logError("deleting category", error);
+      toast.error(`Error deleting category: ${extractErrorMessage(error)}`);
     }
   };
 
@@ -306,8 +311,8 @@ const CooperativeSavingsTab = () => {
       logAction("delete", id, { id });
       fetchSavings();
     } catch (error) {
-      console.error("Error deleting saving:", error);
-      toast.error("Failed to delete saving");
+      logError("deleting saving", error);
+      toast.error(`Error deleting saving: ${extractErrorMessage(error)}`);
     }
   };
 
@@ -327,8 +332,8 @@ const CooperativeSavingsTab = () => {
       setIsEditDialogOpen(false);
       fetchSavings();
     } catch (error) {
-      console.error("Error updating saving:", error);
-      toast.error("Failed to update saving");
+      logError("updating saving", error);
+      toast.error(`Error updating saving: ${extractErrorMessage(error)}`);
     }
   };
 

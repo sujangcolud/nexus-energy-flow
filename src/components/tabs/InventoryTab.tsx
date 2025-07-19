@@ -30,6 +30,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { extractErrorMessage, logError } from "@/utils/errorHandling";
+import { handleSupabaseError } from "@/utils/supabaseErrorHandler";
 import {
   Package,
   Plus,
@@ -87,6 +89,7 @@ const InventoryTab = () => {
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [transactions, setTransactions] = useState<InventoryTransaction[]>([]);
   const [loading, setLoading] = useState(true);
+  const [hasSchemaError, setHasSchemaError] = useState(false);
   const [stockOutDialogOpen, setStockOutDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
   const [stockOutForm, setStockOutForm] = useState({
@@ -127,10 +130,30 @@ const InventoryTab = () => {
       if (error) throw error;
       setInventory(data || []);
     } catch (error) {
-      console.error("Error fetching inventory:", error);
-      const errorMessage =
-        error?.message || error?.details || "Failed to load inventory";
-      toast.error(`Error fetching inventory: ${errorMessage}`);
+      logError("fetching inventory", error);
+
+      // Handle auth-specific errors first
+      handleSupabaseError(error);
+
+      // Handle schema errors gracefully
+      if (
+        error?.code === "PGRST204" ||
+        error?.code === "PGRST200" ||
+        extractErrorMessage(error).includes("schema cache") ||
+        extractErrorMessage(error).includes("table") ||
+        extractErrorMessage(error).includes("relation")
+      ) {
+        console.warn("Inventory table not found, setting empty inventory");
+        setInventory([]);
+        setHasSchemaError(true);
+        toast.error("Inventory table not found. Please contact administrator.");
+      } else if (
+        !error?.message?.includes("refresh_token_not_found") &&
+        !error?.message?.includes("Invalid Refresh Token")
+      ) {
+        const errorMessage = extractErrorMessage(error);
+        toast.error(`Error fetching inventory: ${errorMessage}`);
+      }
     }
   };
 
@@ -148,10 +171,34 @@ const InventoryTab = () => {
       if (error) throw error;
       setTransactions(data || []);
     } catch (error) {
-      console.error("Error fetching transactions:", error);
-      const errorMessage =
-        error?.message || error?.details || "Failed to load transactions";
-      toast.error(`Error fetching transactions: ${errorMessage}`);
+      logError("fetching inventory transactions", error);
+
+      // Handle auth-specific errors first
+      handleSupabaseError(error);
+
+      // Handle schema errors gracefully
+      if (
+        error?.code === "PGRST204" ||
+        error?.code === "PGRST200" ||
+        extractErrorMessage(error).includes("schema cache") ||
+        extractErrorMessage(error).includes("table") ||
+        extractErrorMessage(error).includes("relation")
+      ) {
+        console.warn(
+          "Inventory transactions table not found, setting empty transactions",
+        );
+        setTransactions([]);
+        setHasSchemaError(true);
+        toast.error(
+          "Inventory transactions table not found. Please contact administrator.",
+        );
+      } else if (
+        !error?.message?.includes("refresh_token_not_found") &&
+        !error?.message?.includes("Invalid Refresh Token")
+      ) {
+        const errorMessage = extractErrorMessage(error);
+        toast.error(`Error fetching transactions: ${errorMessage}`);
+      }
     } finally {
       setLoading(false);
     }
@@ -184,10 +231,26 @@ const InventoryTab = () => {
       fetchInventory();
       fetchTransactions();
     } catch (error) {
-      console.error("Error recording stock out:", error);
-      const errorMessage =
-        error?.message || error?.details || "Failed to record stock out";
-      toast.error(`Error recording stock out: ${errorMessage}`);
+      logError("recording stock out", error);
+      handleSupabaseError(error);
+
+      if (
+        !error?.message?.includes("refresh_token_not_found") &&
+        !error?.message?.includes("Invalid Refresh Token")
+      ) {
+        const errorMessage = extractErrorMessage(error);
+        if (
+          error?.code === "PGRST204" ||
+          errorMessage.includes("schema cache")
+        ) {
+          toast.error(
+            "Database schema issue. Please refresh the page and try again.",
+          );
+          setHasSchemaError(true);
+        } else {
+          toast.error(`Error recording stock out: ${errorMessage}`);
+        }
+      }
     }
   };
 
@@ -256,10 +319,26 @@ const InventoryTab = () => {
       fetchInventory();
       fetchTransactions();
     } catch (error) {
-      console.error("Error adding manual item:", error);
-      const errorMessage =
-        error?.message || error?.details || "Failed to add inventory item";
-      toast.error(`Error adding manual item: ${errorMessage}`);
+      logError("adding manual inventory item", error);
+      handleSupabaseError(error);
+
+      if (
+        !error?.message?.includes("refresh_token_not_found") &&
+        !error?.message?.includes("Invalid Refresh Token")
+      ) {
+        const errorMessage = extractErrorMessage(error);
+        if (
+          error?.code === "PGRST204" ||
+          errorMessage.includes("schema cache")
+        ) {
+          toast.error(
+            "Database schema issue. Please refresh the page and try again.",
+          );
+          setHasSchemaError(true);
+        } else {
+          toast.error(`Error adding manual item: ${errorMessage}`);
+        }
+      }
     }
   };
 
@@ -330,6 +409,33 @@ const InventoryTab = () => {
             Track your inventory with auto-population from expenses and manual
             management
           </p>
+
+          {/* Schema Error Notice */}
+          {hasSchemaError && (
+            <div className="mt-6 max-w-3xl mx-auto">
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <AlertTriangle className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                  <div className="text-sm text-amber-800">
+                    <strong>Database Setup Required:</strong> The inventory
+                    tables are not properly configured. Please contact your
+                    administrator to run the database setup scripts.
+                    <div className="mt-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => window.location.reload()}
+                        className="text-amber-700 border-amber-300 hover:bg-amber-100"
+                      >
+                        <RefreshCw className="h-4 w-4 mr-2" />
+                        Retry Connection
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Inventory Summary */}

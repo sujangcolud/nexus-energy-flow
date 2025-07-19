@@ -76,10 +76,8 @@ interface Deposit {
   deposited_by: string;
   deposit_date: string;
   remarks: string;
-  sender_name: string;
-  receiver_name: string;
-  deposited_to: string;
-  category: string;
+  user_id: string;
+  created_at: string;
 }
 
 interface Category {
@@ -97,9 +95,6 @@ const DepositsTab = () => {
     mode: "",
     depositedBy: "",
     remarks: "",
-    sender_name: "",
-    receiver_name: "",
-    deposited_to: "",
   });
   const [newCategory, setNewCategory] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -153,27 +148,7 @@ const DepositsTab = () => {
         </div>
       ),
     },
-    {
-      key: "sender_name",
-      label: "Sender",
-      className: "font-semibold text-gray-700",
-      hideOnMobile: true,
-      render: (value: string) => value || "-",
-    },
-    {
-      key: "receiver_name",
-      label: "Receiver",
-      className: "font-semibold text-gray-700",
-      hideOnMobile: true,
-      render: (value: string) => value || "-",
-    },
-    {
-      key: "deposited_to",
-      label: "Deposited To",
-      className: "font-semibold text-gray-700",
-      hideOnMobile: true,
-      render: (value: string) => value || "-",
-    },
+    // Removed sender_name, receiver_name, deposited_to columns as they don't exist in database
     {
       key: "remarks",
       label: "Remarks",
@@ -384,11 +359,7 @@ const DepositsTab = () => {
           deposited_by: formData.depositedBy,
           remarks: formData.remarks || "",
           deposit_date: new Date().toISOString().split("T")[0],
-          sender_name: formData.sender_name,
-          receiver_name: formData.receiver_name,
-          payment_mode: formData.mode,
-          deposited_to: formData.deposited_to,
-          category: "General",
+          // Removed non-existent columns: sender_name, receiver_name, payment_mode, deposited_to, category
         },
       ]);
 
@@ -400,9 +371,6 @@ const DepositsTab = () => {
         mode: "",
         depositedBy: "",
         remarks: "",
-        sender_name: "",
-        receiver_name: "",
-        deposited_to: "",
       });
       fetchDeposits();
     } catch (error) {

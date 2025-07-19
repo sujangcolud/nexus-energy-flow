@@ -83,21 +83,91 @@ const UserManagementTab = () => {
         ({ data, error } = await supabase.rpc("get_users_from_auth"));
       }
 
-      // If both fail, try direct query
+      // If both fail, try direct queries with manual joining
       if (error) {
-        console.warn("Fallback function failed, trying direct query:", error);
-        ({ data, error } = await supabase.from("profiles").select(`
-            id,
-            email,
-            user_roles!inner(role)
-          `));
+        console.warn("Fallback function failed, trying direct queries:", error);
 
-        if (data) {
-          data = data.map((user: any) => ({
-            id: user.id,
-            email: user.email,
-            role: user.user_roles?.role || "user",
-          }));
+        // Get profiles first
+        const { data: profilesData, error: profilesError } = await supabase
+          .from("profiles")
+          .select("id, email");
+
+        if (profilesError) {
+          console.error("Profiles query failed:", profilesError);
+          error = profilesError;
+        } else {
+          // Get user roles separately
+          const { data: rolesData, error: rolesError } = await supabase
+            .from("user_roles")
+            .select("user_id, role");
+
+          if (rolesError) {
+            console.warn(
+              "User roles query failed, using default roles:",
+              rolesError,
+            );
+          }
+
+          // Manually join the data
+          data = (profilesData || []).map((profile: any) => {
+            const userRole = rolesData?.find(
+              (role: any) => role.user_id === profile.id,
+            );
+            return {
+              id: profile.id,
+              email: profile.email,
+              role: userRole?.role || "user",
+            };
+          });
+
+          error = null; // Clear error since we got profiles data
+        }
+      }
+
+      // Final fallback: if we still have an error or no data, try auth.users directly
+      if (error || !data || data.length === 0) {
+        console.warn(
+          "All queries failed or returned no data, trying auth.users directly",
+        );
+
+        try {
+          // Try to get users from auth.users table using SQL
+          const { data: authUsersData, error: authError } = await supabase
+            .from("auth.users")
+            .select("id, email, raw_user_meta_data")
+            .limit(10); // Limit to prevent too much data
+
+          if (!authError && authUsersData) {
+            data = authUsersData.map((user: any) => ({
+              id: user.id,
+              email: user.email || "Unknown",
+              role: user.raw_user_meta_data?.role || "user",
+            }));
+            error = null;
+          } else {
+            // Absolute final fallback - create minimal user list
+            console.warn(
+              "Auth users query also failed, using minimal fallback",
+            );
+            data = [
+              {
+                id: "placeholder",
+                email: "No users found - Check database connection",
+                role: "user",
+              },
+            ];
+            error = null;
+          }
+        } catch (fallbackError) {
+          console.error("Final fallback failed:", fallbackError);
+          data = [
+            {
+              id: "error",
+              email: "Error loading users - Check console",
+              role: "user",
+            },
+          ];
+          error = null;
         }
       }
 
@@ -131,7 +201,18 @@ const UserManagementTab = () => {
         !error?.message?.includes("Invalid Refresh Token")
       ) {
         const errorMessage = extractErrorMessage(error);
-        toast.error(`Failed to load users: ${errorMessage}`);
+
+        // Show specific message for relationship errors
+        if (
+          error?.code === "PGRST200" ||
+          errorMessage.includes("relationship")
+        ) {
+          toast.error(
+            "Database schema issue detected. Using fallback user data.",
+          );
+        } else {
+          toast.error(`Failed to load users: ${errorMessage}`);
+        }
       }
     } finally {
       setLoading(false);

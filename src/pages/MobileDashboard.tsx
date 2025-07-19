@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { extractErrorMessage, logError } from "@/utils/errorHandling";
+import DailyClosingSystem from "@/components/DailyClosingSystem";
 import {
   Sheet,
   SheetContent,
@@ -64,6 +65,7 @@ const MobileDashboard = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [tabSettings, setTabSettings] = useState<Record<string, boolean>>({});
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [isDailyClosingOpen, setIsDailyClosingOpen] = useState(false);
 
   // Update time every minute
   useEffect(() => {
@@ -86,33 +88,8 @@ const MobileDashboard = () => {
     }
   };
 
-  const handleDailyClosing = async () => {
-    try {
-      console.log("Mobile - Starting daily closing for user:", user.id);
-      console.log(
-        "Mobile - Closing date:",
-        new Date().toISOString().slice(0, 10),
-      );
-
-      const { data, error } = await supabase.rpc("daily_closing", {
-        p_user_id: user.id,
-        p_closing_date: new Date().toISOString().slice(0, 10),
-      });
-
-      console.log("Mobile - Daily closing response:", { data, error });
-
-      if (error) {
-        logError("mobile daily closing RPC", error);
-        throw error;
-      }
-
-      toast.success("Daily closing completed successfully!");
-      console.log("Mobile - Daily closing result:", data);
-    } catch (error) {
-      logError("mobile daily closing", error);
-      const errorMessage = extractErrorMessage(error);
-      toast.error(`Error during daily closing: ${errorMessage}`);
-    }
+  const handleDailyClosing = () => {
+    setIsDailyClosingOpen(true);
   };
 
   // Mobile-optimized navigation items
@@ -616,6 +593,12 @@ const MobileDashboard = () => {
           </div>
         )}
       </main>
+
+      {/* Daily Closing System */}
+      <DailyClosingSystem
+        isOpen={isDailyClosingOpen}
+        onClose={() => setIsDailyClosingOpen(false)}
+      />
     </div>
   );
 };

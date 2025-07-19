@@ -20,6 +20,8 @@ import {
   LineChart,
 } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
+import { extractErrorMessage, logError } from "@/utils/errorHandling";
+import { toast } from "sonner";
 import {
   Activity,
   TrendingUp,
@@ -176,7 +178,10 @@ const SuperAdminDashboard = () => {
         setCooperativeSavingsTrend(cooperativeSavingsTrendResult.data);
         setMenuItemAvailability(menuItemAvailabilityResult.data);
       } catch (error) {
-        console.error("Error fetching dashboard data:", error);
+        logError("fetching dashboard data", error);
+        toast.error(
+          `Error fetching dashboard data: ${extractErrorMessage(error)}`,
+        );
       } finally {
         setLoading(false);
       }
@@ -252,7 +257,7 @@ const SuperAdminDashboard = () => {
                     Total Revenue
                   </p>
                   <p className="text-2xl font-bold text-blue-800">
-                    $
+                    NRs.
                     {monthlyFinancialSummary
                       .reduce((acc, item) => acc + item.revenue, 0)
                       .toLocaleString()}
@@ -588,7 +593,7 @@ const SuperAdminDashboard = () => {
                       </span>
                     </div>
                     <span className="font-bold text-orange-600">
-                      ${Number(spender.total_spent).toFixed(2)}
+                      NRs. {Number(spender.total_spent).toFixed(2)}
                     </span>
                   </div>
                 ))}

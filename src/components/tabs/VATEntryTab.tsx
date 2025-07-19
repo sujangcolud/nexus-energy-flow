@@ -189,7 +189,33 @@ const VATEntryTab = () => {
     } catch (error) {
       logError("fetching VAT entries", error);
       const errorMessage = extractErrorMessage(error);
-      toast.error(`Error loading VAT entries: ${errorMessage}`);
+
+      // Handle specific PGRST204 schema cache errors
+      if (error?.code === "PGRST204") {
+        console.warn("VAT entries table schema issue:", errorMessage);
+        setVatEntries([]); // Set empty list instead of failing
+
+        if (errorMessage.includes("entry_id")) {
+          toast.error(
+            "VAT entries table has schema issues with entry_id column. Please refresh the page or contact administrator.",
+            { duration: 5000 },
+          );
+        } else {
+          toast.error(
+            `VAT entries table schema error: ${errorMessage}. Please refresh the page or contact administrator.`,
+            { duration: 5000 },
+          );
+        }
+      } else if (errorMessage.includes("schema cache")) {
+        console.warn("Schema cache issue detected:", errorMessage);
+        setVatEntries([]);
+        toast.error(
+          "Database schema cache issue. Please refresh the page and try again.",
+          { duration: 5000 },
+        );
+      } else {
+        toast.error(`Error loading VAT entries: ${errorMessage}`);
+      }
     } finally {
       setLoading(false);
     }
@@ -205,6 +231,7 @@ const VATEntryTab = () => {
         nepalVATRate,
       );
 
+      // Only insert the base fields, let computed columns be calculated automatically
       const { error } = await supabase.from("vat_entries").insert({
         user_id: user.id,
         entry_type: selectedEntry.type,
@@ -212,8 +239,7 @@ const VATEntryTab = () => {
         item_name: selectedEntry.item_name,
         amount: vatCalculation.baseAmount, // Store the base amount (excluding VAT)
         vat_rate: nepalVATRate,
-        vat_amount: vatCalculation.vatAmount, // Manually calculate VAT amount
-        total_with_vat: vatCalculation.totalWithVAT, // Original amount (VAT inclusive)
+        // Remove vat_amount and total_with_vat - these are computed columns
       });
 
       if (error) {
@@ -228,7 +254,34 @@ const VATEntryTab = () => {
     } catch (error) {
       logError("creating VAT entry", error);
       const errorMessage = extractErrorMessage(error);
-      toast.error(`Error creating VAT entry: ${errorMessage}`);
+
+      // Handle specific PGRST204 errors with detailed feedback
+      if (error?.code === "PGRST204") {
+        if (errorMessage.includes("entry_id")) {
+          toast.error(
+            "VAT entry creation failed: entry_id column issue. The database schema may need updating. Please contact administrator.",
+            { duration: 6000 },
+          );
+        } else {
+          toast.error(
+            `VAT entry creation failed: Database schema error - ${errorMessage}. Please refresh the page and try again.`,
+            { duration: 6000 },
+          );
+        }
+
+        // Try to refresh the page after a delay to reload schema
+        setTimeout(() => {
+          toast.info("Refreshing page to reload database schema...");
+          window.location.reload();
+        }, 3000);
+      } else if (errorMessage.includes("schema cache")) {
+        toast.error(
+          "Database schema cache issue detected. Please refresh the page and try again.",
+          { duration: 5000 },
+        );
+      } else {
+        toast.error(`Error creating VAT entry: ${errorMessage}`);
+      }
     }
   };
 
