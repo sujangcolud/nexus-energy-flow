@@ -116,34 +116,9 @@ const UserManagementTab = () => {
 
       setUsers(filteredUsers);
     } catch (error) {
-      console.error("Error fetching users and roles:", error);
-
-      let errorMessage = "Failed to load users";
-      if (error && typeof error === "object") {
-        const msg = error.message || error["message"] || null;
-        const details = error.details || error["details"] || null;
-        const hint = error.hint || error["hint"] || null;
-        const code = error.code || error["code"] || null;
-
-        if (msg && typeof msg === "string" && msg.trim() !== "") {
-          errorMessage = msg;
-          if (code) errorMessage += ` (${code})`;
-        } else if (
-          details &&
-          typeof details === "string" &&
-          details.trim() !== ""
-        ) {
-          errorMessage = details;
-          if (code) errorMessage += ` (${code})`;
-        } else if (hint && typeof hint === "string" && hint.trim() !== "") {
-          errorMessage = hint;
-          if (code) errorMessage += ` (${code})`;
-        } else if (code) {
-          errorMessage = `Database error: ${code}`;
-        }
-      }
-      console.log("Detailed error:", errorMessage);
-      toast.error(errorMessage);
+      logError("fetching users and roles", error);
+      const errorMessage = extractErrorMessage(error);
+      toast.error(`Failed to load users: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
