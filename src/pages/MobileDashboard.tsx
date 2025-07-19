@@ -109,27 +109,8 @@ const MobileDashboard = () => {
       toast.success("Daily closing completed successfully!");
       console.log("Mobile - Daily closing result:", data);
     } catch (error) {
-      console.error("Error during daily closing:", error);
-      let errorMessage = "Failed to complete daily closing";
-
-      if (error && typeof error === "object") {
-        if (error.message) {
-          errorMessage = error.message;
-        } else if (error.details) {
-          errorMessage = error.details;
-        } else if (error.error_description) {
-          errorMessage = error.error_description;
-        } else if (error.hint) {
-          errorMessage = error.hint;
-        } else if (error.code) {
-          errorMessage = `Database error (${error.code})`;
-        } else {
-          errorMessage = JSON.stringify(error, null, 2);
-        }
-      } else if (typeof error === "string") {
-        errorMessage = error;
-      }
-
+      logError("mobile daily closing", error);
+      const errorMessage = extractErrorMessage(error);
       toast.error(`Error during daily closing: ${errorMessage}`);
     }
   };
