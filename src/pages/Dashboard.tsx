@@ -52,6 +52,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { extractErrorMessage, logError } from "@/utils/errorHandling";
 import ChatBot from "@/components/ChatBot";
 import MobileDashboard from "./MobileDashboard";
+import FinancialSummaryWidget from "@/components/FinancialSummaryWidget";
 
 // Tab components are now rendered by routes, but their types/icons might be needed for nav items.
 import OrdersTab from "@/components/tabs/OrdersTab";
@@ -613,6 +614,9 @@ const Dashboard = () => {
                 );
               })}
             </div>
+
+            {/* Financial Summary Widget */}
+            <FinancialSummaryWidget className="mb-8" />
 
             {/* Quick Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
