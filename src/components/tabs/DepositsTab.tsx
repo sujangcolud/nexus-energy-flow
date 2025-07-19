@@ -154,8 +154,8 @@ const DepositsTab = () => {
       if (error) throw error;
       setCategories(data || []);
     } catch (error) {
-      console.error("Error fetching categories:", error);
-      toast.error("Failed to load categories");
+      logError("fetching categories", error);
+      toast.error(`Failed to load categories: ${extractErrorMessage(error)}`);
     }
   };
 
@@ -181,8 +181,8 @@ const DepositsTab = () => {
 
       setDeposits(data || []);
     } catch (error) {
-      console.error("Error fetching deposits:", error);
-      toast.error("Failed to load deposits");
+      logError("fetching deposits", error);
+      toast.error(`Failed to load deposits: ${extractErrorMessage(error)}`);
     } finally {
       setLoading(false);
     }
