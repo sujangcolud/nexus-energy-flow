@@ -298,6 +298,10 @@ Thank you for your business!
     (sum, entry) => sum + entry.total_with_vat,
     0,
   );
+  const totalBaseAmount = vatEntries.reduce(
+    (sum, entry) => sum + entry.amount,
+    0,
+  );
 
   if (loading) {
     return (
