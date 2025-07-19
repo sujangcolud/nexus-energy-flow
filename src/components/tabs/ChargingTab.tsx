@@ -787,6 +787,14 @@ const ChargingTab = () => {
                   </Select>
                 </div>
 
+                {/* Transaction Date */}
+                <TransactionDatePicker
+                  selectedDate={transactionDate}
+                  onDateChange={setTransactionDate}
+                  label="Charging Session Date"
+                  className="mb-4"
+                />
+
                 {/* Cost Calculation Display */}
                 {(startPercentage > 0 || kcal > 0) && (
                   <div className="p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
