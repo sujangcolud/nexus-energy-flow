@@ -54,6 +54,7 @@ import { extractErrorMessage, logError } from "@/utils/errorHandling";
 import EnhancedChatBot from "@/components/EnhancedChatBot";
 import MobileDashboard from "./MobileDashboard";
 import FinancialSummaryWidget from "@/components/FinancialSummaryWidget";
+import AllTimeSummaryWidget from "@/components/AllTimeSummaryWidget";
 import DailyClosingSystem from "@/components/DailyClosingSystem";
 import BatchDailyClosingSystem from "@/components/BatchDailyClosingSystem";
 
