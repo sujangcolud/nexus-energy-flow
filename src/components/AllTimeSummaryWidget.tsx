@@ -153,29 +153,35 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
       const cooperativeBalanceCalc =
         latestSummary.cooperative_balance || cooperativeSavings;
 
-      // Calculate income breakdown
+      // Calculate income breakdown using exact formulas
       const incomeBreakdown = {
-        fromOrders: summaries.reduce(
-          (sum, s) => sum + (s.total_income_from_orders || 0),
-          0,
-        ),
-        fromCharging: summaries.reduce(
-          (sum, s) => sum + (s.total_income_from_charging || 0),
-          0,
-        ),
+        fromOrders: totalIncomeFromOrders,
+        fromCharging: totalIncomeFromCharging,
       };
 
-      // Calculate payment method breakdown
+      // Calculate payment method breakdown:
+      // total_income_cash: Sum of cash income from orders and charging
+      const totalIncomeCash = summaries.reduce(
+        (sum, s) => sum + (s.total_income_cash || 0),
+        0,
+      );
+
+      // total_income_esewa: Sum of esewa income from orders and charging
+      const totalIncomeEsewa = summaries.reduce(
+        (sum, s) => sum + (s.total_income_esewa || 0),
+        0,
+      );
+
+      // total_income_fonepay: Sum of fonepay income from orders and charging
+      const totalIncomeFonepay = summaries.reduce(
+        (sum, s) => sum + (s.total_income_fonepay || 0),
+        0,
+      );
+
       const paymentMethodBreakdown = {
-        cash: summaries.reduce((sum, s) => sum + (s.total_income_cash || 0), 0),
-        esewa: summaries.reduce(
-          (sum, s) => sum + (s.total_income_esewa || 0),
-          0,
-        ),
-        fonepay: summaries.reduce(
-          (sum, s) => sum + (s.total_income_fonepay || 0),
-          0,
-        ),
+        cash: totalIncomeCash,
+        esewa: totalIncomeEsewa,
+        fonepay: totalIncomeFonepay,
       };
 
       const allTimeSummary: AllTimeSummaryData = {
