@@ -274,9 +274,10 @@ const EnhancedInsightsTab = () => {
       ),
     };
 
-    // Break-even calculation
-    const breakEvenPoint =
-      averageDailyExpenses > 0 ? averageDailyRevenue / averageDailyExpenses : 0;
+    // Break-even calculation (revenue needed to cover expenses)
+    // If we're already profitable, break-even is current expense level
+    // If we're losing money, break-even is total expenses needed to be covered
+    const breakEvenPoint = totalExpenses > 0 ? totalExpenses : 0;
 
     return {
       totalRevenue,
