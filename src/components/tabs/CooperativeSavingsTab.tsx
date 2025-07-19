@@ -209,7 +209,7 @@ const CooperativeSavingsTab = () => {
           contribution_amount: parseFloat(formData.contributionAmount),
           member_id: formData.memberId,
           cycle_period: formData.cyclePeriod,
-          contribution_date: new Date().toISOString().split("T")[0],
+          contribution_date: transactionDate,
         },
       ]);
 
