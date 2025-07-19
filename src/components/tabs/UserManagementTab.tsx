@@ -121,8 +121,18 @@ const UserManagementTab = () => {
       setUsers(filteredUsers);
     } catch (error) {
       logError("fetching users and roles", error);
-      const errorMessage = extractErrorMessage(error);
-      toast.error(`Failed to load users: ${errorMessage}`);
+
+      // Handle auth-specific errors first
+      handleSupabaseError(error);
+
+      // If it's not an auth error, show the regular error message
+      if (
+        !error?.message?.includes("refresh_token_not_found") &&
+        !error?.message?.includes("Invalid Refresh Token")
+      ) {
+        const errorMessage = extractErrorMessage(error);
+        toast.error(`Failed to load users: ${errorMessage}`);
+      }
     } finally {
       setLoading(false);
     }
