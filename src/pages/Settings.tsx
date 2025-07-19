@@ -231,7 +231,23 @@ const Settings = () => {
     queryKey: ["admin-users"],
     queryFn: async () => {
       const { data, error } = await supabase.rpc("get_all_users_with_roles");
-      if (error) throw error;
+      if (error) {
+        // Handle specific schema errors gracefully
+        if (
+          error.code === "42703" ||
+          error.message?.includes("ur.role") ||
+          error.message?.includes("column") ||
+          error.message?.includes("does not exist")
+        ) {
+          console.warn(
+            "User roles schema issue detected in Settings, returning empty array:",
+            error,
+          );
+          // Return empty array instead of throwing error
+          return [] as UserWithRole[];
+        }
+        throw error;
+      }
 
       const filteredUsers = (data || [])
         .map((user) => ({
