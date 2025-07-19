@@ -25,6 +25,7 @@ import ReportsViewTab from "./components/tabs/ReportsViewTab";
 import DataInputTab from "./components/tabs/DataInputTab";
 import UserManagementTab from "./components/tabs/UserManagementTab";
 import ShareInvestmentsTab from "./components/tabs/ShareInvestmentsTab";
+import ExpenseBookingsTab from "./components/tabs/ExpenseBookingsTab";
 import VATEntryTab from "./components/tabs/VATEntryTab";
 import InventoryTab from "./components/tabs/InventoryTab";
 import FileUploadTab from "./components/tabs/FileUploadTab";
@@ -99,6 +100,10 @@ const App = () => {
                 <Route
                   path="share-investments"
                   element={<ShareInvestmentsTab />}
+                />
+                <Route
+                  path="expense-bookings"
+                  element={<ExpenseBookingsTab />}
                 />
                 <Route path="vat-entry" element={<VATEntryTab />} />
                 <Route path="inventory" element={<InventoryTab />} />
