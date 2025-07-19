@@ -503,6 +503,9 @@ const InsightsTab = () => {
           showDetails={true}
         />
 
+        {/* Enhanced Financial Insights Widget */}
+        <FinancialInsightsWidget className="mb-8" />
+
         {/* Financial Overview */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
           <Card className="bg-gradient-to-br from-white/90 to-emerald-50/90 backdrop-blur-sm border-0 shadow-2xl">
