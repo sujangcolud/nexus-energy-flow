@@ -122,11 +122,7 @@ const App = () => {
 
                 <Route
                   path="calculation-engine"
-                  element={
-                    <ProtectedRoute allowedRoles={["super_admin"]}>
-                      <CalculationEngineTab />
-                    </ProtectedRoute>
-                  }
+                  element={<CalculationEngineTab />}
                 />
                 <Route
                   path="super-admin"
