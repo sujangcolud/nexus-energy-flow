@@ -24,6 +24,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { extractErrorMessage, logError } from "@/utils/errorHandling";
+import TransactionDatePicker from "@/components/ui/transaction-date-picker";
 import {
   Receipt,
   Calendar as CalendarIcon,
@@ -101,6 +102,9 @@ const ExpensesTab = () => {
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
   const [canEditTransactions, setCanEditTransactions] = useState(false);
   const [canAddCategory, setCanAddCategory] = useState(false);
+  const [transactionDate, setTransactionDate] = useState(
+    format(new Date(), "yyyy-MM-dd"),
+  );
 
   const paymentModes = [
     "Cash",
@@ -209,7 +213,7 @@ const ExpensesTab = () => {
           category: formData.category,
           payment_mode: formData.paymentMode,
           remarks: formData.remarks || null,
-          expense_date: new Date().toISOString().split("T")[0],
+          expense_date: transactionDate,
         },
       ]);
 
