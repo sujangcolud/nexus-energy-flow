@@ -202,6 +202,22 @@ const EnhancedUserManagementTab = () => {
     setUserPermissions(permissions as any);
   };
 
+  const verifyCurrentUserRole = async () => {
+    try {
+      const { data, error } = await supabase.rpc("get_current_user_role");
+      if (error) {
+        console.error("Error getting current user role:", error);
+        setCurrentUserDbRole("error");
+      } else {
+        console.log("Current user role from DB:", data);
+        setCurrentUserDbRole(data);
+      }
+    } catch (error) {
+      console.error("Failed to verify user role:", error);
+      setCurrentUserDbRole("failed");
+    }
+  };
+
   const handleCreateUser = async () => {
     if (!currentUserPermissions.canCreateUsers) {
       toast.error("You don't have permission to create users");
