@@ -145,6 +145,7 @@ const InventoryTab = () => {
       ) {
         console.warn("Inventory table not found, setting empty inventory");
         setInventory([]);
+        setHasSchemaError(true);
         toast.error("Inventory table not found. Please contact administrator.");
       } else if (
         !error?.message?.includes("refresh_token_not_found") &&
