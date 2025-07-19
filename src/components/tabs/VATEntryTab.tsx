@@ -189,7 +189,17 @@ const VATEntryTab = () => {
     } catch (error) {
       logError("fetching VAT entries", error);
       const errorMessage = extractErrorMessage(error);
-      toast.error(`Error loading VAT entries: ${errorMessage}`);
+
+      // Handle schema cache errors gracefully
+      if (error?.code === "PGRST204" || errorMessage.includes("schema cache")) {
+        console.warn("VAT entries table schema issue, setting empty list");
+        setVatEntries([]); // Set empty list instead of failing
+        toast.error(
+          "VAT entries table not found. Please contact administrator.",
+        );
+      } else {
+        toast.error(`Error loading VAT entries: ${errorMessage}`);
+      }
     } finally {
       setLoading(false);
     }
