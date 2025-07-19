@@ -16,6 +16,7 @@ import {
   Banknote,
   RefreshCw,
   AlertCircle,
+  Database,
 } from "lucide-react";
 import { format, startOfMonth, endOfMonth } from "date-fns";
 import { toast } from "sonner";
