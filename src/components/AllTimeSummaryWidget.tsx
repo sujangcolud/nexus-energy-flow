@@ -222,7 +222,7 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
         totalExpenses,
         totalDeposits,
         totalWithdrawals,
-        cooperativeSavings,
+        cooperativeSavings: cooperativeBalanceCalc, // Use calculated cooperative balance
         netProfit,
         currentBalances,
         incomeBreakdown,
