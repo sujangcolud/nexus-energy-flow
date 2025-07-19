@@ -255,17 +255,30 @@ const VATEntryTab = () => {
       logError("creating VAT entry", error);
       const errorMessage = extractErrorMessage(error);
 
-      // Handle specific PGRST204 errors
-      if (error?.code === "PGRST204" || errorMessage.includes("schema cache")) {
-        toast.error(
-          "Database schema issue detected. Please refresh the page and try again.",
-        );
+      // Handle specific PGRST204 errors with detailed feedback
+      if (error?.code === "PGRST204") {
+        if (errorMessage.includes("entry_id")) {
+          toast.error(
+            "VAT entry creation failed: entry_id column issue. The database schema may need updating. Please contact administrator.",
+            { duration: 6000 },
+          );
+        } else {
+          toast.error(
+            `VAT entry creation failed: Database schema error - ${errorMessage}. Please refresh the page and try again.`,
+            { duration: 6000 },
+          );
+        }
 
         // Try to refresh the page after a delay to reload schema
         setTimeout(() => {
           toast.info("Refreshing page to reload database schema...");
           window.location.reload();
         }, 3000);
+      } else if (errorMessage.includes("schema cache")) {
+        toast.error(
+          "Database schema cache issue detected. Please refresh the page and try again.",
+          { duration: 5000 },
+        );
       } else {
         toast.error(`Error creating VAT entry: ${errorMessage}`);
       }
