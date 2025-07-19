@@ -264,69 +264,53 @@ const OrdersTab = () => {
       console.log("Cart items:", cart);
       console.log("Payment mode:", paymentMode);
 
-      const orderPromises = cart.map((item) => {
+      const orderPromises = cart.map(async (item) => {
         const currentDate = new Date().toISOString().split("T")[0];
-        const orderParams = {
-          p_user_id: user.id,
-          p_item_name: String(item.name),
-          p_quantity: Number(item.quantity),
-          p_rate: Number(item.price),
-          p_total: Number(item.price * item.quantity),
-          p_payment_mode: String(paymentMode),
-          p_order_date: currentDate,
-        };
-        console.log("Order params for RPC:", orderParams);
 
-        // Use RPC function to bypass trigger issues
-        return supabase
-          .rpc("insert_order_safe", orderParams)
-          .then((result) => {
-            // If RPC function doesn't exist, fall back to direct insert
-            if (
-              result.error &&
-              (result.error.code === "PGRST202" ||
-                result.error.code === "42883")
-            ) {
-              console.log(
-                "RPC function not found, falling back to direct insert",
-              );
-              console.log("RPC error:", result.error);
-              const directOrderData = {
-                user_id: orderParams.p_user_id,
-                item_name: orderParams.p_item_name,
-                quantity: orderParams.p_quantity,
-                rate: orderParams.p_rate,
-                total: orderParams.p_total,
-                payment_mode: orderParams.p_payment_mode,
-                order_date: orderParams.p_order_date,
-                date: orderParams.p_order_date, // Add date field to satisfy triggers
-              };
-              console.log(
-                "Attempting direct insert with data:",
-                directOrderData,
-              );
-              return supabase.from("orders").insert(directOrderData);
-            }
-            return result;
-          })
-          .catch((error) => {
-            console.error(
-              "RPC call failed completely, falling back to direct insert:",
-              error,
-            );
-            // If the RPC call itself fails, fall back to direct insert
-            const directOrderData = {
-              user_id: orderParams.p_user_id,
-              item_name: orderParams.p_item_name,
-              quantity: orderParams.p_quantity,
-              rate: orderParams.p_rate,
-              total: orderParams.p_total,
-              payment_mode: orderParams.p_payment_mode,
-              order_date: orderParams.p_order_date,
-              date: orderParams.p_order_date, // Add date field to satisfy triggers
+        // Try direct insert first (most reliable)
+        const directOrderData = {
+          user_id: user.id,
+          item_name: String(item.name),
+          quantity: Number(item.quantity),
+          rate: Number(item.price),
+          total: Number(item.price * item.quantity),
+          payment_mode: String(paymentMode),
+          order_date: currentDate,
+        };
+
+        console.log("Attempting direct insert with data:", directOrderData);
+
+        try {
+          // Try without 'date' field first
+          const result = await supabase.from("orders").insert(directOrderData);
+
+          if (result.error && result.error.code === "PGRST204") {
+            console.log("PGRST204 detected, trying with both date fields");
+            // If PGRST204, try with both date fields
+            const dataWithBothDates = {
+              ...directOrderData,
+              date: currentDate,
             };
-            return supabase.from("orders").insert(directOrderData);
-          });
+            return await supabase.from("orders").insert(dataWithBothDates);
+          }
+
+          return result;
+        } catch (error) {
+          console.error("Direct insert failed, trying RPC fallback:", error);
+
+          // Fallback to RPC if available
+          const orderParams = {
+            p_user_id: user.id,
+            p_item_name: String(item.name),
+            p_quantity: Number(item.quantity),
+            p_rate: Number(item.price),
+            p_total: Number(item.price * item.quantity),
+            p_payment_mode: String(paymentMode),
+            p_order_date: currentDate,
+          };
+
+          return await supabase.rpc("insert_order_safe", orderParams);
+        }
       });
 
       const results = await Promise.all(orderPromises);
@@ -363,18 +347,19 @@ const OrdersTab = () => {
         errorMessage = "Database function not found. Using fallback method...";
       } else if (error?.code === "PGRST204") {
         errorMessage =
-          "Database schema error. Please run the latest migration or refresh the page.";
+          "Database schema cache error. Please run the schema fix in your Supabase SQL Editor.";
 
-        // Auto-diagnose and attempt to fix PGRST204 errors
-        import("@/utils/debugSchemaCache").then(({ autoFixPGRST204 }) => {
-          autoFixPGRST204().then((result) => {
-            if (result.success) {
-              toast.success(result.message);
-            } else {
-              console.error("PGRST204 Diagnostic:", result.message);
-            }
-          });
-        });
+        // Show detailed instructions for PGRST204
+        console.error("\n=== PGRST204 SCHEMA CACHE ERROR ===");
+        console.error("The PostgREST schema cache is out of sync.");
+        console.error("\nTo fix this:");
+        console.error("1. Go to your Supabase dashboard");
+        console.error("2. Open SQL Editor");
+        console.error("3. Run the fix_orders_schema.sql file");
+        console.error("4. Refresh this page");
+        console.error(
+          "\nOr try refreshing the page - the issue may resolve automatically.",
+        );
       } else if (error?.message) {
         errorMessage = `Failed to place order: ${error.message}`;
       }
