@@ -257,7 +257,6 @@ const OrdersTab = () => {
 
     setSubmitting(true);
     try {
-<<<<<<< HEAD
       console.log("Submitting orders for user:", user.id);
       console.log("Current session user:", session.user.id);
       console.log("Full user object:", user);
@@ -294,21 +293,6 @@ const OrdersTab = () => {
             };
             return await supabase.from("orders").insert(dataWithBothDates);
           }
-=======
-      const orderPromises = cart.map((item) =>
-        supabase.from("orders").insert({
-          user_id: user.id,
-          item_name: item.name,
-          quantity: item.quantity,
-          rate: item.price,
-          total: item.price * item.quantity,
-          payment_mode: paymentMode,
-          order_date: new Date().toISOString().split("T")[0],
-        }),
-      );
-
-      const results = await Promise.all(orderPromises);
->>>>>>> origin/main
 
           return result;
         } catch (error) {
