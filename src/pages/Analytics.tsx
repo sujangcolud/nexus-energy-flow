@@ -481,7 +481,7 @@ const Analytics = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-green-800">
-                ${financials.bankBalance.toLocaleString()}
+                NRs. {financials.bankBalance.toLocaleString()}
               </div>
               <p className="text-xs text-green-600 mt-1">
                 Deposits minus withdrawals and bank expenses
@@ -498,7 +498,7 @@ const Analytics = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-blue-800">
-                ${financials.cashInHand.toLocaleString()}
+                NRs. {financials.cashInHand.toLocaleString()}
               </div>
               <p className="text-xs text-blue-600 mt-1">
                 Cash received minus expenses and deposits
@@ -515,7 +515,7 @@ const Analytics = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-amber-800">
-                ${financials.cooperativeBalance.toLocaleString()}
+                NRs. {financials.cooperativeBalance.toLocaleString()}
               </div>
               <p className="text-xs text-amber-600 mt-1">
                 Savings minus withdrawals
@@ -543,7 +543,7 @@ const Analytics = () => {
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="date" />
                     <YAxis />
-                    <Tooltip formatter={(value) => [`$${value}`, ""]} />
+                    <Tooltip formatter={(value) => [`NRs. ${value}`, ""]} />
                     <Legend />
                     <Bar
                       dataKey="charging"
@@ -576,7 +576,7 @@ const Analytics = () => {
                       cy="50%"
                       labelLine={false}
                       label={({ name, value }) =>
-                        `${name}: $${value.toLocaleString()}`
+                        `${name}: NRs. ${value.toLocaleString()}`
                       }
                       outerRadius={80}
                       fill="#8884d8"
@@ -586,7 +586,7 @@ const Analytics = () => {
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
                     </Pie>
-                    <Tooltip formatter={(value) => [`$${value}`, ""]} />
+                    <Tooltip formatter={(value) => [`NRs. ${value}`, ""]} />
                   </PieChart>
                 </ResponsiveContainer>
               </CardContent>
@@ -605,7 +605,7 @@ const Analytics = () => {
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="date" />
                     <YAxis />
-                    <Tooltip formatter={(value) => [`$${value}`, ""]} />
+                    <Tooltip formatter={(value) => [`NRs. ${value}`, ""]} />
                     <Area
                       type="monotone"
                       dataKey="total"
@@ -644,7 +644,7 @@ const Analytics = () => {
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
                     </Pie>
-                    <Tooltip formatter={(value) => [`$${value}`, ""]} />
+                    <Tooltip formatter={(value) => [`NRs. ${value}`, ""]} />
                   </PieChart>
                 </ResponsiveContainer>
               </CardContent>
@@ -664,7 +664,7 @@ const Analytics = () => {
                     Total Income
                   </p>
                   <p className="text-2xl font-bold text-green-600">
-                    ${financials.totalIncome.toLocaleString()}
+                    NRs. {financials.totalIncome.toLocaleString()}
                   </p>
                 </div>
                 <TrendingUp className="h-8 w-8 text-green-600" />
@@ -680,7 +680,7 @@ const Analytics = () => {
                     Total Expenses
                   </p>
                   <p className="text-2xl font-bold text-red-600">
-                    ${financials.totalExpenses.toLocaleString()}
+                    NRs. {financials.totalExpenses.toLocaleString()}
                   </p>
                 </div>
                 <TrendingDown className="h-8 w-8 text-red-600" />
@@ -702,7 +702,7 @@ const Analytics = () => {
                         : "text-red-600"
                     }`}
                   >
-                    ${financials.netProfit.toLocaleString()}
+                    NRs. {financials.netProfit.toLocaleString()}
                   </p>
                 </div>
                 <BarChart3 className="h-8 w-8 text-slate-600" />
@@ -718,7 +718,7 @@ const Analytics = () => {
                     Total Assets
                   </p>
                   <p className="text-2xl font-bold text-blue-600">
-                    ${financials.totalAssets.toLocaleString()}
+                    NRs. {financials.totalAssets.toLocaleString()}
                   </p>
                 </div>
                 <CreditCard className="h-8 w-8 text-blue-600" />
