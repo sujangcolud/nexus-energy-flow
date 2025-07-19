@@ -82,7 +82,6 @@ const CooperativeSavingsTab = () => {
     memberId: "",
     cyclePeriod: "",
     remarks: "",
-    category: "",
   });
   const [newCategory, setNewCategory] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -202,7 +201,7 @@ const CooperativeSavingsTab = () => {
           member_id: formData.memberId,
           cycle_period: formData.cyclePeriod,
           contribution_date: new Date().toISOString().split("T")[0],
-          category: formData.category,
+          category: "General",
         },
       ]);
 
@@ -214,7 +213,6 @@ const CooperativeSavingsTab = () => {
         memberId: "",
         cyclePeriod: "",
         remarks: "",
-        category: "",
       });
       fetchSavings();
     } catch (error) {
@@ -284,11 +282,7 @@ const CooperativeSavingsTab = () => {
     savings.length > 0 ? totalSavings / savings.length : 0;
   const uniqueMembers = new Set(savings.map((s) => s.member_id)).size;
 
-  const logAction = async (
-    action: string,
-    record_id: string,
-    details: any,
-  ) => {
+  const logAction = async (action: string, record_id: string, details: any) => {
     if (!user) return;
     await supabase.from("logs").insert({
       user_id: user.id,
@@ -590,35 +584,6 @@ const CooperativeSavingsTab = () => {
                       ))}
                     </select>
                   </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="category"
-                    className="text-sm font-medium text-gray-700 flex items-center gap-2"
-                  >
-                    <Users className="h-4 w-4 text-blue-600" />
-                    Category *
-                  </Label>
-                  <select
-                    id="category"
-                    value={formData.category}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        category: e.target.value,
-                      })
-                    }
-                    required
-                    className="w-full h-12 border border-purple-200 rounded-md px-3 bg-white focus:border-purple-500 focus:ring-purple-500"
-                  >
-                    <option value="">Select category</option>
-                    {categories.map((cat) => (
-                      <option key={cat.id} value={cat.name}>
-                        {cat.name}
-                      </option>
-                    ))}
-                  </select>
                 </div>
 
                 <div className="space-y-2">
@@ -935,7 +900,9 @@ const CooperativeSavingsTab = () => {
                                     </AlertDialogDescription>
                                   </AlertDialogHeader>
                                   <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogCancel>
+                                      Cancel
+                                    </AlertDialogCancel>
                                     <AlertDialogAction
                                       onClick={() => handleDelete(saving.id)}
                                     >
