@@ -199,13 +199,21 @@ const VATEntryTab = () => {
     if (!user || !selectedEntry) return;
 
     try {
+      // Calculate VAT from VAT-inclusive amount
+      const vatCalculation = calculateVATFromInclusive(
+        selectedEntry.amount,
+        nepalVATRate,
+      );
+
       const { error } = await supabase.from("vat_entries").insert({
         user_id: user.id,
         entry_type: selectedEntry.type,
         entry_id: selectedEntry.id,
         item_name: selectedEntry.item_name,
-        amount: selectedEntry.amount,
+        amount: vatCalculation.baseAmount, // Store the base amount (excluding VAT)
         vat_rate: nepalVATRate,
+        vat_amount: vatCalculation.vatAmount, // Manually calculate VAT amount
+        total_with_vat: vatCalculation.totalWithVAT, // Original amount (VAT inclusive)
       });
 
       if (error) {
