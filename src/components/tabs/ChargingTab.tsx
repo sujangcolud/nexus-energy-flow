@@ -106,6 +106,9 @@ const ChargingTab = () => {
   const [perUnitRate, setPerUnitRate] = useState(0);
   const [paymentMode, setPaymentMode] = useState("");
   const [category, setCategory] = useState("");
+  const [transactionDate, setTransactionDate] = useState(
+    new Date().toISOString().split("T")[0],
+  );
 
   const paymentModes = ["Cash", "Esewa", "Fonepay", "Bank", "Cheque", "Credit"];
 
