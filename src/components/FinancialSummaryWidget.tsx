@@ -254,10 +254,16 @@ const FinancialSummaryWidget: React.FC<FinancialSummaryWidgetProps> = ({
         .filter((w) => w.mode?.toLowerCase() === "cash")
         .reduce((sum, w) => sum + (w.amount || 0), 0);
 
+      // Cash Balance: Total Cash income - total expense from cash - total savings in cash - total deposits cash deposits to bank + total withdrawals in cash - deposits made to Esewa - deposits made to fonepay
+      const depositsCash = deposits
+        .filter((d) => d.mode?.toLowerCase() === "cash")
+        .reduce((sum, d) => sum + (d.amount || 0), 0);
+
       const cashBalance =
         totalIncomeCash -
         expensesCash -
-        savingsCash +
+        savingsCash -
+        depositsCash +
         withdrawalsCash -
         depositsToEsewa -
         depositsToFonepay;
