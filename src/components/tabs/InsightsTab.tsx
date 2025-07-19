@@ -12,6 +12,7 @@ import {
 import BalanceDisplay from "@/components/ui/balance-display";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import FinancialInsightsWidget from "@/components/FinancialInsightsWidget";
 import {
   BarChart3,
   TrendingUp,
