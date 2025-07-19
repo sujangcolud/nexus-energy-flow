@@ -671,8 +671,8 @@ const Dashboard = () => {
         )}
       </main>
 
-      {/* ChatBot Component */}
-      <ChatBot
+      {/* Enhanced ChatBot Component */}
+      <EnhancedChatBot
         isOpen={isChatBotOpen}
         onToggle={() => setIsChatBotOpen(!isChatBotOpen)}
       />
