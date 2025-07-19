@@ -150,6 +150,7 @@ const EnhancedInsightsTab = () => {
           esewaBalance: 0,
           fonepayBalance: 0,
           cooperativeBalance: 0,
+          totalBalance: 0,
           totalIncomeFromOrders: 0,
           totalIncomeFromCharging: 0,
           averageDailyRevenue: 0,
