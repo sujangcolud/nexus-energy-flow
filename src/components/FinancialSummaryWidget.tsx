@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/context/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -48,6 +49,7 @@ interface FinancialSummaryWidgetProps {
 const FinancialSummaryWidget: React.FC<FinancialSummaryWidgetProps> = ({
   className,
 }) => {
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [todaySummary, setTodaySummary] = useState<DailySummary | null>(null);
   const [monthSummary, setMonthSummary] = useState<{
@@ -60,15 +62,23 @@ const FinancialSummaryWidget: React.FC<FinancialSummaryWidgetProps> = ({
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchTodaySummary = async () => {
+    if (!user) return;
+
     try {
       const today = new Date().toISOString().split("T")[0];
       const { data, error } = await supabase
         .from("daily_summary")
         .select("*")
         .eq("summary_date", today)
+        .eq("user_id", user.id)
         .single();
 
       if (error && error.code !== "PGRST116") {
+        // If no daily summary exists, calculate real-time
+        if (error.code === "PGRST116") {
+          await calculateRealTimeTodaySummary();
+          return;
+        }
         logError("fetching today's summary", error);
         throw error;
       }
@@ -76,7 +86,188 @@ const FinancialSummaryWidget: React.FC<FinancialSummaryWidgetProps> = ({
       setTodaySummary(data);
     } catch (error) {
       logError("fetching today's summary", error);
-      console.error("Error fetching today's summary:", error);
+      // Fallback to real-time calculation
+      await calculateRealTimeTodaySummary();
+    }
+  };
+
+  const calculateRealTimeTodaySummary = async () => {
+    if (!user) return;
+
+    try {
+      const today = new Date().toISOString().split("T")[0];
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const tomorrowStr = tomorrow.toISOString().split("T")[0];
+
+      // Fetch all data for today
+      const [
+        ordersRes,
+        chargingRes,
+        expensesRes,
+        depositsRes,
+        withdrawalsRes,
+        cooperativeRes,
+      ] = await Promise.all([
+        supabase
+          .from("orders")
+          .select("total, payment_mode")
+          .eq("user_id", user.id)
+          .gte("order_date", today)
+          .lt("order_date", tomorrowStr),
+        supabase
+          .from("charging_sessions")
+          .select("total_amount, payment_mode")
+          .eq("user_id", user.id)
+          .gte("session_date", today)
+          .lt("session_date", tomorrowStr),
+        supabase
+          .from("expenses")
+          .select("amount, payment_mode")
+          .eq("user_id", user.id)
+          .gte("expense_date", today)
+          .lt("expense_date", tomorrowStr),
+        supabase
+          .from("deposits")
+          .select("amount, mode")
+          .eq("user_id", user.id)
+          .gte("deposit_date", today)
+          .lt("deposit_date", tomorrowStr),
+        supabase
+          .from("withdrawals")
+          .select("amount, mode")
+          .eq("user_id", user.id)
+          .gte("withdrawal_date", today)
+          .lt("withdrawal_date", tomorrowStr),
+        supabase
+          .from("cooperative_savings")
+          .select("contribution_amount")
+          .eq("user_id", user.id)
+          .gte("contribution_date", today)
+          .lt("contribution_date", tomorrowStr),
+      ]);
+
+      const orders = ordersRes.data || [];
+      const charging = chargingRes.data || [];
+      const expenses = expensesRes.data || [];
+      const deposits = depositsRes.data || [];
+      const withdrawals = withdrawalsRes.data || [];
+      const cooperative = cooperativeRes.data || [];
+
+      // Calculate totals
+      const totalIncomeFromOrders = orders.reduce(
+        (sum, order) => sum + (order.total || 0),
+        0,
+      );
+      const totalIncomeFromCharging = charging.reduce(
+        (sum, session) => sum + (session.total_amount || 0),
+        0,
+      );
+      const totalIncome = totalIncomeFromOrders + totalIncomeFromCharging;
+      const totalExpenses = expenses.reduce(
+        (sum, expense) => sum + (expense.amount || 0),
+        0,
+      );
+      const totalDeposits = deposits.reduce(
+        (sum, deposit) => sum + (deposit.amount || 0),
+        0,
+      );
+      const totalWithdrawals = withdrawals.reduce(
+        (sum, withdrawal) => sum + (withdrawal.amount || 0),
+        0,
+      );
+      const totalSavings = cooperative.reduce(
+        (sum, saving) => sum + (saving.contribution_amount || 0),
+        0,
+      );
+
+      // Calculate payment mode breakdowns
+      const calculatePaymentModeTotal = (
+        transactions: any[],
+        amountField: string,
+        paymentField: string,
+        mode: string,
+      ) => {
+        return transactions
+          .filter(
+            (t) => (t[paymentField] || "").toLowerCase() === mode.toLowerCase(),
+          )
+          .reduce((sum, t) => sum + (t[amountField] || 0), 0);
+      };
+
+      const cashFromOrders = calculatePaymentModeTotal(
+        orders,
+        "total",
+        "payment_mode",
+        "cash",
+      );
+      const esewaFromOrders = calculatePaymentModeTotal(
+        orders,
+        "total",
+        "payment_mode",
+        "esewa",
+      );
+      const fonepayFromOrders = calculatePaymentModeTotal(
+        orders,
+        "total",
+        "payment_mode",
+        "fonepay",
+      );
+
+      const cashFromCharging = calculatePaymentModeTotal(
+        charging,
+        "total_amount",
+        "payment_mode",
+        "cash",
+      );
+      const esewaFromCharging = calculatePaymentModeTotal(
+        charging,
+        "total_amount",
+        "payment_mode",
+        "esewa",
+      );
+      const fonepayFromCharging = calculatePaymentModeTotal(
+        charging,
+        "total_amount",
+        "payment_mode",
+        "fonepay",
+      );
+
+      const totalIncomeCash = cashFromOrders + cashFromCharging;
+      const totalIncomeEsewa = esewaFromOrders + esewaFromCharging;
+      const totalIncomeFonepay = fonepayFromOrders + fonepayFromCharging;
+
+      const cashBalance =
+        totalIncomeCash + totalDeposits - totalExpenses - totalWithdrawals;
+      const esewaBalance = totalIncomeEsewa;
+      const fonepayBalance = totalIncomeFonepay;
+      const totalBalance = cashBalance + esewaBalance + fonepayBalance;
+
+      // Create summary object
+      const calculatedSummary: DailySummary = {
+        id: 0,
+        summary_date: today,
+        total_income: totalIncome,
+        total_income_from_orders: totalIncomeFromOrders,
+        total_income_from_charging: totalIncomeFromCharging,
+        total_income_cash: totalIncomeCash,
+        total_income_esewa: totalIncomeEsewa,
+        total_income_fonepay: totalIncomeFonepay,
+        total_expenses: totalExpenses,
+        total_deposits: totalDeposits,
+        total_withdrawals: totalWithdrawals,
+        total_savings: totalSavings,
+        cash_balance: cashBalance,
+        esewa_balance: esewaBalance,
+        fonepay_balance: fonepayBalance,
+        total_balance: totalBalance,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      setTodaySummary(calculatedSummary);
+    } catch (error) {
+      logError("calculating real-time summary", error);
     }
   };
 
