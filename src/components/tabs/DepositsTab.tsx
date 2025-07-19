@@ -1005,162 +1005,29 @@ const DepositsTab = () => {
               />
             </div>
           </CardHeader>
-          <CardContent className="p-0">
-            {loading ? (
-              <div className="text-center py-10">
-                <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full animate-spin mx-auto flex items-center justify-center mb-4">
-                  <PiggyBank className="h-8 w-8 text-white" />
+          <CardContent className={isMobile ? "p-2" : "p-0"}>
+            {/* Total row for mobile */}
+            {!loading && deposits.length > 0 && (
+              <div
+                className={`${isMobile ? "bg-gray-50 p-3 rounded-lg mb-3" : ""}`}
+              >
+                <div className="flex justify-between items-center">
+                  <span className="font-bold text-gray-700">Total:</span>
+                  <span className="font-bold text-green-600">
+                    NRs. {totalDeposits.toFixed(2)}
+                  </span>
                 </div>
-                <p className="text-gray-600">Loading deposits...</p>
-              </div>
-            ) : deposits.length === 0 ? (
-              <div className="text-center py-12">
-                <PiggyBank className="h-16 w-16 mx-auto text-gray-300 mb-4" />
-                <p className="text-xl font-semibold text-gray-700 mb-2">
-                  No deposits found
-                </p>
-                <p className="text-gray-500">
-                  Start recording your deposits to see them here.
-                </p>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-gradient-to-r from-gray-50 to-teal-50">
-                      <TableHead className="font-semibold text-gray-700">
-                        Date
-                      </TableHead>
-                      <TableHead className="font-semibold text-gray-700">
-                        Amount
-                      </TableHead>
-                      <TableHead className="font-semibold text-gray-700">
-                        Mode
-                      </TableHead>
-                      <TableHead className="font-semibold text-gray-700">
-                        Deposited By
-                      </TableHead>
-                      <TableHead className="font-semibold text-gray-700">
-                        Sender
-                      </TableHead>
-                      <TableHead className="font-semibold text-gray-700">
-                        Receiver
-                      </TableHead>
-                      <TableHead className="font-semibold text-gray-700">
-                        Deposited To
-                      </TableHead>
-                      <TableHead className="font-semibold text-gray-700">
-                        Remarks
-                      </TableHead>
-                      <TableHead className="font-semibold text-gray-700">
-                        Actions
-                      </TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    <TableRow>
-                      <TableCell colSpan={1} className="font-bold">
-                        Total
-                      </TableCell>
-                      <TableCell colSpan={8} className="font-bold">
-                        NRs. {totalDeposits.toFixed(2)}
-                      </TableCell>
-                    </TableRow>
-                    {deposits.map((deposit, index) => (
-                      <TableRow
-                        key={deposit.id}
-                        className="hover:bg-gradient-to-r hover:from-green-50 hover:to-emerald-50 transition-all duration-200"
-                        style={{ animationDelay: `${index * 50}ms` }}
-                      >
-                        <TableCell className="font-medium">
-                          {format(
-                            new Date(deposit.deposit_date),
-                            "MMM dd, yyyy",
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <span className="font-bold text-xl bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
-                            NRs. {deposit.amount.toFixed(2)}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          <Badge
-                            className={`bg-gradient-to-r ${modeColors[deposit.mode as keyof typeof modeColors]} text-white border-0`}
-                          >
-                            {deposit.mode}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="font-medium text-gray-800">
-                          <div className="flex items-center gap-2">
-                            <User className="h-4 w-4 text-gray-500" />
-                            {deposit.deposited_by}
-                          </div>
-                        </TableCell>
-                        <TableCell>{deposit.sender_name || "-"}</TableCell>
-                        <TableCell>{deposit.receiver_name || "-"}</TableCell>
-                        <TableCell>{deposit.deposited_to || "-"}</TableCell>
-                        <TableCell className="max-w-xs">
-                          <span
-                            className="text-sm text-gray-600 truncate"
-                            title={deposit.remarks}
-                          >
-                            {deposit.remarks || "-"}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          {canEditTransactions && (
-                            <div className="flex gap-2">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => {
-                                  setSelectedDeposit(deposit);
-                                  setIsEditDialogOpen(true);
-                                }}
-                              >
-                                Edit
-                              </Button>
-                              <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                  <AlertDialogHeader>
-                                    <AlertDialogTitle>
-                                      Are you sure?
-                                    </AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                      This action cannot be undone. This will
-                                      permanently delete the deposit.
-                                    </AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                    <AlertDialogCancel>
-                                      Cancel
-                                    </AlertDialogCancel>
-                                    <AlertDialogAction
-                                      onClick={() => handleDelete(deposit.id)}
-                                    >
-                                      Continue
-                                    </AlertDialogAction>
-                                  </AlertDialogFooter>
-                                </AlertDialogContent>
-                              </AlertDialog>
-                            </div>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
               </div>
             )}
+
+            <MobileTable
+              columns={tableColumns}
+              data={deposits}
+              loading={loading}
+              emptyMessage="No deposits found. Start recording your deposits to see them here."
+              className={isMobile ? "" : ""}
+              cardKey="id"
+            />
           </CardContent>
           {deposits.length > 0 && (
             <div className="flex justify-center p-4 border-t border-gray-200">
