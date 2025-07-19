@@ -353,6 +353,18 @@ const OrdersTab = () => {
         console.error("2. Open SQL Editor");
         console.error("3. Run the fix_amount_column_error.sql file");
         console.error("4. Refresh this page");
+      } else if (error?.code === "42702") {
+        errorMessage =
+          "Database function error. Please run the ambiguous column fix in Supabase SQL Editor.";
+
+        // Show detailed instructions for 42702
+        console.error("\n=== 42702 AMBIGUOUS COLUMN ERROR ===");
+        console.error(`Ambiguous column error: ${error?.message}`);
+        console.error("\nTo fix this:");
+        console.error("1. Go to your Supabase dashboard");
+        console.error("2. Open SQL Editor");
+        console.error("3. Run the fix_ambiguous_column.sql file");
+        console.error("4. Refresh this page");
       } else if (error?.code === "PGRST202") {
         errorMessage = "Database function not found. Using fallback method...";
       } else if (error?.code === "PGRST204") {
