@@ -628,6 +628,28 @@ const EnhancedInsightsTab = () => {
               </div>
             </CardContent>
           </Card>
+
+          {/* Total Withdrawals */}
+          <Card className="bg-gradient-to-br from-orange-50 to-amber-50 border-orange-200 hover:shadow-xl transition-all duration-300">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-orange-600 font-medium">
+                    Total Withdrawals
+                  </p>
+                  <p className="text-2xl font-bold text-orange-800">
+                    {formatCurrency(analytics.totalWithdrawals)}
+                  </p>
+                  <div className="text-xs text-orange-600 mt-1">
+                    Cash outflow tracking
+                  </div>
+                </div>
+                <div className="p-3 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl text-white">
+                  <TrendingDown className="h-6 w-6" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Balance Information */}
