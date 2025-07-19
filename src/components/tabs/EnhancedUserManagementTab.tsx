@@ -117,6 +117,13 @@ const EnhancedUserManagementTab = () => {
 
   const currentUserPermissions = getUserActionPermissions(userRole);
 
+  // Add debugging for current user role
+  useEffect(() => {
+    console.log("Current user:", user?.email);
+    console.log("Current user role:", userRole);
+    console.log("Current user permissions:", currentUserPermissions);
+  }, [user, userRole, currentUserPermissions]);
+
   useEffect(() => {
     if (user && currentUserPermissions.canManagePermissions) {
       fetchUsersAndRoles();
