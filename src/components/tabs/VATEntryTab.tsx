@@ -190,12 +190,28 @@ const VATEntryTab = () => {
       logError("fetching VAT entries", error);
       const errorMessage = extractErrorMessage(error);
 
-      // Handle schema cache errors gracefully
-      if (error?.code === "PGRST204" || errorMessage.includes("schema cache")) {
-        console.warn("VAT entries table schema issue, setting empty list");
+      // Handle specific PGRST204 schema cache errors
+      if (error?.code === "PGRST204") {
+        console.warn("VAT entries table schema issue:", errorMessage);
         setVatEntries([]); // Set empty list instead of failing
+
+        if (errorMessage.includes("entry_id")) {
+          toast.error(
+            "VAT entries table has schema issues with entry_id column. Please refresh the page or contact administrator.",
+            { duration: 5000 },
+          );
+        } else {
+          toast.error(
+            `VAT entries table schema error: ${errorMessage}. Please refresh the page or contact administrator.`,
+            { duration: 5000 },
+          );
+        }
+      } else if (errorMessage.includes("schema cache")) {
+        console.warn("Schema cache issue detected:", errorMessage);
+        setVatEntries([]);
         toast.error(
-          "VAT entries table not found. Please contact administrator.",
+          "Database schema cache issue. Please refresh the page and try again.",
+          { duration: 5000 },
         );
       } else {
         toast.error(`Error loading VAT entries: ${errorMessage}`);
