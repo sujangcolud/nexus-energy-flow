@@ -24,6 +24,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { extractErrorMessage, logError } from "@/utils/errorHandling";
+import TransactionDatePicker from "@/components/ui/transaction-date-picker";
 import {
   TrendingUp,
   Calendar as CalendarIcon,
@@ -104,6 +105,9 @@ const DepositsTab = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedDeposit, setSelectedDeposit] = useState<Deposit | null>(null);
   const [canEditTransactions, setCanEditTransactions] = useState(false);
+  const [transactionDate, setTransactionDate] = useState(
+    format(new Date(), "yyyy-MM-dd"),
+  );
   const [canAddCategory, setCanAddCategory] = useState(false);
   const isMobile = useIsMobile();
 
@@ -358,7 +362,7 @@ const DepositsTab = () => {
           mode: formData.mode,
           deposited_by: formData.depositedBy,
           remarks: formData.remarks || "",
-          deposit_date: new Date().toISOString().split("T")[0],
+          deposit_date: transactionDate,
           // Removed non-existent columns: sender_name, receiver_name, payment_mode, deposited_to, category
         },
       ]);

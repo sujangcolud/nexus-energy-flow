@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/table";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
+import TransactionDatePicker from "@/components/ui/transaction-date-picker";
 import {
   ShoppingCart,
   Plus,
@@ -113,6 +114,9 @@ const OrdersTab = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [canEditTransactions, setCanEditTransactions] = useState(false);
+  const [transactionDate, setTransactionDate] = useState(
+    format(new Date(), "yyyy-MM-dd"),
+  );
 
   const paymentModes = ["Cash", "Esewa", "Fonepay", "Bank", "Cheque", "Credit"];
 
@@ -265,7 +269,7 @@ const OrdersTab = () => {
       console.log("Payment mode:", paymentMode);
 
       const orderPromises = cart.map(async (item) => {
-        const currentDate = new Date().toISOString().split("T")[0];
+        const currentDate = transactionDate;
 
         // Try direct insert first (most reliable)
         const directOrderData = {
@@ -940,6 +944,15 @@ const OrdersTab = () => {
                           </SelectContent>
                         </Select>
                       </div>
+
+                      {/* Transaction Date Picker */}
+                      <TransactionDatePicker
+                        selectedDate={transactionDate}
+                        onDateChange={setTransactionDate}
+                        label="Order Date"
+                        showBackdateWarning={true}
+                        className="mb-4"
+                      />
 
                       <Button
                         onClick={submitOrder}

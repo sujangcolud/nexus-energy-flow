@@ -155,8 +155,24 @@ const SuperAdminDashboard = () => {
         if (depositsWithdrawalsResult.error)
           throw depositsWithdrawalsResult.error;
         if (newUserGrowthResult.error) throw newUserGrowthResult.error;
-        if (userRoleDistributionResult.error)
-          throw userRoleDistributionResult.error;
+        if (userRoleDistributionResult.error) {
+          // Handle schema errors gracefully for user role distribution
+          if (
+            userRoleDistributionResult.error.code === "42703" ||
+            userRoleDistributionResult.error.message?.includes("ur.role") ||
+            userRoleDistributionResult.error.message?.includes("column") ||
+            userRoleDistributionResult.error.message?.includes("does not exist")
+          ) {
+            console.warn(
+              "User roles schema issue in SuperAdminDashboard, using empty data:",
+              userRoleDistributionResult.error,
+            );
+            // Set empty data instead of throwing
+            userRoleDistributionResult.data = [];
+          } else {
+            throw userRoleDistributionResult.error;
+          }
+        }
         if (topSpendersResult.error) throw topSpendersResult.error;
         if (popularProductsResult.error) throw popularProductsResult.error;
         if (salesByPaymentModeResult.error)

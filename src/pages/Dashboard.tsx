@@ -54,6 +54,7 @@ import { extractErrorMessage, logError } from "@/utils/errorHandling";
 import EnhancedChatBot from "@/components/EnhancedChatBot";
 import MobileDashboard from "./MobileDashboard";
 import FinancialSummaryWidget from "@/components/FinancialSummaryWidget";
+import AllTimeSummaryWidget from "@/components/AllTimeSummaryWidget";
 import DailyClosingSystem from "@/components/DailyClosingSystem";
 import BatchDailyClosingSystem from "@/components/BatchDailyClosingSystem";
 
@@ -608,6 +609,9 @@ const Dashboard = () => {
 
             {/* Financial Summary Widget */}
             <FinancialSummaryWidget className="mb-8" />
+
+            {/* All-Time Summary Widget */}
+            <AllTimeSummaryWidget className="mb-8" />
 
             {/* Quick Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">

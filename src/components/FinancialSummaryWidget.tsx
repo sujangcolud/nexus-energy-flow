@@ -16,6 +16,7 @@ import {
   Banknote,
   RefreshCw,
   AlertCircle,
+  Database,
 } from "lucide-react";
 import { format, startOfMonth, endOfMonth } from "date-fns";
 import { toast } from "sonner";
@@ -617,16 +618,42 @@ const FinancialSummaryWidget: React.FC<FinancialSummaryWidgetProps> = ({
             <AlertCircle className="h-6 w-6 text-yellow-600" />
             <div>
               <p className="font-medium text-yellow-800">
-                No financial data for today
+                No daily summary data available
               </p>
               <p className="text-sm text-yellow-600">
-                Daily summary will be automatically generated when transactions
-                are recorded.
+                Please perform daily closing to generate summary data. All
+                analytics are based on daily_summary table for consistency.
               </p>
+              <Button
+                size="sm"
+                className="mt-2"
+                onClick={refreshSummary}
+                disabled={refreshing}
+              >
+                <RefreshCw
+                  className={`h-4 w-4 mr-2 ${refreshing ? "animate-spin" : ""}`}
+                />
+                Refresh Summary
+              </Button>
             </div>
           </CardContent>
         </Card>
       )}
+
+      {/* Data Source Badge */}
+      <Card className="bg-blue-50 border-blue-200">
+        <CardContent className="p-4">
+          <div className="flex items-center gap-2 text-sm">
+            <Database className="h-4 w-4 text-blue-600" />
+            <span className="text-blue-700 font-medium">
+              Data Source: daily_summary table
+            </span>
+            <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+              Consistent Reports
+            </Badge>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
