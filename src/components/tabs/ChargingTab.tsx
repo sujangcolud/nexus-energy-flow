@@ -220,7 +220,7 @@ const ChargingTab = () => {
     try {
       const totalAmount = calculateTotalAmount();
 
-      const sessionDate = new Date().toISOString().split("T")[0];
+      const sessionDate = transactionDate;
 
       const { error } = await supabase.from("charging_sessions").insert({
         user_id: user.id,
