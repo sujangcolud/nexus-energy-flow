@@ -319,10 +319,26 @@ const InventoryTab = () => {
       fetchInventory();
       fetchTransactions();
     } catch (error) {
-      console.error("Error adding manual item:", error);
-      const errorMessage =
-        error?.message || error?.details || "Failed to add inventory item";
-      toast.error(`Error adding manual item: ${errorMessage}`);
+      logError("adding manual inventory item", error);
+      handleSupabaseError(error);
+
+      if (
+        !error?.message?.includes("refresh_token_not_found") &&
+        !error?.message?.includes("Invalid Refresh Token")
+      ) {
+        const errorMessage = extractErrorMessage(error);
+        if (
+          error?.code === "PGRST204" ||
+          errorMessage.includes("schema cache")
+        ) {
+          toast.error(
+            "Database schema issue. Please refresh the page and try again.",
+          );
+          setHasSchemaError(true);
+        } else {
+          toast.error(`Error adding manual item: ${errorMessage}`);
+        }
+      }
     }
   };
 
