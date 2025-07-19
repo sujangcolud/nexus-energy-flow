@@ -112,6 +112,127 @@ const DepositsTab = () => {
   const [canAddCategory, setCanAddCategory] = useState(false);
   const isMobile = useIsMobile();
 
+  // Table columns configuration for mobile responsive table
+  const tableColumns = [
+    {
+      key: "deposit_date",
+      label: "Date",
+      className: "font-semibold text-gray-700",
+      render: (value: string) => format(new Date(value), "MMM dd, yyyy"),
+    },
+    {
+      key: "amount",
+      label: "Amount",
+      className: "font-semibold text-gray-700",
+      render: (value: number) => (
+        <span className="font-bold text-xl bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+          NRs. {value.toFixed(2)}
+        </span>
+      ),
+    },
+    {
+      key: "mode",
+      label: "Mode",
+      className: "font-semibold text-gray-700",
+      render: (value: string) => (
+        <Badge
+          className={`bg-gradient-to-r ${modeColors[value as keyof typeof modeColors]} text-white border-0`}
+        >
+          {value}
+        </Badge>
+      ),
+    },
+    {
+      key: "deposited_by",
+      label: "Deposited By",
+      className: "font-semibold text-gray-700",
+      render: (value: string) => (
+        <div className="flex items-center gap-2">
+          <User className="h-4 w-4 text-gray-500" />
+          {value}
+        </div>
+      ),
+    },
+    {
+      key: "sender_name",
+      label: "Sender",
+      className: "font-semibold text-gray-700",
+      hideOnMobile: true,
+      render: (value: string) => value || "-",
+    },
+    {
+      key: "receiver_name",
+      label: "Receiver",
+      className: "font-semibold text-gray-700",
+      hideOnMobile: true,
+      render: (value: string) => value || "-",
+    },
+    {
+      key: "deposited_to",
+      label: "Deposited To",
+      className: "font-semibold text-gray-700",
+      hideOnMobile: true,
+      render: (value: string) => value || "-",
+    },
+    {
+      key: "remarks",
+      label: "Remarks",
+      className: "font-semibold text-gray-700 max-w-xs",
+      hideOnMobile: true,
+      render: (value: string) => (
+        <span className="text-sm text-gray-600 truncate" title={value}>
+          {value || "-"}
+        </span>
+      ),
+    },
+    {
+      key: "actions",
+      label: "Actions",
+      className: "font-semibold text-gray-700",
+      render: (_: any, deposit: Deposit) =>
+        canEditTransactions && (
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setSelectedDeposit(deposit);
+                setIsEditDialogOpen(true);
+              }}
+            >
+              Edit
+            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action cannot be undone. This will permanently delete
+                    the deposit.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => handleDelete(deposit.id)}>
+                    Continue
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+        ),
+    },
+  ];
+
   const depositModes = [
     "Cash",
     "Esewa",
