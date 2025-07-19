@@ -216,7 +216,7 @@ const EnhancedInsightsTab = () => {
     const cashBalance = latestSummary.cash_balance || 0;
     const esewaBalance = latestSummary.esewa_balance || 0;
     const fonepayBalance = latestSummary.fonepay_balance || 0;
-    const cooperativeBalance = 0; // This would need to be added to daily_summary schema
+    const cooperativeBalance = cooperativeSavings; // Use total cooperative savings as balance
 
     // Averages
     const daysCount = summaries.length || 1;
