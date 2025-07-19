@@ -383,6 +383,11 @@ const Dashboard = () => {
 
   const navItems = getNavItems();
 
+  // Use mobile dashboard on mobile devices (after all hooks)
+  if (isMobile) {
+    return <MobileDashboard />;
+  }
+
   const isSubPageActive =
     location.pathname !== "/dashboard" && location.pathname !== "/dashboard/";
   const currentPage = navItems.find((item) =>
