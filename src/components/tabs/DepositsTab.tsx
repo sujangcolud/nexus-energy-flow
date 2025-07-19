@@ -384,11 +384,7 @@ const DepositsTab = () => {
           deposited_by: formData.depositedBy,
           remarks: formData.remarks || "",
           deposit_date: new Date().toISOString().split("T")[0],
-          sender_name: formData.sender_name,
-          receiver_name: formData.receiver_name,
-          payment_mode: formData.mode,
-          deposited_to: formData.deposited_to,
-          category: "General",
+          // Removed non-existent columns: sender_name, receiver_name, payment_mode, deposited_to, category
         },
       ]);
 
