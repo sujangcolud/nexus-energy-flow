@@ -102,13 +102,7 @@ const MobileDashboard = () => {
       console.log("Mobile - Daily closing response:", { data, error });
 
       if (error) {
-        console.error("Mobile - Daily closing RPC error:", {
-          message: error.message,
-          details: error.details,
-          hint: error.hint,
-          code: error.code,
-          fullError: error,
-        });
+        logError("mobile daily closing RPC", error);
         throw error;
       }
 
