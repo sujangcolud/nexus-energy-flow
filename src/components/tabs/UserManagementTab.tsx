@@ -124,23 +124,51 @@ const UserManagementTab = () => {
         }
       }
 
-      // Final fallback: if we still have an error or no data, try getting users from auth metadata
+      // Final fallback: if we still have an error or no data, try auth.users directly
       if (error || !data || data.length === 0) {
         console.warn(
-          "All queries failed or returned no data, using basic user list",
+          "All queries failed or returned no data, trying auth.users directly",
         );
 
-        // Create a basic user list with just the current user
-        // This prevents the complete failure of the user management tab
-        data = [
-          {
-            id: "current",
-            email: "Current User",
-            role: "user",
-          },
-        ];
+        try {
+          // Try to get users from auth.users table using SQL
+          const { data: authUsersData, error: authError } = await supabase
+            .from("auth.users")
+            .select("id, email, raw_user_meta_data")
+            .limit(10); // Limit to prevent too much data
 
-        error = null; // Clear error to allow the component to render
+          if (!authError && authUsersData) {
+            data = authUsersData.map((user: any) => ({
+              id: user.id,
+              email: user.email || "Unknown",
+              role: user.raw_user_meta_data?.role || "user",
+            }));
+            error = null;
+          } else {
+            // Absolute final fallback - create minimal user list
+            console.warn(
+              "Auth users query also failed, using minimal fallback",
+            );
+            data = [
+              {
+                id: "placeholder",
+                email: "No users found - Check database connection",
+                role: "user",
+              },
+            ];
+            error = null;
+          }
+        } catch (fallbackError) {
+          console.error("Final fallback failed:", fallbackError);
+          data = [
+            {
+              id: "error",
+              email: "Error loading users - Check console",
+              role: "user",
+            },
+          ];
+          error = null;
+        }
       }
 
       if (error) throw error;
