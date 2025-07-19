@@ -353,9 +353,8 @@ const Dashboard = () => {
       "vat-entry": showVatEntry,
     };
 
-    return allItems.filter(
-      (item) => item.roles.includes(userRole) && (tabSettings[item.id] ?? true),
-    );
+    // Show all items to all users (role restrictions removed as requested)
+    return allItems.filter((item) => tabSettings[item.id] ?? true);
   };
 
   const navItems = getNavItems();
