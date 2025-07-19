@@ -131,6 +131,7 @@ const EnhancedUserManagementTab = () => {
     if (user && currentUserPermissions.canManagePermissions) {
       fetchUsersAndRoles();
       fetchUserPermissions();
+      verifyCurrentUserRole();
     }
   }, [user, currentUserPermissions.canManagePermissions]);
 
