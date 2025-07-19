@@ -65,23 +65,23 @@ const TransactionDatePicker: React.FC<TransactionDatePickerProps> = ({
         )}
       </Label>
 
-      <div className="flex gap-2">
+      <div className="flex gap-2 w-full">
         {/* Direct input for quick entry */}
         <Input
           type="date"
           value={selectedDate}
           onChange={(e) => onDateChange(e.target.value)}
           max={allowFutureDates ? undefined : format(maxDate, "yyyy-MM-dd")}
-          className="flex-1"
+          className="flex-1 min-w-0"
         />
 
-        {/* Calendar popover for better UX */}
+        {/* Calendar popover for better UX - Hidden on mobile to save space */}
         <Popover open={isOpen} onOpenChange={setIsOpen}>
           <PopoverTrigger asChild>
             <Button
               variant="outline"
               className={cn(
-                "px-3",
+                "px-3 hidden sm:flex",
                 isBackdated && "border-amber-300 bg-amber-50",
                 isFutureDate && "border-red-300 bg-red-50",
               )}
