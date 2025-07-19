@@ -742,6 +742,14 @@ const WithdrawalsTab = () => {
                   />
                 </div>
 
+                {/* Transaction Date */}
+                <TransactionDatePicker
+                  selectedDate={transactionDate}
+                  onDateChange={setTransactionDate}
+                  label="Withdrawal Date"
+                  className="mb-4"
+                />
+
                 <Button
                   type="submit"
                   disabled={isSubmitting}
