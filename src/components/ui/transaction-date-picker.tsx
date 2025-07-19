@@ -135,14 +135,14 @@ const TransactionDatePicker: React.FC<TransactionDatePickerProps> = ({
         </div>
       )}
 
-      {/* Quick date buttons */}
-      <div className="flex gap-2 flex-wrap">
+      {/* Quick date buttons - Mobile optimized */}
+      <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
         <Button
           type="button"
           variant="outline"
           size="sm"
           onClick={() => onDateChange(format(today, "yyyy-MM-dd"))}
-          className="text-xs"
+          className="text-xs h-8 min-w-0 flex-1 sm:flex-none"
         >
           <Clock className="h-3 w-3 mr-1" />
           Today
@@ -159,7 +159,7 @@ const TransactionDatePicker: React.FC<TransactionDatePickerProps> = ({
               ),
             )
           }
-          className="text-xs"
+          className="text-xs h-8 min-w-0 flex-1 sm:flex-none"
         >
           Yesterday
         </Button>
@@ -175,7 +175,7 @@ const TransactionDatePicker: React.FC<TransactionDatePickerProps> = ({
               ),
             )
           }
-          className="text-xs"
+          className="text-xs h-8 min-w-0 flex-1 sm:flex-none"
         >
           2 days ago
         </Button>
@@ -191,7 +191,7 @@ const TransactionDatePicker: React.FC<TransactionDatePickerProps> = ({
               ),
             )
           }
-          className="text-xs"
+          className="text-xs h-8 min-w-0 flex-1 sm:flex-none"
         >
           3 days ago
         </Button>
