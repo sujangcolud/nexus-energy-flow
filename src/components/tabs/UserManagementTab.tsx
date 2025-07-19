@@ -201,7 +201,18 @@ const UserManagementTab = () => {
         !error?.message?.includes("Invalid Refresh Token")
       ) {
         const errorMessage = extractErrorMessage(error);
-        toast.error(`Failed to load users: ${errorMessage}`);
+
+        // Show specific message for relationship errors
+        if (
+          error?.code === "PGRST200" ||
+          errorMessage.includes("relationship")
+        ) {
+          toast.error(
+            "Database schema issue detected. Using fallback user data.",
+          );
+        } else {
+          toast.error(`Failed to load users: ${errorMessage}`);
+        }
       }
     } finally {
       setLoading(false);
