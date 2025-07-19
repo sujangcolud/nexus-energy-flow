@@ -72,6 +72,7 @@ interface AnalyticsData {
   esewaBalance: number;
   fonepayBalance: number;
   cooperativeBalance: number;
+  totalBalance: number;
 
   // Enhanced metrics from daily summary
   totalIncomeFromOrders: number;
@@ -149,6 +150,7 @@ const EnhancedInsightsTab = () => {
           esewaBalance: 0,
           fonepayBalance: 0,
           cooperativeBalance: 0,
+          totalBalance: 0,
           totalIncomeFromOrders: 0,
           totalIncomeFromCharging: 0,
           averageDailyRevenue: 0,
@@ -222,22 +224,106 @@ const EnhancedInsightsTab = () => {
     const profitMargin =
       totalRevenue > 0 ? (netProfit / totalRevenue) * 100 : 0;
 
-    // Get latest balances (current balances from most recent day)
+    // Calculate current balances using the new formulas provided:
     const latestSummary = summaries[0] || {};
 
-    // Calculate current balances using latest daily summary:
-    // cash_balance: total_cash_income - total_expenses_cash - total_savings_cash + total_withdrawals_cash - deposits_to_esewa - deposits_to_fonepay
-    const cashBalance = latestSummary.cash_balance || 0;
+    // Calculate payment method totals
+    const totalCashIncome = summaries.reduce(
+      (sum, s) => sum + (s.total_income_cash || 0),
+      0,
+    );
+    const totalEsewaIncome = summaries.reduce(
+      (sum, s) => sum + (s.total_income_esewa || 0),
+      0,
+    );
+    const totalFonepayIncome = summaries.reduce(
+      (sum, s) => sum + (s.total_income_fonepay || 0),
+      0,
+    );
 
-    // esewa_balance: total_income_esewa - total_expenses_esewa - total_savings_esewa + deposits_to_esewa
-    const esewaBalance = latestSummary.esewa_balance || 0;
+    // Calculate expense totals by payment method
+    const totalExpensesCash = summaries.reduce(
+      (sum, s) => sum + (s.total_expenses_cash || 0),
+      0,
+    );
+    const totalExpensesEsewa = summaries.reduce(
+      (sum, s) => sum + (s.total_expenses_esewa || 0),
+      0,
+    );
+    const totalExpensesFonepay = summaries.reduce(
+      (sum, s) => sum + (s.total_expenses_fonepay || 0),
+      0,
+    );
 
-    // fonepay_balance: total_income_fonepay - total_expenses_fonepay - total_savings_fonepay + deposits_to_fonepay
-    const fonepayBalance = latestSummary.fonepay_balance || 0;
+    // Calculate savings totals by payment method
+    const totalSavingsCash = summaries.reduce(
+      (sum, s) => sum + (s.total_savings_cash || 0),
+      0,
+    );
+    const totalSavingsEsewa = summaries.reduce(
+      (sum, s) => sum + (s.total_savings_esewa || 0),
+      0,
+    );
+    const totalSavingsFonepay = summaries.reduce(
+      (sum, s) => sum + (s.total_savings_fonepay || 0),
+      0,
+    );
 
-    // cooperative_balance: total_savings - total_withdrawals_cooperative
-    const cooperativeBalance =
-      latestSummary.cooperative_balance || cooperativeSavings;
+    // Calculate deposits
+    const totalDepositsCash = summaries.reduce(
+      (sum, s) => sum + (s.total_deposits_cash || 0),
+      0,
+    );
+    const depositsToEsewa = summaries.reduce(
+      (sum, s) => sum + (s.total_deposits_esewa || 0),
+      0,
+    );
+    const depositsToFonepay = summaries.reduce(
+      (sum, s) => sum + (s.total_deposits_fonepay || 0),
+      0,
+    );
+
+    // Calculate withdrawals
+    const totalWithdrawalsCash = summaries.reduce(
+      (sum, s) => sum + (s.total_withdrawals_cash || 0),
+      0,
+    );
+    const totalWithdrawalsCooperative = summaries.reduce(
+      (sum, s) => sum + (s.total_withdrawals_cooperative || 0),
+      0,
+    );
+    const totalWithdrawalsBank = summaries.reduce(
+      (sum, s) => sum + (s.total_withdrawals_bank || 0),
+      0,
+    );
+
+    // Calculate balances using the specified formulas:
+    // Cash Balance: Total Cash income - total expense from cash - total savings in cash - total deposits cash deposits to bank + total withdrawals in cash - deposits made to Esewa - deposits made to fonepay
+    const cashBalance =
+      totalCashIncome -
+      totalExpensesCash -
+      totalSavingsCash -
+      totalDepositsCash +
+      totalWithdrawalsCash -
+      depositsToEsewa -
+      depositsToFonepay;
+
+    // Esewa Balance: Total income in Esewa - Total expense from Esewa - total withdrawal from Esewa + Deposits made to Esewa
+    const esewaBalance =
+      totalEsewaIncome -
+      totalExpensesEsewa -
+      totalSavingsEsewa +
+      depositsToEsewa;
+
+    // Fonepay Balance: Total Income in Fonepay - Withdrawals from fonepay - withdrawals from bank
+    const fonepayBalance =
+      totalFonepayIncome -
+      totalExpensesFonepay -
+      totalSavingsFonepay -
+      totalWithdrawalsBank;
+
+    // Cooperative Balance: Total cooperative savings - withdrawals from cooperative
+    const cooperativeBalance = cooperativeSavings - totalWithdrawalsCooperative;
 
     // Averages
     const daysCount = summaries.length || 1;
@@ -300,6 +386,10 @@ const EnhancedInsightsTab = () => {
     // If we're losing money, break-even is total expenses needed to be covered
     const breakEvenPoint = totalExpenses > 0 ? totalExpenses : 0;
 
+    // Total Balance of all: Cash Balance + Bank Balance (fonepay) + Cooperative Balance + Esewa Balance
+    const totalBalance =
+      cashBalance + fonepayBalance + cooperativeBalance + esewaBalance;
+
     return {
       totalRevenue,
       totalExpenses,
@@ -313,6 +403,7 @@ const EnhancedInsightsTab = () => {
       esewaBalance,
       fonepayBalance,
       cooperativeBalance,
+      totalBalance,
       totalIncomeFromOrders,
       totalIncomeFromCharging,
       averageDailyRevenue,
@@ -430,7 +521,7 @@ const EnhancedInsightsTab = () => {
         </div>
 
         {/* Key Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
           {/* Total Revenue */}
           <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200 hover:shadow-xl transition-all duration-300">
             <CardContent className="p-6">
@@ -533,6 +624,28 @@ const EnhancedInsightsTab = () => {
                   ) : (
                     <ArrowDown className="h-6 w-6" />
                   )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Total Withdrawals */}
+          <Card className="bg-gradient-to-br from-orange-50 to-amber-50 border-orange-200 hover:shadow-xl transition-all duration-300">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-orange-600 font-medium">
+                    Total Withdrawals
+                  </p>
+                  <p className="text-2xl font-bold text-orange-800">
+                    {formatCurrency(analytics.totalWithdrawals)}
+                  </p>
+                  <div className="text-xs text-orange-600 mt-1">
+                    Cash outflow tracking
+                  </div>
+                </div>
+                <div className="p-3 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl text-white">
+                  <TrendingDown className="h-6 w-6" />
                 </div>
               </div>
             </CardContent>

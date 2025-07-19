@@ -34,6 +34,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { DateRange } from "react-day-picker";
+import TransactionDatePicker from "@/components/ui/transaction-date-picker";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -105,6 +106,9 @@ const ChargingTab = () => {
   const [perUnitRate, setPerUnitRate] = useState(0);
   const [paymentMode, setPaymentMode] = useState("");
   const [category, setCategory] = useState("");
+  const [transactionDate, setTransactionDate] = useState(
+    new Date().toISOString().split("T")[0],
+  );
 
   const paymentModes = ["Cash", "Esewa", "Fonepay", "Bank", "Cheque", "Credit"];
 
@@ -216,7 +220,7 @@ const ChargingTab = () => {
     try {
       const totalAmount = calculateTotalAmount();
 
-      const sessionDate = new Date().toISOString().split("T")[0];
+      const sessionDate = transactionDate;
 
       const { error } = await supabase.from("charging_sessions").insert({
         user_id: user.id,
@@ -782,6 +786,14 @@ const ChargingTab = () => {
                     </SelectContent>
                   </Select>
                 </div>
+
+                {/* Transaction Date */}
+                <TransactionDatePicker
+                  selectedDate={transactionDate}
+                  onDateChange={setTransactionDate}
+                  label="Charging Session Date"
+                  className="mb-4"
+                />
 
                 {/* Cost Calculation Display */}
                 {(startPercentage > 0 || kcal > 0) && (

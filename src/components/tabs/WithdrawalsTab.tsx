@@ -16,6 +16,8 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import TransactionDatePicker from "@/components/ui/transaction-date-picker";
+import { format } from "date-fns";
 import {
   Select,
   SelectContent,
@@ -61,7 +63,6 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import useTableControls from "@/hooks/useTableControls";
 
@@ -97,6 +98,9 @@ const WithdrawalsTab = () => {
   });
   const [newCategory, setNewCategory] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [transactionDate, setTransactionDate] = useState(
+    format(new Date(), "yyyy-MM-dd"),
+  );
   const { user } = useAuth();
   const { page, range, onPageChange, onRangeChange, itemsPerPage } =
     useTableControls();
@@ -264,7 +268,7 @@ const WithdrawalsTab = () => {
           recipient: formData.recipient || null,
           reference_number: formData.referenceNumber || null,
           remarks: formData.remarks || null,
-          withdrawal_date: new Date().toISOString().split("T")[0],
+          withdrawal_date: transactionDate,
           payment_mode: formData.payment_mode,
           category: "General",
         },
@@ -736,6 +740,14 @@ const WithdrawalsTab = () => {
                     className="border-gray-200 focus:border-gray-500 focus:ring-gray-500"
                   />
                 </div>
+
+                {/* Transaction Date */}
+                <TransactionDatePicker
+                  selectedDate={transactionDate}
+                  onDateChange={setTransactionDate}
+                  label="Withdrawal Date"
+                  className="mb-4"
+                />
 
                 <Button
                   type="submit"

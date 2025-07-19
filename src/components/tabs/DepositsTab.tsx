@@ -846,6 +846,14 @@ const DepositsTab = () => {
                 className="border-gray-200 focus:border-gray-500 focus:ring-gray-500"
               />
             </div>
+
+            {/* Transaction Date */}
+            <TransactionDatePicker
+              selectedDate={transactionDate}
+              onDateChange={setTransactionDate}
+              label="Deposit Date"
+              className="mb-4"
+            />
           </MobileForm>
 
           {/* Deposit Mode Breakdown */}

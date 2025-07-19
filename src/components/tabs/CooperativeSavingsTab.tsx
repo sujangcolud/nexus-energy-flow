@@ -17,6 +17,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { extractErrorMessage, logError } from "@/utils/errorHandling";
+import TransactionDatePicker from "@/components/ui/transaction-date-picker";
+import { format } from "date-fns";
 import {
   PiggyBank,
   Calendar as CalendarIcon,
@@ -55,7 +57,6 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import useTableControls from "@/hooks/useTableControls";
 
@@ -87,6 +88,9 @@ const CooperativeSavingsTab = () => {
   });
   const [newCategory, setNewCategory] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [transactionDate, setTransactionDate] = useState(
+    format(new Date(), "yyyy-MM-dd"),
+  );
   const { user } = useAuth();
   const { page, range, onPageChange, onRangeChange, itemsPerPage } =
     useTableControls();
@@ -204,7 +208,7 @@ const CooperativeSavingsTab = () => {
           contribution_amount: parseFloat(formData.contributionAmount),
           member_id: formData.memberId,
           cycle_period: formData.cyclePeriod,
-          contribution_date: new Date().toISOString().split("T")[0],
+          contribution_date: transactionDate,
         },
       ]);
 
@@ -590,6 +594,14 @@ const CooperativeSavingsTab = () => {
                     </select>
                   </div>
                 </div>
+
+                {/* Transaction Date */}
+                <TransactionDatePicker
+                  selectedDate={transactionDate}
+                  onDateChange={setTransactionDate}
+                  label="Contribution Date"
+                  className="mb-4"
+                />
 
                 <div className="space-y-2">
                   <Label
