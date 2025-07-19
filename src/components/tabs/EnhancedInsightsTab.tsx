@@ -402,6 +402,7 @@ const EnhancedInsightsTab = () => {
       esewaBalance,
       fonepayBalance,
       cooperativeBalance,
+      totalBalance,
       totalIncomeFromOrders,
       totalIncomeFromCharging,
       averageDailyRevenue,
