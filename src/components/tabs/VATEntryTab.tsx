@@ -205,6 +205,7 @@ const VATEntryTab = () => {
         nepalVATRate,
       );
 
+      // Only insert the base fields, let computed columns be calculated automatically
       const { error } = await supabase.from("vat_entries").insert({
         user_id: user.id,
         entry_type: selectedEntry.type,
@@ -212,8 +213,7 @@ const VATEntryTab = () => {
         item_name: selectedEntry.item_name,
         amount: vatCalculation.baseAmount, // Store the base amount (excluding VAT)
         vat_rate: nepalVATRate,
-        vat_amount: vatCalculation.vatAmount, // Manually calculate VAT amount
-        total_with_vat: vatCalculation.totalWithVAT, // Original amount (VAT inclusive)
+        // Remove vat_amount and total_with_vat - these are computed columns
       });
 
       if (error) {
