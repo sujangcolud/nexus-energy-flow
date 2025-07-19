@@ -85,6 +85,34 @@ const VATEntryTab = () => {
 
   const nepalVATRate = 13; // Nepal VAT rate
 
+  // Calculate VAT from VAT-inclusive amount
+  const calculateVATFromInclusive = (
+    totalWithVAT: number,
+    vatRate: number = nepalVATRate,
+  ) => {
+    const baseAmount = totalWithVAT / (1 + vatRate / 100);
+    const vatAmount = totalWithVAT - baseAmount;
+    return {
+      baseAmount: Math.round(baseAmount * 100) / 100,
+      vatAmount: Math.round(vatAmount * 100) / 100,
+      totalWithVAT: totalWithVAT,
+    };
+  };
+
+  // Calculate VAT from VAT-exclusive amount (for comparison)
+  const calculateVATFromExclusive = (
+    baseAmount: number,
+    vatRate: number = nepalVATRate,
+  ) => {
+    const vatAmount = (baseAmount * vatRate) / 100;
+    const totalWithVAT = baseAmount + vatAmount;
+    return {
+      baseAmount,
+      vatAmount: Math.round(vatAmount * 100) / 100,
+      totalWithVAT: Math.round(totalWithVAT * 100) / 100,
+    };
+  };
+
   useEffect(() => {
     if (user) {
       fetchIncomeEntries();
