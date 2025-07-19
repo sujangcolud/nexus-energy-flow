@@ -90,9 +90,24 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         };
         setUser(basicUser);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching user profile:", error);
-      // Create a fallback user object
+
+      // Check for refresh token errors
+      if (
+        error?.message?.includes("refresh_token_not_found") ||
+        error?.message?.includes("Invalid Refresh Token") ||
+        error?.message?.includes("AuthApiError: Invalid Refresh Token")
+      ) {
+        console.log("Refresh token error in profile fetch, signing out");
+        // Clear everything and let the auth state listener handle it
+        setUser(null);
+        setSession(null);
+        supabase.auth.signOut().catch(console.error);
+        return;
+      }
+
+      // Create a fallback user object for other errors
       const fallbackUser: AppUser = {
         id: userId,
         email: session?.user?.email || "",
