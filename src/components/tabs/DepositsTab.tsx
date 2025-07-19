@@ -308,8 +308,8 @@ const DepositsTab = () => {
       setNewCategory("");
       fetchCategories();
     } catch (error) {
-      console.error("Error adding category:", error);
-      toast.error("Failed to add category");
+      logError("adding category", error);
+      toast.error(`Failed to add category: ${extractErrorMessage(error)}`);
     }
   };
 
