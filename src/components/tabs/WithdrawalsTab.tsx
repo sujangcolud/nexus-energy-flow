@@ -269,7 +269,7 @@ const WithdrawalsTab = () => {
           recipient: formData.recipient || null,
           reference_number: formData.referenceNumber || null,
           remarks: formData.remarks || null,
-          withdrawal_date: new Date().toISOString().split("T")[0],
+          withdrawal_date: transactionDate,
           payment_mode: formData.payment_mode,
           category: "General",
         },
