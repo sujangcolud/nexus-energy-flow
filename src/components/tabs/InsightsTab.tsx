@@ -2,8 +2,17 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  calculateDailySummary,
+  formatCurrency,
+  calculatePercentage,
+  getPaymentModeColor,
+  type DailySummaryData,
+} from "@/lib/calculations";
+import BalanceDisplay from "@/components/ui/balance-display";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import FinancialInsightsWidget from "@/components/FinancialInsightsWidget";
 import {
   BarChart3,
   TrendingUp,
@@ -477,6 +486,25 @@ const InsightsTab = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* Balance Overview */}
+        <BalanceDisplay
+          cashBalance={analytics.cashBalance || 0}
+          bankBalance={analytics.fonepayBalance || 0}
+          cooperativeBalance={analytics.cooperativeBalance || 0}
+          esewaBalance={analytics.esewaBalance || 0}
+          totalBalance={
+            (analytics.cashBalance || 0) +
+            (analytics.fonepayBalance || 0) +
+            (analytics.cooperativeBalance || 0) +
+            (analytics.esewaBalance || 0)
+          }
+          size="md"
+          showDetails={true}
+        />
+
+        {/* Enhanced Financial Insights Widget */}
+        <FinancialInsightsWidget className="mb-8" />
 
         {/* Financial Overview */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">

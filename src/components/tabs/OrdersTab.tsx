@@ -69,6 +69,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import useTableControls from "@/hooks/useTableControls";
+import BalanceDisplay from "@/components/ui/balance-display";
 
 interface Order {
   id: string;
@@ -157,16 +158,27 @@ const OrdersTab = () => {
 
   const fetchMenuItems = async () => {
     try {
+      console.log("Fetching menu items...");
       const { data, error } = await supabase
         .from("menu_items")
         .select("*")
         .eq("is_available", true)
         .order("category", { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        console.error(
+          "Menu items fetch error:",
+          JSON.stringify(error, null, 2),
+        );
+        throw error;
+      }
+      console.log("Menu items loaded:", data?.length || 0, "items");
       setMenuItems(data || []);
     } catch (error) {
-      console.error("Error fetching menu items:", error);
+      console.error(
+        "Error fetching menu items:",
+        JSON.stringify(error, null, 2),
+      );
       toast.error("Failed to load menu items");
     }
   };
@@ -232,33 +244,151 @@ const OrdersTab = () => {
       return;
     }
 
+    // Check current session
+    const {
+      data: { session },
+      error: sessionError,
+    } = await supabase.auth.getSession();
+    if (sessionError || !session) {
+      console.error("Authentication error:", sessionError);
+      toast.error("Authentication expired. Please log in again.");
+      return;
+    }
+
     setSubmitting(true);
     try {
-      const orderPromises = cart.map((item) =>
-        supabase.from("orders").insert({
+      console.log("Submitting orders for user:", user.id);
+      console.log("Current session user:", session.user.id);
+      console.log("Full user object:", user);
+      console.log("Full session object:", session);
+      console.log("Cart items:", cart);
+      console.log("Payment mode:", paymentMode);
+
+      const orderPromises = cart.map(async (item) => {
+        const currentDate = new Date().toISOString().split("T")[0];
+
+        // Try direct insert first (most reliable)
+        const directOrderData = {
           user_id: user.id,
-          item_name: item.name,
-          quantity: item.quantity,
-          rate: item.price,
-          total: item.price * item.quantity,
-          payment_mode: paymentMode,
-          order_date: new Date().toISOString().split("T")[0],
-        }),
-      );
+          item_name: String(item.name),
+          quantity: Number(item.quantity),
+          rate: Number(item.price),
+          total: Number(item.price * item.quantity),
+          payment_mode: String(paymentMode),
+          order_date: currentDate,
+        };
+
+        console.log("Attempting direct insert with data:", directOrderData);
+
+        try {
+          // Try without 'date' field first
+          const result = await supabase.from("orders").insert(directOrderData);
+
+          if (result.error && result.error.code === "PGRST204") {
+            console.log("PGRST204 detected, trying with both date fields");
+            // If PGRST204, try with both date fields
+            const dataWithBothDates = {
+              ...directOrderData,
+              date: currentDate,
+            };
+            return await supabase.from("orders").insert(dataWithBothDates);
+          }
+
+          return result;
+        } catch (error) {
+          console.error("Direct insert failed, trying RPC fallback:", error);
+
+          // Fallback to RPC if available
+          const orderParams = {
+            p_user_id: user.id,
+            p_item_name: String(item.name),
+            p_quantity: Number(item.quantity),
+            p_rate: Number(item.price),
+            p_total: Number(item.price * item.quantity),
+            p_payment_mode: String(paymentMode),
+            p_order_date: currentDate,
+          };
+
+          return await supabase.rpc("insert_order_safe", orderParams);
+        }
+      });
 
       const results = await Promise.all(orderPromises);
 
-      // Check if any insert failed
+      // Check if any RPC call failed
       const failed = results.find((result) => result.error);
-      if (failed) throw failed.error;
+      if (failed) {
+        console.error(
+          "Order submission failed:",
+          JSON.stringify(failed.error, null, 2),
+        );
+        console.error("Failed result:", JSON.stringify(failed, null, 2));
+        throw failed.error;
+      }
+
+      // Log successful results
+      console.log("All orders inserted successfully:", results);
 
       toast.success("Order placed successfully! 🎉");
       clearCart();
       setPaymentMode("");
       fetchOrders();
     } catch (error) {
-      console.error("Error submitting order:", error);
-      toast.error("Failed to place order");
+      console.error("Error submitting order:", JSON.stringify(error, null, 2));
+      console.error("Error details:", error);
+      console.error("Error code:", error?.code);
+      console.error("Error message:", error?.message);
+
+      // Provide more specific error messages based on the error code
+      let errorMessage = "Failed to place order";
+      if (error?.code === "42703") {
+        errorMessage =
+          "Database column error. Please run the column fix in Supabase SQL Editor.";
+
+        // Show detailed instructions for 42703
+        console.error("\n=== 42703 COLUMN ERROR ===");
+        console.error(`Column error: ${error?.message}`);
+        console.error("\nTo fix this:");
+        console.error("1. Go to your Supabase dashboard");
+        console.error("2. Open SQL Editor");
+        console.error("3. Run the fix_amount_column_error.sql file");
+        console.error("4. Refresh this page");
+      } else if (error?.code === "42702") {
+        errorMessage =
+          "Database function error. Please run the ambiguous column fix in Supabase SQL Editor.";
+
+        // Show detailed instructions for 42702
+        console.error("\n=== 42702 AMBIGUOUS COLUMN ERROR ===");
+        console.error(`Ambiguous column error: ${error?.message}`);
+        console.error("\nTo fix this:");
+        console.error("1. Go to your Supabase dashboard");
+        console.error("2. Open SQL Editor");
+        console.error("3. Run the fix_ambiguous_column.sql file");
+        console.error("4. Refresh this page");
+      } else if (error?.code === "PGRST202") {
+        errorMessage = "Database function not found. Using fallback method...";
+      } else if (error?.code === "PGRST204") {
+        errorMessage =
+          "Database schema cache error. Please run the schema fix in your Supabase SQL Editor.";
+
+        // Show detailed instructions for PGRST204
+        console.error("\n=== PGRST204 SCHEMA CACHE ERROR ===");
+        console.error("The PostgREST schema cache is out of sync.");
+        console.error("\nTo fix this:");
+        console.error("1. Go to your Supabase dashboard");
+        console.error("2. Open SQL Editor");
+        console.error("3. Run the fix_orders_schema.sql file");
+        console.error("4. Refresh this page");
+        console.error(
+          "\nOr try refreshing the page - the issue may resolve automatically.",
+        );
+      } else if (error?.message) {
+        errorMessage = `Failed to place order: ${error.message}`;
+      }
+
+      console.log("Final error message:", errorMessage);
+
+      toast.error(errorMessage);
     } finally {
       setSubmitting(false);
     }
@@ -312,11 +442,7 @@ const OrdersTab = () => {
   const currentMenuItemsToDisplay = filteredMenuItems();
   const totalOrders = orders.reduce((sum, order) => sum + order.total, 0);
 
-  const logAction = async (
-    action: string,
-    record_id: string,
-    details: any,
-  ) => {
+  const logAction = async (action: string, record_id: string, details: any) => {
     if (!user) return;
     await supabase.from("logs").insert({
       user_id: user.id,
@@ -1012,7 +1138,9 @@ const OrdersTab = () => {
                                     </AlertDialogDescription>
                                   </AlertDialogHeader>
                                   <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogCancel>
+                                      Cancel
+                                    </AlertDialogCancel>
                                     <AlertDialogAction
                                       onClick={() => handleDelete(order.id)}
                                     >

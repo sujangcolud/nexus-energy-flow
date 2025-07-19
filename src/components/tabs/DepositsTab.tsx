@@ -23,6 +23,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import { extractErrorMessage, logError } from "@/utils/errorHandling";
 import {
   TrendingUp,
   Calendar as CalendarIcon,
@@ -63,6 +64,10 @@ import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import useTableControls from "@/hooks/useTableControls";
+import { useIsMobile } from "@/hooks/use-mobile";
+import MobileDateRange from "@/components/ui/mobile-date-range";
+import MobileTable from "@/components/ui/mobile-table";
+import MobileForm from "@/components/ui/mobile-form";
 
 interface Deposit {
   id: string;
@@ -95,7 +100,6 @@ const DepositsTab = () => {
     sender_name: "",
     receiver_name: "",
     deposited_to: "",
-    category: "",
   });
   const [newCategory, setNewCategory] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -106,6 +110,128 @@ const DepositsTab = () => {
   const [selectedDeposit, setSelectedDeposit] = useState<Deposit | null>(null);
   const [canEditTransactions, setCanEditTransactions] = useState(false);
   const [canAddCategory, setCanAddCategory] = useState(false);
+  const isMobile = useIsMobile();
+
+  // Table columns configuration for mobile responsive table
+  const tableColumns = [
+    {
+      key: "deposit_date",
+      label: "Date",
+      className: "font-semibold text-gray-700",
+      render: (value: string) => format(new Date(value), "MMM dd, yyyy"),
+    },
+    {
+      key: "amount",
+      label: "Amount",
+      className: "font-semibold text-gray-700",
+      render: (value: number) => (
+        <span className="font-bold text-xl bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+          NRs. {value.toFixed(2)}
+        </span>
+      ),
+    },
+    {
+      key: "mode",
+      label: "Mode",
+      className: "font-semibold text-gray-700",
+      render: (value: string) => (
+        <Badge
+          className={`bg-gradient-to-r ${modeColors[value as keyof typeof modeColors]} text-white border-0`}
+        >
+          {value}
+        </Badge>
+      ),
+    },
+    {
+      key: "deposited_by",
+      label: "Deposited By",
+      className: "font-semibold text-gray-700",
+      render: (value: string) => (
+        <div className="flex items-center gap-2">
+          <User className="h-4 w-4 text-gray-500" />
+          {value}
+        </div>
+      ),
+    },
+    {
+      key: "sender_name",
+      label: "Sender",
+      className: "font-semibold text-gray-700",
+      hideOnMobile: true,
+      render: (value: string) => value || "-",
+    },
+    {
+      key: "receiver_name",
+      label: "Receiver",
+      className: "font-semibold text-gray-700",
+      hideOnMobile: true,
+      render: (value: string) => value || "-",
+    },
+    {
+      key: "deposited_to",
+      label: "Deposited To",
+      className: "font-semibold text-gray-700",
+      hideOnMobile: true,
+      render: (value: string) => value || "-",
+    },
+    {
+      key: "remarks",
+      label: "Remarks",
+      className: "font-semibold text-gray-700 max-w-xs",
+      hideOnMobile: true,
+      render: (value: string) => (
+        <span className="text-sm text-gray-600 truncate" title={value}>
+          {value || "-"}
+        </span>
+      ),
+    },
+    {
+      key: "actions",
+      label: "Actions",
+      className: "font-semibold text-gray-700",
+      render: (_: any, deposit: Deposit) =>
+        canEditTransactions && (
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setSelectedDeposit(deposit);
+                setIsEditDialogOpen(true);
+              }}
+            >
+              Edit
+            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action cannot be undone. This will permanently delete
+                    the deposit.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => handleDelete(deposit.id)}>
+                    Continue
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+        ),
+    },
+  ];
 
   const depositModes = [
     "Cash",
@@ -153,8 +279,8 @@ const DepositsTab = () => {
       if (error) throw error;
       setCategories(data || []);
     } catch (error) {
-      console.error("Error fetching categories:", error);
-      toast.error("Failed to load categories");
+      logError("fetching categories", error);
+      toast.error(`Failed to load categories: ${extractErrorMessage(error)}`);
     }
   };
 
@@ -180,8 +306,8 @@ const DepositsTab = () => {
 
       setDeposits(data || []);
     } catch (error) {
-      console.error("Error fetching deposits:", error);
-      toast.error("Failed to load deposits");
+      logError("fetching deposits", error);
+      toast.error(`Failed to load deposits: ${extractErrorMessage(error)}`);
     } finally {
       setLoading(false);
     }
@@ -262,7 +388,7 @@ const DepositsTab = () => {
           receiver_name: formData.receiver_name,
           payment_mode: formData.mode,
           deposited_to: formData.deposited_to,
-          category: formData.category,
+          category: "General",
         },
       ]);
 
@@ -277,12 +403,11 @@ const DepositsTab = () => {
         sender_name: "",
         receiver_name: "",
         deposited_to: "",
-        category: "",
       });
       fetchDeposits();
     } catch (error) {
-      console.error("Error adding deposit:", error);
-      toast.error("Failed to add deposit");
+      logError("adding deposit", error);
+      toast.error(`Failed to add deposit: ${extractErrorMessage(error)}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -307,8 +432,8 @@ const DepositsTab = () => {
       setNewCategory("");
       fetchCategories();
     } catch (error) {
-      console.error("Error adding category:", error);
-      toast.error("Failed to add category");
+      logError("adding category", error);
+      toast.error(`Failed to add category: ${extractErrorMessage(error)}`);
     }
   };
 
@@ -345,11 +470,7 @@ const DepositsTab = () => {
   const averageDeposit =
     deposits.length > 0 ? totalDeposits / deposits.length : 0;
 
-  const logAction = async (
-    action: string,
-    record_id: string,
-    details: any,
-  ) => {
+  const logAction = async (action: string, record_id: string, details: any) => {
     if (!user) return;
     await supabase.from("logs").insert({
       user_id: user.id,
@@ -370,8 +491,8 @@ const DepositsTab = () => {
       logAction("delete", id, { id });
       fetchDeposits();
     } catch (error) {
-      console.error("Error deleting deposit:", error);
-      toast.error("Failed to delete deposit");
+      logError("deleting deposit", error);
+      toast.error(`Failed to delete deposit: ${extractErrorMessage(error)}`);
     }
   };
 
@@ -391,8 +512,8 @@ const DepositsTab = () => {
       setIsEditDialogOpen(false);
       fetchDeposits();
     } catch (error) {
-      console.error("Error updating deposit:", error);
-      toast.error("Failed to update deposit");
+      logError("updating deposit", error);
+      toast.error(`Failed to update deposit: ${extractErrorMessage(error)}`);
     }
   };
 
@@ -572,236 +693,188 @@ const DepositsTab = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Add Deposit Form */}
-          <Card className="bg-gradient-to-br from-white/90 to-green-50/90 backdrop-blur-sm border-0 shadow-2xl hover:shadow-3xl transition-all duration-300">
-            <CardHeader className="bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-t-lg">
-              <CardTitle className="flex items-center gap-3 text-xl">
-                <div className="p-2 bg-white/20 rounded-lg">
-                  <ArrowUpCircle className="h-6 w-6" />
-                </div>
-                Record New Deposit
-                <Sparkles className="h-5 w-5 animate-pulse" />
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-6">
-              <form onSubmit={handleSubmit} className="space-y-6">
+          <MobileForm
+            title="Record New Deposit"
+            icon={<ArrowUpCircle />}
+            onSubmit={handleSubmit}
+            submitText="Record Deposit"
+            isSubmitting={isSubmitting}
+            submitIcon={<ArrowUpCircle className="h-5 w-5" />}
+            className="bg-gradient-to-br from-white/90 to-green-50/90 backdrop-blur-sm hover:shadow-3xl transition-all duration-300"
+          >
+            <div className="space-y-2">
+              <Label
+                htmlFor="amount"
+                className="text-sm font-medium text-gray-700 flex items-center gap-2"
+              >
+                <DollarSign className="h-4 w-4 text-green-600" />
+                Amount (NRs.) *
+              </Label>
+              <Input
+                id="amount"
+                type="number"
+                step="0.01"
+                value={formData.amount}
+                onChange={(e) =>
+                  setFormData({ ...formData, amount: e.target.value })
+                }
+                placeholder="0.00"
+                required
+                className="border-green-200 focus:border-green-500 focus:ring-green-500 h-12 text-lg"
+              />
+            </div>
+
+            <div
+              className={`grid gap-4 ${isMobile ? "grid-cols-1" : "grid-cols-2"}`}
+            >
+              <div className="space-y-2">
+                <Label
+                  htmlFor="mode"
+                  className="text-sm font-medium text-gray-700 flex items-center gap-2"
+                >
+                  <CreditCard className="h-4 w-4 text-blue-600" />
+                  Deposit Mode *
+                </Label>
+                <Select
+                  value={formData.mode}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, mode: value })
+                  }
+                  required
+                >
+                  <SelectTrigger className="border-blue-200 focus:border-blue-500 focus:ring-blue-500 h-12">
+                    <SelectValue placeholder="Select mode" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {depositModes.map((mode) => (
+                      <SelectItem key={mode} value={mode}>
+                        <div className="flex items-center gap-2">
+                          <div
+                            className={`w-3 h-3 rounded-full bg-gradient-to-r ${modeColors[mode as keyof typeof modeColors]}`}
+                          ></div>
+                          {mode}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label
+                  htmlFor="depositedBy"
+                  className="text-sm font-medium text-gray-700 flex items-center gap-2"
+                >
+                  <User className="h-4 w-4 text-purple-600" />
+                  Deposited By *
+                </Label>
+                <Input
+                  id="depositedBy"
+                  value={formData.depositedBy}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      depositedBy: e.target.value,
+                    })
+                  }
+                  placeholder="Enter depositor name"
+                  required
+                  className="border-purple-200 focus:border-purple-500 focus:ring-purple-500 h-12"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label
+                htmlFor="deposited_to"
+                className="text-sm font-medium text-gray-700"
+              >
+                Deposited To *
+              </Label>
+              <Select
+                value={formData.deposited_to}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, deposited_to: value })
+                }
+                required
+              >
+                <SelectTrigger className="h-12">
+                  <SelectValue placeholder="Select where to deposit" />
+                </SelectTrigger>
+                <SelectContent>
+                  {depositedTo.map((mode) => (
+                    <SelectItem key={mode} value={mode}>
+                      {mode}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {formData.mode === "Esewa" && (
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label
-                    htmlFor="amount"
-                    className="text-sm font-medium text-gray-700 flex items-center gap-2"
+                    htmlFor="senderName"
+                    className="text-sm font-medium text-gray-700"
                   >
-                    <DollarSign className="h-4 w-4 text-green-600" />
-                    Amount (NRs.) *
+                    Sender Name
                   </Label>
                   <Input
-                    id="amount"
-                    type="number"
-                    step="0.01"
-                    value={formData.amount}
+                    id="senderName"
+                    value={formData.sender_name}
                     onChange={(e) =>
-                      setFormData({ ...formData, amount: e.target.value })
+                      setFormData({
+                        ...formData,
+                        sender_name: e.target.value,
+                      })
                     }
-                    placeholder="0.00"
-                    required
-                    className="border-green-200 focus:border-green-500 focus:ring-green-500 h-12 text-lg"
+                    placeholder="Enter sender name"
+                    className="border-gray-200 focus:border-gray-500 focus:ring-gray-500 h-12"
                   />
                 </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label
-                      htmlFor="mode"
-                      className="text-sm font-medium text-gray-700 flex items-center gap-2"
-                    >
-                      <CreditCard className="h-4 w-4 text-blue-600" />
-                      Deposit Mode *
-                    </Label>
-                    <Select
-                      value={formData.mode}
-                      onValueChange={(value) =>
-                        setFormData({ ...formData, mode: value })
-                      }
-                      required
-                    >
-                      <SelectTrigger className="border-blue-200 focus:border-blue-500 focus:ring-blue-500 h-12">
-                        <SelectValue placeholder="Select mode" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {depositModes.map((mode) => (
-                          <SelectItem key={mode} value={mode}>
-                            <div className="flex items-center gap-2">
-                              <div
-                                className={`w-3 h-3 rounded-full bg-gradient-to-r ${modeColors[mode as keyof typeof modeColors]}`}
-                              ></div>
-                              {mode}
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label
-                      htmlFor="depositedBy"
-                      className="text-sm font-medium text-gray-700 flex items-center gap-2"
-                    >
-                      <User className="h-4 w-4 text-purple-600" />
-                      Deposited By *
-                    </Label>
-                    <Input
-                      id="depositedBy"
-                      value={formData.depositedBy}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          depositedBy: e.target.value,
-                        })
-                      }
-                      placeholder="Enter depositor name"
-                      required
-                      className="border-purple-200 focus:border-purple-500 focus:ring-purple-500 h-12"
-                    />
-                  </div>
-                </div>
-
                 <div className="space-y-2">
                   <Label
-                    htmlFor="deposited_to"
+                    htmlFor="receiverName"
                     className="text-sm font-medium text-gray-700"
                   >
-                    Deposited To *
+                    Receiver Name
                   </Label>
-                  <Select
-                    value={formData.deposited_to}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, deposited_to: value })
-                    }
-                    required
-                  >
-                    <SelectTrigger className="h-12">
-                      <SelectValue placeholder="Select where to deposit" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {depositedTo.map((mode) => (
-                        <SelectItem key={mode} value={mode}>
-                          {mode}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="category"
-                    className="text-sm font-medium text-gray-700"
-                  >
-                    Category *
-                  </Label>
-                  <Select
-                    value={formData.category}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, category: value })
-                    }
-                    required
-                  >
-                    <SelectTrigger className="h-12">
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.map((cat) => (
-                        <SelectItem key={cat.id} value={cat.name}>
-                          {cat.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {formData.mode === "Esewa" && (
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label
-                        htmlFor="senderName"
-                        className="text-sm font-medium text-gray-700"
-                      >
-                        Sender Name
-                      </Label>
-                      <Input
-                        id="senderName"
-                        value={formData.sender_name}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            sender_name: e.target.value,
-                          })
-                        }
-                        placeholder="Enter sender name"
-                        className="border-gray-200 focus:border-gray-500 focus:ring-gray-500 h-12"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label
-                        htmlFor="receiverName"
-                        className="text-sm font-medium text-gray-700"
-                      >
-                        Receiver Name
-                      </Label>
-                      <Input
-                        id="receiverName"
-                        value={formData.receiver_name}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            receiver_name: e.target.value,
-                          })
-                        }
-                        placeholder="Enter receiver name"
-                        className="border-gray-200 focus:border-gray-500 focus:ring-gray-500 h-12"
-                      />
-                    </div>
-                  </div>
-                )}
-
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="remarks"
-                    className="text-sm font-medium text-gray-700"
-                  >
-                    Remarks (Optional)
-                  </Label>
-                  <Textarea
-                    id="remarks"
-                    value={formData.remarks}
+                  <Input
+                    id="receiverName"
+                    value={formData.receiver_name}
                     onChange={(e) =>
-                      setFormData({ ...formData, remarks: e.target.value })
+                      setFormData({
+                        ...formData,
+                        receiver_name: e.target.value,
+                      })
                     }
-                    placeholder="Additional notes or reference information"
-                    rows={3}
-                    className="border-gray-200 focus:border-gray-500 focus:ring-gray-500"
+                    placeholder="Enter receiver name"
+                    className="border-gray-200 focus:border-gray-500 focus:ring-gray-500 h-12"
                   />
                 </div>
+              </div>
+            )}
 
-                <Button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full h-12 bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 hover:from-green-600 hover:via-emerald-600 hover:to-teal-600 text-white font-semibold shadow-lg transition-all duration-300 transform hover:scale-105"
-                >
-                  {isSubmitting ? (
-                    <div className="flex items-center gap-2">
-                      <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                      Recording Deposit...
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2">
-                      <ArrowUpCircle className="h-5 w-5" />
-                      Record Deposit
-                    </div>
-                  )}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
+            <div className="space-y-2">
+              <Label
+                htmlFor="remarks"
+                className="text-sm font-medium text-gray-700"
+              >
+                Remarks (Optional)
+              </Label>
+              <Textarea
+                id="remarks"
+                value={formData.remarks}
+                onChange={(e) =>
+                  setFormData({ ...formData, remarks: e.target.value })
+                }
+                placeholder="Additional notes or reference information"
+                rows={3}
+                className="border-gray-200 focus:border-gray-500 focus:ring-gray-500"
+              />
+            </div>
+          </MobileForm>
 
           {/* Deposit Mode Breakdown */}
           <Card className="bg-gradient-to-br from-white/90 to-teal-50/90 backdrop-blur-sm border-0 shadow-2xl hover:shadow-3xl transition-all duration-300">
@@ -925,197 +998,36 @@ const DepositsTab = () => {
               Deposit History
             </CardTitle>
             <div className="flex items-center gap-2">
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-[300px] justify-start text-left font-normal hover:bg-gradient-to-r hover:from-green-50 hover:to-teal-50",
-                      !range && "text-muted-foreground",
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {range?.from ? (
-                      range.to ? (
-                        <>
-                          {format(range.from, "LLL dd, y")} -{" "}
-                          {format(range.to, "LLL dd, y")}
-                        </>
-                      ) : (
-                        format(range.from, "LLL dd, y")
-                      )
-                    ) : (
-                      <span>Pick a date range</span>
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="end">
-                  <Calendar
-                    initialFocus
-                    mode="range"
-                    defaultMonth={range?.from}
-                    selected={range}
-                    onSelect={onRangeChange}
-                    numberOfMonths={2}
-                  />
-                </PopoverContent>
-              </Popover>
+              <MobileDateRange
+                range={range}
+                onRangeChange={onRangeChange}
+                className={isMobile ? "w-full" : "w-[300px]"}
+              />
             </div>
           </CardHeader>
-          <CardContent className="p-0">
-            {loading ? (
-              <div className="text-center py-10">
-                <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full animate-spin mx-auto flex items-center justify-center mb-4">
-                  <PiggyBank className="h-8 w-8 text-white" />
+          <CardContent className={isMobile ? "p-2" : "p-0"}>
+            {/* Total row for mobile */}
+            {!loading && deposits.length > 0 && (
+              <div
+                className={`${isMobile ? "bg-gray-50 p-3 rounded-lg mb-3" : ""}`}
+              >
+                <div className="flex justify-between items-center">
+                  <span className="font-bold text-gray-700">Total:</span>
+                  <span className="font-bold text-green-600">
+                    NRs. {totalDeposits.toFixed(2)}
+                  </span>
                 </div>
-                <p className="text-gray-600">Loading deposits...</p>
-              </div>
-            ) : deposits.length === 0 ? (
-              <div className="text-center py-12">
-                <PiggyBank className="h-16 w-16 mx-auto text-gray-300 mb-4" />
-                <p className="text-xl font-semibold text-gray-700 mb-2">
-                  No deposits found
-                </p>
-                <p className="text-gray-500">
-                  Start recording your deposits to see them here.
-                </p>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-gradient-to-r from-gray-50 to-teal-50">
-                      <TableHead className="font-semibold text-gray-700">
-                        Date
-                      </TableHead>
-                      <TableHead className="font-semibold text-gray-700">
-                        Amount
-                      </TableHead>
-                      <TableHead className="font-semibold text-gray-700">
-                        Mode
-                      </TableHead>
-                      <TableHead className="font-semibold text-gray-700">
-                        Deposited By
-                      </TableHead>
-                      <TableHead className="font-semibold text-gray-700">
-                        Sender
-                      </TableHead>
-                      <TableHead className="font-semibold text-gray-700">
-                        Receiver
-                      </TableHead>
-                      <TableHead className="font-semibold text-gray-700">
-                        Deposited To
-                      </TableHead>
-                      <TableHead className="font-semibold text-gray-700">
-                        Remarks
-                      </TableHead>
-                      <TableHead className="font-semibold text-gray-700">
-                        Actions
-                      </TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    <TableRow>
-                      <TableCell colSpan={1} className="font-bold">
-                        Total
-                      </TableCell>
-                      <TableCell colSpan={8} className="font-bold">
-                        NRs. {totalDeposits.toFixed(2)}
-                      </TableCell>
-                    </TableRow>
-                    {deposits.map((deposit, index) => (
-                      <TableRow
-                        key={deposit.id}
-                        className="hover:bg-gradient-to-r hover:from-green-50 hover:to-emerald-50 transition-all duration-200"
-                        style={{ animationDelay: `${index * 50}ms` }}
-                      >
-                        <TableCell className="font-medium">
-                          {format(
-                            new Date(deposit.deposit_date),
-                            "MMM dd, yyyy",
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <span className="font-bold text-xl bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
-                            NRs. {deposit.amount.toFixed(2)}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          <Badge
-                            className={`bg-gradient-to-r ${modeColors[deposit.mode as keyof typeof modeColors]} text-white border-0`}
-                          >
-                            {deposit.mode}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="font-medium text-gray-800">
-                          <div className="flex items-center gap-2">
-                            <User className="h-4 w-4 text-gray-500" />
-                            {deposit.deposited_by}
-                          </div>
-                        </TableCell>
-                        <TableCell>{deposit.sender_name || "-"}</TableCell>
-                        <TableCell>{deposit.receiver_name || "-"}</TableCell>
-                        <TableCell>{deposit.deposited_to || "-"}</TableCell>
-                        <TableCell className="max-w-xs">
-                          <span
-                            className="text-sm text-gray-600 truncate"
-                            title={deposit.remarks}
-                          >
-                            {deposit.remarks || "-"}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          {canEditTransactions && (
-                            <div className="flex gap-2">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => {
-                                  setSelectedDeposit(deposit);
-                                  setIsEditDialogOpen(true);
-                                }}
-                              >
-                                Edit
-                              </Button>
-                              <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                  <AlertDialogHeader>
-                                    <AlertDialogTitle>
-                                      Are you sure?
-                                    </AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                      This action cannot be undone. This will
-                                      permanently delete the deposit.
-                                    </AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                    <AlertDialogAction
-                                      onClick={() => handleDelete(deposit.id)}
-                                    >
-                                      Continue
-                                    </AlertDialogAction>
-                                  </AlertDialogFooter>
-                                </AlertDialogContent>
-                              </AlertDialog>
-                            </div>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
               </div>
             )}
+
+            <MobileTable
+              columns={tableColumns}
+              data={deposits}
+              loading={loading}
+              emptyMessage="No deposits found. Start recording your deposits to see them here."
+              className={isMobile ? "" : ""}
+              cardKey="id"
+            />
           </CardContent>
           {deposits.length > 0 && (
             <div className="flex justify-center p-4 border-t border-gray-200">

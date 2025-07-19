@@ -90,9 +90,24 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         };
         setUser(basicUser);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching user profile:", error);
-      // Create a fallback user object
+
+      // Check for refresh token errors
+      if (
+        error?.message?.includes("refresh_token_not_found") ||
+        error?.message?.includes("Invalid Refresh Token") ||
+        error?.message?.includes("AuthApiError: Invalid Refresh Token")
+      ) {
+        console.log("Refresh token error in profile fetch, signing out");
+        // Clear everything and let the auth state listener handle it
+        setUser(null);
+        setSession(null);
+        supabase.auth.signOut().catch(console.error);
+        return;
+      }
+
+      // Create a fallback user object for other errors
       const fallbackUser: AppUser = {
         id: userId,
         email: session?.user?.email || "",
@@ -111,16 +126,59 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log("Auth state changed:", event, session);
+
+      // Handle token refresh errors
+      if (event === "TOKEN_REFRESHED" && !session) {
+        console.log("Token refresh failed, signing out user");
+        setUser(null);
+        setSession(null);
+        setLoading(false);
+        return;
+      }
+
+      // Handle sign out events
+      if (event === "SIGNED_OUT") {
+        console.log("User signed out");
+        setUser(null);
+        setSession(null);
+        setLoading(false);
+        return;
+      }
+
       setSession(session);
       setLoading(false);
     });
 
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log("Initial session check:", session);
-      setSession(session);
-      setLoading(false);
-    });
+    // Check for existing session with error handling
+    supabase.auth
+      .getSession()
+      .then(({ data: { session }, error }) => {
+        console.log("Initial session check:", session, "Error:", error);
+
+        if (error) {
+          console.error("Session check error:", error);
+          // If there's an error getting the session (like invalid refresh token), clear everything
+          if (
+            error.message?.includes("refresh_token_not_found") ||
+            error.message?.includes("Invalid Refresh Token")
+          ) {
+            console.log("Invalid refresh token detected, clearing session");
+            setUser(null);
+            setSession(null);
+          }
+        } else {
+          setSession(session);
+        }
+
+        setLoading(false);
+      })
+      .catch((error) => {
+        console.error("Unexpected error during session check:", error);
+        // Clear session on any unexpected errors
+        setUser(null);
+        setSession(null);
+        setLoading(false);
+      });
 
     return () => subscription.unsubscribe();
   }, []);

@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { extractErrorMessage, logError } from "@/utils/errorHandling";
 import {
   Receipt,
   Calendar as CalendarIcon,
@@ -146,8 +147,8 @@ const ExpensesTab = () => {
       if (error) throw error;
       setCategories(data || []);
     } catch (error) {
-      console.error("Error fetching categories:", error);
-      toast.error("Failed to load categories");
+      logError("fetching categories", error);
+      toast.error(`Failed to load categories: ${extractErrorMessage(error)}`);
     }
   };
 
@@ -212,7 +213,10 @@ const ExpensesTab = () => {
         },
       ]);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Expense submission failed:", error);
+        throw error;
+      }
 
       toast.success("Expense added successfully!");
       setFormData({
@@ -224,8 +228,11 @@ const ExpensesTab = () => {
       });
       fetchExpenses();
     } catch (error) {
-      console.error("Error adding expense:", error);
-      toast.error("Failed to add expense");
+      console.error("Error adding expense:", JSON.stringify(error, null, 2));
+      console.error("Error details:", error);
+      toast.error(
+        `Failed to add expense: ${error?.message || "Unknown error"}`,
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -247,11 +254,7 @@ const ExpensesTab = () => {
     ([, a], [, b]) => b - a,
   )[0];
 
-  const logAction = async (
-    action: string,
-    record_id: string,
-    details: any,
-  ) => {
+  const logAction = async (action: string, record_id: string, details: any) => {
     if (!user) return;
     await supabase.from("logs").insert({
       user_id: user.id,
@@ -317,8 +320,8 @@ const ExpensesTab = () => {
       setNewCategory("");
       fetchCategories();
     } catch (error) {
-      console.error("Error adding category:", error);
-      toast.error("Failed to add category");
+      logError("adding category", error);
+      toast.error(`Failed to add category: ${extractErrorMessage(error)}`);
     }
   };
 
@@ -977,7 +980,9 @@ const ExpensesTab = () => {
                                     </AlertDialogDescription>
                                   </AlertDialogHeader>
                                   <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogCancel>
+                                      Cancel
+                                    </AlertDialogCancel>
                                     <AlertDialogAction
                                       onClick={() => handleDelete(expense.id)}
                                     >

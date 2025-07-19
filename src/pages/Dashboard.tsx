@@ -44,9 +44,15 @@ import {
   Bell,
   Search,
   TrendingUp,
+  Package,
   Trash,
 } from "lucide-react";
+import { toast } from "sonner";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { extractErrorMessage, logError } from "@/utils/errorHandling";
 import ChatBot from "@/components/ChatBot";
+import MobileDashboard from "./MobileDashboard";
+import FinancialSummaryWidget from "@/components/FinancialSummaryWidget";
 
 // Tab components are now rendered by routes, but their types/icons might be needed for nav items.
 import OrdersTab from "@/components/tabs/OrdersTab";
@@ -63,7 +69,8 @@ import DataInputTab from "@/components/tabs/DataInputTab";
 import UserManagementTab from "@/components/tabs/UserManagementTab";
 import ShareInvestmentsTab from "@/components/tabs/ShareInvestmentsTab";
 import ExpenseBookingsTab from "@/components/tabs/ExpenseBookingsTab";
-import VatEntryTab from "@/components/tabs/VatEntryTab";
+import VATEntryTab from "@/components/tabs/VATEntryTab";
+import InventoryTab from "@/components/tabs/InventoryTab";
 import FileUploadTab from "@/components/tabs/FileUploadTab";
 
 const Dashboard = () => {
@@ -71,6 +78,7 @@ const Dashboard = () => {
   const { hasTabAccess } = useUserPermissions();
   const location = useLocation();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [isChatBotOpen, setIsChatBotOpen] = useState(false);
   const [canDeleteTabs, setCanDeleteTabs] = useState(false);
   const [tabSettings, setTabSettings] = useState<Record<string, boolean>>({});
@@ -98,29 +106,41 @@ const Dashboard = () => {
 
   const handleDailyClosing = async () => {
     try {
-      const { error } = await supabase.rpc("daily_closing", {
+      console.log("Starting daily closing for user:", user.id);
+      console.log("Closing date:", new Date().toISOString().slice(0, 10));
+
+      const { data, error } = await supabase.rpc("daily_closing", {
         p_user_id: user.id,
         p_closing_date: new Date().toISOString().slice(0, 10),
       });
-      if (error) throw error;
-      alert("Daily closing completed successfully!");
+
+      console.log("Daily closing response:", { data, error });
+
+      if (error) {
+        logError("daily closing RPC", error);
+        throw error;
+      }
+
+      toast.success("Daily closing completed successfully!");
+      console.log("Daily closing result:", data);
     } catch (error) {
-      console.error("Error during daily closing:", error);
-      alert("Failed to complete daily closing.");
+      logError("daily closing", error);
+      const errorMessage = extractErrorMessage(error);
+      toast.error(`Error during daily closing: ${errorMessage}`);
     }
   };
 
   // Define role-based navigation items with clean color schemes
   const getNavItems = () => {
     const allItems = [
-      // Data Entry - accessible to data_entry, super_admin
+      // Data Entry - accessible to all users for broader access
       {
         id: "orders",
         path: "orders",
         label: "Orders",
         icon: ShoppingCart,
         component: OrdersTab,
-        roles: ["data_entry", "super_admin"],
+        roles: ["user", "data_entry", "reports_viewer", "super_admin"],
         color: "bg-orange-600",
         bgColor: "bg-orange-50",
         description: "Manage food orders",
@@ -131,7 +151,7 @@ const Dashboard = () => {
         label: "Charging",
         icon: Zap,
         component: ChargingTab,
-        roles: ["data_entry", "super_admin"],
+        roles: ["user", "data_entry", "reports_viewer", "super_admin"],
         color: "bg-yellow-600",
         bgColor: "bg-yellow-50",
         description: "Track energy consumption",
@@ -142,7 +162,7 @@ const Dashboard = () => {
         label: "Expenses",
         icon: Receipt,
         component: ExpensesTab,
-        roles: ["data_entry", "super_admin"],
+        roles: ["user", "data_entry", "reports_viewer", "super_admin"],
         color: "bg-red-600",
         bgColor: "bg-red-50",
         description: "Monitor business expenses",
@@ -153,7 +173,7 @@ const Dashboard = () => {
         label: "Deposits",
         icon: CreditCard,
         component: DepositsTab,
-        roles: ["data_entry", "super_admin"],
+        roles: ["user", "data_entry", "reports_viewer", "super_admin"],
         color: "bg-green-600",
         bgColor: "bg-green-50",
         description: "Handle financial deposits",
@@ -164,7 +184,7 @@ const Dashboard = () => {
         label: "Withdrawals",
         icon: Banknote,
         component: WithdrawalsTab,
-        roles: ["data_entry", "super_admin"],
+        roles: ["user", "data_entry", "reports_viewer", "super_admin"],
         color: "bg-blue-600",
         bgColor: "bg-blue-50",
         description: "Process withdrawals",
@@ -175,7 +195,7 @@ const Dashboard = () => {
         label: "Savings",
         icon: Users,
         component: CooperativeSavingsTab,
-        roles: ["data_entry", "super_admin"],
+        roles: ["user", "data_entry", "reports_viewer", "super_admin"],
         color: "bg-teal-600",
         bgColor: "bg-teal-50",
         description: "Cooperative savings management",
@@ -186,67 +206,53 @@ const Dashboard = () => {
         label: "Share Investments",
         icon: TrendingUp,
         component: ShareInvestmentsTab,
-        roles: ["data_entry", "super_admin"],
+        roles: ["user", "data_entry", "reports_viewer", "super_admin"],
         color: "bg-emerald-600",
         bgColor: "bg-emerald-50",
         description: "Manage share investments",
       },
-      // Add Analytics page - accessible to all users
-      {
-        id: "analytics",
-        path: "analytics",
-        label: "Analytics",
-        icon: BarChart3,
-        roles: ["user", "data_entry", "reports_viewer", "super_admin"],
-        color: "bg-purple-600",
-        bgColor: "bg-purple-50",
-        description: "Financial analytics & insights",
-      },
 
       {
-        id: "reports-view",
-        path: "reports-view",
-        label: "View Reports",
-        icon: FileText,
-        component: ReportsViewTab,
-        roles: ["user", "reports_viewer", "super_admin"],
-        color: "bg-indigo-600",
-        bgColor: "bg-indigo-50",
-        description: "View generated reports",
+        id: "inventory",
+        path: "inventory",
+        label: "Inventory",
+        icon: Package,
+        component: InventoryTab,
+        roles: ["user", "data_entry", "reports_viewer", "super_admin"],
+        color: "bg-teal-600",
+        bgColor: "bg-teal-50",
+        description: "Inventory tracking and management",
       },
+      // Unified tabs - accessible to appropriate users
       {
         id: "insights",
         path: "insights",
         label: "Insights",
         icon: BarChart3,
-        component: InsightsTab,
-        roles: ["user", "reports_viewer", "super_admin"],
-        color: "bg-green-600",
-        bgColor: "bg-green-50",
-        description: "Business insights",
+        roles: ["user", "data_entry", "reports_viewer", "super_admin"],
+        color: "bg-blue-600",
+        bgColor: "bg-blue-50",
+        description: "Analytics, insights & visual dashboards",
       },
       {
-        id: "data-input",
-        path: "data-input",
+        id: "reports",
+        path: "reports",
+        label: "Reports",
+        icon: FileText,
+        roles: ["user", "reports_viewer", "super_admin"],
+        color: "bg-slate-600",
+        bgColor: "bg-slate-50",
+        description: "View reports, admin panel & custom reports",
+      },
+      {
+        id: "bulk_import",
+        path: "bulk-import",
         label: "Bulk Import",
         icon: Upload,
-        component: DataInputTab,
         roles: ["reports_viewer", "super_admin"],
-        color: "bg-sky-600",
-        bgColor: "bg-sky-50",
-        description: "Import data in bulk",
-      },
-
-      // Super Admin Only
-      {
-        id: "super_admin_dashboard",
-        path: "super-admin",
-        label: "Infographics",
-        icon: LayoutDashboard,
-        roles: ["super_admin"],
-        color: "bg-rose-600",
-        bgColor: "bg-rose-50",
-        description: "Visual analytics dashboard",
+        color: "bg-green-600",
+        bgColor: "bg-green-50",
+        description: "Data import & file upload",
       },
       {
         id: "menu",
@@ -271,22 +277,12 @@ const Dashboard = () => {
         description: "Manage users & permissions",
       },
       {
-        id: "admin_panel",
-        path: "admin-panel",
-        label: "Admin Panel",
-        icon: Settings,
-        roles: ["super_admin"],
-        color: "bg-purple-600",
-        bgColor: "bg-purple-50",
-        description: "Advanced user & permission management",
-      },
-      {
         id: "expense_bookings",
         path: "expense-bookings",
         label: "Expense Bookings",
         icon: FileText,
         component: ExpenseBookingsTab,
-        roles: ["data_entry", "super_admin"],
+        roles: ["user", "data_entry", "reports_viewer", "super_admin"],
         color: "bg-cyan-600",
         bgColor: "bg-cyan-50",
         description: "Manage expense bookings",
@@ -296,33 +292,22 @@ const Dashboard = () => {
         path: "vat-entry",
         label: "VAT Entry",
         icon: FileText,
-        component: VatEntryTab,
-        roles: ["data_entry", "super_admin"],
+        component: VATEntryTab,
+        roles: ["user", "data_entry", "reports_viewer", "super_admin"],
         color: "bg-lime-600",
         bgColor: "bg-lime-50",
         description: "Manage VAT entries",
       },
       {
-        id: "custom_report_creator",
-        path: "custom-reports/create",
-        label: "Custom Reports",
+        id: "calculation_engine",
+        path: "calculation-engine",
+        label: "Calculation Engine",
         icon: Settings,
         roles: ["super_admin"],
-        color: "bg-gray-600",
-        bgColor: "bg-gray-50",
-        description: "Create custom reports",
+        color: "bg-purple-600",
+        bgColor: "bg-purple-50",
+        description: "Custom calculations & formulas",
       },
-      {
-        id: "file_upload",
-        path: "file-upload",
-        label: "File Upload",
-        icon: Upload,
-        component: FileUploadTab,
-        roles: ["super_admin"],
-        color: "bg-pink-600",
-        bgColor: "bg-pink-50",
-        description: "Upload files to the system",
-      }
     ];
 
     if (!userRole) return [];
@@ -368,16 +353,16 @@ const Dashboard = () => {
       "vat-entry": showVatEntry,
     };
 
-    return allItems.filter(
-      (item) =>
-        item.roles.includes(userRole) &&
-        (tabSettings[item.id] ?? true) &&
-        hasTabAccess(item.id) &&
-        (tabVisibility[item.id] ?? true),
-    );
+    // Show all items to all users (role restrictions removed as requested)
+    return allItems.filter((item) => tabSettings[item.id] ?? true);
   };
 
   const navItems = getNavItems();
+
+  // Use mobile dashboard on mobile devices (after all hooks)
+  if (isMobile) {
+    return <MobileDashboard />;
+  }
 
   const isSubPageActive =
     location.pathname !== "/dashboard" && location.pathname !== "/dashboard/";
@@ -628,6 +613,9 @@ const Dashboard = () => {
                 );
               })}
             </div>
+
+            {/* Financial Summary Widget */}
+            <FinancialSummaryWidget className="mb-8" />
 
             {/* Quick Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">

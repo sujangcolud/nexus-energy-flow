@@ -94,7 +94,6 @@ const WithdrawalsTab = () => {
     referenceNumber: "",
     remarks: "",
     payment_mode: "",
-    category: "",
   });
   const [newCategory, setNewCategory] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -267,7 +266,7 @@ const WithdrawalsTab = () => {
           remarks: formData.remarks || null,
           withdrawal_date: new Date().toISOString().split("T")[0],
           payment_mode: formData.payment_mode,
-          category: formData.category,
+          category: "General",
         },
       ]);
 
@@ -281,7 +280,6 @@ const WithdrawalsTab = () => {
         referenceNumber: "",
         remarks: "",
         payment_mode: "",
-        category: "",
       });
       fetchWithdrawals();
     } catch (error) {
@@ -350,11 +348,7 @@ const WithdrawalsTab = () => {
   const averageWithdrawal =
     withdrawals.length > 0 ? totalWithdrawals / withdrawals.length : 0;
 
-  const logAction = async (
-    action: string,
-    record_id: string,
-    details: any,
-  ) => {
+  const logAction = async (action: string, record_id: string, details: any) => {
     if (!user) return;
     await supabase.from("logs").insert({
       user_id: user.id,
@@ -674,33 +668,6 @@ const WithdrawalsTab = () => {
                       {paymentModes.map((mode) => (
                         <SelectItem key={mode} value={mode}>
                           {mode}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="category"
-                    className="text-sm font-medium text-gray-700"
-                  >
-                    Category *
-                  </Label>
-                  <Select
-                    value={formData.category}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, category: value })
-                    }
-                    required
-                  >
-                    <SelectTrigger className="h-12">
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.map((cat) => (
-                        <SelectItem key={cat.id} value={cat.name}>
-                          {cat.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -1103,7 +1070,9 @@ const WithdrawalsTab = () => {
                                     </AlertDialogDescription>
                                   </AlertDialogHeader>
                                   <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogCancel>
+                                      Cancel
+                                    </AlertDialogCancel>
                                     <AlertDialogAction
                                       onClick={() =>
                                         handleDelete(withdrawal.id)

@@ -38,6 +38,75 @@ export type Database = {
         };
         Relationships: [];
       };
+      balances: {
+        Row: {
+          id: string;
+          user_id: string;
+          cash_in_hand: number | null;
+          bank_balance: number | null;
+          esewa_balance: number | null;
+          fonepay_balance: number | null;
+          cooperative_balance: number | null;
+          created_at: string | null;
+          updated_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          cash_in_hand?: number | null;
+          bank_balance?: number | null;
+          esewa_balance?: number | null;
+          fonepay_balance?: number | null;
+          cooperative_balance?: number | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          cash_in_hand?: number | null;
+          bank_balance?: number | null;
+          esewa_balance?: number | null;
+          fonepay_balance?: number | null;
+          cooperative_balance?: number | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+        };
+        Relationships: [];
+      };
+      categories: {
+        Row: {
+          id: string;
+          name: string;
+          table_type: string;
+          description: string | null;
+          is_active: boolean | null;
+          created_at: string | null;
+          updated_at: string | null;
+          user_id: string | null;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          table_type: string;
+          description?: string | null;
+          is_active?: boolean | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+          user_id?: string | null;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          table_type?: string;
+          description?: string | null;
+          is_active?: boolean | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+          user_id?: string | null;
+        };
+        Relationships: [];
+      };
       charging_sessions: {
         Row: {
           created_at: string | null;
@@ -77,6 +146,42 @@ export type Database = {
           start_percentage?: number | null;
           total_amount?: number;
           user_id?: string;
+        };
+        Relationships: [];
+      };
+      custom_calculations: {
+        Row: {
+          id: string;
+          name: string;
+          description: string | null;
+          calculation_config: Json;
+          result_cache: Json | null;
+          is_active: boolean | null;
+          created_at: string | null;
+          updated_at: string | null;
+          user_id: string | null;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          description?: string | null;
+          calculation_config: Json;
+          result_cache?: Json | null;
+          is_active?: boolean | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+          user_id?: string | null;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          description?: string | null;
+          calculation_config?: Json;
+          result_cache?: Json | null;
+          is_active?: boolean | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+          user_id?: string | null;
         };
         Relationships: [];
       };
@@ -143,6 +248,51 @@ export type Database = {
         };
         Relationships: [];
       };
+      expense_bookings: {
+        Row: {
+          id: string;
+          description: string;
+          amount: number;
+          category: string | null;
+          vendor: string | null;
+          due_date: string | null;
+          status: string | null;
+          notes: string | null;
+          expense_id: string | null;
+          created_at: string | null;
+          updated_at: string | null;
+          user_id: string | null;
+        };
+        Insert: {
+          id?: string;
+          description: string;
+          amount: number;
+          category?: string | null;
+          vendor?: string | null;
+          due_date?: string | null;
+          status?: string | null;
+          notes?: string | null;
+          expense_id?: string | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+          user_id?: string | null;
+        };
+        Update: {
+          id?: string;
+          description?: string;
+          amount?: number;
+          category?: string | null;
+          vendor?: string | null;
+          due_date?: string | null;
+          status?: string | null;
+          notes?: string | null;
+          expense_id?: string | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+          user_id?: string | null;
+        };
+        Relationships: [];
+      };
       expenses: {
         Row: {
           amount: number;
@@ -176,6 +326,141 @@ export type Database = {
           payment_mode?: string;
           remarks?: string | null;
           user_id?: string;
+        };
+        Relationships: [];
+      };
+      inventory: {
+        Row: {
+          id: string;
+          item_name: string;
+          description: string | null;
+          category: string | null;
+          quantity: number | null;
+          unit_cost: number | null;
+          total_cost: number | null;
+          supplier: string | null;
+          purchase_date: string | null;
+          expiry_date: string | null;
+          location: string | null;
+          minimum_stock: number | null;
+          is_active: boolean | null;
+          expense_id: string | null;
+          created_at: string | null;
+          updated_at: string | null;
+          user_id: string | null;
+        };
+        Insert: {
+          id?: string;
+          item_name: string;
+          description?: string | null;
+          category?: string | null;
+          quantity?: number | null;
+          unit_cost?: number | null;
+          total_cost?: number | null;
+          supplier?: string | null;
+          purchase_date?: string | null;
+          expiry_date?: string | null;
+          location?: string | null;
+          minimum_stock?: number | null;
+          is_active?: boolean | null;
+          expense_id?: string | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+          user_id?: string | null;
+        };
+        Update: {
+          id?: string;
+          item_name?: string;
+          description?: string | null;
+          category?: string | null;
+          quantity?: number | null;
+          unit_cost?: number | null;
+          total_cost?: number | null;
+          supplier?: string | null;
+          purchase_date?: string | null;
+          expiry_date?: string | null;
+          location?: string | null;
+          minimum_stock?: number | null;
+          is_active?: boolean | null;
+          expense_id?: string | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+          user_id?: string | null;
+        };
+        Relationships: [];
+      };
+      inventory_transactions: {
+        Row: {
+          id: string;
+          inventory_id: string | null;
+          transaction_type: string;
+          quantity: number;
+          unit_cost: number | null;
+          total_cost: number | null;
+          reference_type: string | null;
+          reference_id: string | null;
+          notes: string | null;
+          transaction_date: string | null;
+          created_at: string | null;
+          user_id: string | null;
+        };
+        Insert: {
+          id?: string;
+          inventory_id?: string | null;
+          transaction_type: string;
+          quantity: number;
+          unit_cost?: number | null;
+          total_cost?: number | null;
+          reference_type?: string | null;
+          reference_id?: string | null;
+          notes?: string | null;
+          transaction_date?: string | null;
+          created_at?: string | null;
+          user_id?: string | null;
+        };
+        Update: {
+          id?: string;
+          inventory_id?: string | null;
+          transaction_type?: string;
+          quantity?: number;
+          unit_cost?: number | null;
+          total_cost?: number | null;
+          reference_type?: string | null;
+          reference_id?: string | null;
+          notes?: string | null;
+          transaction_date?: string | null;
+          created_at?: string | null;
+          user_id?: string | null;
+        };
+        Relationships: [];
+      };
+      logs: {
+        Row: {
+          id: string;
+          user_id: string;
+          action: string;
+          table_name: string;
+          record_id: string;
+          details: Json | null;
+          created_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          action: string;
+          table_name: string;
+          record_id: string;
+          details?: Json | null;
+          created_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          action?: string;
+          table_name?: string;
+          record_id?: string;
+          details?: Json | null;
+          created_at?: string | null;
         };
         Relationships: [];
       };
@@ -215,6 +500,7 @@ export type Database = {
       orders: {
         Row: {
           created_at: string | null;
+          date: string | null;
           id: string;
           item_name: string;
           order_date: string | null;
@@ -226,6 +512,7 @@ export type Database = {
         };
         Insert: {
           created_at?: string | null;
+          date?: string | null;
           id?: string;
           item_name: string;
           order_date?: string | null;
@@ -237,6 +524,7 @@ export type Database = {
         };
         Update: {
           created_at?: string | null;
+          date?: string | null;
           id?: string;
           item_name?: string;
           order_date?: string | null;
@@ -245,6 +533,39 @@ export type Database = {
           rate?: number;
           total?: number;
           user_id?: string;
+        };
+        Relationships: [];
+      };
+      payment_modes: {
+        Row: {
+          id: string;
+          name: string;
+          table_type: string;
+          description: string | null;
+          is_active: boolean | null;
+          created_at: string | null;
+          updated_at: string | null;
+          user_id: string | null;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          table_type: string;
+          description?: string | null;
+          is_active?: boolean | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+          user_id?: string | null;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          table_type?: string;
+          description?: string | null;
+          is_active?: boolean | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+          user_id?: string | null;
         };
         Relationships: [];
       };
@@ -332,6 +653,59 @@ export type Database = {
           is_recurring?: boolean;
           name?: string;
           user_id?: string;
+        };
+        Relationships: [];
+      };
+      vat_entries: {
+        Row: {
+          id: string;
+          entry_type: string;
+          entry_id: string;
+          item_name: string;
+          amount: number;
+          vat_rate: number | null;
+          vat_amount: number | null;
+          total_with_vat: number | null;
+          bill_generated: boolean | null;
+          bill_number: string | null;
+          bill_date: string | null;
+          customer_pan: string | null;
+          customer_name: string | null;
+          created_at: string | null;
+          updated_at: string | null;
+          user_id: string | null;
+        };
+        Insert: {
+          id?: string;
+          entry_type: string;
+          entry_id: string;
+          item_name: string;
+          amount: number;
+          vat_rate?: number | null;
+          bill_generated?: boolean | null;
+          bill_number?: string | null;
+          bill_date?: string | null;
+          customer_pan?: string | null;
+          customer_name?: string | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+          user_id?: string | null;
+        };
+        Update: {
+          id?: string;
+          entry_type?: string;
+          entry_id?: string;
+          item_name?: string;
+          amount?: number;
+          vat_rate?: number | null;
+          bill_generated?: boolean | null;
+          bill_number?: string | null;
+          bill_date?: string | null;
+          customer_pan?: string | null;
+          customer_name?: string | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+          user_id?: string | null;
         };
         Relationships: [];
       };
@@ -563,6 +937,28 @@ export type Database = {
           new_role: Database["public"]["Enums"]["app_role"];
         };
         Returns: undefined;
+      };
+      insert_order_safe: {
+        Args: {
+          p_user_id: string;
+          p_item_name: string;
+          p_quantity: number;
+          p_rate: number;
+          p_total: number;
+          p_payment_mode: string;
+          p_order_date: string;
+        };
+        Returns: {
+          id: string;
+          user_id: string;
+          item_name: string;
+          quantity: number;
+          rate: number;
+          total: number;
+          payment_mode: string;
+          order_date: string;
+          created_at: string;
+        }[];
       };
     };
     Enums: {

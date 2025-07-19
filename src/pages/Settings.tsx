@@ -466,7 +466,49 @@ const Settings = () => {
       setLogs(data || []);
     } catch (error) {
       console.error("Error fetching logs:", error);
-      toast.error("Failed to load logs.");
+
+      let errorMessage = "Failed to load logs";
+      if (error && typeof error === "object") {
+        const msg = error.message || error["message"] || null;
+        const details = error.details || error["details"] || null;
+        const hint = error.hint || error["hint"] || null;
+        const code = error.code || error["code"] || null;
+
+        if (msg && typeof msg === "string" && msg.trim() !== "") {
+          errorMessage = msg;
+        } else if (
+          details &&
+          typeof details === "string" &&
+          details.trim() !== ""
+        ) {
+          errorMessage = details;
+        } else if (hint && typeof hint === "string" && hint.trim() !== "") {
+          errorMessage = hint;
+        } else if (code && typeof code === "string" && code.trim() !== "") {
+          if (code === "42P01") {
+            errorMessage =
+              "Logs table does not exist. Please run the database migration.";
+          } else if (code === "42501") {
+            errorMessage =
+              "Permission denied. Please check your database permissions.";
+          } else if (code === "PGRST204") {
+            errorMessage =
+              "Database schema error. Please refresh the page or run migrations.";
+          } else {
+            errorMessage = `Database error (${code})`;
+          }
+        } else {
+          try {
+            errorMessage = JSON.stringify(error, null, 2);
+          } catch (e) {
+            errorMessage = `Error object could not be serialized: ${String(error)}`;
+          }
+        }
+      } else if (typeof error === "string") {
+        errorMessage = error;
+      }
+
+      toast.error(`Error fetching logs: ${errorMessage}`);
     }
   };
 

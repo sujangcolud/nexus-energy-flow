@@ -21,6 +21,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { toast } from "sonner";
+import { extractErrorMessage, logError } from "@/utils/errorHandling";
 import {
   Zap,
   Plus,
@@ -132,7 +133,19 @@ const ChargingTab = () => {
       setSessions(data || []);
     } catch (error) {
       console.error("Error fetching charging sessions:", error);
-      toast.error("Failed to load charging sessions");
+
+      let errorMessage = "Failed to load charging sessions";
+      if (error && typeof error === "object") {
+        if (error.message) {
+          errorMessage = error.message;
+        } else if (error.details) {
+          errorMessage = error.details;
+        } else {
+          errorMessage = JSON.stringify(error, null, 2);
+        }
+      }
+
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -147,8 +160,8 @@ const ChargingTab = () => {
       if (error) throw error;
       setCategories(data || []);
     } catch (error) {
-      console.error("Error fetching categories:", error);
-      toast.error("Failed to load categories");
+      logError("fetching categories", error);
+      toast.error(`Failed to load categories: ${extractErrorMessage(error)}`);
     }
   };
 
@@ -203,6 +216,8 @@ const ChargingTab = () => {
     try {
       const totalAmount = calculateTotalAmount();
 
+      const sessionDate = new Date().toISOString().split("T")[0];
+
       const { error } = await supabase.from("charging_sessions").insert({
         user_id: user.id,
         start_percentage: startPercentage,
@@ -212,7 +227,8 @@ const ChargingTab = () => {
         per_unit_rate: perUnitRate,
         total_amount: totalAmount,
         payment_mode: paymentMode,
-        session_date: new Date().toISOString().split("T")[0],
+        session_date: sessionDate,
+        date: sessionDate, // Add date field for compatibility
         category: category,
       });
 
@@ -232,7 +248,32 @@ const ChargingTab = () => {
       fetchSessions();
     } catch (error) {
       console.error("Error saving charging session:", error);
-      toast.error("Failed to save charging session");
+
+      let errorMessage = "Failed to save charging session";
+      if (error && typeof error === "object") {
+        if (error.message) {
+          errorMessage = error.message;
+        } else if (error.details) {
+          errorMessage = error.details;
+        } else if (error.error_description) {
+          errorMessage = error.error_description;
+        } else if (error.hint) {
+          errorMessage = error.hint;
+        } else if (error.code) {
+          if (error.code === "PGRST204") {
+            errorMessage =
+              "Database schema error. Please run the latest migration or refresh the page.";
+          } else {
+            errorMessage = `Database error (${error.code})`;
+          }
+        } else {
+          errorMessage = JSON.stringify(error, null, 2);
+        }
+      } else if (typeof error === "string") {
+        errorMessage = error;
+      }
+
+      toast.error(`Error saving charging session: ${errorMessage}`);
     } finally {
       setSubmitting(false);
     }
@@ -285,11 +326,7 @@ const ChargingTab = () => {
     sessions.length > 0 ? totalSessionCost / sessions.length : 0;
   const totalKcal = sessions.reduce((sum, session) => sum + session.kcal, 0);
 
-  const logAction = async (
-    action: string,
-    record_id: string,
-    details: any,
-  ) => {
+  const logAction = async (action: string, record_id: string, details: any) => {
     if (!user) return;
     await supabase.from("logs").insert({
       user_id: user.id,
@@ -314,7 +351,19 @@ const ChargingTab = () => {
       fetchSessions();
     } catch (error) {
       console.error("Error deleting session:", error);
-      toast.error("Failed to delete session");
+
+      let errorMessage = "Failed to delete session";
+      if (error && typeof error === "object") {
+        if (error.message) {
+          errorMessage = error.message;
+        } else if (error.details) {
+          errorMessage = error.details;
+        } else {
+          errorMessage = JSON.stringify(error, null, 2);
+        }
+      }
+
+      toast.error(errorMessage);
     }
   };
 
@@ -335,7 +384,19 @@ const ChargingTab = () => {
       fetchSessions();
     } catch (error) {
       console.error("Error updating session:", error);
-      toast.error("Failed to update session");
+
+      let errorMessage = "Failed to update session";
+      if (error && typeof error === "object") {
+        if (error.message) {
+          errorMessage = error.message;
+        } else if (error.details) {
+          errorMessage = error.details;
+        } else {
+          errorMessage = JSON.stringify(error, null, 2);
+        }
+      }
+
+      toast.error(errorMessage);
     }
   };
 
@@ -708,11 +769,7 @@ const ChargingTab = () => {
                   <label className="text-sm font-medium text-gray-700">
                     Category
                   </label>
-                  <Select
-                    value={category}
-                    onValueChange={setCategory}
-                    required
-                  >
+                  <Select value={category} onValueChange={setCategory} required>
                     <SelectTrigger className="border-blue-200 focus:border-blue-500 focus:ring-blue-500">
                       <SelectValue placeholder="Select category" />
                     </SelectTrigger>
@@ -1063,7 +1120,9 @@ const ChargingTab = () => {
                                     </AlertDialogDescription>
                                   </AlertDialogHeader>
                                   <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogCancel>
+                                      Cancel
+                                    </AlertDialogCancel>
                                     <AlertDialogAction
                                       onClick={() => handleDelete(session.id)}
                                     >

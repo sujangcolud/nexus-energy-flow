@@ -3,6 +3,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
+  calculateDailySummary,
+  formatCurrency,
+  calculatePercentage,
+  getPaymentModeColor,
+  type DailySummaryData,
+} from "@/lib/calculations";
+import {
   BarChart,
   Bar,
   XAxis,
@@ -194,93 +201,93 @@ const Analytics = () => {
     },
   });
 
-  // Calculate financial metrics with correct column names
+  // Calculate financial metrics using the new daily summary logic
   const calculateFinancials = (): FinancialData => {
-    // Restaurant income using correct column name 'total'
-    const restaurantIncome = ordersData.reduce(
-      (sum, order) => sum + (parseFloat(order.total) || 0),
-      0,
+    // Prepare data for daily summary calculation
+    const summaryData: DailySummaryData = {
+      orders: ordersData.map((order) => ({
+        total: parseFloat(order.total) || 0,
+        payment_mode: order.payment_mode,
+        order_date:
+          order.order_date ||
+          order.created_at?.split("T")[0] ||
+          new Date().toISOString().split("T")[0],
+      })),
+      charging: chargingData.map((session) => ({
+        total_amount: parseFloat(session.total_amount) || 0,
+        payment_mode: session.payment_mode,
+        session_date:
+          session.session_date ||
+          session.created_at?.split("T")[0] ||
+          new Date().toISOString().split("T")[0],
+      })),
+      expenses: expensesData.map((expense) => ({
+        amount: parseFloat(expense.amount) || 0,
+        payment_mode: expense.payment_mode,
+        expense_date:
+          expense.expense_date ||
+          expense.created_at?.split("T")[0] ||
+          new Date().toISOString().split("T")[0],
+      })),
+      deposits: depositsData.map((deposit) => ({
+        amount: parseFloat(deposit.amount) || 0,
+        mode: deposit.mode,
+        deposit_date:
+          deposit.deposit_date ||
+          deposit.created_at?.split("T")[0] ||
+          new Date().toISOString().split("T")[0],
+      })),
+      savings: cooperativeData.map((saving) => ({
+        contribution_amount: parseFloat(saving.contribution_amount) || 0,
+        contribution_date:
+          saving.contribution_date ||
+          saving.created_at?.split("T")[0] ||
+          new Date().toISOString().split("T")[0],
+      })),
+      withdrawals: withdrawalsData.map((withdrawal) => ({
+        amount: parseFloat(withdrawal.amount) || 0,
+        withdrawal_date:
+          withdrawal.withdrawal_date ||
+          withdrawal.created_at?.split("T")[0] ||
+          new Date().toISOString().split("T")[0],
+        purpose: withdrawal.purpose || "general",
+      })),
+    };
+
+    // Calculate aggregated summary for the entire time range
+    const today = new Date().toISOString().split("T")[0];
+    const aggregatedSummary = calculateDailySummary(
+      summaryData,
+      today,
+      balancesData?.deposits_to_esewa || 0,
+      balancesData?.deposits_to_fonepay || 0,
+      balancesData?.total_withdrawals_cash || 0,
     );
 
-    // Charging income using correct column name 'total_amount'
-    const chargingIncome = chargingData.reduce(
-      (sum, session) => sum + (parseFloat(session.total_amount) || 0),
-      0,
-    );
-
-    // Total deposits to bank
-    const totalDeposits = depositsData.reduce(
-      (sum, deposit) => sum + (parseFloat(deposit.amount) || 0),
-      0,
-    );
-
-    // Total withdrawals from bank
-    const totalWithdrawals = withdrawalsData.reduce(
-      (sum, withdrawal) => sum + (parseFloat(withdrawal.amount) || 0),
-      0,
-    );
-
-    // Total expenses using correct column name
-    const totalExpenses = expensesData.reduce(
-      (sum, expense) => sum + (parseFloat(expense.amount) || 0),
-      0,
-    );
-
-    // Bank expenses (non-cash expenses) using correct column 'payment_mode'
-    const bankExpenses = expensesData
-      .filter((expense) => expense.payment_mode !== "cash")
-      .reduce((sum, expense) => sum + (parseFloat(expense.amount) || 0), 0);
-
-    // Cash expenses
-    const cashExpenses = expensesData
-      .filter((expense) => expense.payment_mode === "cash")
-      .reduce((sum, expense) => sum + (parseFloat(expense.amount) || 0), 0);
-
-    // Cash orders using correct column 'payment_mode'
-    const cashOrders = ordersData
-      .filter((order) => order.payment_mode === "cash")
-      .reduce((sum, order) => sum + (parseFloat(order.total) || 0), 0);
-
-    // Cash from charging using correct column 'payment_mode'
-    const cashFromCharging = chargingData
-      .filter((session) => session.payment_mode === "cash")
-      .reduce(
-        (sum, session) => sum + (parseFloat(session.total_amount) || 0),
-        0,
-      );
-
-    // Cooperative savings using correct column name 'contribution_amount'
-    const cooperativeSavings = cooperativeData.reduce(
-      (sum, saving) => sum + (parseFloat(saving.contribution_amount) || 0),
-      0,
-    );
-
-    // Use actual balances from balances table if available
+    // Use actual balances from balances table if available, otherwise use calculated values
     const actualBankBalance = balancesData?.bank_balance
       ? parseFloat(balancesData.bank_balance)
-      : totalDeposits - totalWithdrawals - bankExpenses;
+      : aggregatedSummary.fonepay_balance; // Bank balance maps to fonepay balance
+
     const actualCashInHand = balancesData?.cash_in_hand
       ? parseFloat(balancesData.cash_in_hand)
-      : cashOrders + cashFromCharging - cashExpenses;
+      : aggregatedSummary.cash_balance;
+
     const actualCooperativeBalance = balancesData?.cooperative_balance
       ? parseFloat(balancesData.cooperative_balance)
-      : cooperativeSavings;
-
-    const totalIncome = restaurantIncome + chargingIncome;
-    const netProfit = totalIncome - totalExpenses;
-    const totalAssets =
-      actualBankBalance + actualCashInHand + actualCooperativeBalance;
+      : aggregatedSummary.cooperative_balance;
 
     return {
       bankBalance: actualBankBalance,
       cashInHand: actualCashInHand,
       cooperativeBalance: actualCooperativeBalance,
-      totalIncome,
-      totalExpenses,
-      chargingIncome,
-      restaurantIncome,
-      netProfit,
-      totalAssets,
+      totalIncome: aggregatedSummary.total_income,
+      totalExpenses: aggregatedSummary.total_expenses,
+      chargingIncome: aggregatedSummary.total_income_from_charging,
+      restaurantIncome: aggregatedSummary.total_income_from_orders,
+      netProfit:
+        aggregatedSummary.total_income - aggregatedSummary.total_expenses,
+      totalAssets: aggregatedSummary.total_balance,
     };
   };
 
