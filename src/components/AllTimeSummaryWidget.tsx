@@ -138,20 +138,117 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
       // Calculate net profit
       const netProfit = totalIncome - totalExpenses;
 
-      // Get current balances from latest daily summary (most recent day)
-      const latestSummary = summaries[0] || {};
+      // Calculate current balances using the new formulas provided:
 
-      // Current balances are calculated in daily_summary using the specified formulas
-      const currentBalances = {
-        cash: latestSummary.cash_balance || 0,
-        esewa: latestSummary.esewa_balance || 0,
-        fonepay: latestSummary.fonepay_balance || 0,
-        total: latestSummary.total_balance || 0,
-      };
+      // Calculate payment method totals
+      const totalCashIncome = summaries.reduce(
+        (sum, s) => sum + (s.total_income_cash || 0),
+        0,
+      );
+      const totalEsewaIncome = summaries.reduce(
+        (sum, s) => sum + (s.total_income_esewa || 0),
+        0,
+      );
+      const totalFonepayIncome = summaries.reduce(
+        (sum, s) => sum + (s.total_income_fonepay || 0),
+        0,
+      );
 
-      // Calculate cooperative balance: total_savings - total_withdrawals_cooperative
+      // Calculate expense totals by payment method
+      const totalExpensesCash = summaries.reduce(
+        (sum, s) => sum + (s.total_expenses_cash || 0),
+        0,
+      );
+      const totalExpensesEsewa = summaries.reduce(
+        (sum, s) => sum + (s.total_expenses_esewa || 0),
+        0,
+      );
+      const totalExpensesFonepay = summaries.reduce(
+        (sum, s) => sum + (s.total_expenses_fonepay || 0),
+        0,
+      );
+
+      // Calculate savings totals by payment method
+      const totalSavingsCash = summaries.reduce(
+        (sum, s) => sum + (s.total_savings_cash || 0),
+        0,
+      );
+      const totalSavingsEsewa = summaries.reduce(
+        (sum, s) => sum + (s.total_savings_esewa || 0),
+        0,
+      );
+      const totalSavingsFonepay = summaries.reduce(
+        (sum, s) => sum + (s.total_savings_fonepay || 0),
+        0,
+      );
+
+      // Calculate deposits
+      const totalDepositsCash = summaries.reduce(
+        (sum, s) => sum + (s.total_deposits_cash || 0),
+        0,
+      );
+      const depositsToEsewa = summaries.reduce(
+        (sum, s) => sum + (s.total_deposits_esewa || 0),
+        0,
+      );
+      const depositsToFonepay = summaries.reduce(
+        (sum, s) => sum + (s.total_deposits_fonepay || 0),
+        0,
+      );
+
+      // Calculate withdrawals
+      const totalWithdrawalsCash = summaries.reduce(
+        (sum, s) => sum + (s.total_withdrawals_cash || 0),
+        0,
+      );
+      const totalWithdrawalsCooperative = summaries.reduce(
+        (sum, s) => sum + (s.total_withdrawals_cooperative || 0),
+        0,
+      );
+      const totalWithdrawalsBank = summaries.reduce(
+        (sum, s) => sum + (s.total_withdrawals_bank || 0),
+        0,
+      );
+
+      // Calculate balances using the specified formulas:
+      // Cash Balance: Total Cash income - total expense from cash - total savings in cash - total deposits cash deposits to bank + total withdrawals in cash - deposits made to Esewa - deposits made to fonepay
+      const cashBalance =
+        totalCashIncome -
+        totalExpensesCash -
+        totalSavingsCash -
+        totalDepositsCash +
+        totalWithdrawalsCash -
+        depositsToEsewa -
+        depositsToFonepay;
+
+      // Esewa Balance: Total income in Esewa - Total expense from Esewa - total withdrawal from Esewa + Deposits made to Esewa
+      const esewaBalance =
+        totalEsewaIncome -
+        totalExpensesEsewa -
+        totalSavingsEsewa +
+        depositsToEsewa;
+
+      // Fonepay Balance: Total Income in Fonepay - Withdrawals from fonepay - withdrawals from bank
+      const fonepayBalance =
+        totalFonepayIncome -
+        totalExpensesFonepay -
+        totalSavingsFonepay -
+        totalWithdrawalsBank;
+
+      // Cooperative Balance: Total cooperative savings - withdrawals from cooperative
       const cooperativeBalanceCalc =
-        latestSummary.cooperative_balance || cooperativeSavings;
+        cooperativeSavings - totalWithdrawalsCooperative;
+
+      // Total Balance of all: Cash Balance + Bank Balance (fonepay) + Cooperative Balance + Esewa Balance
+      const totalBalance =
+        cashBalance + fonepayBalance + cooperativeBalanceCalc + esewaBalance;
+
+      const currentBalances = {
+        cash: cashBalance,
+        esewa: esewaBalance,
+        fonepay: fonepayBalance,
+        total: totalBalance,
+      };
 
       // Calculate income breakdown using exact formulas
       const incomeBreakdown = {
