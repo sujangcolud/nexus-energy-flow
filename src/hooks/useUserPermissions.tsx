@@ -33,19 +33,8 @@ export const useUserPermissions = () => {
   });
 
   const hasTabAccess = (tabId: string): boolean => {
-    if (!user?.id) return false;
-
-    // If no permissions are loaded or found, default to allowing access
-    if (permissions.length === 0) return true;
-
-    // Find specific permission for this tab
-    const permission = permissions.find((p) => p.tab_id === tabId);
-
-    // If no specific permission exists, default to allow
-    if (!permission) return true;
-
-    // Return the explicit permission
-    return permission.enabled;
+    // Show all tabs to all users (role restrictions removed as requested)
+    return !!user?.id;
   };
 
   const getAccessibleTabs = (
