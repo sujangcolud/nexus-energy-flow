@@ -228,7 +228,21 @@ const VATEntryTab = () => {
     } catch (error) {
       logError("creating VAT entry", error);
       const errorMessage = extractErrorMessage(error);
-      toast.error(`Error creating VAT entry: ${errorMessage}`);
+
+      // Handle specific PGRST204 errors
+      if (error?.code === "PGRST204" || errorMessage.includes("schema cache")) {
+        toast.error(
+          "Database schema issue detected. Please refresh the page and try again.",
+        );
+
+        // Try to refresh the page after a delay to reload schema
+        setTimeout(() => {
+          toast.info("Refreshing page to reload database schema...");
+          window.location.reload();
+        }, 3000);
+      } else {
+        toast.error(`Error creating VAT entry: ${errorMessage}`);
+      }
     }
   };
 
