@@ -65,6 +65,7 @@ import ExpensesTab from "@/components/tabs/ExpensesTab";
 import DepositsTab from "@/components/tabs/DepositsTab";
 import WithdrawalsTab from "@/components/tabs/WithdrawalsTab";
 import CooperativeSavingsTab from "@/components/tabs/CooperativeSavingsTab";
+import SavingsWithdrawalsTab from "@/components/tabs/SavingsWithdrawalsTab";
 
 import MenuManagementTab from "@/components/tabs/MenuManagementTab";
 import DataInputTab from "@/components/tabs/DataInputTab";
@@ -88,6 +89,7 @@ const Dashboard = () => {
   const [tabToDelete, setTabToDelete] = useState<string | null>(null);
   const [isDailyClosingOpen, setIsDailyClosingOpen] = useState(false);
   const [isBatchClosingOpen, setIsBatchClosingOpen] = useState(false);
+  const [showBatchClosing, setShowBatchClosing] = useState(true);
 
   useEffect(() => {
     const storedSettings = localStorage.getItem("tabSettings");
@@ -98,6 +100,12 @@ const Dashboard = () => {
       localStorage.getItem("canDeleteTabs") || "false",
     );
     setCanDeleteTabs(canDelete);
+
+    // Load batch closing setting
+    const batchClosingSetting = localStorage.getItem("showBatchClosing");
+    if (batchClosingSetting !== null) {
+      setShowBatchClosing(JSON.parse(batchClosingSetting));
+    }
   }, []);
 
   const handleSignOut = async () => {
@@ -163,24 +171,24 @@ const Dashboard = () => {
       {
         id: "withdrawals",
         path: "withdrawals",
-        label: "Withdrawals",
+        label: "Savings & Withdrawals",
         icon: Banknote,
-        component: WithdrawalsTab,
+        component: SavingsWithdrawalsTab,
         roles: ["user", "data_entry", "reports_viewer", "super_admin"],
         color: "bg-blue-600",
         bgColor: "bg-blue-50",
-        description: "Process withdrawals",
+        description: "Manage savings and withdrawals",
       },
       {
         id: "cooperative",
         path: "cooperative",
-        label: "Savings",
+        label: "Savings & Withdrawals",
         icon: Users,
-        component: CooperativeSavingsTab,
+        component: SavingsWithdrawalsTab,
         roles: ["user", "data_entry", "reports_viewer", "super_admin"],
         color: "bg-teal-600",
         bgColor: "bg-teal-50",
-        description: "Cooperative savings management",
+        description: "Comprehensive savings and withdrawals management",
       },
       {
         id: "share_investments",
@@ -472,15 +480,17 @@ const Dashboard = () => {
                 <Database className="h-4 w-4" />
                 Daily Closing
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsBatchClosingOpen(true)}
-                className="flex items-center gap-2 hover:bg-green-50 hover:border-green-300 transition-colors"
-              >
-                <Calendar className="h-4 w-4" />
-                Batch Closing
-              </Button>
+              {showBatchClosing && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsBatchClosingOpen(true)}
+                  className="flex items-center gap-2 hover:bg-green-50 hover:border-green-300 transition-colors"
+                >
+                  <Calendar className="h-4 w-4" />
+                  Batch Closing
+                </Button>
+              )}
               <Button
                 variant="outline"
                 size="sm"

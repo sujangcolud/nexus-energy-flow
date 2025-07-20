@@ -19,6 +19,7 @@ import ExpensesTab from "./components/tabs/ExpensesTab";
 import DepositsTab from "./components/tabs/DepositsTab";
 import WithdrawalsTab from "./components/tabs/WithdrawalsTab";
 import CooperativeSavingsTab from "./components/tabs/CooperativeSavingsTab";
+import SavingsWithdrawalsTab from "./components/tabs/SavingsWithdrawalsTab";
 import MenuManagementTab from "./components/tabs/MenuManagementTab"; // Consider admin roles for this route
 
 import DataInputTab from "./components/tabs/DataInputTab";
@@ -100,8 +101,8 @@ const App = () => {
                 <Route path="charging" element={<ChargingTab />} />
                 <Route path="expenses" element={<ExpensesTab />} />
                 <Route path="deposits" element={<DepositsTab />} />
-                <Route path="withdrawals" element={<WithdrawalsTab />} />
-                <Route path="cooperative" element={<CooperativeSavingsTab />} />
+                <Route path="withdrawals" element={<SavingsWithdrawalsTab />} />
+                <Route path="cooperative" element={<SavingsWithdrawalsTab />} />
                 <Route
                   path="share-investments"
                   element={<ShareInvestmentsTab />}

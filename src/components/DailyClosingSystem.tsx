@@ -170,8 +170,8 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
           .single(),
       ]);
 
-      // Check if already closed
-      setAlreadyClosed(!!dailySummaryRes.data);
+      // Check if already closed - only if there's actual closing data, not just query results
+      setAlreadyClosed(!!dailySummaryRes.data && !dailySummaryRes.error);
 
       // Process the data
       const summary: TransactionSummary = {
@@ -194,7 +194,7 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
         withdrawals: processTransactions(
           withdrawalsRes.data || [],
           "amount",
-          "mode",
+          "payment_mode",
         ),
         cooperative_savings: processTransactions(
           cooperativeRes.data || [],
@@ -309,13 +309,27 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
         ),
         expenses: processTransactions(expenses || [], "amount", "payment_mode"),
         deposits: processTransactions(deposits || [], "amount", "mode"),
-        withdrawals: processTransactions(withdrawals || [], "amount", "mode"),
+        withdrawals: processTransactions(
+          withdrawals || [],
+          "amount",
+          "payment_mode",
+        ),
         cooperative_savings: processTransactions(
           savings || [],
           "contribution_amount",
           "payment_mode",
         ),
       };
+
+      console.log("All-time data fetched:", {
+        orders: orders?.length || 0,
+        charging: charging?.length || 0,
+        expenses: expenses?.length || 0,
+        deposits: deposits?.length || 0,
+        withdrawals: withdrawals?.length || 0,
+        savings: savings?.length || 0,
+        summary,
+      });
 
       setAllTimeSummary(summary);
     } catch (error) {

@@ -74,6 +74,7 @@ import {
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import useTableControls from "@/hooks/useTableControls";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface Saving {
   id: string;
@@ -82,6 +83,7 @@ interface Saving {
   cycle_period: string | null;
   contribution_date: string;
   payment_mode: string;
+  savings_to: string;
   user_id: string;
   created_at: string;
 }
@@ -109,6 +111,7 @@ const SavingsWithdrawalsTab = () => {
     memberId: "",
     cyclePeriod: "",
     paymentMode: "",
+    savingsTo: "",
     remarks: "",
   });
   const [withdrawalsFormData, setWithdrawalsFormData] = useState({
@@ -133,6 +136,7 @@ const SavingsWithdrawalsTab = () => {
   );
   const [editType, setEditType] = useState<"saving" | "withdrawal">("saving");
   const [canEditTransactions, setCanEditTransactions] = useState(false);
+  const isMobile = useIsMobile();
 
   const cyclePeriods = [
     "Weekly",
@@ -145,6 +149,8 @@ const SavingsWithdrawalsTab = () => {
   ];
 
   const paymentModes = ["Cash", "Esewa", "Fonepay"];
+
+  const savingsToOptions = ["Bank", "Cooperative"];
 
   const withdrawalSources = ["Esewa", "Bank", "Cooperative"];
 
@@ -277,7 +283,8 @@ const SavingsWithdrawalsTab = () => {
       !savingsFormData.contributionAmount ||
       !savingsFormData.memberId ||
       !savingsFormData.cyclePeriod ||
-      !savingsFormData.paymentMode
+      !savingsFormData.paymentMode ||
+      !savingsFormData.savingsTo
     ) {
       toast.error("Please fill in all required fields");
       return;
@@ -292,6 +299,7 @@ const SavingsWithdrawalsTab = () => {
           member_id: savingsFormData.memberId,
           cycle_period: savingsFormData.cyclePeriod,
           payment_mode: savingsFormData.paymentMode,
+          savings_to: savingsFormData.savingsTo,
           contribution_date: transactionDate,
         },
       ]);
@@ -304,6 +312,7 @@ const SavingsWithdrawalsTab = () => {
         memberId: "",
         cyclePeriod: "",
         paymentMode: "",
+        savingsTo: "",
         remarks: "",
       });
       fetchSavings();
@@ -534,6 +543,29 @@ const SavingsWithdrawalsTab = () => {
                       </SelectContent>
                     </Select>
                   </div>
+                  <div>
+                    <Label htmlFor="editSavingsTo">Savings To</Label>
+                    <Select
+                      value={(selectedItem as Saving).savings_to || ""}
+                      onValueChange={(value) =>
+                        setSelectedItem({
+                          ...selectedItem,
+                          savings_to: value,
+                        } as Saving)
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {savingsToOptions.map((option) => (
+                          <SelectItem key={option} value={option}>
+                            {option}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </>
               ) : (
                 <>
@@ -743,7 +775,9 @@ const SavingsWithdrawalsTab = () => {
           </TabsList>
 
           <TabsContent value="savings" className="space-y-8">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div
+              className={`grid gap-8 ${isMobile ? "grid-cols-1" : "lg:grid-cols-2"}`}
+            >
               {/* Add Savings Form */}
               <Card className="bg-gradient-to-br from-white/90 to-teal-50/90 backdrop-blur-sm border-0 shadow-2xl hover:shadow-3xl transition-all duration-300">
                 <CardHeader className="bg-gradient-to-r from-teal-500 to-cyan-600 text-white rounded-t-lg">
@@ -782,7 +816,9 @@ const SavingsWithdrawalsTab = () => {
                       />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div
+                      className={`grid gap-4 ${isMobile ? "grid-cols-1" : "grid-cols-2"}`}
+                    >
                       <div className="space-y-2">
                         <Label
                           htmlFor="memberId"
@@ -878,6 +914,45 @@ const SavingsWithdrawalsTab = () => {
                                   <CreditCard className="h-4 w-4" />
                                 )}
                                 {mode}
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label
+                        htmlFor="savingsTo"
+                        className="text-sm font-medium text-gray-700 flex items-center gap-2"
+                      >
+                        <Building2 className="h-4 w-4 text-indigo-600" />
+                        Savings To *
+                      </Label>
+                      <Select
+                        value={savingsFormData.savingsTo}
+                        onValueChange={(value) =>
+                          setSavingsFormData({
+                            ...savingsFormData,
+                            savingsTo: value,
+                          })
+                        }
+                        required
+                      >
+                        <SelectTrigger className="border-indigo-200 focus:border-indigo-500 focus:ring-indigo-500 h-12">
+                          <SelectValue placeholder="Select savings destination" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {savingsToOptions.map((option) => (
+                            <SelectItem key={option} value={option}>
+                              <div className="flex items-center gap-2">
+                                {option === "Bank" && (
+                                  <Building2 className="h-4 w-4" />
+                                )}
+                                {option === "Cooperative" && (
+                                  <PiggyBank className="h-4 w-4" />
+                                )}
+                                {option}
                               </div>
                             </SelectItem>
                           ))}
@@ -1178,7 +1253,9 @@ const SavingsWithdrawalsTab = () => {
           </TabsContent>
 
           <TabsContent value="withdrawals" className="space-y-8">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div
+              className={`grid gap-8 ${isMobile ? "grid-cols-1" : "lg:grid-cols-2"}`}
+            >
               {/* Add Withdrawals Form */}
               <Card className="bg-gradient-to-br from-white/90 to-red-50/90 backdrop-blur-sm border-0 shadow-2xl hover:shadow-3xl transition-all duration-300">
                 <CardHeader className="bg-gradient-to-r from-red-500 to-pink-600 text-white rounded-t-lg">
@@ -1249,7 +1326,9 @@ const SavingsWithdrawalsTab = () => {
                       </datalist>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div
+                      className={`grid gap-4 ${isMobile ? "grid-cols-1" : "grid-cols-2"}`}
+                    >
                       <div className="space-y-2">
                         <Label
                           htmlFor="paymentMode"
@@ -1335,7 +1414,9 @@ const SavingsWithdrawalsTab = () => {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div
+                      className={`grid gap-4 ${isMobile ? "grid-cols-1" : "grid-cols-2"}`}
+                    >
                       <div className="space-y-2">
                         <Label
                           htmlFor="recipient"

@@ -176,6 +176,7 @@ const Settings = () => {
   const [canAddMenuCategory, setCanAddMenuCategory] = useState(false);
   const [canAddExpenseCategory, setCanAddExpenseCategory] = useState(false);
   const [canDeleteTabs, setCanDeleteTabs] = useState(false);
+  const [showBatchClosing, setShowBatchClosing] = useState(true);
   const [showOrders, setShowOrders] = useState(true);
 
   const [showDataInput, setShowDataInput] = useState(true);
@@ -355,6 +356,11 @@ const Settings = () => {
     const canEdit = localStorage.getItem("canEditTransactions");
     if (canEdit) {
       setCanEditTransactions(JSON.parse(canEdit));
+    }
+
+    const batchClosingSetting = localStorage.getItem("showBatchClosing");
+    if (batchClosingSetting !== null) {
+      setShowBatchClosing(JSON.parse(batchClosingSetting));
     }
 
     const canAddCharging = localStorage.getItem("canAddChargingCategory");
@@ -572,6 +578,7 @@ const Settings = () => {
       "canEditTransactions",
       JSON.stringify(canEditTransactions),
     );
+    localStorage.setItem("showBatchClosing", JSON.stringify(showBatchClosing));
     localStorage.setItem(
       "canAddChargingCategory",
       JSON.stringify(canAddChargingCategory),
@@ -617,6 +624,7 @@ const Settings = () => {
   }, [
     canEditTransactions,
     canDeleteTabs,
+    showBatchClosing,
     canAddChargingCategory,
     canAddSavingsCategory,
     canAddWithdrawalCategory,
@@ -1220,6 +1228,16 @@ const Settings = () => {
                 id="delete-tabs"
                 checked={canDeleteTabs}
                 onCheckedChange={setCanDeleteTabs}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="show-batch-closing">
+                Show Batch Closing Button
+              </Label>
+              <Switch
+                id="show-batch-closing"
+                checked={showBatchClosing}
+                onCheckedChange={setShowBatchClosing}
               />
             </div>
           </CardContent>
