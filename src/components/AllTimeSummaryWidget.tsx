@@ -383,18 +383,28 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
             {summaryData.dataPoints} days of data
           </Badge>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={refreshSummary}
-          disabled={refreshing}
-          className="flex items-center gap-2"
-        >
-          <RefreshCw
-            className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
-          />
-          Refresh
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            onClick={() => setIsModalOpen(true)}
+            className="bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white"
+            size="sm"
+          >
+            <Eye className="h-4 w-4 mr-2" />
+            View Details
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={refreshSummary}
+            disabled={refreshing}
+            className="flex items-center gap-2"
+          >
+            <RefreshCw
+              className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
+            />
+            Refresh
+          </Button>
+        </div>
       </div>
 
       {/* Main Summary Cards */}
