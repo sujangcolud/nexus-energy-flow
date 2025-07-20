@@ -96,6 +96,10 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
     useState<TransactionSummary | null>(null);
   const [isClosing, setIsClosing] = useState(false);
   const [alreadyClosed, setAlreadyClosed] = useState(false);
+  const [viewMode, setViewMode] = useState<"daily" | "alltime">("daily");
+  const [dateRange, setDateRange] = useState<DateRange | undefined>();
+  const [allTimeSummary, setAllTimeSummary] =
+    useState<TransactionSummary | null>(null);
 
   useEffect(() => {
     if (isOpen && user) {
