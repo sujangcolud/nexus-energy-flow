@@ -75,6 +75,7 @@ interface Deposit {
   amount: number;
   mode: string;
   deposited_by: string;
+  deposited_by_type?: string;
   deposit_date: string;
   remarks: string;
   user_id: string;
@@ -95,6 +96,7 @@ const DepositsTab = () => {
     amount: "",
     mode: "",
     depositedBy: "",
+    depositedByType: "",
     remarks: "",
   });
   const [newCategory, setNewCategory] = useState("");
@@ -145,10 +147,15 @@ const DepositsTab = () => {
       key: "deposited_by",
       label: "Deposited By",
       className: "font-semibold text-gray-700",
-      render: (value: string) => (
-        <div className="flex items-center gap-2">
-          <User className="h-4 w-4 text-gray-500" />
-          {value}
+      render: (value: string, deposit: Deposit) => (
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <User className="h-4 w-4 text-gray-500" />
+            {value}
+          </div>
+          <div className="text-xs text-gray-500">
+            ({(deposit as any).deposited_by_type || "N/A"})
+          </div>
         </div>
       ),
     },
@@ -225,6 +232,8 @@ const DepositsTab = () => {
 
   const depositedTo = ["Cash", "Esewa", "Fonepay", "Bank"];
 
+  const depositedByTypes = ["Customer", "Staff"];
+
   const modeColors = {
     Cash: "from-green-500 to-emerald-500",
     Esewa: "from-blue-500 to-cyan-500",
@@ -300,7 +309,12 @@ const DepositsTab = () => {
       return;
     }
 
-    if (!formData.amount || !formData.mode || !formData.depositedBy) {
+    if (
+      !formData.amount ||
+      !formData.mode ||
+      !formData.depositedBy ||
+      !formData.depositedByType
+    ) {
       toast.error("Please fill in all required fields");
       return;
     }
@@ -361,6 +375,7 @@ const DepositsTab = () => {
           amount: parseFloat(formData.amount),
           mode: formData.mode,
           deposited_by: formData.depositedBy,
+          deposited_by_type: formData.depositedByType,
           remarks: formData.remarks || "",
           deposit_date: transactionDate,
           // Removed non-existent columns: sender_name, receiver_name, payment_mode, deposited_to, category
@@ -374,6 +389,7 @@ const DepositsTab = () => {
         amount: "",
         mode: "",
         depositedBy: "",
+        depositedByType: "",
         remarks: "",
       });
       fetchDeposits();
@@ -525,7 +541,30 @@ const DepositsTab = () => {
                 />
               </div>
               <div>
-                <Label htmlFor="editDepositedBy">Deposited By</Label>
+                <Label htmlFor="editDepositedByType">Deposited By Type</Label>
+                <Select
+                  value={(selectedDeposit as any).deposited_by_type || ""}
+                  onValueChange={(value) =>
+                    setSelectedDeposit({
+                      ...selectedDeposit,
+                      deposited_by_type: value,
+                    } as any)
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {depositedByTypes.map((type) => (
+                      <SelectItem key={type} value={type}>
+                        {type}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="editDepositedBy">Depositor Name</Label>
                 <Input
                   id="editDepositedBy"
                   value={selectedDeposit.deposited_by}
@@ -734,26 +773,57 @@ const DepositsTab = () => {
 
               <div className="space-y-2">
                 <Label
-                  htmlFor="depositedBy"
+                  htmlFor="depositedByType"
                   className="text-sm font-medium text-gray-700 flex items-center gap-2"
                 >
                   <User className="h-4 w-4 text-purple-600" />
                   Deposited By *
                 </Label>
-                <Input
-                  id="depositedBy"
-                  value={formData.depositedBy}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      depositedBy: e.target.value,
-                    })
+                <Select
+                  value={formData.depositedByType}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, depositedByType: value })
                   }
-                  placeholder="Enter depositor name"
                   required
-                  className="border-purple-200 focus:border-purple-500 focus:ring-purple-500 h-12"
-                />
+                >
+                  <SelectTrigger className="border-purple-200 focus:border-purple-500 focus:ring-purple-500 h-12">
+                    <SelectValue placeholder="Select depositor type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {depositedByTypes.map((type) => (
+                      <SelectItem key={type} value={type}>
+                        <div className="flex items-center gap-2">
+                          <User className="h-4 w-4" />
+                          {type}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label
+                htmlFor="depositedBy"
+                className="text-sm font-medium text-gray-700 flex items-center gap-2"
+              >
+                <User className="h-4 w-4 text-indigo-600" />
+                Depositor Name *
+              </Label>
+              <Input
+                id="depositedBy"
+                value={formData.depositedBy}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    depositedBy: e.target.value,
+                  })
+                }
+                placeholder="Enter depositor name"
+                required
+                className="border-indigo-200 focus:border-indigo-500 focus:ring-indigo-500 h-12"
+              />
             </div>
 
             <div className="space-y-2">
