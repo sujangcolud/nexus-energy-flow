@@ -308,6 +308,28 @@ const DashboardStudio: React.FC = () => {
     }
 
     try {
+      // First, try to check if the table exists by doing a simple count query
+      const { error: testError } = await supabase
+        .from("custom_calculations")
+        .select("id", { count: "exact", head: true })
+        .limit(1);
+
+      if (testError) {
+        console.warn("custom_calculations table not accessible:", testError);
+        // If table doesn't exist or isn't accessible, use localStorage fallback
+        const storedDashboards = localStorage.getItem(`dashboards_${user.id}`);
+        if (storedDashboards) {
+          try {
+            const parsed = JSON.parse(storedDashboards);
+            setDashboards(parsed);
+            console.log("Loaded dashboards from localStorage:", parsed.length);
+          } catch (e) {
+            console.error("Error parsing stored dashboards:", e);
+          }
+        }
+        return;
+      }
+
       const { data, error } = await supabase
         .from("custom_calculations")
         .select("*")
@@ -315,7 +337,12 @@ const DashboardStudio: React.FC = () => {
         .order("created_at", { ascending: false });
 
       if (error) {
-        console.error("Supabase error:", error);
+        console.error("Supabase error details:", {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code,
+        });
         throw error;
       }
 
