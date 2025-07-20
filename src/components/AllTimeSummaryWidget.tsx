@@ -20,7 +20,6 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { extractErrorMessage, logError } from "@/utils/errorHandling";
-import { Button } from "@/components/ui/button";
 import AllTimeSummaryModal from "./AllTimeSummaryModal";
 import { DateRange } from "react-day-picker";
 
