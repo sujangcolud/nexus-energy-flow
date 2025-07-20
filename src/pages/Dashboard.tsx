@@ -634,12 +634,13 @@ const Dashboard = () => {
                 </CardContent>
               </Card>
             </div>
+
+            {/* All-Time Summary Widget */}
+            <AllTimeSummaryWidget className="my-8" />
           </div>
         ) : (
           <Outlet />
         )}
-        {/* All-Time Summary Widget */}
-        <AllTimeSummaryWidget className="my-8" />
       </main>
 
       {/* Enhanced ChatBot Component */}
