@@ -429,30 +429,72 @@ const DashboardStudio: React.FC = () => {
         is_active: true,
       };
 
-      if (
-        currentDashboard.id &&
-        dashboards.find((d) => d.id === currentDashboard.id)
-      ) {
-        // Update existing
-        const { error } = await supabase
-          .from("custom_calculations")
-          .update(dashboardData)
-          .eq("id", currentDashboard.id);
+      // Try to save to Supabase first, fallback to localStorage
+      try {
+        if (
+          currentDashboard.id &&
+          dashboards.find((d) => d.id === currentDashboard.id)
+        ) {
+          // Update existing
+          const { error } = await supabase
+            .from("custom_calculations")
+            .update(dashboardData)
+            .eq("id", currentDashboard.id);
 
-        if (error) throw error;
-      } else {
-        // Create new
-        const { data, error } = await supabase
-          .from("custom_calculations")
-          .insert(dashboardData)
-          .select();
+          if (error) throw error;
+        } else {
+          // Create new
+          const { data, error } = await supabase
+            .from("custom_calculations")
+            .insert(dashboardData)
+            .select();
 
-        if (error) throw error;
-        if (data) {
-          setCurrentDashboard((prev) =>
-            prev ? { ...prev, id: data[0].id } : null,
-          );
+          if (error) throw error;
+          if (data) {
+            setCurrentDashboard((prev) =>
+              prev ? { ...prev, id: data[0].id } : null,
+            );
+          }
         }
+      } catch (supabaseError) {
+        console.warn(
+          "Failed to save to Supabase, using localStorage:",
+          supabaseError,
+        );
+
+        // Fallback to localStorage
+        const updatedDashboard = {
+          ...currentDashboard,
+          name: dashboardName,
+          description: dashboardDescription,
+          updatedAt: new Date().toISOString(),
+        };
+
+        let existingDashboards = [];
+        try {
+          const stored = localStorage.getItem(`dashboards_${user.id}`);
+          existingDashboards = stored ? JSON.parse(stored) : [];
+        } catch (e) {
+          console.error("Error parsing existing dashboards:", e);
+        }
+
+        const existingIndex = existingDashboards.findIndex(
+          (d: any) => d.id === currentDashboard.id,
+        );
+
+        if (existingIndex >= 0) {
+          existingDashboards[existingIndex] = updatedDashboard;
+        } else {
+          existingDashboards.push(updatedDashboard);
+        }
+
+        localStorage.setItem(
+          `dashboards_${user.id}`,
+          JSON.stringify(existingDashboards),
+        );
+
+        setDashboards(existingDashboards);
+        toast.success("Dashboard saved to local storage");
       }
 
       toast.success("Dashboard saved successfully");
