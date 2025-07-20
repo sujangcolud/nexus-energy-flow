@@ -532,21 +532,20 @@ const ChargingTab = () => {
         ></div>
       </div>
 
-      <div className="relative z-10 space-y-8 p-6">
+      <div className="relative z-10 space-y-6 sm:space-y-8 p-4 sm:p-6">
         {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="p-4 rounded-2xl bg-gradient-to-r from-yellow-500 to-orange-600 text-white shadow-xl animate-pulse">
-              <Zap className="h-8 w-8" />
+        <div className="text-center mb-6 sm:mb-8">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 mb-4">
+            <div className="p-3 sm:p-4 rounded-2xl bg-gradient-to-r from-yellow-500 to-orange-600 text-white shadow-xl animate-pulse">
+              <Zap className="h-6 w-6 sm:h-8 sm:w-8" />
             </div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-yellow-600 via-orange-600 to-red-600 bg-clip-text text-transparent">
-              Energy Charging Station
+            <h1 className="text-2xl sm:text-4xl font-bold bg-gradient-to-r from-yellow-600 via-orange-600 to-red-600 bg-clip-text text-transparent text-center">
+              {isMobile ? "EV Charging" : "Energy Charging Station"}
             </h1>
-            <Zap className="h-8 w-8 text-yellow-500 animate-bounce" />
+            <Zap className="h-6 w-6 sm:h-8 sm:w-8 text-yellow-500 animate-bounce" />
           </div>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Track your electric vehicle charging sessions with precision and
-            style
+          <p className="text-sm sm:text-xl text-gray-600 max-w-2xl mx-auto px-4">
+            Track your electric vehicle charging sessions with precision
           </p>
         </div>
 
