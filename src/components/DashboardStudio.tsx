@@ -412,8 +412,9 @@ const DashboardStudio: React.FC = () => {
       setShowSaveDialog(false);
       loadDashboards();
     } catch (error) {
-      console.error("Error saving dashboard:", error);
-      toast.error("Failed to save dashboard");
+      const errorMessage = extractErrorMessage(error);
+      console.error("Error saving dashboard:", errorMessage, error);
+      toast.error(`Failed to save dashboard: ${errorMessage}`);
     }
   };
 
