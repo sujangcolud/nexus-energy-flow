@@ -153,7 +153,7 @@ const AllTimeSummaryModal: React.FC<AllTimeSummaryModalProps> = ({
           <div className="flex items-center gap-4">
             <Calendar className="h-5 w-5 text-blue-600" />
             <DateRangePicker
-              onUpdate={(values) => setDateRange(values.range)}
+              onUpdate={(values) => setDateRange(values?.range)}
             />
             <Badge
               variant="outline"
