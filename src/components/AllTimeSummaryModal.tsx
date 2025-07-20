@@ -100,6 +100,17 @@ const AllTimeSummaryModal: React.FC<AllTimeSummaryModalProps> = ({
     try {
       console.log("📊 Fetching comprehensive all-time summary...");
 
+      // Debug: Check for specific July 13th, 2025 data
+      const { data: july13Debug } = await supabase
+        .from("daily_summary")
+        .select("*")
+        .eq("summary_date", "2025-07-13")
+        .single();
+
+      if (july13Debug) {
+        console.log("🔍 MODAL: July 13th, 2025 daily summary:", july13Debug);
+      }
+
       // Fetch all daily summaries
       const { data: summariesData, error } = await supabase
         .from("daily_summary")
