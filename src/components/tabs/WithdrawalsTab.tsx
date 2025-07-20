@@ -283,12 +283,13 @@ const WithdrawalsTab = () => {
         category: "General",
       };
 
-      // Add new fields only if they have values (for backward compatibility)
+      // TODO: Add new fields when database schema is updated
+      // For now, store withdrawal_from in purpose field if available
       if (formData.withdrawal_from) {
-        withdrawalData.withdrawal_from = formData.withdrawal_from;
-      }
-      if (formData.cooperative_member_id) {
-        withdrawalData.cooperative_member_id = formData.cooperative_member_id;
+        withdrawalData.purpose = `${formData.purpose} (From: ${formData.withdrawal_from})`;
+        if (formData.cooperative_member_id) {
+          withdrawalData.purpose += ` (Member: ${formData.cooperative_member_id})`;
+        }
       }
 
       console.log("Attempting to insert withdrawal data:", withdrawalData);
