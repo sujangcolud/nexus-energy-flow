@@ -333,11 +333,12 @@ const AllTimeSummaryModal: React.FC<AllTimeSummaryModalProps> = ({
           </div>
         ) : (
           <Tabs defaultValue="overview" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="income">Income Analysis</TabsTrigger>
               <TabsTrigger value="withdrawals">Withdrawals</TabsTrigger>
               <TabsTrigger value="balances">Current Balances</TabsTrigger>
+              <TabsTrigger value="debug">Debug Data</TabsTrigger>
             </TabsList>
 
             <TabsContent value="overview" className="space-y-6">
