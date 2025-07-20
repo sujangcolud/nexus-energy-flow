@@ -59,6 +59,7 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
   const [summaryData, setSummaryData] = useState<AllTimeSummaryData | null>(
     null,
   );
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const fetchAllTimeSummary = async () => {
     if (!user) return;
