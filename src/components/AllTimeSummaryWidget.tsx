@@ -68,62 +68,6 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
     try {
       console.log("📊 Fetching all-time summary from daily_summary table...");
 
-      // Debug: Check for July 13th, 2025 data specifically
-      const { data: july13Data } = await supabase
-        .from("daily_summary")
-        .select("*")
-        .eq("summary_date", "2025-07-13")
-        .single();
-
-      if (july13Data) {
-        console.log("🔍 July 13th, 2025 data found:", july13Data);
-        console.log("Withdrawals - Total:", july13Data.total_withdrawals);
-        console.log(
-          "Withdrawals - Cooperative:",
-          july13Data.total_withdrawals_cooperative,
-        );
-        console.log("Withdrawals - Bank:", july13Data.total_withdrawals_bank);
-      } else {
-        console.log("⚠️ No daily summary data found for July 13th, 2025");
-
-        // Check if there are raw withdrawal records for that date
-        const { data: rawWithdrawals } = await supabase
-          .from("withdrawals")
-          .select("*")
-          .eq("withdrawal_date", "2025-07-13");
-
-        if (rawWithdrawals && rawWithdrawals.length > 0) {
-          console.log(
-            "🔍 Found raw withdrawal records for July 13th:",
-            rawWithdrawals,
-          );
-
-          // Try to trigger daily summary update for that date
-          try {
-            const { error: updateError } = await supabase.rpc(
-              "update_daily_summary",
-              {
-                p_summary_date: "2025-07-13",
-              },
-            );
-
-            if (!updateError) {
-              console.log(
-                "✅ Daily summary update triggered for July 13th, 2025",
-              );
-              toast.success(
-                "Daily summary updated for July 13th, 2025. Refreshing data...",
-              );
-            }
-          } catch (updateErr) {
-            console.log(
-              "⚠️ Could not trigger daily summary update:",
-              updateErr,
-            );
-          }
-        }
-      }
-
       // Fetch all daily summaries
       const { data: summariesData, error } = await supabase
         .from("daily_summary")
