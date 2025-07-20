@@ -595,8 +595,8 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
                     </p>
                     <p className="text-lg font-bold text-purple-600">
                       {formatCurrency(
-                        transactionSummary.deposits.total -
-                          transactionSummary.withdrawals.total,
+                        currentSummary.deposits.total -
+                          currentSummary.withdrawals.total,
                       )}
                     </p>
                   </div>
