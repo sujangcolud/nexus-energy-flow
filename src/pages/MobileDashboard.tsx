@@ -262,8 +262,7 @@ const MobileDashboard = () => {
         return "Transactions";
       case "financial":
         return "Financial";
-      case "reports":
-        return "Analytics";
+
       case "management":
         return "Management";
       default:
@@ -277,8 +276,7 @@ const MobileDashboard = () => {
         return ShoppingCart;
       case "financial":
         return CreditCard;
-      case "reports":
-        return BarChart3;
+
       case "management":
         return Settings;
       default:
