@@ -273,6 +273,8 @@ const WithdrawalsTab = () => {
           withdrawal_date: transactionDate,
           payment_mode: formData.payment_mode,
           category: "General",
+          withdrawal_from: formData.withdrawal_from || null,
+          cooperative_member_id: formData.cooperative_member_id || null,
         },
       ]);
 
