@@ -759,7 +759,7 @@ const OrdersTab = () => {
                             {category}
                           </h3>
                         </div>
-                        <div className="grid grid-cols-3 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                           {items.map((item, index) => (
                             <Card
                               key={item.id}
@@ -767,32 +767,34 @@ const OrdersTab = () => {
                               onClick={() => addToCart(item)}
                               style={{ animationDelay: `${index * 50}ms` }}
                             >
-                              <CardContent className="p-2 sm:p-4">
-                                <div className="flex justify-between items-start mb-3">
-                                  <div className="flex-1">
-                                    <h4 className="font-bold text-sm sm:text-lg text-gray-800 group-hover:text-orange-600 transition-colors mb-1">
-                                      {item.name}
-                                    </h4>
-                                    {item.description && (
-                                      <p className="text-xs sm:text-sm text-gray-600 line-clamp-2 mb-2">
-                                        {item.description}
-                                      </p>
-                                    )}
+                              <CardContent className="p-3 sm:p-4">
+                                <div className="space-y-2 sm:space-y-3">
+                                  <div className="flex justify-between items-start">
+                                    <div className="flex-1 min-w-0">
+                                      <h4 className="font-bold text-sm sm:text-base lg:text-lg text-gray-800 group-hover:text-orange-600 transition-colors mb-1 line-clamp-1">
+                                        {item.name}
+                                      </h4>
+                                      {item.description && (
+                                        <p className="text-xs sm:text-sm text-gray-600 line-clamp-2 mb-2">
+                                          {item.description}
+                                        </p>
+                                      )}
+                                    </div>
                                   </div>
-                                  <div className="ml-3">
+                                  <div className="flex justify-center">
                                     <Badge
-                                      className={`bg-gradient-to-r ${categoryColors[item.category as keyof typeof categoryColors] || "from-gray-500 to-slate-500"} text-white border-0 text-xs sm:text-sm px-2 sm:px-3 py-1`}
+                                      className={`bg-gradient-to-r ${categoryColors[item.category as keyof typeof categoryColors] || "from-gray-500 to-slate-500"} text-white border-0 text-sm sm:text-base px-3 py-1.5 font-semibold`}
                                     >
                                       NRs. {item.price}
                                     </Badge>
                                   </div>
                                 </div>
-                                <div className="flex items-center justify-between">
-                                  <span className="text-xs text-gray-500 bg-gray-100 px-1 sm:px-2 py-1 rounded-full">
+                                <div className="flex items-center justify-between mt-2">
+                                  <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full truncate max-w-20 sm:max-w-none">
                                     {item.category}
                                   </span>
                                   <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                                    <Plus className="h-5 w-5 text-orange-600" />
+                                    <Plus className="h-4 w-4 sm:h-5 sm:w-5 text-orange-600" />
                                   </div>
                                 </div>
                               </CardContent>
