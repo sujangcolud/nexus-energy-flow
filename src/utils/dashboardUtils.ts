@@ -1,73 +1,85 @@
 import { supabase } from "@/integrations/supabase/client";
 import { extractErrorMessage } from "./errorHandling";
 
-export const ensureCustomCalculationsTable = async (): Promise<boolean> => {
+export const checkCustomCalculationsAccess = async (): Promise<{
+  accessible: boolean;
+  error?: string;
+}> => {
   try {
-    // First, try a simple query to check if table exists
-    const { error: testError } = await supabase
+    // Try a simple query to check if table exists and is accessible
+    const { error } = await supabase
       .from("custom_calculations")
       .select("id", { count: "exact", head: true })
       .limit(1);
 
-    if (!testError) {
+    if (!error) {
       console.log("✅ custom_calculations table is accessible");
-      return true;
+      return { accessible: true };
     }
 
-    console.warn("⚠️ custom_calculations table not accessible:", testError);
+    const errorMessage = extractErrorMessage(error);
+    console.warn("⚠️ custom_calculations table not accessible:", errorMessage);
 
-    // If the table doesn't exist, try to create it
-    const createTableSQL = `
-      CREATE TABLE IF NOT EXISTS public.custom_calculations (
-        id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-        user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
-        name text NOT NULL,
-        description text,
-        calculation_config jsonb NOT NULL DEFAULT '[]'::jsonb,
-        result_cache jsonb,
-        is_active boolean DEFAULT true,
-        created_at timestamptz DEFAULT now(),
-        updated_at timestamptz DEFAULT now()
-      );
-
-      -- Enable RLS
-      ALTER TABLE public.custom_calculations ENABLE ROW LEVEL SECURITY;
-
-      -- Create policies
-      DROP POLICY IF EXISTS "Users can manage own custom calculations" ON public.custom_calculations;
-      CREATE POLICY "Users can manage own custom calculations" ON public.custom_calculations
-        FOR ALL USING (auth.uid() = user_id);
-
-      -- Create index
-      CREATE INDEX IF NOT EXISTS idx_custom_calculations_user_active 
-        ON public.custom_calculations(user_id, is_active);
-
-      -- Grant permissions
-      GRANT SELECT, INSERT, UPDATE, DELETE ON public.custom_calculations TO authenticated;
-    `;
-
-    const { error: createError } = await supabase.rpc("execute_custom_sql", {
-      sql: createTableSQL,
-    });
-
-    if (createError) {
-      console.error(
-        "❌ Failed to create custom_calculations table:",
-        createError,
-      );
-      return false;
-    }
-
-    console.log("✅ custom_calculations table created successfully");
-    return true;
+    return {
+      accessible: false,
+      error: errorMessage,
+    };
   } catch (error) {
     const errorMessage = extractErrorMessage(error);
-    console.error("❌ Error ensuring custom_calculations table:", errorMessage);
-    return false;
+    console.error("❌ Error checking custom_calculations table:", errorMessage);
+    return {
+      accessible: false,
+      error: errorMessage,
+    };
   }
 };
 
 export const isDashboardStudioSupported = async (): Promise<boolean> => {
-  const tableExists = await ensureCustomCalculationsTable();
-  return tableExists;
+  const { accessible } = await checkCustomCalculationsAccess();
+  return accessible;
+};
+
+// Dashboard storage utilities for localStorage fallback
+export const saveDashboardToStorage = (
+  userId: string,
+  dashboard: any,
+): void => {
+  try {
+    const key = `dashboards_${userId}`;
+    let existingDashboards = [];
+
+    try {
+      const stored = localStorage.getItem(key);
+      existingDashboards = stored ? JSON.parse(stored) : [];
+    } catch (e) {
+      console.error("Error parsing existing dashboards:", e);
+      existingDashboards = [];
+    }
+
+    const existingIndex = existingDashboards.findIndex(
+      (d: any) => d.id === dashboard.id,
+    );
+
+    if (existingIndex >= 0) {
+      existingDashboards[existingIndex] = dashboard;
+    } else {
+      existingDashboards.push(dashboard);
+    }
+
+    localStorage.setItem(key, JSON.stringify(existingDashboards));
+    console.log("Dashboard saved to localStorage");
+  } catch (error) {
+    console.error("Error saving dashboard to localStorage:", error);
+  }
+};
+
+export const loadDashboardsFromStorage = (userId: string): any[] => {
+  try {
+    const key = `dashboards_${userId}`;
+    const stored = localStorage.getItem(key);
+    return stored ? JSON.parse(stored) : [];
+  } catch (error) {
+    console.error("Error loading dashboards from localStorage:", error);
+    return [];
+  }
 };
