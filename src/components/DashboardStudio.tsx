@@ -88,6 +88,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { extractErrorMessage } from "@/utils/errorHandling";
 import { format } from "date-fns";
+import {
+  checkCustomCalculationsAccess,
+  saveDashboardToStorage,
+  loadDashboardsFromStorage,
+} from "@/utils/dashboardUtils";
 
 // Types for dashboard components
 interface ChartConfig {
@@ -327,15 +332,11 @@ const DashboardStudio: React.FC = () => {
   const [queryResults, setQueryResults] = useState<any[]>([]);
   const [isQueryRunning, setIsQueryRunning] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSupported, setIsSupported] = useState<boolean | null>(null);
   const [dashboardMetrics, setDashboardMetrics] =
     useState<DashboardMetrics | null>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
 
-<<<<<<< HEAD
-  // Load saved dashboards and metrics when component mounts
-  useEffect(() => {
-    if (user?.id) {
-=======
   // Check if dashboard studio is supported
   useEffect(() => {
     const checkSupport = async () => {
@@ -378,11 +379,10 @@ const DashboardStudio: React.FC = () => {
   // Load saved dashboards when user is available
   useEffect(() => {
     if (user?.id && isSupported !== null) {
->>>>>>> origin/main
       loadDashboards();
       loadDashboardMetrics();
     }
-  }, [user?.id]);
+  }, [user?.id, isSupported]);
 
   const loadDashboardMetrics = async () => {
     if (!user?.id) return;
