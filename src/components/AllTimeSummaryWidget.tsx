@@ -127,29 +127,10 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
       );
 
       // total_withdrawals: SUM(amount) from withdrawals table
-      // Withdrawal = Withdrawal from bank + Withdrawal from Savings + Withdrawal from esewa + Withdrawal from fonepay
-      const withdrawalFromBank = summaries.reduce(
-        (sum, s) => sum + (s.total_withdrawals_bank || 0),
+      const totalWithdrawals = summaries.reduce(
+        (sum, s) => sum + (s.total_withdrawals || 0),
         0,
       );
-      const withdrawalFromSavings = summaries.reduce(
-        (sum, s) => sum + (s.total_withdrawals_cooperative || 0),
-        0,
-      );
-      const withdrawalFromEsewa = summaries.reduce(
-        (sum, s) => sum + (s.total_withdrawals_esewa || 0),
-        0,
-      );
-      const withdrawalFromFonepay = summaries.reduce(
-        (sum, s) => sum + (s.total_withdrawals_fonepay || 0),
-        0,
-      );
-
-      const totalWithdrawals =
-        withdrawalFromBank +
-        withdrawalFromSavings +
-        withdrawalFromEsewa +
-        withdrawalFromFonepay;
 
       // total_savings: SUM(contribution_amount) from cooperative_savings table
       const cooperativeSavings = summaries.reduce(
