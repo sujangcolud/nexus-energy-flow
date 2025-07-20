@@ -697,42 +697,51 @@ const OrdersTab = () => {
               </CardHeader>
               <CardContent className="p-6 space-y-6">
                 {/* Search and Filters */}
-                <div className="flex flex-col sm:flex-row gap-4">
+                <div className="flex flex-col gap-3">
                   <div className="flex-grow">
                     <Input
                       placeholder="Search delicious items... 🔍"
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="border-orange-200 focus:border-orange-500 focus:ring-orange-500 h-12"
+                      className="border-orange-200 focus:border-orange-500 focus:ring-orange-500 h-10 sm:h-12 text-sm sm:text-base"
                     />
                   </div>
                 </div>
 
                 {/* Category Filters */}
-                <div className="flex items-center gap-2 flex-wrap pb-2">
-                  <Filter className="h-5 w-5 text-gray-600" />
-                  <Button
-                    key="all-categories"
-                    onClick={() => setSelectedCategory(null)}
-                    variant={selectedCategory === null ? "default" : "outline"}
-                    size="sm"
-                    className={`transition-all duration-150 ${selectedCategory === null ? "bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-md" : "hover:bg-orange-50"}`}
-                  >
-                    All Categories
-                  </Button>
-                  {productCategories.map((category) => (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Filter className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600" />
+                    <span className="text-sm font-medium text-gray-700">
+                      Filter by Category
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
                     <Button
-                      key={category}
-                      onClick={() => setSelectedCategory(category)}
+                      key="all-categories"
+                      onClick={() => setSelectedCategory(null)}
                       variant={
-                        selectedCategory === category ? "default" : "outline"
+                        selectedCategory === null ? "default" : "outline"
                       }
                       size="sm"
-                      className={`transition-all duration-150 ${selectedCategory === category ? `bg-gradient-to-r ${categoryColors[category as keyof typeof categoryColors] || "from-gray-500 to-slate-500"} text-white shadow-md` : "hover:bg-orange-50"}`}
+                      className={`transition-all duration-150 text-xs sm:text-sm px-2 sm:px-3 ${selectedCategory === null ? "bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-md" : "hover:bg-orange-50"}`}
                     >
-                      {category}
+                      All
                     </Button>
-                  ))}
+                    {productCategories.map((category) => (
+                      <Button
+                        key={category}
+                        onClick={() => setSelectedCategory(category)}
+                        variant={
+                          selectedCategory === category ? "default" : "outline"
+                        }
+                        size="sm"
+                        className={`transition-all duration-150 text-xs sm:text-sm px-2 sm:px-3 ${selectedCategory === category ? `bg-gradient-to-r ${categoryColors[category as keyof typeof categoryColors] || "from-gray-500 to-slate-500"} text-white shadow-md` : "hover:bg-orange-50"}`}
+                      >
+                        {category}
+                      </Button>
+                    ))}
+                  </div>
                 </div>
 
                 {/* Menu Items Display */}
