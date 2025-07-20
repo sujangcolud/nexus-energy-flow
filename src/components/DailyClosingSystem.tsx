@@ -103,9 +103,13 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
 
   useEffect(() => {
     if (isOpen && user) {
-      fetchDayData();
+      if (viewMode === "daily") {
+        fetchDayData();
+      } else {
+        fetchAllTimeData();
+      }
     }
-  }, [isOpen, selectedDate, user]);
+  }, [isOpen, selectedDate, user, viewMode, dateRange]);
 
   const fetchDayData = async () => {
     if (!user) return;
