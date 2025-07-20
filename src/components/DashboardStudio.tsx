@@ -306,12 +306,20 @@ const DashboardStudio: React.FC = () => {
   // Check if dashboard studio is supported
   useEffect(() => {
     const checkSupport = async () => {
-      const supported = await isDashboardStudioSupported();
-      setIsSupported(supported);
+      const { accessible, error } = await checkCustomCalculationsAccess();
+      setIsSupported(accessible);
 
-      if (!supported) {
-        console.warn("Dashboard Studio: Falling back to localStorage mode");
-        toast.info("Dashboard Studio is running in offline mode");
+      if (!accessible) {
+        console.warn(
+          "Dashboard Studio: Falling back to localStorage mode. Error:",
+          error,
+        );
+        toast.info(
+          "Dashboard Studio is running in offline mode (data stored locally)",
+          {
+            description: "Your dashboards will be saved to browser storage.",
+          },
+        );
       }
     };
 
