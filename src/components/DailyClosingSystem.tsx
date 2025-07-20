@@ -194,7 +194,7 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
         withdrawals: processTransactions(
           withdrawalsRes.data || [],
           "amount",
-          "mode",
+          "payment_mode",
         ),
         cooperative_savings: processTransactions(
           cooperativeRes.data || [],
