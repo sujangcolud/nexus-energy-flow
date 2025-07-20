@@ -102,6 +102,7 @@ interface CartItem {
 const OrdersTab = () => {
   const { user } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
+  const [totalOrdersCount, setTotalOrdersCount] = useState(0);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [paymentMode, setPaymentMode] = useState("");
@@ -152,6 +153,16 @@ const OrdersTab = () => {
 
       if (error) throw error;
       setOrders(data || []);
+
+      // Get total count without pagination
+      const { count: totalCount, error: countError } = await supabase
+        .from("orders")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", user.id);
+
+      if (!countError && totalCount !== null) {
+        setTotalOrdersCount(totalCount);
+      }
     } catch (error) {
       console.error("Error fetching orders:", error);
       toast.error("Failed to load orders");
@@ -653,7 +664,7 @@ const OrdersTab = () => {
                     Total Orders
                   </p>
                   <p className="text-2xl font-bold text-purple-800">
-                    {orders.length}
+                    {totalOrdersCount}
                   </p>
                 </div>
                 <div className="p-3 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-xl text-white">
