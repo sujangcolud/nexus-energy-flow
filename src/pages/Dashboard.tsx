@@ -65,9 +65,7 @@ import ExpensesTab from "@/components/tabs/ExpensesTab";
 import DepositsTab from "@/components/tabs/DepositsTab";
 import WithdrawalsTab from "@/components/tabs/WithdrawalsTab";
 import CooperativeSavingsTab from "@/components/tabs/CooperativeSavingsTab";
-import InsightsTab from "@/components/tabs/InsightsTab";
-import ReportsTab from "@/components/tabs/ReportsTab";
-import ReportsViewTab from "@/components/tabs/ReportsViewTab";
+
 import MenuManagementTab from "@/components/tabs/MenuManagementTab";
 import DataInputTab from "@/components/tabs/DataInputTab";
 import UserManagementTab from "@/components/tabs/UserManagementTab";
@@ -208,26 +206,7 @@ const Dashboard = () => {
         description: "Inventory tracking and management",
       },
       // Unified tabs - accessible to appropriate users
-      {
-        id: "insights",
-        path: "insights",
-        label: "Insights",
-        icon: BarChart3,
-        roles: ["user", "data_entry", "reports_viewer", "super_admin"],
-        color: "bg-blue-600",
-        bgColor: "bg-blue-50",
-        description: "Analytics, insights & visual dashboards",
-      },
-      {
-        id: "reports",
-        path: "reports",
-        label: "Reports",
-        icon: FileText,
-        roles: ["user", "reports_viewer", "super_admin"],
-        color: "bg-slate-600",
-        bgColor: "bg-slate-50",
-        description: "View reports, admin panel & custom reports",
-      },
+
       {
         id: "bulk_import",
         path: "bulk-import",
