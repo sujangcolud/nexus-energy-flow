@@ -18,6 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import TransactionDatePicker from "@/components/ui/transaction-date-picker";
 import { format } from "date-fns";
+import { logError, extractErrorMessage } from "@/utils/errorHandling";
 import {
   Select,
   SelectContent,
@@ -74,19 +75,10 @@ interface Withdrawal {
   reference_number: string | null;
   remarks: string | null;
   withdrawal_date: string;
-  payment_mode: string;
-  category: string;
-}
-
-interface Category {
-  id: string;
-  name: string;
-  created_at: string;
 }
 
 const WithdrawalsTab = () => {
   const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
     amount: "",
@@ -94,11 +86,7 @@ const WithdrawalsTab = () => {
     recipient: "",
     referenceNumber: "",
     remarks: "",
-    payment_mode: "",
-    withdrawal_from: "",
-    cooperative_member_id: "",
   });
-  const [newCategory, setNewCategory] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [transactionDate, setTransactionDate] = useState(
     format(new Date(), "yyyy-MM-dd"),
@@ -110,7 +98,6 @@ const WithdrawalsTab = () => {
   const [selectedWithdrawal, setSelectedWithdrawal] =
     useState<Withdrawal | null>(null);
   const [canEditTransactions, setCanEditTransactions] = useState(false);
-  const [canAddCategory, setCanAddCategory] = useState(false);
 
   const commonPurposes = [
     "Salary Payment",
@@ -124,8 +111,6 @@ const WithdrawalsTab = () => {
     "Emergency Fund",
     "Other",
   ];
-
-  const paymentModes = ["Cash", "Esewa", "Fonepay", "Bank"];
 
   const purposeColors = {
     "Salary Payment": "from-green-500 to-emerald-500",
@@ -142,30 +127,11 @@ const WithdrawalsTab = () => {
 
   useEffect(() => {
     fetchWithdrawals();
-    fetchCategories();
     const canEdit = localStorage.getItem("canEditTransactions");
     if (canEdit) {
       setCanEditTransactions(JSON.parse(canEdit));
     }
-    const canAdd = localStorage.getItem("canAddWithdrawalCategory");
-    if (canAdd) {
-      setCanAddCategory(JSON.parse(canAdd));
-    }
   }, [user, page, range]);
-
-  const fetchCategories = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("withdrawal_categories")
-        .select("*")
-        .order("name", { ascending: true });
-      if (error) throw error;
-      setCategories(data || []);
-    } catch (error) {
-      console.error("Error fetching categories:", error);
-      toast.error("Failed to load categories");
-    }
-  };
 
   const fetchWithdrawals = async () => {
     if (!user) return;
@@ -207,70 +173,14 @@ const WithdrawalsTab = () => {
       return;
     }
 
-    if (!formData.amount || !formData.purpose || !formData.payment_mode) {
+    if (!formData.amount || !formData.purpose) {
       toast.error("Please fill in all required fields");
-      return;
-    }
-
-    if (
-      formData.withdrawal_from === "Cooperative" &&
-      !formData.cooperative_member_id
-    ) {
-      toast.error("Please enter the cooperative member ID");
       return;
     }
 
     setIsSubmitting(true);
     try {
-      let { data: balanceData, error: balanceError } = await supabase
-        .from("balances")
-        .select("*")
-        .eq("user_id", user.id)
-        .single();
-
-      if (balanceError && balanceError.code !== "PGRST116") {
-        throw balanceError;
-      }
-
-      if (!balanceData) {
-        // Create a new balance record if one doesn't exist
-        const { data: newBalanceData, error: newBalanceError } = await supabase
-          .from("balances")
-          .insert({ user_id: user.id })
-          .select()
-          .single();
-        if (newBalanceError) throw newBalanceError;
-        balanceData = newBalanceData;
-      }
-
-      const newBalance = { ...balanceData };
-      const amount = parseFloat(formData.amount);
-
-      switch (formData.payment_mode) {
-        case "Cash":
-          newBalance.cash_in_hand -= amount;
-          break;
-        case "Esewa":
-          newBalance.esewa_balance -= amount;
-          break;
-        case "Fonepay":
-          newBalance.fonepay_balance -= amount;
-          break;
-        case "Bank":
-          newBalance.bank_balance -= amount;
-          break;
-        default:
-          break;
-      }
-
-      const { error: updateBalanceError } = await supabase
-        .from("balances")
-        .update(newBalance)
-        .eq("id", balanceData.id);
-
-      if (updateBalanceError) throw updateBalanceError;
-
-      // Prepare withdrawal data with new database fields
+      // Prepare withdrawal data according to database schema
       const withdrawalData: any = {
         user_id: user.id,
         amount: parseFloat(formData.amount),
@@ -279,10 +189,6 @@ const WithdrawalsTab = () => {
         reference_number: formData.referenceNumber || null,
         remarks: formData.remarks || null,
         withdrawal_date: transactionDate,
-        payment_mode: formData.payment_mode,
-        withdrawal_from: formData.withdrawal_from || "Cash",
-        cooperative_member_id: formData.cooperative_member_id || null,
-        category: "General",
       };
 
       console.log("Attempting to insert withdrawal data:", withdrawalData);
@@ -302,9 +208,6 @@ const WithdrawalsTab = () => {
         recipient: "",
         referenceNumber: "",
         remarks: "",
-        payment_mode: "",
-        withdrawal_from: "",
-        cooperative_member_id: "",
       });
       fetchWithdrawals();
     } catch (error) {
@@ -312,45 +215,6 @@ const WithdrawalsTab = () => {
       toast.error(`Error recording withdrawal: ${extractErrorMessage(error)}`);
     } finally {
       setIsSubmitting(false);
-    }
-  };
-
-  const handleAddCategory = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newCategory) {
-      toast.error("Please enter a category name");
-      return;
-    }
-
-    try {
-      const { data, error } = await supabase
-        .from("withdrawal_categories")
-        .insert({ name: newCategory })
-        .select();
-
-      if (error) throw error;
-
-      toast.success(`Category "${newCategory}" added successfully`);
-      setNewCategory("");
-      fetchCategories();
-    } catch (error) {
-      console.error("Error adding category:", error);
-      toast.error("Failed to add category");
-    }
-  };
-
-  const handleDeleteCategory = async (id: string) => {
-    try {
-      const { error } = await supabase
-        .from("withdrawal_categories")
-        .delete()
-        .eq("id", id);
-      if (error) throw error;
-      toast.success("Category deleted successfully");
-      fetchCategories();
-    } catch (error) {
-      console.error("Error deleting category:", error);
-      toast.error("Failed to delete category");
     }
   };
 
@@ -672,92 +536,6 @@ const WithdrawalsTab = () => {
                   </datalist>
                 </div>
 
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="payment_mode"
-                    className="text-sm font-medium text-gray-700"
-                  >
-                    Payment Mode *
-                  </Label>
-                  <Select
-                    value={formData.payment_mode}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, payment_mode: value })
-                    }
-                    required
-                  >
-                    <SelectTrigger className="h-12">
-                      <SelectValue placeholder="Select payment mode" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {paymentModes.map((mode) => (
-                        <SelectItem key={mode} value={mode}>
-                          {mode}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Withdrawal From */}
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="withdrawal_from"
-                    className="text-sm font-medium text-gray-700 flex items-center gap-2"
-                  >
-                    <ArrowDownCircle className="h-4 w-4 text-orange-600" />
-                    Withdrawal From (stored in purpose field)
-                  </Label>
-                  <Select
-                    value={formData.withdrawal_from}
-                    onValueChange={(value) =>
-                      setFormData({
-                        ...formData,
-                        withdrawal_from: value,
-                        cooperative_member_id:
-                          value !== "Cooperative"
-                            ? ""
-                            : formData.cooperative_member_id,
-                      })
-                    }
-                  >
-                    <SelectTrigger className="border-orange-200 focus:border-orange-500 focus:ring-orange-500 h-12">
-                      <SelectValue placeholder="Select withdrawal source" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Bank">Bank</SelectItem>
-                      <SelectItem value="Cooperative">Cooperative</SelectItem>
-                      <SelectItem value="Esewa">Esewa</SelectItem>
-                      <SelectItem value="Cash">Cash</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Cooperative Member ID - conditional */}
-                {formData.withdrawal_from === "Cooperative" && (
-                  <div className="space-y-2">
-                    <Label
-                      htmlFor="cooperative_member_id"
-                      className="text-sm font-medium text-gray-700 flex items-center gap-2"
-                    >
-                      <User className="h-4 w-4 text-purple-600" />
-                      Cooperative Member ID *
-                    </Label>
-                    <Input
-                      id="cooperative_member_id"
-                      value={formData.cooperative_member_id}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          cooperative_member_id: e.target.value,
-                        })
-                      }
-                      placeholder="Enter member ID (e.g., DF1, SF1)"
-                      className="border-purple-200 focus:border-purple-500 focus:ring-purple-500 h-12"
-                    />
-                  </div>
-                )}
-
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label
@@ -916,55 +694,6 @@ const WithdrawalsTab = () => {
           </Card>
         </div>
 
-        {canAddCategory && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Manage Categories */}
-            <Card className="bg-gradient-to-br from-white/90 to-red-50/90 backdrop-blur-sm border-0 shadow-2xl hover:shadow-3xl transition-all duration-300">
-              <CardHeader className="bg-gradient-to-r from-red-500 to-pink-600 text-white rounded-t-lg">
-                <CardTitle className="flex items-center gap-3 text-xl">
-                  <div className="p-2 bg-white/20 rounded-lg">
-                    <Banknote className="h-6 w-6" />
-                  </div>
-                  Manage Categories
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-6">
-                <form onSubmit={handleAddCategory} className="space-y-4">
-                  <Input
-                    value={newCategory}
-                    onChange={(e) => setNewCategory(e.target.value)}
-                    placeholder="Enter new category"
-                    className="h-12"
-                  />
-                  <Button
-                    type="submit"
-                    className="w-full h-12 bg-gradient-to-r from-red-500 to-pink-500 text-white"
-                  >
-                    Add Category
-                  </Button>
-                </form>
-                <div className="mt-6 space-y-2">
-                  {categories.map((cat) => (
-                    <div
-                      key={cat.id}
-                      className="flex items-center justify-between bg-white p-3 rounded-lg shadow-sm"
-                    >
-                      <span className="font-medium">{cat.name}</span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDeleteCategory(cat.id)}
-                      >
-                        <Trash2 className="h-4 w-4 text-red-500" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-
         {/* Withdrawal History */}
         <Card className="bg-gradient-to-br from-white/90 to-gray-50/90 backdrop-blur-sm border-0 shadow-2xl">
           <CardHeader className="border-b border-gray-200/50 flex flex-row items-center justify-between">
@@ -1042,9 +771,6 @@ const WithdrawalsTab = () => {
                         Purpose
                       </TableHead>
                       <TableHead className="font-semibold text-gray-700">
-                        Payment Mode
-                      </TableHead>
-                      <TableHead className="font-semibold text-gray-700">
                         Recipient
                       </TableHead>
                       <TableHead className="font-semibold text-gray-700">
@@ -1063,7 +789,7 @@ const WithdrawalsTab = () => {
                       <TableCell colSpan={1} className="font-bold">
                         Total
                       </TableCell>
-                      <TableCell colSpan={7} className="font-bold">
+                      <TableCell colSpan={6} className="font-bold">
                         NRs. {totalWithdrawals.toFixed(2)}
                       </TableCell>
                     </TableRow>
@@ -1089,13 +815,6 @@ const WithdrawalsTab = () => {
                             className={`bg-gradient-to-r ${purposeColors[withdrawal.purpose as keyof typeof purposeColors] || "from-gray-500 to-slate-500"} text-white border-0`}
                           >
                             {withdrawal.purpose}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Badge
-                            className={`bg-gradient-to-r ${purposeColors[withdrawal.payment_mode as keyof typeof purposeColors] || "from-gray-500 to-slate-500"} text-white border-0`}
-                          >
-                            {withdrawal.payment_mode}
                           </Badge>
                         </TableCell>
                         <TableCell className="font-medium text-gray-800">
