@@ -122,27 +122,7 @@ const allItems = [
     description: "Cooperative savings management",
     defaultRoles: ["data_entry", "super_admin"] as AppRole[],
   },
-  {
-    id: "reports",
-    label: "Reports",
-    icon: "📊",
-    description: "Generate business reports",
-    defaultRoles: ["reports_viewer", "super_admin"] as AppRole[],
-  },
-  {
-    id: "reports-view",
-    label: "View Reports",
-    icon: "👁️",
-    description: "View generated reports",
-    defaultRoles: ["user", "reports_viewer", "super_admin"] as AppRole[],
-  },
-  {
-    id: "insights",
-    label: "Analytics",
-    icon: "📈",
-    description: "Business analytics and insights",
-    defaultRoles: ["user", "reports_viewer", "super_admin"] as AppRole[],
-  },
+
   {
     id: "data-input",
     label: "Bulk Data Import",
@@ -197,9 +177,7 @@ const Settings = () => {
   const [canAddExpenseCategory, setCanAddExpenseCategory] = useState(false);
   const [canDeleteTabs, setCanDeleteTabs] = useState(false);
   const [showOrders, setShowOrders] = useState(true);
-  const [showInsights, setShowInsights] = useState(true);
-  const [showReports, setShowReports] = useState(true);
-  const [showReportsView, setShowReportsView] = useState(true);
+
   const [showDataInput, setShowDataInput] = useState(true);
   const [showUserManagement, setShowUserManagement] = useState(true);
   const [showAdminPanel, setShowAdminPanel] = useState(true);
@@ -426,21 +404,6 @@ const Settings = () => {
       setShowOrders(JSON.parse(orders));
     }
 
-    const insights = localStorage.getItem("showInsights");
-    if (insights) {
-      setShowInsights(JSON.parse(insights));
-    }
-
-    const reports = localStorage.getItem("showReports");
-    if (reports) {
-      setShowReports(JSON.parse(reports));
-    }
-
-    const reportsView = localStorage.getItem("showReportsView");
-    if (reportsView) {
-      setShowReportsView(JSON.parse(reportsView));
-    }
-
     const dataInput = localStorage.getItem("showDataInput");
     if (dataInput) {
       setShowDataInput(JSON.parse(dataInput));
@@ -638,9 +601,7 @@ const Settings = () => {
       JSON.stringify(canAddExpenseCategory),
     );
     localStorage.setItem("showOrders", JSON.stringify(showOrders));
-    localStorage.setItem("showInsights", JSON.stringify(showInsights));
-    localStorage.setItem("showReports", JSON.stringify(showReports));
-    localStorage.setItem("showReportsView", JSON.stringify(showReportsView));
+
     localStorage.setItem("showDataInput", JSON.stringify(showDataInput));
     localStorage.setItem(
       "showUserManagement",
@@ -664,9 +625,7 @@ const Settings = () => {
     canAddMenuCategory,
     canAddExpenseCategory,
     showOrders,
-    showInsights,
-    showReports,
-    showReportsView,
+
     showDataInput,
     showUserManagement,
     showAdminPanel,
