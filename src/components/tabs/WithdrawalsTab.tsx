@@ -713,7 +713,7 @@ const WithdrawalsTab = () => {
                     className="text-sm font-medium text-gray-700 flex items-center gap-2"
                   >
                     <ArrowDownCircle className="h-4 w-4 text-orange-600" />
-                    Withdrawal From *
+                    Withdrawal From (stored in purpose field)
                   </Label>
                   <Select
                     value={formData.withdrawal_from}
