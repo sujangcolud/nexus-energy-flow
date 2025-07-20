@@ -893,26 +893,6 @@ const DashboardStudio: React.FC = () => {
     setIsCreatingChart(true);
   };
 
-  const updateChart = useCallback(
-    (chartId: string, updates: Partial<ChartConfig>) => {
-      setCurrentDashboard((prev) =>
-        prev
-          ? {
-              ...prev,
-              charts: prev.charts.map((chart) =>
-                chart.id === chartId ? { ...chart, ...updates } : chart,
-              ),
-            }
-          : null,
-      );
-
-      setSelectedChart((prev) =>
-        prev?.id === chartId ? { ...prev, ...updates } : prev,
-      );
-    },
-    [],
-  );
-
   const deleteChart = (chartId: string) => {
     if (!currentDashboard) return;
 
