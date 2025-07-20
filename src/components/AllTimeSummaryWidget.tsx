@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { extractErrorMessage, logError } from "@/utils/errorHandling";
+import AllTimeSummaryModal from "@/components/AllTimeSummaryModal";
 
 interface AllTimeSummaryData {
   totalIncome: number;
