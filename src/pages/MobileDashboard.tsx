@@ -302,26 +302,6 @@ const MobileDashboard = () => {
     }
   };
 
-  // Mobile status bar component
-  const MobileStatusBar = () => (
-    <div className="flex justify-between items-center px-4 py-1 bg-black text-white text-xs font-medium">
-      <div className="flex items-center gap-1">
-        <span>
-          {currentTime.toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          })}
-        </span>
-      </div>
-      <div className="flex items-center gap-1">
-        <Signal className="h-3 w-3" />
-        <Wifi className="h-3 w-3" />
-        <Battery className="h-3 w-3" />
-        <span>100%</span>
-      </div>
-    </div>
-  );
-
   // Mobile app header
   const MobileHeader = () => (
     <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-4">
@@ -518,9 +498,6 @@ const MobileDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Mobile Status Bar */}
-      <MobileStatusBar />
-
       {/* Mobile Header */}
       <MobileHeader />
 
