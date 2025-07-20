@@ -570,54 +570,58 @@ const ChargingTab = () => {
           </Card>
 
           <Card className="bg-gradient-to-br from-orange-50 to-red-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
-            <CardContent className="p-6">
+            <CardContent className="p-3 sm:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-orange-600 font-medium">
-                    Total Cost
+                  <p className="text-xs sm:text-sm text-orange-600 font-medium">
+                    {isMobile ? "Cost" : "Total Cost"}
                   </p>
-                  <p className="text-2xl font-bold text-orange-800">
-                    NRs. {totalSessionCost.toFixed(2)}
+                  <p className="text-sm sm:text-2xl font-bold text-orange-800">
+                    {isMobile
+                      ? `₹${totalSessionCost.toFixed(0)}`
+                      : `NRs. ${totalSessionCost.toFixed(2)}`}
                   </p>
                 </div>
-                <div className="p-3 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl text-white">
-                  <TrendingUp className="h-6 w-6" />
+                <div className="p-2 sm:p-3 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl text-white">
+                  <TrendingUp className="h-4 w-4 sm:h-6 sm:w-6" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card className="bg-gradient-to-br from-red-50 to-pink-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
-            <CardContent className="p-6">
+            <CardContent className="p-3 sm:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-red-600 font-medium">
-                    Average Cost
+                  <p className="text-xs sm:text-sm text-red-600 font-medium">
+                    {isMobile ? "Avg" : "Average Cost"}
                   </p>
-                  <p className="text-2xl font-bold text-red-800">
-                    NRs. {averageSessionCost.toFixed(2)}
+                  <p className="text-sm sm:text-2xl font-bold text-red-800">
+                    {isMobile
+                      ? `₹${averageSessionCost.toFixed(0)}`
+                      : `NRs. ${averageSessionCost.toFixed(2)}`}
                   </p>
                 </div>
-                <div className="p-3 bg-gradient-to-r from-red-500 to-pink-500 rounded-xl text-white">
-                  <Activity className="h-6 w-6" />
+                <div className="p-2 sm:p-3 bg-gradient-to-r from-red-500 to-pink-500 rounded-xl text-white">
+                  <Activity className="h-4 w-4 sm:h-6 sm:w-6" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card className="bg-gradient-to-br from-pink-50 to-purple-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
-            <CardContent className="p-6">
+            <CardContent className="p-3 sm:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-pink-600 font-medium">
-                    Total Energy
+                  <p className="text-xs sm:text-sm text-pink-600 font-medium">
+                    {isMobile ? "Energy" : "Total Energy"}
                   </p>
-                  <p className="text-2xl font-bold text-pink-800">
+                  <p className="text-sm sm:text-2xl font-bold text-pink-800">
                     {totalKcal} kCal
                   </p>
                 </div>
-                <div className="p-3 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl text-white">
-                  <Battery className="h-6 w-6" />
+                <div className="p-2 sm:p-3 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl text-white">
+                  <Battery className="h-4 w-4 sm:h-6 sm:w-6" />
                 </div>
               </div>
             </CardContent>
