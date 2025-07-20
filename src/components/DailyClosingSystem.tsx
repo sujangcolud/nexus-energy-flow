@@ -207,6 +207,124 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
     }
   };
 
+  const fetchAllTimeData = async () => {
+    if (!user) return;
+
+    setLoading(true);
+    try {
+      let fromDate = "";
+      let toDate = "";
+
+      if (dateRange?.from) {
+        fromDate = format(dateRange.from, "yyyy-MM-dd");
+      }
+      if (dateRange?.to) {
+        toDate = format(dateRange.to, "yyyy-MM-dd");
+      }
+
+      // Fetch data from all tables within date range
+      let ordersQuery = supabase
+        .from("orders")
+        .select("*")
+        .eq("user_id", user.id);
+
+      let chargingQuery = supabase
+        .from("charging_sessions")
+        .select("*")
+        .eq("user_id", user.id);
+
+      let expensesQuery = supabase
+        .from("expenses")
+        .select("*")
+        .eq("user_id", user.id);
+
+      let depositsQuery = supabase
+        .from("deposits")
+        .select("*")
+        .eq("user_id", user.id);
+
+      let withdrawalsQuery = supabase
+        .from("withdrawals")
+        .select("*")
+        .eq("user_id", user.id);
+
+      let savingsQuery = supabase
+        .from("cooperative_savings")
+        .select("*")
+        .eq("user_id", user.id);
+
+      // Apply date filters if provided
+      if (fromDate) {
+        ordersQuery = ordersQuery.gte("order_date", fromDate);
+        chargingQuery = chargingQuery.gte("session_date", fromDate);
+        expensesQuery = expensesQuery.gte("expense_date", fromDate);
+        depositsQuery = depositsQuery.gte("deposit_date", fromDate);
+        withdrawalsQuery = withdrawalsQuery.gte("withdrawal_date", fromDate);
+        savingsQuery = savingsQuery.gte("contribution_date", fromDate);
+      }
+
+      if (toDate) {
+        ordersQuery = ordersQuery.lte("order_date", toDate);
+        chargingQuery = chargingQuery.lte("session_date", toDate);
+        expensesQuery = expensesQuery.lte("expense_date", toDate);
+        depositsQuery = depositsQuery.lte("deposit_date", toDate);
+        withdrawalsQuery = withdrawalsQuery.lte("withdrawal_date", toDate);
+        savingsQuery = savingsQuery.lte("contribution_date", toDate);
+      }
+
+      const [
+        { data: orders, error: ordersError },
+        { data: charging, error: chargingError },
+        { data: expenses, error: expensesError },
+        { data: deposits, error: depositsError },
+        { data: withdrawals, error: withdrawalsError },
+        { data: savings, error: savingsError },
+      ] = await Promise.all([
+        ordersQuery,
+        chargingQuery,
+        expensesQuery,
+        depositsQuery,
+        withdrawalsQuery,
+        savingsQuery,
+      ]);
+
+      if (ordersError) throw ordersError;
+      if (chargingError) throw chargingError;
+      if (expensesError) throw expensesError;
+      if (depositsError) throw depositsError;
+      if (withdrawalsError) throw withdrawalsError;
+      if (savingsError) throw savingsError;
+
+      const summary: TransactionSummary = {
+        orders: processTransactions(orders || [], "total", "payment_mode"),
+        charging: processTransactions(
+          charging || [],
+          "total_amount",
+          "payment_mode",
+        ),
+        expenses: processTransactions(expenses || [], "amount", "payment_mode"),
+        deposits: processTransactions(deposits || [], "amount", "mode"),
+        withdrawals: processTransactions(
+          withdrawals || [],
+          "amount",
+          "payment_mode",
+        ),
+        cooperative_savings: processTransactions(
+          savings || [],
+          "contribution_amount",
+          "payment_mode",
+        ),
+      };
+
+      setAllTimeSummary(summary);
+    } catch (error) {
+      logError("fetching all-time data", error);
+      toast.error(`Error loading all-time data: ${extractErrorMessage(error)}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const processTransactions = (
     transactions: any[],
     amountField: string,
