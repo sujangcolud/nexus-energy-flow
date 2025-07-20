@@ -262,6 +262,16 @@ const Dashboard = () => {
         description: "Manage VAT entries",
       },
       {
+        id: "dashboard_studio",
+        path: "dashboard-studio",
+        label: "Dashboard Studio",
+        icon: BarChart3,
+        roles: ["user", "reports_viewer", "super_admin"],
+        color: "bg-indigo-600",
+        bgColor: "bg-indigo-50",
+        description: "Create custom dashboards with drag-and-drop",
+      },
+      {
         id: "calculation_engine",
         path: "calculation-engine",
         label: "Calculation Engine",
