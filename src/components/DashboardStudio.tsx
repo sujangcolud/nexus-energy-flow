@@ -435,8 +435,9 @@ const DashboardStudio: React.FC = () => {
         `Query executed successfully. ${data?.length || 0} rows returned.`,
       );
     } catch (error) {
-      console.error("Error executing query:", error);
-      toast.error("Query execution failed");
+      const errorMessage = extractErrorMessage(error);
+      console.error("Error executing query:", errorMessage, error);
+      toast.error(`Query execution failed: ${errorMessage}`);
       setQueryResults([]);
     } finally {
       setIsQueryRunning(false);
