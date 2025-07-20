@@ -207,8 +207,21 @@ const WithdrawalsTab = () => {
       return;
     }
 
-    if (!formData.amount || !formData.purpose || !formData.payment_mode) {
+    if (
+      !formData.amount ||
+      !formData.purpose ||
+      !formData.payment_mode ||
+      !formData.withdrawal_from
+    ) {
       toast.error("Please fill in all required fields");
+      return;
+    }
+
+    if (
+      formData.withdrawal_from === "Cooperative" &&
+      !formData.cooperative_member_id
+    ) {
+      toast.error("Please enter the cooperative member ID");
       return;
     }
 
