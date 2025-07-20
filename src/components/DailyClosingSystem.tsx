@@ -308,11 +308,7 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
         ),
         expenses: processTransactions(expenses || [], "amount", "payment_mode"),
         deposits: processTransactions(deposits || [], "amount", "mode"),
-        withdrawals: processTransactions(
-          withdrawals || [],
-          "amount",
-          "payment_mode",
-        ),
+        withdrawals: processTransactions(withdrawals || [], "amount", "mode"),
         cooperative_savings: processTransactions(
           savings || [],
           "contribution_amount",
@@ -622,7 +618,7 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
 
             <TabsContent value="overview" className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {Object.entries(transactionSummary).map(([key, data]) => (
+                {Object.entries(currentSummary).map(([key, data]) => (
                   <Card key={key}>
                     <CardHeader className="pb-2">
                       <CardTitle className="text-sm flex items-center gap-2">
@@ -684,46 +680,48 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
             </TabsContent>
 
             <TabsContent value="payment" className="space-y-4">
-              {Object.entries(transactionSummary).map(
-                ([transactionType, data]) => (
-                  <Card key={transactionType}>
-                    <CardHeader>
-                      <CardTitle className="text-sm">
-                        {transactionType.replace("_", " ").toUpperCase()}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Payment Mode</TableHead>
-                            <TableHead>Count</TableHead>
-                            <TableHead className="text-right">Amount</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {Object.entries(data.by_payment).map(
-                            ([paymentMode, paymentData]) => (
-                              <TableRow key={paymentMode}>
-                                <TableCell>{paymentMode}</TableCell>
-                                <TableCell>{paymentData.count}</TableCell>
-                                <TableCell className="text-right">
-                                  {formatCurrency(paymentData.total)}
-                                </TableCell>
-                              </TableRow>
-                            ),
-                          )}
-                        </TableBody>
-                      </Table>
-                    </CardContent>
-                  </Card>
-                ),
-              )}
+              {Object.entries(currentSummary).map(([transactionType, data]) => (
+                <Card key={transactionType}>
+                  <CardHeader>
+                    <CardTitle className="text-sm">
+                      {transactionType.replace("_", " ").toUpperCase()}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Payment Mode</TableHead>
+                          <TableHead>Count</TableHead>
+                          <TableHead className="text-right">Amount</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {Object.entries(data.by_payment).map(
+                          ([paymentMode, paymentData]) => (
+                            <TableRow key={paymentMode}>
+                              <TableCell>{paymentMode}</TableCell>
+                              <TableCell>{paymentData.count}</TableCell>
+                              <TableCell className="text-right">
+                                {formatCurrency(paymentData.total)}
+                              </TableCell>
+                            </TableRow>
+                          ),
+                        )}
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
+              ))}
             </TabsContent>
 
             <TabsContent value="details" className="space-y-4">
               <div className="bg-gray-50 p-4 rounded-lg">
-                <h3 className="font-semibold mb-2">Day Closing Summary</h3>
+                <h3 className="font-semibold mb-2">
+                  {viewMode === "daily"
+                    ? "Day Closing Summary"
+                    : "All-Time Summary"}
+                </h3>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span>Total Income (Orders + Charging):</span>
