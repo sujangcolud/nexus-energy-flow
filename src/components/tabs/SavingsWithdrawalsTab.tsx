@@ -541,6 +541,29 @@ const SavingsWithdrawalsTab = () => {
                       </SelectContent>
                     </Select>
                   </div>
+                  <div>
+                    <Label htmlFor="editSavingsTo">Savings To</Label>
+                    <Select
+                      value={(selectedItem as Saving).savings_to || ""}
+                      onValueChange={(value) =>
+                        setSelectedItem({
+                          ...selectedItem,
+                          savings_to: value,
+                        } as Saving)
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {savingsToOptions.map((option) => (
+                          <SelectItem key={option} value={option}>
+                            {option}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </>
               ) : (
                 <>
