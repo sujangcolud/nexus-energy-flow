@@ -295,7 +295,22 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
           error,
           errorType: typeof error,
           errorProperties: error ? Object.getOwnPropertyNames(error) : [],
+          userAgent: navigator.userAgent,
+          online: navigator.onLine,
+          url: window.location.href,
+          timestamp: new Date().toISOString(),
         });
+
+        // Additional diagnostic info
+        console.log("🔍 Diagnostic Information:");
+        console.log(
+          "- Network status:",
+          navigator.onLine ? "Online" : "Offline",
+        );
+        console.log("- User authenticated:", !!user);
+        console.log("- Supabase URL:", supabase.supabaseUrl);
+        console.log("- Error stack:", error?.stack || "No stack trace");
+
         logError("AllTimeSummaryWidget", error);
 
         // Set fallback/empty data to prevent UI crash
