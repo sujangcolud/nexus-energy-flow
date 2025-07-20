@@ -636,14 +636,13 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
             </Badge>
           </div>
         </CardContent>
-            </Card>
-        </div>
+      </Card>
 
-    {/* All-Time Summary Modal */}
-    <AllTimeSummaryModal
-      isOpen={isModalOpen}
-      onClose={() => setIsModalOpen(false)}
-    />
+      {/* All-Time Summary Modal */}
+      <AllTimeSummaryModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+      />
     </div>
   );
 };
