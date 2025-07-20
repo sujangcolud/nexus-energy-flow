@@ -16,6 +16,7 @@ import {
   Database,
   BarChart3,
   Clock,
+  Eye,
 } from "lucide-react";
 import { toast } from "sonner";
 import { extractErrorMessage, logError } from "@/utils/errorHandling";
