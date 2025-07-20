@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/table";
 import { toast } from "sonner";
 import { extractErrorMessage, logError } from "@/utils/errorHandling";
+import { useIsMobile } from "@/hooks/use-mobile";
 import {
   Zap,
   Plus,
@@ -109,6 +110,7 @@ const ChargingTab = () => {
   const [transactionDate, setTransactionDate] = useState(
     new Date().toISOString().split("T")[0],
   );
+  const isMobile = useIsMobile();
 
   const paymentModes = ["Cash", "Esewa", "Fonepay", "Bank", "Cheque", "Credit"];
 
