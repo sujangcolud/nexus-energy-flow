@@ -961,9 +961,9 @@ const ChargingTab = () => {
               </CardContent>
             </Card>
           </div>
-        )}
+                )}
 
-                {/* Charging History */}
+        {/* Charging History */}
         <Card className="bg-gradient-to-br from-white/90 to-gray-50/90 backdrop-blur-sm border-0 shadow-2xl">
           <CardHeader className="border-b border-gray-200/50 space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
