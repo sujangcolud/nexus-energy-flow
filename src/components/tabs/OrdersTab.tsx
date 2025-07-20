@@ -1152,17 +1152,17 @@ const OrdersTab = () => {
                             </div>
                           </span>
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="hidden sm:table-cell px-1 sm:px-4">
                           <Badge
                             variant="outline"
-                            className="bg-green-50 border-green-200"
+                            className="bg-green-50 border-green-200 text-xs"
                           >
                             {order.payment_mode}
                           </Badge>
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="hidden sm:table-cell px-1 sm:px-4">
                           {canEditTransactions && (
-                            <div className="flex gap-2">
+                            <div className="flex gap-1 sm:gap-2">
                               <Button
                                 variant="outline"
                                 size="sm"
@@ -1170,6 +1170,7 @@ const OrdersTab = () => {
                                   setSelectedOrder(order);
                                   setIsEditDialogOpen(true);
                                 }}
+                                className="text-xs px-2"
                               >
                                 Edit
                               </Button>
@@ -1178,9 +1179,9 @@ const OrdersTab = () => {
                                   <Button
                                     variant="outline"
                                     size="sm"
-                                    className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                                    className="text-red-500 hover:text-red-700 hover:bg-red-50 px-2"
                                   >
-                                    <Trash2 className="h-4 w-4" />
+                                    <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
                                   </Button>
                                 </AlertDialogTrigger>
                                 <AlertDialogContent>
