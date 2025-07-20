@@ -479,15 +479,17 @@ const Dashboard = () => {
                 <Database className="h-4 w-4" />
                 Daily Closing
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsBatchClosingOpen(true)}
-                className="flex items-center gap-2 hover:bg-green-50 hover:border-green-300 transition-colors"
-              >
-                <Calendar className="h-4 w-4" />
-                Batch Closing
-              </Button>
+              {showBatchClosing && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsBatchClosingOpen(true)}
+                  className="flex items-center gap-2 hover:bg-green-50 hover:border-green-300 transition-colors"
+                >
+                  <Calendar className="h-4 w-4" />
+                  Batch Closing
+                </Button>
+              )}
               <Button
                 variant="outline"
                 size="sm"
