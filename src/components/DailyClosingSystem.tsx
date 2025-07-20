@@ -465,32 +465,73 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Database className="h-5 w-5" />
-            Daily Closing System -{" "}
-            {format(new Date(selectedDate), "MMM dd, yyyy")}
+            {viewMode === "daily"
+              ? `Daily Closing System - ${format(new Date(selectedDate), "MMM dd, yyyy")}`
+              : "All-Time Summary"}
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6">
-          {/* Date Selector */}
-          <div className="flex items-center gap-4">
-            <Calendar className="h-5 w-5 text-blue-600" />
-            <input
-              type="date"
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              className="border rounded px-3 py-2"
-              max={new Date().toISOString().split("T")[0]}
-            />
-            {alreadyClosed && (
-              <Badge
-                variant="secondary"
-                className="bg-green-100 text-green-800"
-              >
-                <CheckCircle className="h-4 w-4 mr-1" />
-                Already Closed
-              </Badge>
-            )}
+          {/* View Mode Toggle */}
+          <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
+            <Button
+              variant={viewMode === "daily" ? "default" : "outline"}
+              onClick={() => setViewMode("daily")}
+              className="flex items-center gap-2"
+            >
+              <Calendar className="h-4 w-4" />
+              Daily View
+            </Button>
+            <Button
+              variant={viewMode === "alltime" ? "default" : "outline"}
+              onClick={() => setViewMode("alltime")}
+              className="flex items-center gap-2"
+            >
+              <BarChart3 className="h-4 w-4" />
+              All Time
+            </Button>
           </div>
+
+          {/* Date Controls */}
+          {viewMode === "daily" ? (
+            <div className="flex items-center gap-4">
+              <Calendar className="h-5 w-5 text-blue-600" />
+              <input
+                type="date"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                className="border rounded px-3 py-2"
+                max={new Date().toISOString().split("T")[0]}
+              />
+              {alreadyClosed && (
+                <Badge
+                  variant="secondary"
+                  className="bg-green-100 text-green-800"
+                >
+                  <CheckCircle className="h-4 w-4 mr-1" />
+                  Already Closed
+                </Badge>
+              )}
+            </div>
+          ) : (
+            <div className="flex items-center gap-4">
+              <Calendar className="h-5 w-5 text-blue-600" />
+              <DateRangePicker
+                onUpdate={(range) => {
+                  if (range?.from && range?.to) {
+                    setDateRange({ from: range.from, to: range.to });
+                  } else {
+                    setDateRange(undefined);
+                  }
+                }}
+              />
+              <span className="text-sm text-gray-600">
+                {dateRange?.from && dateRange?.to
+                  ? `${format(dateRange.from, "MMM dd, yyyy")} - ${format(dateRange.to, "MMM dd, yyyy")}`
+                  : "Select date range for all-time summary"}
+              </span>
+            </div>
+          )}
 
           {/* Summary Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
