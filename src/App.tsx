@@ -20,9 +20,7 @@ import DepositsTab from "./components/tabs/DepositsTab";
 import WithdrawalsTab from "./components/tabs/WithdrawalsTab";
 import CooperativeSavingsTab from "./components/tabs/CooperativeSavingsTab";
 import MenuManagementTab from "./components/tabs/MenuManagementTab"; // Consider admin roles for this route
-import InsightsTab from "./components/tabs/InsightsTab";
-import ReportsTab from "./components/tabs/ReportsTab";
-import ReportsViewTab from "./components/tabs/ReportsViewTab";
+
 import DataInputTab from "./components/tabs/DataInputTab";
 import UserManagementTab from "./components/tabs/UserManagementTab";
 import ShareInvestmentsTab from "./components/tabs/ShareInvestmentsTab";
@@ -30,10 +28,10 @@ import ExpenseBookingsTab from "./components/tabs/ExpenseBookingsTab";
 import VATEntryTab from "./components/tabs/VATEntryTab";
 import InventoryTab from "./components/tabs/InventoryTab";
 import FileUploadTab from "./components/tabs/FileUploadTab";
-import CalculationEngineTab from "./components/tabs/CalculationEngineTab";
+
 import UnifiedInsightsTab from "./components/tabs/UnifiedInsightsTab";
 import UnifiedBulkImportTab from "./components/tabs/UnifiedBulkImportTab";
-import UnifiedReportsTab from "./components/tabs/UnifiedReportsTab";
+
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import AdminPanel from "./pages/AdminPanel";
 import CustomReportCreator from "./pages/CustomReportCreator";
@@ -115,15 +113,10 @@ const App = () => {
                 <Route path="inventory" element={<InventoryTab />} />
                 {/* TODO: Add role-based protection for menu if needed at route level, or handle in MenuManagementTab */}
                 <Route path="menu" element={<MenuManagementTab />} />
-                <Route path="insights" element={<UnifiedInsightsTab />} />
-                <Route path="reports" element={<UnifiedReportsTab />} />
+
                 <Route path="bulk-import" element={<UnifiedBulkImportTab />} />
                 <Route path="user-management" element={<UserManagementTab />} />
 
-                <Route
-                  path="calculation-engine"
-                  element={<CalculationEngineTab />}
-                />
                 <Route
                   path="super-admin"
                   element={
