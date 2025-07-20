@@ -393,6 +393,9 @@ const DepositsTab = () => {
         mode: "",
         depositedBy: "",
         depositedByType: "",
+        deposited_to: "",
+        sender_name: "",
+        receiver_name: "",
         remarks: "",
       });
       fetchDeposits();
