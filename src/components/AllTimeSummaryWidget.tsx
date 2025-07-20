@@ -146,25 +146,56 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
           "✅ Connectivity test passed, proceeding with full query...",
         );
 
-        let query = supabase
-          .from("daily_summary")
-          .select("*")
-          .order("summary_date", { ascending: true });
+        let summariesData, error;
 
-        if (dateRange?.from) {
-          query = query.gte(
-            "summary_date",
-            dateRange.from.toISOString().split("T")[0],
-          );
-        }
-        if (dateRange?.to) {
-          query = query.lt(
-            "summary_date",
-            dateRange.to.toISOString().split("T")[0],
-          );
-        }
+        try {
+          // Try the main query first
+          let query = supabase
+            .from("daily_summary")
+            .select("*")
+            .order("summary_date", { ascending: true });
 
-        const { data: summariesData, error } = await query;
+          if (dateRange?.from) {
+            query = query.gte(
+              "summary_date",
+              dateRange.from.toISOString().split("T")[0],
+            );
+          }
+          if (dateRange?.to) {
+            query = query.lt(
+              "summary_date",
+              dateRange.to.toISOString().split("T")[0],
+            );
+          }
+
+          const result = await query;
+          summariesData = result.data;
+          error = result.error;
+        } catch (queryError) {
+          console.warn("⚠️ Main query failed, trying fallback...", queryError);
+
+          // Fallback: try simpler query without date range
+          try {
+            const fallbackResult = await supabase
+              .from("daily_summary")
+              .select(
+                "summary_date, total_income, total_expenses, total_deposits, total_withdrawals, total_savings, cash_balance, esewa_balance, fonepay_balance, total_balance",
+              )
+              .order("summary_date", { ascending: true })
+              .limit(100);
+
+            summariesData = fallbackResult.data;
+            error = fallbackResult.error;
+
+            if (!error) {
+              console.log("✅ Fallback query succeeded with limited data");
+              toast.info("Using simplified data due to connection issues");
+            }
+          } catch (fallbackError) {
+            console.error("❌ Fallback query also failed:", fallbackError);
+            error = fallbackError;
+          }
+        }
 
         if (error) {
           console.error("❌ Error fetching daily summaries:", {
