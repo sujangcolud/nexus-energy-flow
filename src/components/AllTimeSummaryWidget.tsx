@@ -284,9 +284,44 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
         setSummaryData(finalSummary);
       } catch (error) {
         const errorMessage = extractErrorMessage(error);
-        console.error("❌ Error in fetchAllTimeSummary:", errorMessage);
+        console.error("❌ Error in fetchAllTimeSummary:", {
+          errorMessage,
+          error,
+          errorType: typeof error,
+          errorProperties: error ? Object.getOwnPropertyNames(error) : [],
+        });
         logError("AllTimeSummaryWidget", error);
-        toast.error(`Failed to load all-time summary: ${errorMessage}`);
+
+        // Set fallback/empty data to prevent UI crash
+        setSummaryData({
+          totalIncome: 0,
+          totalExpenses: 0,
+          totalDeposits: 0,
+          totalWithdrawals: 0,
+          cooperativeSavings: 0,
+          netProfit: 0,
+          currentBalances: { cash: 0, esewa: 0, fonepay: 0, total: 0 },
+          incomeBreakdown: { fromOrders: 0, fromCharging: 0 },
+          paymentMethodBreakdown: { cash: 0, esewa: 0, fonepay: 0 },
+          withdrawalBreakdown: {
+            fromBank: 0,
+            fromSavings: 0,
+            fromEsewa: 0,
+            fromFonepay: 0,
+            total: 0,
+          },
+          dataPoints: 0,
+          dateRange: { from: "", to: "" },
+        });
+
+        // Don't show error toast if we already handled it above
+        if (
+          !error?.message?.includes("Failed to fetch") &&
+          !error?.message?.includes("JWT") &&
+          error?.code !== "PGRST116"
+        ) {
+          toast.error(`Failed to load all-time summary: ${errorMessage}`);
+        }
       } finally {
         setLoading(false);
       }
