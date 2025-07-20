@@ -74,6 +74,7 @@ import {
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import useTableControls from "@/hooks/useTableControls";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface Saving {
   id: string;
@@ -135,6 +136,7 @@ const SavingsWithdrawalsTab = () => {
   );
   const [editType, setEditType] = useState<"saving" | "withdrawal">("saving");
   const [canEditTransactions, setCanEditTransactions] = useState(false);
+  const isMobile = useIsMobile();
 
   const cyclePeriods = [
     "Weekly",
@@ -773,7 +775,9 @@ const SavingsWithdrawalsTab = () => {
           </TabsList>
 
           <TabsContent value="savings" className="space-y-8">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div
+              className={`grid gap-8 ${isMobile ? "grid-cols-1" : "lg:grid-cols-2"}`}
+            >
               {/* Add Savings Form */}
               <Card className="bg-gradient-to-br from-white/90 to-teal-50/90 backdrop-blur-sm border-0 shadow-2xl hover:shadow-3xl transition-all duration-300">
                 <CardHeader className="bg-gradient-to-r from-teal-500 to-cyan-600 text-white rounded-t-lg">
@@ -812,7 +816,9 @@ const SavingsWithdrawalsTab = () => {
                       />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div
+                      className={`grid gap-4 ${isMobile ? "grid-cols-1" : "grid-cols-2"}`}
+                    >
                       <div className="space-y-2">
                         <Label
                           htmlFor="memberId"
@@ -1247,7 +1253,9 @@ const SavingsWithdrawalsTab = () => {
           </TabsContent>
 
           <TabsContent value="withdrawals" className="space-y-8">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div
+              className={`grid gap-8 ${isMobile ? "grid-cols-1" : "lg:grid-cols-2"}`}
+            >
               {/* Add Withdrawals Form */}
               <Card className="bg-gradient-to-br from-white/90 to-red-50/90 backdrop-blur-sm border-0 shadow-2xl hover:shadow-3xl transition-all duration-300">
                 <CardHeader className="bg-gradient-to-r from-red-500 to-pink-600 text-white rounded-t-lg">
@@ -1318,7 +1326,9 @@ const SavingsWithdrawalsTab = () => {
                       </datalist>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div
+                      className={`grid gap-4 ${isMobile ? "grid-cols-1" : "grid-cols-2"}`}
+                    >
                       <div className="space-y-2">
                         <Label
                           htmlFor="paymentMode"
@@ -1404,7 +1414,9 @@ const SavingsWithdrawalsTab = () => {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div
+                      className={`grid gap-4 ${isMobile ? "grid-cols-1" : "grid-cols-2"}`}
+                    >
                       <div className="space-y-2">
                         <Label
                           htmlFor="recipient"
