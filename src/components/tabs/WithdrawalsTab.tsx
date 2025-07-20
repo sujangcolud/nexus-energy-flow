@@ -95,6 +95,8 @@ const WithdrawalsTab = () => {
     referenceNumber: "",
     remarks: "",
     payment_mode: "",
+    withdrawal_from: "",
+    cooperative_member_id: "",
   });
   const [newCategory, setNewCategory] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
