@@ -736,21 +736,19 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
                   <div className="flex justify-between">
                     <span>Total Deposits:</span>
                     <span className="font-semibold">
-                      {formatCurrency(transactionSummary.deposits.total)}
+                      {formatCurrency(currentSummary.deposits.total)}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span>Total Withdrawals:</span>
                     <span className="font-semibold">
-                      {formatCurrency(transactionSummary.withdrawals.total)}
+                      {formatCurrency(currentSummary.withdrawals.total)}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span>Cooperative Savings:</span>
                     <span className="font-semibold">
-                      {formatCurrency(
-                        transactionSummary.cooperative_savings.total,
-                      )}
+                      {formatCurrency(currentSummary.cooperative_savings.total)}
                     </span>
                   </div>
                   <hr className="my-2" />
