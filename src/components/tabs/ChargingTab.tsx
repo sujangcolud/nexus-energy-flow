@@ -959,7 +959,7 @@ const ChargingTab = () => {
                   ))}
                 </div>
               </CardContent>
-                        </Card>
+            </Card>
           </div>
         )}
 
@@ -986,28 +986,37 @@ const ChargingTab = () => {
                           <>
                             {isMobile
                               ? `${format(range.from, "MMM dd")} - ${format(range.to, "MMM dd")}`
-                              : `${format(range.from, "LLL dd, y")} - ${format(range.to, "LLL dd, y")}`
-                            }
+                              : `${format(range.from, "LLL dd, y")} - ${format(range.to, "LLL dd, y")}`}
                           </>
                         ) : (
-                          format(range.from, isMobile ? "MMM dd, y" : "LLL dd, y")
+                          format(
+                            range.from,
+                            isMobile ? "MMM dd, y" : "LLL dd, y",
+                          )
                         )
                       ) : (
-                        <span className="truncate">{isMobile ? "Pick dates" : "Pick a date range"}</span>
+                        <span className="truncate">
+                          {isMobile ? "Pick dates" : "Pick a date range"}
+                        </span>
                       )}
                     </Button>
-                                    </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="end" side="bottom">
-                  <Calendar
-                    initialFocus
-                    mode="range"
-                    defaultMonth={range?.from}
-                    selected={range}
-                    onSelect={onRangeChange}
-                    numberOfMonths={isMobile ? 1 : 2}
-                  />
-                </PopoverContent>
-              </Popover>
+                  </PopoverTrigger>
+                  <PopoverContent
+                    className="w-auto p-0"
+                    align="end"
+                    side="bottom"
+                  >
+                    <Calendar
+                      initialFocus
+                      mode="range"
+                      defaultMonth={range?.from}
+                      selected={range}
+                      onSelect={onRangeChange}
+                      numberOfMonths={isMobile ? 1 : 2}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
             </div>
           </CardHeader>
           <CardContent className="p-0">
