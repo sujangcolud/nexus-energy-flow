@@ -450,8 +450,8 @@ const Dashboard = () => {
               </NavLink>
             </div>
 
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2 text-sm text-slate-700">
+            <div className="flex items-center gap-2 sm:gap-4">
+              <div className="hidden sm:flex items-center gap-2 text-sm text-slate-700">
                 <div className="p-2 rounded-full bg-slate-100">
                   <User className="h-4 w-4 text-slate-600" />
                 </div>
@@ -475,30 +475,32 @@ const Dashboard = () => {
                 variant="outline"
                 size="sm"
                 onClick={handleDailyClosing}
-                className="flex items-center gap-2 hover:bg-blue-50 hover:border-blue-300 transition-colors"
+                className="flex items-center gap-1 sm:gap-2 hover:bg-blue-50 hover:border-blue-300 transition-colors text-xs sm:text-sm px-2 sm:px-3"
               >
                 <Database className="h-4 w-4" />
-                Daily Closing
+                <span className="hidden sm:inline">Daily Closing</span>
+                <span className="sm:hidden">Daily</span>
               </Button>
               {showBatchClosing && (
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => setIsBatchClosingOpen(true)}
-                  className="flex items-center gap-2 hover:bg-green-50 hover:border-green-300 transition-colors"
+                  className="flex items-center gap-1 sm:gap-2 hover:bg-green-50 hover:border-green-300 transition-colors text-xs sm:text-sm px-2 sm:px-3"
                 >
                   <Calendar className="h-4 w-4" />
-                  Batch Closing
+                  <span className="hidden sm:inline">Batch Closing</span>
+                  <span className="sm:hidden">Batch</span>
                 </Button>
               )}
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleSignOut}
-                className="flex items-center gap-2 hover:bg-red-50 hover:border-red-300 transition-colors"
+                className="flex items-center gap-1 sm:gap-2 hover:bg-red-50 hover:border-red-300 transition-colors text-xs sm:text-sm px-2 sm:px-3"
               >
                 <LogOut className="h-4 w-4" />
-                Sign Out
+                <span className="hidden sm:inline">Sign Out</span>
               </Button>
 
               <Link to="settings">
