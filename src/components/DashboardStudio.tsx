@@ -371,7 +371,15 @@ const DashboardStudio: React.FC = () => {
   };
 
   const saveDashboard = async () => {
-    if (!currentDashboard || !user) return;
+    if (!currentDashboard || !user?.id) {
+      toast.error("Cannot save dashboard: missing user information");
+      return;
+    }
+
+    if (!dashboardName.trim()) {
+      toast.error("Please enter a dashboard name");
+      return;
+    }
 
     try {
       const dashboardData = {
