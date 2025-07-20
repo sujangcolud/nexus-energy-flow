@@ -518,6 +518,18 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
           <Button
             variant="outline"
             size="sm"
+            onClick={forceUpdateDailySummaries}
+            disabled={refreshing}
+            className="flex items-center gap-2 text-orange-600 border-orange-300 hover:bg-orange-50"
+          >
+            <Database
+              className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
+            />
+            Force Update
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
             onClick={refreshSummary}
             disabled={refreshing}
             className="flex items-center gap-2"
