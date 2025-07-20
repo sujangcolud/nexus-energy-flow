@@ -98,7 +98,7 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
   const fetchAllTimeSummary = useCallback(
     async (dateRange?: DateRange) => {
       if (!user) {
-        console.warn("❌ No user found, cannot fetch summary");
+        console.warn("�� No user found, cannot fetch summary");
         return;
       }
 
@@ -592,6 +592,23 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
                 Refresh Page
               </Button>
             </div>
+
+            {/* Debug Information (only show in development or for admins) */}
+            {process.env.NODE_ENV === "development" && (
+              <details className="mt-4 text-xs text-gray-500">
+                <summary className="cursor-pointer hover:text-gray-700">
+                  Debug Info
+                </summary>
+                <div className="mt-2 p-2 bg-gray-100 rounded text-left">
+                  <p>• URL: {window.location.href}</p>
+                  <p>• User Agent: {navigator.userAgent.substring(0, 50)}...</p>
+                  <p>• Online: {navigator.onLine ? "Yes" : "No"}</p>
+                  <p>• User: {user?.email || "Not logged in"}</p>
+                  <p>• Retry Count: {retryCount}</p>
+                  <p>• Timestamp: {new Date().toISOString()}</p>
+                </div>
+              </details>
+            )}
           </div>
         ) : summaryData.dataPoints === 0 ? (
           <div className="flex items-center justify-center py-8 text-gray-500">
