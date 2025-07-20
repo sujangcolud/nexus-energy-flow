@@ -295,6 +295,7 @@ const DashboardStudio: React.FC = () => {
   const [dashboardDescription, setDashboardDescription] = useState("");
   const [queryResults, setQueryResults] = useState<any[]>([]);
   const [isQueryRunning, setIsQueryRunning] = useState(false);
+  const [isSupported, setIsSupported] = useState<boolean | null>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
 
   // Load saved dashboards when user is available
