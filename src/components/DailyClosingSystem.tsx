@@ -454,9 +454,15 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
     );
   }
 
+  // Use appropriate data source based on view mode
+  const currentSummary =
+    viewMode === "daily"
+      ? transactionSummary
+      : allTimeSummary || transactionSummary;
+
   const totalIncome =
-    transactionSummary.orders.total + transactionSummary.charging.total;
-  const totalExpenses = transactionSummary.expenses.total;
+    currentSummary.orders.total + currentSummary.charging.total;
+  const totalExpenses = currentSummary.expenses.total;
   const netProfit = totalIncome - totalExpenses;
 
   return (
