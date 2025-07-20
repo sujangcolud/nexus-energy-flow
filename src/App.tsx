@@ -37,6 +37,7 @@ import AdminPanel from "./pages/AdminPanel";
 import CustomReportCreator from "./pages/CustomReportCreator";
 import Settings from "./pages/Settings";
 import Analytics from "./pages/Analytics";
+import DashboardStudioPage from "./pages/DashboardStudio";
 import { Outlet } from "react-router-dom"; // Needed for nested routes
 
 const queryClient = new QueryClient();
@@ -126,6 +127,10 @@ const App = () => {
                   }
                 />
                 <Route path="settings" element={<Settings />} />
+                <Route
+                  path="dashboard-studio"
+                  element={<DashboardStudioPage />}
+                />
                 {/* It might be good to have an index route that explicitly shows the cards */}
                 {/* <Route index element={<DashboardPageWithCards />} /> */}
               </Route>
