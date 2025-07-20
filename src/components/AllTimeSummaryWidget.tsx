@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { extractErrorMessage, logError } from "@/utils/errorHandling";
+import { Button } from "@/components/ui/button";
 import AllTimeSummaryModal from "./AllTimeSummaryModal";
 import { DateRange } from "react-day-picker";
 
@@ -334,6 +335,29 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
     [user],
   );
 
+  const checkConnection = async () => {
+    try {
+      console.log("🔍 Testing Supabase connection...");
+
+      // Simple health check
+      const { data, error } = await supabase
+        .from("daily_summary")
+        .select("summary_date")
+        .limit(1);
+
+      if (error) {
+        console.error("❌ Connection test failed:", error);
+        return false;
+      }
+
+      console.log("✅ Connection test successful");
+      return true;
+    } catch (error) {
+      console.error("❌ Connection test error:", error);
+      return false;
+    }
+  };
+
   const retryFetch = async () => {
     if (retryCount >= 3) {
       toast.error("Maximum retry attempts reached. Please refresh the page.");
@@ -342,6 +366,16 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
 
     setRetryCount((prev) => prev + 1);
     console.log(`🔄 Retrying fetch attempt ${retryCount + 1}/3...`);
+
+    // Test connection first
+    const isConnected = await checkConnection();
+    if (!isConnected) {
+      toast.error(
+        "Still unable to connect to database. Please check your internet connection.",
+      );
+      return;
+    }
+
     await fetchAllTimeSummary();
   };
 
