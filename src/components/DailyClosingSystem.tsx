@@ -309,13 +309,27 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
         ),
         expenses: processTransactions(expenses || [], "amount", "payment_mode"),
         deposits: processTransactions(deposits || [], "amount", "mode"),
-        withdrawals: processTransactions(withdrawals || [], "amount", "mode"),
+        withdrawals: processTransactions(
+          withdrawals || [],
+          "amount",
+          "payment_mode",
+        ),
         cooperative_savings: processTransactions(
           savings || [],
           "contribution_amount",
           "payment_mode",
         ),
       };
+
+      console.log("All-time data fetched:", {
+        orders: orders?.length || 0,
+        charging: charging?.length || 0,
+        expenses: expenses?.length || 0,
+        deposits: deposits?.length || 0,
+        withdrawals: withdrawals?.length || 0,
+        savings: savings?.length || 0,
+        summary,
+      });
 
       setAllTimeSummary(summary);
     } catch (error) {
