@@ -207,12 +207,7 @@ const WithdrawalsTab = () => {
       return;
     }
 
-    if (
-      !formData.amount ||
-      !formData.purpose ||
-      !formData.payment_mode ||
-      !formData.withdrawal_from
-    ) {
+    if (!formData.amount || !formData.purpose || !formData.payment_mode) {
       toast.error("Please fill in all required fields");
       return;
     }
