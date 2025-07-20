@@ -994,7 +994,7 @@ const OrdersTab = () => {
 
         {/* Order History */}
         <Card className="bg-gradient-to-br from-white/90 to-gray-50/90 backdrop-blur-sm border-0 shadow-2xl">
-                    <CardHeader className="border-b border-gray-200/50 space-y-4">
+          <CardHeader className="border-b border-gray-200/50 space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <CardTitle className="text-lg sm:text-2xl font-bold bg-gradient-to-r from-gray-700 to-gray-900 bg-clip-text text-transparent flex items-center gap-2">
                 <Clock className="h-5 w-5 sm:h-6 sm:w-6 text-gray-600" />
@@ -1010,32 +1010,37 @@ const OrdersTab = () => {
                         !range && "text-muted-foreground",
                       )}
                     >
-                                        <CalendarIcon className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-                    {range?.from ? (
-                      range.to ? (
-                        <>
-                          {format(range.from, "LLL dd, y")} -{" "}
-                          {format(range.to, "LLL dd, y")}
-                        </>
+                      <CalendarIcon className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                      {range?.from ? (
+                        range.to ? (
+                          <>
+                            {format(range.from, "LLL dd, y")} -{" "}
+                            {format(range.to, "LLL dd, y")}
+                          </>
+                        ) : (
+                          format(range.from, "LLL dd, y")
+                        )
                       ) : (
-                        format(range.from, "LLL dd, y")
-                      )
-                    ) : (
-                                            <span className="truncate">Pick date range</span>
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0" align="end" side="bottom">
-                  <Calendar
-                    initialFocus
-                    mode="range"
-                    defaultMonth={range?.from}
-                    selected={range}
-                    onSelect={onRangeChange}
-                                        numberOfMonths={1}
-                  />
-                </PopoverContent>
-              </Popover>
+                        <span className="truncate">Pick date range</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent
+                    className="w-auto p-0"
+                    align="end"
+                    side="bottom"
+                  >
+                    <Calendar
+                      initialFocus
+                      mode="range"
+                      defaultMonth={range?.from}
+                      selected={range}
+                      onSelect={onRangeChange}
+                      numberOfMonths={1}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
             </div>
           </CardHeader>
           <CardContent className="p-0">
