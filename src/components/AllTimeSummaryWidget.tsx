@@ -69,6 +69,8 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [connectionError, setConnectionError] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
   const [summaryData, setSummaryData] = useState<AllTimeSummaryData>({
     totalIncome: 0,
     totalExpenses: 0,
@@ -99,6 +101,7 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
       }
 
       setLoading(true);
+      setConnectionError(false);
       try {
         // Check authentication status first
         const {
@@ -282,7 +285,9 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
 
         console.log("📈 All-time summary calculated:", finalSummary);
         setSummaryData(finalSummary);
+        setRetryCount(0); // Reset retry count on success
       } catch (error) {
+        setConnectionError(true);
         const errorMessage = extractErrorMessage(error);
         console.error("❌ Error in fetchAllTimeSummary:", {
           errorMessage,
