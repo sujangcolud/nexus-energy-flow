@@ -562,21 +562,36 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
             <div className="text-center">
               <p className="font-medium text-red-600">Connection Error</p>
               <p className="text-sm">Failed to load summary data</p>
-              <p className="text-xs text-gray-400 mt-1">
-                Attempt {retryCount}/3
-              </p>
+              <div className="flex items-center justify-center mt-2 space-x-2">
+                <div
+                  className={`w-2 h-2 rounded-full ${networkStatus ? "bg-green-500" : "bg-red-500"}`}
+                ></div>
+                <p className="text-xs text-gray-400">
+                  Network: {networkStatus ? "Online" : "Offline"} | Attempt{" "}
+                  {retryCount}/3
+                </p>
+              </div>
             </div>
-            <Button
-              onClick={retryFetch}
-              variant="outline"
-              size="sm"
-              disabled={loading || retryCount >= 3}
-            >
-              <RefreshCw
-                className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`}
-              />
-              {loading ? "Retrying..." : "Retry Connection"}
-            </Button>
+            <div className="flex space-x-2">
+              <Button
+                onClick={retryFetch}
+                variant="outline"
+                size="sm"
+                disabled={loading || retryCount >= 3 || !networkStatus}
+              >
+                <RefreshCw
+                  className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`}
+                />
+                {loading ? "Retrying..." : "Retry Connection"}
+              </Button>
+              <Button
+                onClick={() => window.location.reload()}
+                variant="outline"
+                size="sm"
+              >
+                Refresh Page
+              </Button>
+            </div>
           </div>
         ) : summaryData.dataPoints === 0 ? (
           <div className="flex items-center justify-center py-8 text-gray-500">
