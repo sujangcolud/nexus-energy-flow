@@ -288,6 +288,8 @@ const WithdrawalsTab = () => {
         referenceNumber: "",
         remarks: "",
         payment_mode: "",
+        withdrawal_from: "",
+        cooperative_member_id: "",
       });
       fetchWithdrawals();
     } catch (error) {
