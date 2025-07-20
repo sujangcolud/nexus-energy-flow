@@ -334,6 +334,17 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
     [user],
   );
 
+  const retryFetch = async () => {
+    if (retryCount >= 3) {
+      toast.error("Maximum retry attempts reached. Please refresh the page.");
+      return;
+    }
+
+    setRetryCount((prev) => prev + 1);
+    console.log(`🔄 Retrying fetch attempt ${retryCount + 1}/3...`);
+    await fetchAllTimeSummary();
+  };
+
   const forceUpdateDailySummaries = async () => {
     if (!user) return;
 
@@ -436,6 +447,28 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
           <div className="flex items-center justify-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
             <span className="ml-2 text-gray-600">Loading summary...</span>
+          </div>
+        ) : connectionError ? (
+          <div className="flex flex-col items-center justify-center py-8 text-gray-500 space-y-4">
+            <AlertCircle className="h-8 w-8 text-red-500" />
+            <div className="text-center">
+              <p className="font-medium text-red-600">Connection Error</p>
+              <p className="text-sm">Failed to load summary data</p>
+              <p className="text-xs text-gray-400 mt-1">
+                Attempt {retryCount}/3
+              </p>
+            </div>
+            <Button
+              onClick={retryFetch}
+              variant="outline"
+              size="sm"
+              disabled={loading || retryCount >= 3}
+            >
+              <RefreshCw
+                className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`}
+              />
+              {loading ? "Retrying..." : "Retry Connection"}
+            </Button>
           </div>
         ) : summaryData.dataPoints === 0 ? (
           <div className="flex items-center justify-center py-8 text-gray-500">
