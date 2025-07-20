@@ -275,21 +275,30 @@ const WithdrawalsTab = () => {
 
       if (updateBalanceError) throw updateBalanceError;
 
-      const { error } = await supabase.from("withdrawals").insert([
-        {
-          user_id: user.id,
-          amount: parseFloat(formData.amount),
-          purpose: formData.purpose,
-          recipient: formData.recipient || null,
-          reference_number: formData.referenceNumber || null,
-          remarks: formData.remarks || null,
-          withdrawal_date: transactionDate,
-          payment_mode: formData.payment_mode,
-          category: "General",
-          withdrawal_from: formData.withdrawal_from || null,
-          cooperative_member_id: formData.cooperative_member_id || null,
-        },
-      ]);
+      // Prepare base withdrawal data
+      const withdrawalData: any = {
+        user_id: user.id,
+        amount: parseFloat(formData.amount),
+        purpose: formData.purpose,
+        recipient: formData.recipient || null,
+        reference_number: formData.referenceNumber || null,
+        remarks: formData.remarks || null,
+        withdrawal_date: transactionDate,
+        payment_mode: formData.payment_mode,
+        category: "General",
+      };
+
+      // Add new fields only if they have values (for backward compatibility)
+      if (formData.withdrawal_from) {
+        withdrawalData.withdrawal_from = formData.withdrawal_from;
+      }
+      if (formData.cooperative_member_id) {
+        withdrawalData.cooperative_member_id = formData.cooperative_member_id;
+      }
+
+      const { error } = await supabase
+        .from("withdrawals")
+        .insert([withdrawalData]);
 
       if (error) throw error;
 
