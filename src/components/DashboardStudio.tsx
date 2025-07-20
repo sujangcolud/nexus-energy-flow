@@ -289,22 +289,6 @@ const DashboardStudio: React.FC = () => {
   const [isSupported, setIsSupported] = useState<boolean | null>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
 
-  // Show loading if user is not yet available or checking support
-  if (!user || isSupported === null) {
-    return (
-      <div className="h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <RefreshCw className="h-8 w-8 mx-auto mb-4 animate-spin text-blue-500" />
-          <p className="text-gray-600">
-            {!user
-              ? "Loading Dashboard Studio..."
-              : "Checking system compatibility..."}
-          </p>
-        </div>
-      </div>
-    );
-  }
-
   // Check if dashboard studio is supported
   useEffect(() => {
     const checkSupport = async () => {
@@ -327,6 +311,22 @@ const DashboardStudio: React.FC = () => {
 
     checkSupport();
   }, []);
+
+  // Show loading if user is not yet available or checking support
+  if (!user || isSupported === null) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <RefreshCw className="h-8 w-8 mx-auto mb-4 animate-spin text-blue-500" />
+          <p className="text-gray-600">
+            {!user
+              ? "Loading Dashboard Studio..."
+              : "Checking system compatibility..."}
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   // Load saved dashboards when user is available
   useEffect(() => {
