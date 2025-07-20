@@ -271,16 +271,6 @@ const Dashboard = () => {
         bgColor: "bg-indigo-50",
         description: "Create custom dashboards with drag-and-drop",
       },
-      {
-        id: "calculation_engine",
-        path: "calculation-engine",
-        label: "Calculation Engine",
-        icon: Settings,
-        roles: ["super_admin"],
-        color: "bg-purple-600",
-        bgColor: "bg-purple-50",
-        description: "Custom calculations & formulas",
-      },
     ];
 
     if (!userRole) return [];
