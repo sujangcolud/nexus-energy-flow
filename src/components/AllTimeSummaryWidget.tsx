@@ -72,6 +72,7 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
   const [refreshing, setRefreshing] = useState(false);
   const [connectionError, setConnectionError] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
+  const [networkStatus, setNetworkStatus] = useState(navigator.onLine);
   const [summaryData, setSummaryData] = useState<AllTimeSummaryData>({
     totalIncome: 0,
     totalExpenses: 0,
@@ -457,6 +458,33 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
       fetchAllTimeSummary();
     }
   }, [user, fetchAllTimeSummary]);
+
+  // Monitor network status
+  useEffect(() => {
+    const handleOnline = () => {
+      console.log("🟢 Network connection restored");
+      setNetworkStatus(true);
+      if (connectionError) {
+        toast.success("Network connection restored. Retrying...");
+        fetchAllTimeSummary();
+      }
+    };
+
+    const handleOffline = () => {
+      console.log("🔴 Network connection lost");
+      setNetworkStatus(false);
+      setConnectionError(true);
+      toast.error("Network connection lost");
+    };
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, [connectionError, fetchAllTimeSummary]);
 
   const handleDateRangeChange = async (dateRange: DateRange) => {
     setLoading(true);
