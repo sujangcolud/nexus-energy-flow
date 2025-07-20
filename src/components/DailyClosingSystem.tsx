@@ -404,6 +404,12 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
         }
       });
 
+      // Calculate withdrawal breakdown by source
+      // Note: This needs to be implemented with withdrawal_from field
+      const totalWithdrawalsBank = 0; // TODO: Filter by withdrawal_from = 'Bank'
+      const totalWithdrawalsCooperative = 0; // TODO: Filter by withdrawal_from = 'Cooperative'
+      const totalWithdrawalsEsewa = 0; // TODO: Filter by withdrawal_from = 'Esewa'
+
       // Insert or update daily summary
       const dailySummaryData = {
         summary_date: selectedDate,
@@ -416,6 +422,9 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
         total_expenses: totalExpenses,
         total_deposits: totalDeposits,
         total_withdrawals: totalWithdrawals,
+        total_withdrawals_bank: totalWithdrawalsBank,
+        total_withdrawals_cooperative: totalWithdrawalsCooperative,
+        total_withdrawals_esewa: totalWithdrawalsEsewa,
         total_savings: totalSavings,
         cash_balance:
           totalIncomeCash + totalDeposits - totalExpenses - totalWithdrawals,
