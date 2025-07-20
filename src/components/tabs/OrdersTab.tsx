@@ -1091,10 +1091,16 @@ const OrdersTab = () => {
                   </TableHeader>
                   <TableBody>
                     <TableRow>
-                      <TableCell colSpan={4} className="font-bold">
+                      <TableCell
+                        colSpan={4}
+                        className="font-bold text-xs sm:text-sm px-2 sm:px-4"
+                      >
                         Total
                       </TableCell>
-                      <TableCell colSpan={2} className="font-bold text-right">
+                      <TableCell
+                        colSpan={3}
+                        className="font-bold text-right text-xs sm:text-sm px-1 sm:px-4"
+                      >
                         NRs. {totalOrders.toFixed(2)}
                       </TableCell>
                     </TableRow>
@@ -1104,26 +1110,46 @@ const OrdersTab = () => {
                         className="hover:bg-gradient-to-r hover:from-orange-50 hover:to-pink-50 transition-all duration-200"
                         style={{ animationDelay: `${index * 50}ms` }}
                       >
-                        <TableCell className="font-medium">
-                          {format(new Date(order.order_date), "MMM dd, yyyy")}
+                        <TableCell className="font-medium text-xs sm:text-sm px-2 sm:px-4">
+                          <div className="sm:hidden">
+                            {format(new Date(order.order_date), "MMM dd")}
+                          </div>
+                          <div className="hidden sm:block">
+                            {format(new Date(order.order_date), "MMM dd, yyyy")}
+                          </div>
                         </TableCell>
-                        <TableCell className="font-medium">
-                          {order.item_name}
+                        <TableCell className="font-medium text-xs sm:text-sm px-2 sm:px-4">
+                          <div
+                            className="truncate max-w-24 sm:max-w-none"
+                            title={order.item_name}
+                          >
+                            {order.item_name}
+                          </div>
                         </TableCell>
-                        <TableCell className="text-center">
+                        <TableCell className="text-center px-1 sm:px-4">
                           <Badge
                             variant="outline"
-                            className="bg-blue-50 border-blue-200"
+                            className="bg-blue-50 border-blue-200 text-xs px-1 sm:px-2"
                           >
                             {order.quantity}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-right">
-                          NRs. {Number(order.rate).toFixed(2)}
+                        <TableCell className="text-right text-xs sm:text-sm px-1 sm:px-4">
+                          <div className="sm:hidden">
+                            ₹{Number(order.rate).toFixed(0)}
+                          </div>
+                          <div className="hidden sm:block">
+                            NRs. {Number(order.rate).toFixed(2)}
+                          </div>
                         </TableCell>
-                        <TableCell className="text-right">
-                          <span className="font-bold text-lg bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
-                            NRs. {Number(order.total).toFixed(2)}
+                        <TableCell className="text-right px-1 sm:px-4">
+                          <span className="font-bold text-sm sm:text-lg bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
+                            <div className="sm:hidden">
+                              ₹{Number(order.total).toFixed(0)}
+                            </div>
+                            <div className="hidden sm:block">
+                              NRs. {Number(order.total).toFixed(2)}
+                            </div>
                           </span>
                         </TableCell>
                         <TableCell>
