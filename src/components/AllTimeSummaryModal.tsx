@@ -691,6 +691,117 @@ const AllTimeSummaryModal: React.FC<AllTimeSummaryModalProps> = ({
                 </CardContent>
               </Card>
             </TabsContent>
+
+            <TabsContent value="debug" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <AlertCircle className="h-5 w-5 text-orange-600" />
+                    Data Diagnostics
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                      <h4 className="font-semibold text-blue-800 mb-2">
+                        July 13th, 2025 Check
+                      </h4>
+                      <p className="text-sm text-blue-600 mb-2">
+                        Expected: 30,000 total withdrawals (10,000 from
+                        cooperative)
+                      </p>
+                      <div className="text-xs font-mono bg-white p-2 rounded border">
+                        <p>Check browser console for detailed July 13th data</p>
+                        <p>
+                          Use "Force Update" button to refresh daily summaries
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                      <h4 className="font-semibold text-gray-800 mb-2">
+                        Daily Summaries Status
+                      </h4>
+                      <p className="text-sm text-gray-600 mb-2">
+                        Total days with data: {summaryData.dataPoints}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        Date range: {summaryData.dateRange.from} to{" "}
+                        {summaryData.dateRange.to}
+                      </p>
+                    </div>
+
+                    {summaryData.totalWithdrawals === 0 && (
+                      <div className="p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+                        <h4 className="font-semibold text-yellow-800 mb-2">
+                          ⚠️ No Withdrawals Detected
+                        </h4>
+                        <p className="text-sm text-yellow-600">
+                          If you have withdrawal records but they're not
+                          showing, try:
+                        </p>
+                        <ul className="text-sm text-yellow-600 list-disc list-inside mt-2">
+                          <li>
+                            Click "Force Update" to refresh daily summaries
+                          </li>
+                          <li>
+                            Check that withdrawal dates are correctly formatted
+                          </li>
+                          <li>
+                            Verify withdrawal records exist in the database
+                          </li>
+                        </ul>
+                      </div>
+                    )}
+
+                    <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+                      <h4 className="font-semibold text-green-800 mb-2">
+                        Withdrawal Calculation Formula
+                      </h4>
+                      <div className="text-sm text-green-600 space-y-1">
+                        <p>
+                          <strong>Total Withdrawals =</strong>
+                        </p>
+                        <p className="ml-4">
+                          + Withdrawal from bank (
+                          {formatCurrency(
+                            summaryData.withdrawalBreakdown?.fromBank || 0,
+                          )}
+                          )
+                        </p>
+                        <p className="ml-4">
+                          + Withdrawal from Savings (
+                          {formatCurrency(
+                            summaryData.withdrawalBreakdown?.fromSavings || 0,
+                          )}
+                          )
+                        </p>
+                        <p className="ml-4">
+                          + Withdrawal from eSewa (
+                          {formatCurrency(
+                            summaryData.withdrawalBreakdown?.fromEsewa || 0,
+                          )}
+                          )
+                        </p>
+                        <p className="ml-4">
+                          + Withdrawal from Fonepay (
+                          {formatCurrency(
+                            summaryData.withdrawalBreakdown?.fromFonepay || 0,
+                          )}
+                          )
+                        </p>
+                        <p className="mt-2">
+                          <strong>
+                            Total:{" "}
+                            {formatCurrency(summaryData.totalWithdrawals)}
+                          </strong>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
           </Tabs>
         )}
 
