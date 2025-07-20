@@ -88,6 +88,7 @@ const Dashboard = () => {
   const [tabToDelete, setTabToDelete] = useState<string | null>(null);
   const [isDailyClosingOpen, setIsDailyClosingOpen] = useState(false);
   const [isBatchClosingOpen, setIsBatchClosingOpen] = useState(false);
+  const [showBatchClosing, setShowBatchClosing] = useState(true);
 
   useEffect(() => {
     const storedSettings = localStorage.getItem("tabSettings");
@@ -98,6 +99,12 @@ const Dashboard = () => {
       localStorage.getItem("canDeleteTabs") || "false",
     );
     setCanDeleteTabs(canDelete);
+
+    // Load batch closing setting
+    const batchClosingSetting = localStorage.getItem("showBatchClosing");
+    if (batchClosingSetting !== null) {
+      setShowBatchClosing(JSON.parse(batchClosingSetting));
+    }
   }, []);
 
   const handleSignOut = async () => {
