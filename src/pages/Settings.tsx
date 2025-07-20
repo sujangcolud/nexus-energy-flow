@@ -1230,6 +1230,16 @@ const Settings = () => {
                 onCheckedChange={setCanDeleteTabs}
               />
             </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="show-batch-closing">
+                Show Batch Closing Button
+              </Label>
+              <Switch
+                id="show-batch-closing"
+                checked={showBatchClosing}
+                onCheckedChange={setShowBatchClosing}
+              />
+            </div>
           </CardContent>
         </Card>
         {/* Quick Stats */}
