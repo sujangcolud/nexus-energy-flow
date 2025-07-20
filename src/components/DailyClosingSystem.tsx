@@ -435,7 +435,9 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
 
   const formatCurrency = (amount: number) => `NRs. ${amount.toFixed(2)}`;
 
-  if (!transactionSummary) {
+  const dataToShow = viewMode === "daily" ? transactionSummary : allTimeSummary;
+
+  if (!dataToShow) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-auto">
