@@ -93,10 +93,55 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
 
   const fetchAllTimeSummary = useCallback(
     async (dateRange?: DateRange) => {
-      if (!user) return;
+      if (!user) {
+        console.warn("❌ No user found, cannot fetch summary");
+        return;
+      }
 
       setLoading(true);
       try {
+        // Check authentication status first
+        const {
+          data: { session },
+          error: sessionError,
+        } = await supabase.auth.getSession();
+
+        if (sessionError) {
+          console.error("❌ Authentication error:", sessionError);
+          toast.error("Authentication expired. Please log in again.");
+          return;
+        }
+
+        if (!session) {
+          console.warn("❌ No active session found");
+          toast.error("Please log in to view summary data.");
+          return;
+        }
+
+        console.log("✅ Authentication verified, fetching daily summaries...");
+
+        // Test basic connectivity first
+        const { data: testData, error: testError } = await supabase
+          .from("daily_summary")
+          .select("summary_date")
+          .limit(1);
+
+        if (testError) {
+          console.error("❌ Connectivity test failed:", testError);
+          if (testError.message?.includes("Failed to fetch")) {
+            toast.error(
+              "Network connection failed. Please check your internet connection.",
+            );
+          } else {
+            toast.error(`Database error: ${testError.message}`);
+          }
+          throw testError;
+        }
+
+        console.log(
+          "✅ Connectivity test passed, proceeding with full query...",
+        );
+
         let query = supabase
           .from("daily_summary")
           .select("*")
@@ -118,8 +163,32 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
         const { data: summariesData, error } = await query;
 
         if (error) {
-          console.error("Error fetching daily summaries:", error);
+          console.error("❌ Error fetching daily summaries:", {
+            error,
+            message: error.message,
+            details: error.details,
+            hint: error.hint,
+            code: error.code,
+          });
           logError("AllTimeSummaryWidget", error);
+
+          // Provide specific error messages based on error type
+          if (error.message?.includes("Failed to fetch")) {
+            toast.error(
+              "Network connection lost. Please check your internet and try again.",
+            );
+          } else if (error.code === "PGRST116") {
+            toast.error("Database table not found. Please contact support.");
+          } else if (
+            error.message?.includes("JWT") ||
+            error.message?.includes("auth")
+          ) {
+            toast.error("Session expired. Please log in again.");
+          } else {
+            toast.error(
+              `Failed to load summary: ${error.message || "Unknown error"}`,
+            );
+          }
           throw error;
         }
 
