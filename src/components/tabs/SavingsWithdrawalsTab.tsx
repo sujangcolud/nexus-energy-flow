@@ -892,6 +892,45 @@ const SavingsWithdrawalsTab = () => {
                       </Select>
                     </div>
 
+                    <div className="space-y-2">
+                      <Label
+                        htmlFor="savingsTo"
+                        className="text-sm font-medium text-gray-700 flex items-center gap-2"
+                      >
+                        <Building2 className="h-4 w-4 text-indigo-600" />
+                        Savings To *
+                      </Label>
+                      <Select
+                        value={savingsFormData.savingsTo}
+                        onValueChange={(value) =>
+                          setSavingsFormData({
+                            ...savingsFormData,
+                            savingsTo: value,
+                          })
+                        }
+                        required
+                      >
+                        <SelectTrigger className="border-indigo-200 focus:border-indigo-500 focus:ring-indigo-500 h-12">
+                          <SelectValue placeholder="Select savings destination" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {savingsToOptions.map((option) => (
+                            <SelectItem key={option} value={option}>
+                              <div className="flex items-center gap-2">
+                                {option === "Bank" && (
+                                  <Building2 className="h-4 w-4" />
+                                )}
+                                {option === "Cooperative" && (
+                                  <PiggyBank className="h-4 w-4" />
+                                )}
+                                {option}
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
                     {/* Transaction Date */}
                     <TransactionDatePicker
                       selectedDate={transactionDate}
