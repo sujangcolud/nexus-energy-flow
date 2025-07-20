@@ -378,14 +378,16 @@ const MobileDashboard = () => {
                       <Database className="h-5 w-5" />
                       Daily Closing
                     </Button>
-                    <Button
-                      variant="ghost"
-                      onClick={() => setIsBatchClosingOpen(true)}
-                      className="w-full justify-start gap-3 h-12"
-                    >
-                      <Calendar className="h-5 w-5" />
-                      Batch Closing
-                    </Button>
+                    {showBatchClosing && (
+                      <Button
+                        variant="ghost"
+                        onClick={() => setIsBatchClosingOpen(true)}
+                        className="w-full justify-start gap-3 h-12"
+                      >
+                        <Calendar className="h-5 w-5" />
+                        Batch Closing
+                      </Button>
+                    )}
                     <Button
                       variant="ghost"
                       onClick={() => navigate("/dashboard/settings")}
