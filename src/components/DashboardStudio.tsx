@@ -267,6 +267,18 @@ const DEFAULT_COLORS = [
 
 const DashboardStudio: React.FC = () => {
   const { user } = useAuth();
+
+  // Show loading if user is not yet available
+  if (!user) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <RefreshCw className="h-8 w-8 mx-auto mb-4 animate-spin text-blue-500" />
+          <p className="text-gray-600">Loading Dashboard Studio...</p>
+        </div>
+      </div>
+    );
+  }
   const [dashboards, setDashboards] = useState<Dashboard[]>([]);
   const [currentDashboard, setCurrentDashboard] = useState<Dashboard | null>(
     null,
