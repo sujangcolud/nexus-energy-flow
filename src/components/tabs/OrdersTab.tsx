@@ -866,16 +866,16 @@ const OrdersTab = () => {
                   </div>
                 ) : (
                   <>
-                    <div className="space-y-3 max-h-64 overflow-y-auto">
+                    <div className="space-y-3 max-h-48 sm:max-h-64 overflow-y-auto">
                       {cart.map((item, index) => (
                         <div
                           key={item.id}
-                          className="flex items-center justify-between p-3 bg-gradient-to-r from-white to-pink-50 rounded-lg border border-pink-100"
+                          className="flex items-center justify-between p-2 sm:p-3 bg-gradient-to-r from-white to-pink-50 rounded-lg border border-pink-100"
                           style={{ animationDelay: `${index * 100}ms` }}
                         >
                           <div className="flex-1 min-w-0 mr-2">
                             <h4
-                              className="font-medium text-sm truncate"
+                              className="font-medium text-xs sm:text-sm truncate"
                               title={item.name}
                             >
                               {item.name}
@@ -891,11 +891,11 @@ const OrdersTab = () => {
                               onClick={() =>
                                 updateCartQuantity(item.id, item.quantity - 1)
                               }
-                              className="h-6 w-6 hover:bg-red-50 hover:border-red-300"
+                              className="h-6 w-6 hover:bg-red-50 hover:border-red-300 flex-shrink-0"
                             >
                               <Minus className="h-3 w-3" />
                             </Button>
-                            <span className="text-sm font-semibold w-8 text-center">
+                            <span className="text-xs sm:text-sm font-semibold w-6 sm:w-8 text-center flex-shrink-0">
                               {item.quantity}
                             </span>
                             <Button
@@ -904,7 +904,7 @@ const OrdersTab = () => {
                               onClick={() =>
                                 updateCartQuantity(item.id, item.quantity + 1)
                               }
-                              className="h-6 w-6 hover:bg-green-50 hover:border-green-300"
+                              className="h-6 w-6 hover:bg-green-50 hover:border-green-300 flex-shrink-0"
                             >
                               <Plus className="h-3 w-3" />
                             </Button>
@@ -912,7 +912,7 @@ const OrdersTab = () => {
                               variant="ghost"
                               size="icon"
                               onClick={() => removeFromCart(item.id)}
-                              className="h-6 w-6 text-red-500 hover:text-red-700 hover:bg-red-50"
+                              className="h-6 w-6 text-red-500 hover:text-red-700 hover:bg-red-50 flex-shrink-0"
                             >
                               <Trash2 className="h-3 w-3" />
                             </Button>
