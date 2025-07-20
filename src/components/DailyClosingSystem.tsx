@@ -772,28 +772,30 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
           <Button variant="outline" onClick={onClose}>
             Close
           </Button>
-          <Button
-            onClick={handleDayClose}
-            disabled={isClosing || alreadyClosed}
-            className="bg-blue-600 hover:bg-blue-700"
-          >
-            {isClosing ? (
-              <>
-                <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin mr-2" />
-                Processing...
-              </>
-            ) : alreadyClosed ? (
-              <>
-                <CheckCircle className="h-4 w-4 mr-2" />
-                Already Closed
-              </>
-            ) : (
-              <>
-                <Save className="h-4 w-4 mr-2" />
-                Close Day
-              </>
-            )}
-          </Button>
+          {viewMode === "daily" && (
+            <Button
+              onClick={handleDayClose}
+              disabled={isClosing || alreadyClosed}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              {isClosing ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin mr-2" />
+                  Processing...
+                </>
+              ) : alreadyClosed ? (
+                <>
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  Already Closed
+                </>
+              ) : (
+                <>
+                  <Save className="h-4 w-4 mr-2" />
+                  Close Day
+                </>
+              )}
+            </Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>
