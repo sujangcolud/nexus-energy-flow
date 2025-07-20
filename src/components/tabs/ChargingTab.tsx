@@ -996,8 +996,8 @@ const ChargingTab = () => {
                         <span className="truncate">{isMobile ? "Pick dates" : "Pick a date range"}</span>
                       )}
                     </Button>
-                  </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0" align="end" side="bottom">
+                                    </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="end" side="bottom">
                   <Calendar
                     initialFocus
                     mode="range"
