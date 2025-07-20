@@ -291,11 +291,15 @@ const WithdrawalsTab = () => {
         withdrawalData.cooperative_member_id = formData.cooperative_member_id;
       }
 
+      console.log("Attempting to insert withdrawal data:", withdrawalData);
       const { error } = await supabase
         .from("withdrawals")
         .insert([withdrawalData]);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Database error details:", error);
+        throw error;
+      }
 
       toast.success("Withdrawal recorded successfully!");
       setFormData({
