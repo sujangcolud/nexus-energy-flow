@@ -273,6 +273,22 @@ const DEFAULT_COLORS = [
 const DashboardStudio: React.FC = () => {
   const { user } = useAuth();
 
+  // State declarations must come before any conditional returns
+  const [dashboards, setDashboards] = useState<Dashboard[]>([]);
+  const [currentDashboard, setCurrentDashboard] = useState<Dashboard | null>(
+    null,
+  );
+  const [selectedChart, setSelectedChart] = useState<ChartConfig | null>(null);
+  const [isCreatingChart, setIsCreatingChart] = useState(false);
+  const [previewMode, setPreviewMode] = useState(false);
+  const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const [dashboardName, setDashboardName] = useState("");
+  const [dashboardDescription, setDashboardDescription] = useState("");
+  const [queryResults, setQueryResults] = useState<any[]>([]);
+  const [isQueryRunning, setIsQueryRunning] = useState(false);
+  const [isSupported, setIsSupported] = useState<boolean | null>(null);
+  const canvasRef = useRef<HTMLDivElement>(null);
+
   // Show loading if user is not yet available or checking support
   if (!user || isSupported === null) {
     return (
@@ -288,20 +304,6 @@ const DashboardStudio: React.FC = () => {
       </div>
     );
   }
-  const [dashboards, setDashboards] = useState<Dashboard[]>([]);
-  const [currentDashboard, setCurrentDashboard] = useState<Dashboard | null>(
-    null,
-  );
-  const [selectedChart, setSelectedChart] = useState<ChartConfig | null>(null);
-  const [isCreatingChart, setIsCreatingChart] = useState(false);
-  const [previewMode, setPreviewMode] = useState(false);
-  const [showSaveDialog, setShowSaveDialog] = useState(false);
-  const [dashboardName, setDashboardName] = useState("");
-  const [dashboardDescription, setDashboardDescription] = useState("");
-  const [queryResults, setQueryResults] = useState<any[]>([]);
-  const [isQueryRunning, setIsQueryRunning] = useState(false);
-  const [isSupported, setIsSupported] = useState<boolean | null>(null);
-  const canvasRef = useRef<HTMLDivElement>(null);
 
   // Check if dashboard studio is supported
   useEffect(() => {
