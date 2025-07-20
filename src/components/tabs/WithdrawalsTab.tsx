@@ -270,7 +270,7 @@ const WithdrawalsTab = () => {
 
       if (updateBalanceError) throw updateBalanceError;
 
-      // Prepare base withdrawal data
+      // Prepare withdrawal data with new database fields
       const withdrawalData: any = {
         user_id: user.id,
         amount: parseFloat(formData.amount),
@@ -280,17 +280,10 @@ const WithdrawalsTab = () => {
         remarks: formData.remarks || null,
         withdrawal_date: transactionDate,
         payment_mode: formData.payment_mode,
+        withdrawal_from: formData.withdrawal_from || "Cash",
+        cooperative_member_id: formData.cooperative_member_id || null,
         category: "General",
       };
-
-      // TODO: Add new fields when database schema is updated
-      // For now, store withdrawal_from in purpose field if available
-      if (formData.withdrawal_from) {
-        withdrawalData.purpose = `${formData.purpose} (From: ${formData.withdrawal_from})`;
-        if (formData.cooperative_member_id) {
-          withdrawalData.purpose += ` (Member: ${formData.cooperative_member_id})`;
-        }
-      }
 
       console.log("Attempting to insert withdrawal data:", withdrawalData);
       const { error } = await supabase
