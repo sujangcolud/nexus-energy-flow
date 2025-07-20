@@ -101,8 +101,8 @@ const App = () => {
                 <Route path="charging" element={<ChargingTab />} />
                 <Route path="expenses" element={<ExpensesTab />} />
                 <Route path="deposits" element={<DepositsTab />} />
-                <Route path="withdrawals" element={<WithdrawalsTab />} />
-                <Route path="cooperative" element={<CooperativeSavingsTab />} />
+                <Route path="withdrawals" element={<SavingsWithdrawalsTab />} />
+                <Route path="cooperative" element={<SavingsWithdrawalsTab />} />
                 <Route
                   path="share-investments"
                   element={<ShareInvestmentsTab />}
