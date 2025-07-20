@@ -230,6 +230,17 @@ const MobileDashboard = () => {
         description: "VAT entries",
         category: "transactions",
       },
+      {
+        id: "dashboard_studio",
+        path: "dashboard-studio",
+        label: "Dashboard Studio",
+        icon: BarChart3,
+        roles: ["user", "reports_viewer", "super_admin"],
+        color: "from-purple-500 to-purple-600",
+        bgColor: "bg-purple-50",
+        description: "Create custom dashboards",
+        category: "analytics",
+      },
     ];
 
     if (!userRole) return [];
