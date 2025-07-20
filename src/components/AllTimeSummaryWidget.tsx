@@ -395,6 +395,53 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
     }
   };
 
+  const forceUpdateDailySummaries = async () => {
+    setRefreshing(true);
+    try {
+      console.log("🔄 Force updating daily summaries...");
+
+      // Get all withdrawal dates that might need updating
+      const { data: withdrawalDates } = await supabase
+        .from("withdrawals")
+        .select("withdrawal_date")
+        .order("withdrawal_date", { ascending: false });
+
+      if (withdrawalDates && withdrawalDates.length > 0) {
+        const uniqueDates = [
+          ...new Set(withdrawalDates.map((w) => w.withdrawal_date)),
+        ];
+        console.log("📅 Found withdrawal dates to update:", uniqueDates);
+
+        let updatedCount = 0;
+        for (const date of uniqueDates) {
+          try {
+            const { error } = await supabase.rpc("update_daily_summary", {
+              p_summary_date: date,
+            });
+
+            if (!error) {
+              updatedCount++;
+            }
+          } catch (err) {
+            console.log(`Failed to update daily summary for ${date}:`, err);
+          }
+        }
+
+        toast.success(`Updated daily summaries for ${updatedCount} dates`);
+      }
+
+      // Refresh the data
+      await fetchAllTimeSummary();
+    } catch (error) {
+      logError("force updating daily summaries", error);
+      toast.error(
+        `Failed to update daily summaries: ${extractErrorMessage(error)}`,
+      );
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
