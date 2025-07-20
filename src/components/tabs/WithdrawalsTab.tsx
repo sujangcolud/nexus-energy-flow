@@ -306,8 +306,8 @@ const WithdrawalsTab = () => {
       });
       fetchWithdrawals();
     } catch (error) {
-      console.error("Error recording withdrawal:", error);
-      toast.error("Failed to record withdrawal");
+      logError("recording withdrawal", error);
+      toast.error(`Error recording withdrawal: ${extractErrorMessage(error)}`);
     } finally {
       setIsSubmitting(false);
     }
