@@ -282,47 +282,54 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
         onDateRangeChange={handleDateRangeChange}
       />
       {/* Header with Refresh Button */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-2">
-          <Clock className="h-6 w-6 text-purple-600" />
-          <h2 className="text-2xl font-bold text-gray-800">All-Time Summary</h2>
+          <Clock className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600" />
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-800">
+            All-Time Summary
+          </h2>
           <Badge
             variant="outline"
-            className="text-purple-600 border-purple-300"
+            className="text-purple-600 border-purple-300 text-xs"
           >
-            {summaryData.dataPoints} days of data
+            {summaryData.dataPoints} days
           </Badge>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
           <Button
             onClick={() => setIsModalOpen(true)}
-            className="bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white"
+            className="bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white text-xs sm:text-sm px-2 sm:px-3"
             size="sm"
           >
-            <Eye className="h-4 w-4 mr-2" />
-            View Details
+            <Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">View Details</span>
+            <span className="sm:hidden">Details</span>
           </Button>
           <Button
             variant="outline"
             size="sm"
             onClick={forceUpdateDailySummaries}
             disabled={refreshing}
-            className="flex items-center gap-2 text-orange-600 border-orange-300 hover:bg-orange-50"
+            className="flex items-center gap-1 sm:gap-2 text-orange-600 border-orange-300 hover:bg-orange-50 text-xs sm:text-sm px-2 sm:px-3"
           >
             <Database
-              className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
+              className={`h-3 w-3 sm:h-4 sm:w-4 ${refreshing ? "animate-spin" : ""}`}
             />
-            Force Update
+            <span className="hidden sm:inline">Force Update</span>
+            <span className="sm:hidden">Update</span>
           </Button>
           <Button
             variant="outline"
             size="sm"
             onClick={() => fetchAllTimeSummary()}
             disabled={loading}
-            className="flex items-center gap-2"
+            className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3"
           >
-            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-            Refresh
+            <RefreshCw
+              className={`h-3 w-3 sm:h-4 sm:w-4 ${loading ? "animate-spin" : ""}`}
+            />
+            <span className="hidden sm:inline">Refresh</span>
+            <span className="sm:hidden">↻</span>
           </Button>
         </div>
       </div>
