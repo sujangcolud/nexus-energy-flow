@@ -550,20 +550,20 @@ const ChargingTab = () => {
         </div>
 
         {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
           <Card className="bg-gradient-to-br from-yellow-50 to-orange-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
-            <CardContent className="p-6">
+            <CardContent className="p-3 sm:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-yellow-600 font-medium">
-                    Total Sessions
+                  <p className="text-xs sm:text-sm text-yellow-600 font-medium">
+                    {isMobile ? "Sessions" : "Total Sessions"}
                   </p>
-                  <p className="text-2xl font-bold text-yellow-800">
+                  <p className="text-lg sm:text-2xl font-bold text-yellow-800">
                     {sessions.length}
                   </p>
                 </div>
-                <div className="p-3 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-xl text-white">
-                  <BatteryCharging className="h-6 w-6" />
+                <div className="p-2 sm:p-3 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-xl text-white">
+                  <BatteryCharging className="h-4 w-4 sm:h-6 sm:w-6" />
                 </div>
               </div>
             </CardContent>
