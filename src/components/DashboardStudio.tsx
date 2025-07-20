@@ -331,9 +331,54 @@ const DashboardStudio: React.FC = () => {
     useState<DashboardMetrics | null>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
 
+<<<<<<< HEAD
   // Load saved dashboards and metrics when component mounts
   useEffect(() => {
     if (user?.id) {
+=======
+  // Check if dashboard studio is supported
+  useEffect(() => {
+    const checkSupport = async () => {
+      const { accessible, error } = await checkCustomCalculationsAccess();
+      setIsSupported(accessible);
+
+      if (!accessible) {
+        console.warn(
+          "Dashboard Studio: Falling back to localStorage mode. Error:",
+          error,
+        );
+        toast.info(
+          "Dashboard Studio is running in offline mode (data stored locally)",
+          {
+            description: "Your dashboards will be saved to browser storage.",
+          },
+        );
+      }
+    };
+
+    checkSupport();
+  }, []);
+
+  // Show loading if user is not yet available or checking support
+  if (!user || isSupported === null) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <RefreshCw className="h-8 w-8 mx-auto mb-4 animate-spin text-blue-500" />
+          <p className="text-gray-600">
+            {!user
+              ? "Loading Dashboard Studio..."
+              : "Checking system compatibility..."}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Load saved dashboards when user is available
+  useEffect(() => {
+    if (user?.id && isSupported !== null) {
+>>>>>>> origin/main
       loadDashboards();
       loadDashboardMetrics();
     }
