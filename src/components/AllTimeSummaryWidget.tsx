@@ -69,6 +69,9 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [connectionError, setConnectionError] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+  const [networkStatus, setNetworkStatus] = useState(navigator.onLine);
   const [summaryData, setSummaryData] = useState<AllTimeSummaryData>({
     totalIncome: 0,
     totalExpenses: 0,
@@ -93,33 +96,134 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
 
   const fetchAllTimeSummary = useCallback(
     async (dateRange?: DateRange) => {
-      if (!user) return;
+      if (!user) {
+        console.warn("❌ No user found, cannot fetch summary");
+        return;
+      }
 
       setLoading(true);
+      setConnectionError(false);
       try {
-        let query = supabase
+        // Check authentication status first
+        const {
+          data: { session },
+          error: sessionError,
+        } = await supabase.auth.getSession();
+
+        if (sessionError) {
+          console.error("❌ Authentication error:", sessionError);
+          toast.error("Authentication expired. Please log in again.");
+          return;
+        }
+
+        if (!session) {
+          console.warn("❌ No active session found");
+          toast.error("Please log in to view summary data.");
+          return;
+        }
+
+        console.log("✅ Authentication verified, fetching daily summaries...");
+
+        // Test basic connectivity first
+        const { data: testData, error: testError } = await supabase
           .from("daily_summary")
-          .select("*")
-          .order("summary_date", { ascending: true });
+          .select("summary_date")
+          .limit(1);
 
-        if (dateRange?.from) {
-          query = query.gte(
-            "summary_date",
-            dateRange.from.toISOString().split("T")[0],
-          );
-        }
-        if (dateRange?.to) {
-          query = query.lt(
-            "summary_date",
-            dateRange.to.toISOString().split("T")[0],
-          );
+        if (testError) {
+          console.error("❌ Connectivity test failed:", testError);
+          if (testError.message?.includes("Failed to fetch")) {
+            toast.error(
+              "Network connection failed. Please check your internet connection.",
+            );
+          } else {
+            toast.error(`Database error: ${testError.message}`);
+          }
+          throw testError;
         }
 
-        const { data: summariesData, error } = await query;
+        console.log(
+          "✅ Connectivity test passed, proceeding with full query...",
+        );
+
+        let summariesData, error;
+
+        try {
+          // Try the main query first
+          let query = supabase
+            .from("daily_summary")
+            .select("*")
+            .order("summary_date", { ascending: true });
+
+          if (dateRange?.from) {
+            query = query.gte(
+              "summary_date",
+              dateRange.from.toISOString().split("T")[0],
+            );
+          }
+          if (dateRange?.to) {
+            query = query.lt(
+              "summary_date",
+              dateRange.to.toISOString().split("T")[0],
+            );
+          }
+
+          const result = await query;
+          summariesData = result.data;
+          error = result.error;
+        } catch (queryError) {
+          console.warn("⚠️ Main query failed, trying fallback...", queryError);
+
+          // Fallback: try simpler query without date range
+          try {
+            const fallbackResult = await supabase
+              .from("daily_summary")
+              .select(
+                "summary_date, total_income, total_expenses, total_deposits, total_withdrawals, total_savings, cash_balance, esewa_balance, fonepay_balance, total_balance",
+              )
+              .order("summary_date", { ascending: true })
+              .limit(100);
+
+            summariesData = fallbackResult.data;
+            error = fallbackResult.error;
+
+            if (!error) {
+              console.log("✅ Fallback query succeeded with limited data");
+              toast.info("Using simplified data due to connection issues");
+            }
+          } catch (fallbackError) {
+            console.error("❌ Fallback query also failed:", fallbackError);
+            error = fallbackError;
+          }
+        }
 
         if (error) {
-          console.error("Error fetching daily summaries:", error);
+          console.error("❌ Error fetching daily summaries:", {
+            error,
+            message: error.message,
+            details: error.details,
+            hint: error.hint,
+            code: error.code,
+          });
           logError("AllTimeSummaryWidget", error);
+
+          // Provide specific error messages based on error type
+          if (error.message?.includes("Failed to fetch")) {
+            toast.error(
+              "Network connection lost. Please check your internet and try again.",
+            );
+          } else if (error.code === "PGRST116") {
+            toast.error("Database table not found. Please contact support.");
+          } else if (
+            error.message?.includes("JWT") ||
+            error.message?.includes("auth")
+          ) {
+            toast.error("Session expired. Please log in again.");
+          } else {
+            toast.error(
+              `Failed to load summary: ${error.message || "Unknown error"}`,
+            );
+          }
           throw error;
         }
 
@@ -213,17 +317,142 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
 
         console.log("📈 All-time summary calculated:", finalSummary);
         setSummaryData(finalSummary);
+        setRetryCount(0); // Reset retry count on success
       } catch (error) {
+        setConnectionError(true);
         const errorMessage = extractErrorMessage(error);
-        console.error("❌ Error in fetchAllTimeSummary:", errorMessage);
+        console.error("❌ Error in fetchAllTimeSummary:", {
+          errorMessage,
+          error,
+          errorType: typeof error,
+          errorProperties: error ? Object.getOwnPropertyNames(error) : [],
+          userAgent: navigator.userAgent,
+          online: navigator.onLine,
+          url: window.location.href,
+          timestamp: new Date().toISOString(),
+        });
+
+        // Additional diagnostic info
+        console.log("🔍 Diagnostic Information:");
+        console.log(
+          "- Network status:",
+          navigator.onLine ? "Online" : "Offline",
+        );
+        console.log("- User authenticated:", !!user);
+        console.log("- Supabase URL:", supabase.supabaseUrl);
+        console.log("- Error stack:", error?.stack || "No stack trace");
+
         logError("AllTimeSummaryWidget", error);
-        toast.error(`Failed to load all-time summary: ${errorMessage}`);
+
+        // Set fallback/empty data to prevent UI crash
+        setSummaryData({
+          totalIncome: 0,
+          totalExpenses: 0,
+          totalDeposits: 0,
+          totalWithdrawals: 0,
+          cooperativeSavings: 0,
+          netProfit: 0,
+          currentBalances: { cash: 0, esewa: 0, fonepay: 0, total: 0 },
+          incomeBreakdown: { fromOrders: 0, fromCharging: 0 },
+          paymentMethodBreakdown: { cash: 0, esewa: 0, fonepay: 0 },
+          withdrawalBreakdown: {
+            fromBank: 0,
+            fromSavings: 0,
+            fromEsewa: 0,
+            fromFonepay: 0,
+            total: 0,
+          },
+          dataPoints: 0,
+          dateRange: { from: "", to: "" },
+        });
+
+        // Don't show error toast if we already handled it above
+        if (
+          !error?.message?.includes("Failed to fetch") &&
+          !error?.message?.includes("JWT") &&
+          error?.code !== "PGRST116"
+        ) {
+          toast.error(`Failed to load all-time summary: ${errorMessage}`);
+        }
       } finally {
         setLoading(false);
       }
     },
     [user],
   );
+
+  const checkConnection = async () => {
+    try {
+      console.log("🔍 Testing Supabase connection...");
+
+      // Test different tables to isolate the issue
+      const tests = [
+        { name: "Auth Check", test: () => supabase.auth.getSession() },
+        {
+          name: "Daily Summary",
+          test: () =>
+            supabase.from("daily_summary").select("summary_date").limit(1),
+        },
+        {
+          name: "Orders Table",
+          test: () => supabase.from("orders").select("id").limit(1),
+        },
+      ];
+
+      for (const test of tests) {
+        try {
+          console.log(`🔍 Testing ${test.name}...`);
+          const result = await test.test();
+
+          if (result.error) {
+            console.error(`❌ ${test.name} failed:`, result.error);
+          } else {
+            console.log(`✅ ${test.name} successful`);
+          }
+        } catch (error) {
+          console.error(`❌ ${test.name} threw error:`, error);
+        }
+      }
+
+      // Final simple test
+      const { data, error } = await supabase
+        .from("daily_summary")
+        .select("summary_date")
+        .limit(1);
+
+      if (error) {
+        console.error("❌ Final connection test failed:", error);
+        return false;
+      }
+
+      console.log("✅ Connection test successful");
+      return true;
+    } catch (error) {
+      console.error("❌ Connection test error:", error);
+      return false;
+    }
+  };
+
+  const retryFetch = async () => {
+    if (retryCount >= 3) {
+      toast.error("Maximum retry attempts reached. Please refresh the page.");
+      return;
+    }
+
+    setRetryCount((prev) => prev + 1);
+    console.log(`🔄 Retrying fetch attempt ${retryCount + 1}/3...`);
+
+    // Test connection first
+    const isConnected = await checkConnection();
+    if (!isConnected) {
+      toast.error(
+        "Still unable to connect to database. Please check your internet connection.",
+      );
+      return;
+    }
+
+    await fetchAllTimeSummary();
+  };
 
   const forceUpdateDailySummaries = async () => {
     if (!user) return;
@@ -257,6 +486,33 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
       fetchAllTimeSummary();
     }
   }, [user, fetchAllTimeSummary]);
+
+  // Monitor network status
+  useEffect(() => {
+    const handleOnline = () => {
+      console.log("🟢 Network connection restored");
+      setNetworkStatus(true);
+      if (connectionError) {
+        toast.success("Network connection restored. Retrying...");
+        fetchAllTimeSummary();
+      }
+    };
+
+    const handleOffline = () => {
+      console.log("🔴 Network connection lost");
+      setNetworkStatus(false);
+      setConnectionError(true);
+      toast.error("Network connection lost");
+    };
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, [connectionError, fetchAllTimeSummary]);
 
   const handleDateRangeChange = async (dateRange: DateRange) => {
     setLoading(true);
@@ -305,19 +561,7 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
             <span className="hidden sm:inline">View Details</span>
             <span className="sm:hidden">Details</span>
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={forceUpdateDailySummaries}
-            disabled={refreshing}
-            className="flex items-center gap-1 sm:gap-2 text-orange-600 border-orange-300 hover:bg-orange-50 text-xs sm:text-sm px-2 sm:px-3"
-          >
-            <Database
-              className={`h-3 w-3 sm:h-4 sm:w-4 ${refreshing ? "animate-spin" : ""}`}
-            />
-            <span className="hidden sm:inline">Force Update</span>
-            <span className="sm:hidden">Update</span>
-          </Button>
+
           <Button
             variant="outline"
             size="sm"
@@ -339,6 +583,60 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
           <div className="flex items-center justify-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
             <span className="ml-2 text-gray-600">Loading summary...</span>
+          </div>
+        ) : connectionError ? (
+          <div className="flex flex-col items-center justify-center py-8 text-gray-500 space-y-4">
+            <AlertCircle className="h-8 w-8 text-red-500" />
+            <div className="text-center">
+              <p className="font-medium text-red-600">Connection Error</p>
+              <p className="text-sm">Failed to load summary data</p>
+              <div className="flex items-center justify-center mt-2 space-x-2">
+                <div
+                  className={`w-2 h-2 rounded-full ${networkStatus ? "bg-green-500" : "bg-red-500"}`}
+                ></div>
+                <p className="text-xs text-gray-400">
+                  Network: {networkStatus ? "Online" : "Offline"} | Attempt{" "}
+                  {retryCount}/3
+                </p>
+              </div>
+            </div>
+            <div className="flex space-x-2">
+              <Button
+                onClick={retryFetch}
+                variant="outline"
+                size="sm"
+                disabled={loading || retryCount >= 3 || !networkStatus}
+              >
+                <RefreshCw
+                  className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`}
+                />
+                {loading ? "Retrying..." : "Retry Connection"}
+              </Button>
+              <Button
+                onClick={() => window.location.reload()}
+                variant="outline"
+                size="sm"
+              >
+                Refresh Page
+              </Button>
+            </div>
+
+            {/* Debug Information (only show in development or for admins) */}
+            {process.env.NODE_ENV === "development" && (
+              <details className="mt-4 text-xs text-gray-500">
+                <summary className="cursor-pointer hover:text-gray-700">
+                  Debug Info
+                </summary>
+                <div className="mt-2 p-2 bg-gray-100 rounded text-left">
+                  <p>• URL: {window.location.href}</p>
+                  <p>• User Agent: {navigator.userAgent.substring(0, 50)}...</p>
+                  <p>• Online: {navigator.onLine ? "Yes" : "No"}</p>
+                  <p>• User: {user?.email || "Not logged in"}</p>
+                  <p>• Retry Count: {retryCount}</p>
+                  <p>• Timestamp: {new Date().toISOString()}</p>
+                </div>
+              </details>
+            )}
           </div>
         ) : summaryData.dataPoints === 0 ? (
           <div className="flex items-center justify-center py-8 text-gray-500">

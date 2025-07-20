@@ -4,8 +4,14 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider } from "./context/AuthContext";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  useLocation,
+} from "react-router-dom";
+import { AuthProvider, useAuth } from "./context/AuthContext";
 import { setupGlobalErrorHandler } from "./utils/supabaseErrorHandler";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
@@ -52,13 +58,28 @@ const queryClient = new QueryClient();
 // For simplicity, Dashboard.tsx will handle its own content (cards) + Outlet for now.
 // const DashboardHomePage = () => <div>Dashboard Home - Cards Here</div>;
 
-const App = () => {
+const ChatBotWrapper = () => {
+  const { user } = useAuth();
+  const location = useLocation();
   const [isChatBotOpen, setChatBotOpen] = useState(false);
 
   const handleToggleChatBot = () => {
     setChatBotOpen((prev) => !prev);
   };
 
+  // Only show chatbot if user is logged in and not on login page
+  const shouldShowChatBot = user && location.pathname !== "/";
+
+  if (!shouldShowChatBot) {
+    return null;
+  }
+
+  return (
+    <EnhancedChatBot isOpen={isChatBotOpen} onToggle={handleToggleChatBot} />
+  );
+};
+
+const App = () => {
   // Set up global error handler for refresh token errors
   useEffect(() => {
     setupGlobalErrorHandler();
@@ -137,10 +158,7 @@ const App = () => {
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
-            <EnhancedChatBot
-              isOpen={isChatBotOpen}
-              onToggle={handleToggleChatBot}
-            />
+            <ChatBotWrapper />
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
