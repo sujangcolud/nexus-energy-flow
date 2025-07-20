@@ -298,12 +298,27 @@ const DashboardStudio: React.FC = () => {
   const [isSupported, setIsSupported] = useState<boolean | null>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
 
+  // Check if dashboard studio is supported
+  useEffect(() => {
+    const checkSupport = async () => {
+      const supported = await isDashboardStudioSupported();
+      setIsSupported(supported);
+
+      if (!supported) {
+        console.warn("Dashboard Studio: Falling back to localStorage mode");
+        toast.info("Dashboard Studio is running in offline mode");
+      }
+    };
+
+    checkSupport();
+  }, []);
+
   // Load saved dashboards when user is available
   useEffect(() => {
-    if (user?.id) {
+    if (user?.id && isSupported !== null) {
       loadDashboards();
     }
-  }, [user?.id]);
+  }, [user?.id, isSupported]);
 
   const loadDashboards = async () => {
     // Don't load if user is not available yet
