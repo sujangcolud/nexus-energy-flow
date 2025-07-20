@@ -1066,25 +1066,25 @@ const OrdersTab = () => {
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-gradient-to-r from-gray-50 to-orange-50">
-                      <TableHead className="font-semibold text-gray-700">
+                      <TableHead className="font-semibold text-gray-700 text-xs sm:text-sm px-2 sm:px-4">
                         Date
                       </TableHead>
-                      <TableHead className="font-semibold text-gray-700">
+                      <TableHead className="font-semibold text-gray-700 text-xs sm:text-sm px-2 sm:px-4">
                         Item
                       </TableHead>
-                      <TableHead className="font-semibold text-gray-700 text-center">
-                        Quantity
+                      <TableHead className="font-semibold text-gray-700 text-center text-xs sm:text-sm px-1 sm:px-4">
+                        Qty
                       </TableHead>
-                      <TableHead className="font-semibold text-gray-700 text-right">
+                      <TableHead className="font-semibold text-gray-700 text-right text-xs sm:text-sm px-1 sm:px-4">
                         Rate
                       </TableHead>
-                      <TableHead className="font-semibold text-gray-700 text-right">
+                      <TableHead className="font-semibold text-gray-700 text-right text-xs sm:text-sm px-1 sm:px-4">
                         Total
                       </TableHead>
-                      <TableHead className="font-semibold text-gray-700">
+                      <TableHead className="font-semibold text-gray-700 text-xs sm:text-sm px-1 sm:px-4 hidden sm:table-cell">
                         Payment
                       </TableHead>
-                      <TableHead className="font-semibold text-gray-700">
+                      <TableHead className="font-semibold text-gray-700 text-xs sm:text-sm px-1 sm:px-4 hidden sm:table-cell">
                         Actions
                       </TableHead>
                     </TableRow>
