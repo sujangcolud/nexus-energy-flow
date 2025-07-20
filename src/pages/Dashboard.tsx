@@ -279,15 +279,7 @@ const Dashboard = () => {
     const tabSettings = storedSettings ? JSON.parse(storedSettings) : {};
 
     const showOrders = JSON.parse(localStorage.getItem("showOrders") || "true");
-    const showInsights = JSON.parse(
-      localStorage.getItem("showInsights") || "true",
-    );
-    const showReports = JSON.parse(
-      localStorage.getItem("showReports") || "true",
-    );
-    const showReportsView = JSON.parse(
-      localStorage.getItem("showReportsView") || "true",
-    );
+
     const showDataInput = JSON.parse(
       localStorage.getItem("showDataInput") || "true",
     );
@@ -306,9 +298,6 @@ const Dashboard = () => {
 
     const tabVisibility: Record<string, boolean> = {
       orders: showOrders,
-      insights: showInsights,
-      reports: showReports,
-      "reports-view": showReportsView,
       "data-input": showDataInput,
       "user-management": showUserManagement,
       "admin-panel": showAdminPanel,
