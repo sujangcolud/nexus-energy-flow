@@ -68,6 +68,7 @@ const MobileDashboard = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isDailyClosingOpen, setIsDailyClosingOpen] = useState(false);
   const [isBatchClosingOpen, setIsBatchClosingOpen] = useState(false);
+  const [showBatchClosing, setShowBatchClosing] = useState(true);
 
   // Update time every minute
   useEffect(() => {
@@ -79,6 +80,12 @@ const MobileDashboard = () => {
     const storedSettings = localStorage.getItem("tabSettings");
     if (storedSettings) {
       setTabSettings(JSON.parse(storedSettings));
+    }
+
+    // Load batch closing setting
+    const batchClosingSetting = localStorage.getItem("showBatchClosing");
+    if (batchClosingSetting !== null) {
+      setShowBatchClosing(JSON.parse(batchClosingSetting));
     }
   }, []);
 
