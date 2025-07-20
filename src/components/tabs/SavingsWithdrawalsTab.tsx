@@ -82,6 +82,7 @@ interface Saving {
   cycle_period: string | null;
   contribution_date: string;
   payment_mode: string;
+  savings_to: string;
   user_id: string;
   created_at: string;
 }
@@ -109,6 +110,7 @@ const SavingsWithdrawalsTab = () => {
     memberId: "",
     cyclePeriod: "",
     paymentMode: "",
+    savingsTo: "",
     remarks: "",
   });
   const [withdrawalsFormData, setWithdrawalsFormData] = useState({
@@ -145,6 +147,8 @@ const SavingsWithdrawalsTab = () => {
   ];
 
   const paymentModes = ["Cash", "Esewa", "Fonepay"];
+
+  const savingsToOptions = ["Bank", "Cooperative"];
 
   const withdrawalSources = ["Esewa", "Bank", "Cooperative"];
 
@@ -277,7 +281,8 @@ const SavingsWithdrawalsTab = () => {
       !savingsFormData.contributionAmount ||
       !savingsFormData.memberId ||
       !savingsFormData.cyclePeriod ||
-      !savingsFormData.paymentMode
+      !savingsFormData.paymentMode ||
+      !savingsFormData.savingsTo
     ) {
       toast.error("Please fill in all required fields");
       return;
@@ -292,6 +297,7 @@ const SavingsWithdrawalsTab = () => {
           member_id: savingsFormData.memberId,
           cycle_period: savingsFormData.cyclePeriod,
           payment_mode: savingsFormData.paymentMode,
+          savings_to: savingsFormData.savingsTo,
           contribution_date: transactionDate,
         },
       ]);
@@ -304,6 +310,7 @@ const SavingsWithdrawalsTab = () => {
         memberId: "",
         cyclePeriod: "",
         paymentMode: "",
+        savingsTo: "",
         remarks: "",
       });
       fetchSavings();
