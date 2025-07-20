@@ -319,6 +319,8 @@ const KPI_ICONS = {
 
 const DashboardStudio: React.FC = () => {
   const { user } = useAuth();
+
+  // ALL useState hooks must be called BEFORE any conditional logic
   const [dashboards, setDashboards] = useState<Dashboard[]>([]);
   const [currentDashboard, setCurrentDashboard] = useState<Dashboard | null>(
     null,
@@ -335,8 +337,11 @@ const DashboardStudio: React.FC = () => {
   const [isSupported, setIsSupported] = useState<boolean | null>(null);
   const [dashboardMetrics, setDashboardMetrics] =
     useState<DashboardMetrics | null>(null);
+
+  // ALL useRef hooks must be called BEFORE any conditional logic
   const canvasRef = useRef<HTMLDivElement>(null);
 
+  // ALL useEffect hooks must be called BEFORE any conditional logic
   // Check if dashboard studio is supported
   useEffect(() => {
     const checkSupport = async () => {
@@ -360,7 +365,15 @@ const DashboardStudio: React.FC = () => {
     checkSupport();
   }, []);
 
-  // Show loading if user is not yet available or checking support
+  // Load saved dashboards when user is available
+  useEffect(() => {
+    if (user?.id && isSupported !== null) {
+      loadDashboards();
+      loadDashboardMetrics();
+    }
+  }, [user?.id, isSupported]);
+
+  // NOW we can have conditional returns after ALL hooks have been called
   if (!user || isSupported === null) {
     return (
       <div className="h-screen flex items-center justify-center bg-gray-50">
@@ -375,14 +388,6 @@ const DashboardStudio: React.FC = () => {
       </div>
     );
   }
-
-  // Load saved dashboards when user is available
-  useEffect(() => {
-    if (user?.id && isSupported !== null) {
-      loadDashboards();
-      loadDashboardMetrics();
-    }
-  }, [user?.id, isSupported]);
 
   const loadDashboardMetrics = async () => {
     if (!user?.id) return;
