@@ -68,6 +68,7 @@ import {
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { extractErrorMessage } from "@/utils/errorHandling";
 
 // Types for dashboard components
 interface ChartConfig {
@@ -280,38 +281,75 @@ const DashboardStudio: React.FC = () => {
   const [isQueryRunning, setIsQueryRunning] = useState(false);
   const canvasRef = useRef<HTMLDivElement>(null);
 
-  // Load saved dashboards
+  // Load saved dashboards when user is available
   useEffect(() => {
-    loadDashboards();
-  }, []);
+    if (user?.id) {
+      loadDashboards();
+    }
+  }, [user?.id]);
 
   const loadDashboards = async () => {
+    // Don't load if user is not available yet
+    if (!user?.id) {
+      console.log("User not available, skipping dashboard load");
+      return;
+    }
+
     try {
       const { data, error } = await supabase
         .from("custom_calculations")
         .select("*")
-        .eq("user_id", user?.id)
+        .eq("user_id", user.id)
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase error:", error);
+        throw error;
+      }
 
       const parsedDashboards =
-        data?.map((item) => ({
-          id: item.id,
-          name: item.name,
-          description: item.description || "",
-          charts: JSON.parse(item.calculation_config || "[]"),
-          layout: "grid",
-          theme: "light",
-          isPublic: false,
-          createdAt: item.created_at,
-          updatedAt: item.updated_at,
-        })) || [];
+        data?.map((item) => {
+          try {
+            return {
+              id: item.id,
+              name: item.name,
+              description: item.description || "",
+              charts: JSON.parse(item.calculation_config || "[]"),
+              layout: "grid" as const,
+              theme: "light" as const,
+              isPublic: false,
+              createdAt: item.created_at,
+              updatedAt: item.updated_at,
+            };
+          } catch (parseError) {
+            console.error(
+              "Error parsing dashboard config for item:",
+              item.id,
+              parseError,
+            );
+            // Return dashboard with empty charts if parsing fails
+            return {
+              id: item.id,
+              name: item.name,
+              description: item.description || "",
+              charts: [],
+              layout: "grid" as const,
+              theme: "light" as const,
+              isPublic: false,
+              createdAt: item.created_at,
+              updatedAt: item.updated_at,
+            };
+          }
+        }) || [];
 
       setDashboards(parsedDashboards);
+      console.log("Successfully loaded", parsedDashboards.length, "dashboards");
     } catch (error) {
-      console.error("Error loading dashboards:", error);
-      toast.error("Failed to load dashboards");
+      const errorMessage = extractErrorMessage(error);
+      console.error("Error loading dashboards:", errorMessage, error);
+      toast.error(`Failed to load dashboards: ${errorMessage}`);
+      // Set empty array on error to prevent undefined state
+      setDashboards([]);
     }
   };
 
