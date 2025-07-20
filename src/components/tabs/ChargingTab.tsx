@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/table";
 import { toast } from "sonner";
 import { extractErrorMessage, logError } from "@/utils/errorHandling";
+import { useIsMobile } from "@/hooks/use-mobile";
 import {
   Zap,
   Plus,
@@ -109,6 +110,7 @@ const ChargingTab = () => {
   const [transactionDate, setTransactionDate] = useState(
     new Date().toISOString().split("T")[0],
   );
+  const isMobile = useIsMobile();
 
   const paymentModes = ["Cash", "Esewa", "Fonepay", "Bank", "Cheque", "Credit"];
 
@@ -530,93 +532,96 @@ const ChargingTab = () => {
         ></div>
       </div>
 
-      <div className="relative z-10 space-y-8 p-6">
+      <div className="relative z-10 space-y-6 sm:space-y-8 p-4 sm:p-6">
         {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="p-4 rounded-2xl bg-gradient-to-r from-yellow-500 to-orange-600 text-white shadow-xl animate-pulse">
-              <Zap className="h-8 w-8" />
+        <div className="text-center mb-6 sm:mb-8">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 mb-4">
+            <div className="p-3 sm:p-4 rounded-2xl bg-gradient-to-r from-yellow-500 to-orange-600 text-white shadow-xl animate-pulse">
+              <Zap className="h-6 w-6 sm:h-8 sm:w-8" />
             </div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-yellow-600 via-orange-600 to-red-600 bg-clip-text text-transparent">
-              Energy Charging Station
+            <h1 className="text-2xl sm:text-4xl font-bold bg-gradient-to-r from-yellow-600 via-orange-600 to-red-600 bg-clip-text text-transparent text-center">
+              {isMobile ? "EV Charging" : "Energy Charging Station"}
             </h1>
-            <Zap className="h-8 w-8 text-yellow-500 animate-bounce" />
+            <Zap className="h-6 w-6 sm:h-8 sm:w-8 text-yellow-500 animate-bounce" />
           </div>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Track your electric vehicle charging sessions with precision and
-            style
+          <p className="text-sm sm:text-xl text-gray-600 max-w-2xl mx-auto px-4">
+            Track your electric vehicle charging sessions with precision
           </p>
         </div>
 
         {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
           <Card className="bg-gradient-to-br from-yellow-50 to-orange-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
-            <CardContent className="p-6">
+            <CardContent className="p-3 sm:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-yellow-600 font-medium">
-                    Total Sessions
+                  <p className="text-xs sm:text-sm text-yellow-600 font-medium">
+                    {isMobile ? "Sessions" : "Total Sessions"}
                   </p>
-                  <p className="text-2xl font-bold text-yellow-800">
+                  <p className="text-lg sm:text-2xl font-bold text-yellow-800">
                     {sessions.length}
                   </p>
                 </div>
-                <div className="p-3 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-xl text-white">
-                  <BatteryCharging className="h-6 w-6" />
+                <div className="p-2 sm:p-3 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-xl text-white">
+                  <BatteryCharging className="h-4 w-4 sm:h-6 sm:w-6" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card className="bg-gradient-to-br from-orange-50 to-red-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
-            <CardContent className="p-6">
+            <CardContent className="p-3 sm:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-orange-600 font-medium">
-                    Total Cost
+                  <p className="text-xs sm:text-sm text-orange-600 font-medium">
+                    {isMobile ? "Cost" : "Total Cost"}
                   </p>
-                  <p className="text-2xl font-bold text-orange-800">
-                    NRs. {totalSessionCost.toFixed(2)}
+                  <p className="text-sm sm:text-2xl font-bold text-orange-800">
+                    {isMobile
+                      ? `₹${totalSessionCost.toFixed(0)}`
+                      : `NRs. ${totalSessionCost.toFixed(2)}`}
                   </p>
                 </div>
-                <div className="p-3 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl text-white">
-                  <TrendingUp className="h-6 w-6" />
+                <div className="p-2 sm:p-3 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl text-white">
+                  <TrendingUp className="h-4 w-4 sm:h-6 sm:w-6" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card className="bg-gradient-to-br from-red-50 to-pink-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
-            <CardContent className="p-6">
+            <CardContent className="p-3 sm:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-red-600 font-medium">
-                    Average Cost
+                  <p className="text-xs sm:text-sm text-red-600 font-medium">
+                    {isMobile ? "Avg" : "Average Cost"}
                   </p>
-                  <p className="text-2xl font-bold text-red-800">
-                    NRs. {averageSessionCost.toFixed(2)}
+                  <p className="text-sm sm:text-2xl font-bold text-red-800">
+                    {isMobile
+                      ? `₹${averageSessionCost.toFixed(0)}`
+                      : `NRs. ${averageSessionCost.toFixed(2)}`}
                   </p>
                 </div>
-                <div className="p-3 bg-gradient-to-r from-red-500 to-pink-500 rounded-xl text-white">
-                  <Activity className="h-6 w-6" />
+                <div className="p-2 sm:p-3 bg-gradient-to-r from-red-500 to-pink-500 rounded-xl text-white">
+                  <Activity className="h-4 w-4 sm:h-6 sm:w-6" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card className="bg-gradient-to-br from-pink-50 to-purple-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
-            <CardContent className="p-6">
+            <CardContent className="p-3 sm:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-pink-600 font-medium">
-                    Total Energy
+                  <p className="text-xs sm:text-sm text-pink-600 font-medium">
+                    {isMobile ? "Energy" : "Total Energy"}
                   </p>
-                  <p className="text-2xl font-bold text-pink-800">
+                  <p className="text-sm sm:text-2xl font-bold text-pink-800">
                     {totalKcal} kCal
                   </p>
                 </div>
-                <div className="p-3 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl text-white">
-                  <Battery className="h-6 w-6" />
+                <div className="p-2 sm:p-3 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl text-white">
+                  <Battery className="h-4 w-4 sm:h-6 sm:w-6" />
                 </div>
               </div>
             </CardContent>
@@ -960,46 +965,58 @@ const ChargingTab = () => {
 
         {/* Charging History */}
         <Card className="bg-gradient-to-br from-white/90 to-gray-50/90 backdrop-blur-sm border-0 shadow-2xl">
-          <CardHeader className="border-b border-gray-200/50 flex flex-row items-center justify-between">
-            <CardTitle className="text-2xl font-bold bg-gradient-to-r from-gray-700 to-gray-900 bg-clip-text text-transparent">
-              Charging History
-            </CardTitle>
-            <div className="flex items-center gap-2">
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-[300px] justify-start text-left font-normal hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50",
-                      !range && "text-muted-foreground",
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {range?.from ? (
-                      range.to ? (
-                        <>
-                          {format(range.from, "LLL dd, y")} -{" "}
-                          {format(range.to, "LLL dd, y")}
-                        </>
+          <CardHeader className="border-b border-gray-200/50 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <CardTitle className="text-lg sm:text-2xl font-bold bg-gradient-to-r from-gray-700 to-gray-900 bg-clip-text text-transparent">
+                Charging History
+              </CardTitle>
+              <div className="flex items-center gap-2">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full sm:w-[280px] justify-start text-left font-normal hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 text-xs sm:text-sm",
+                        !range && "text-muted-foreground",
+                      )}
+                    >
+                      <CalendarIcon className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                      {range?.from ? (
+                        range.to ? (
+                          <>
+                            {isMobile
+                              ? `${format(range.from, "MMM dd")} - ${format(range.to, "MMM dd")}`
+                              : `${format(range.from, "LLL dd, y")} - ${format(range.to, "LLL dd, y")}`}
+                          </>
+                        ) : (
+                          format(
+                            range.from,
+                            isMobile ? "MMM dd, y" : "LLL dd, y",
+                          )
+                        )
                       ) : (
-                        format(range.from, "LLL dd, y")
-                      )
-                    ) : (
-                      <span>Pick a date range</span>
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="end">
-                  <Calendar
-                    initialFocus
-                    mode="range"
-                    defaultMonth={range?.from}
-                    selected={range}
-                    onSelect={onRangeChange}
-                    numberOfMonths={2}
-                  />
-                </PopoverContent>
-              </Popover>
+                        <span className="truncate">
+                          {isMobile ? "Pick dates" : "Pick a date range"}
+                        </span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent
+                    className="w-auto p-0"
+                    align="end"
+                    side="bottom"
+                  >
+                    <Calendar
+                      initialFocus
+                      mode="range"
+                      defaultMonth={range?.from}
+                      selected={range}
+                      onSelect={onRangeChange}
+                      numberOfMonths={isMobile ? 1 : 2}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
             </div>
           </CardHeader>
           <CardContent className="p-0">

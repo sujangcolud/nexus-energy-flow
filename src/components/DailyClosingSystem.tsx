@@ -170,8 +170,15 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
           .single(),
       ]);
 
-      // Check if already closed - only if there's actual closing data, not just query results
-      setAlreadyClosed(!!dailySummaryRes.data && !dailySummaryRes.error);
+      // Check if already closed - only if there's meaningful closing data with actual totals
+      const hasValidSummary =
+        dailySummaryRes.data &&
+        !dailySummaryRes.error &&
+        (dailySummaryRes.data.total_income > 0 ||
+          dailySummaryRes.data.total_expenses > 0 ||
+          dailySummaryRes.data.total_deposits > 0 ||
+          dailySummaryRes.data.total_withdrawals > 0);
+      setAlreadyClosed(!!hasValidSummary);
 
       // Process the data
       const summary: TransactionSummary = {
