@@ -449,7 +449,9 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
           </DialogHeader>
           <div className="flex items-center justify-center p-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-            <span className="ml-2">Loading daily data...</span>
+            <span className="ml-2">
+              Loading {viewMode === "daily" ? "daily" : "all-time"} data...
+            </span>
           </div>
         </DialogContent>
       </Dialog>
