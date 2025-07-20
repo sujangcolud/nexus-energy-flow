@@ -959,9 +959,9 @@ const ChargingTab = () => {
                   ))}
                 </div>
               </CardContent>
-            </Card>
+                        </Card>
           </div>
-                )}
+        )}
 
         {/* Charging History */}
         <Card className="bg-gradient-to-br from-white/90 to-gray-50/90 backdrop-blur-sm border-0 shadow-2xl">
