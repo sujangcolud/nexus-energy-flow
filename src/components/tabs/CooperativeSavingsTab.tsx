@@ -15,6 +15,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
 import { extractErrorMessage, logError } from "@/utils/errorHandling";
 import TransactionDatePicker from "@/components/ui/transaction-date-picker";
@@ -553,16 +560,20 @@ const CooperativeSavingsTab = () => {
                       <Users className="h-4 w-4 text-blue-600" />
                       Member ID *
                     </Label>
-                    <Input
-                      id="memberId"
+                    <Select
                       value={formData.memberId}
-                      onChange={(e) =>
-                        setFormData({ ...formData, memberId: e.target.value })
+                      onValueChange={(value) =>
+                        setFormData({ ...formData, memberId: value })
                       }
-                      placeholder="Enter member ID"
-                      required
-                      className="border-blue-200 focus:border-blue-500 focus:ring-blue-500 h-12"
-                    />
+                    >
+                      <SelectTrigger className="border-blue-200 focus:border-blue-500 focus:ring-blue-500 h-12">
+                        <SelectValue placeholder="Select member ID" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="DF1">DF1</SelectItem>
+                        <SelectItem value="SF1">SF1</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   <div className="space-y-2">

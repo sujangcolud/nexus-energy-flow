@@ -4,6 +4,8 @@ import { useAuth } from "@/context/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Progress } from "@/components/ui/progress";
 import {
   Table,
   TableBody,
@@ -33,6 +35,12 @@ import {
   Banknote,
   ArrowUpDown,
   BarChart3,
+  Clock,
+  AlertCircle,
+  Download,
+  X,
+  RefreshCw,
+  CheckCircle,
 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
@@ -62,7 +70,18 @@ interface AllTimeSummaryData {
     esewa: number;
     fonepay: number;
   };
+  withdrawalBreakdown: {
+    fromBank: number;
+    fromSavings: number;
+    fromEsewa: number;
+    fromFonepay: number;
+    total: number;
+  };
   dataPoints: number;
+  dateRange: {
+    from: string;
+    to: string;
+  };
 }
 
 interface AllTimeSummaryModalProps {
@@ -133,7 +152,13 @@ const AllTimeSummaryModal: React.FC<AllTimeSummaryModalProps> = ({
         <div className="space-y-6">
           <div className="flex items-center gap-4">
             <Calendar className="h-5 w-5 text-blue-600" />
-            <DateRangePicker onUpdate={(values) => setDateRange(values.range)} />
+            <DateRangePicker
+              onUpdate={(range) => {
+                if (range?.from && range?.to) {
+                  setDateRange({ from: range.from, to: range.to });
+                }
+              }}
+            />
             <Badge
               variant="outline"
               className="text-purple-600 border-purple-300"
@@ -279,7 +304,9 @@ const AllTimeSummaryModal: React.FC<AllTimeSummaryModalProps> = ({
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
                     <Banknote className="h-4 w-4 text-green-600" />
-                    <span className="text-sm font-medium text-gray-700">Cash</span>
+                    <span className="text-sm font-medium text-gray-700">
+                      Cash
+                    </span>
                   </div>
                   <div className="text-lg font-semibold text-green-600">
                     {formatCurrency(paymentMethodBreakdown.cash)}
@@ -288,7 +315,9 @@ const AllTimeSummaryModal: React.FC<AllTimeSummaryModalProps> = ({
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
                     <CreditCard className="h-4 w-4 text-blue-600" />
-                    <span className="text-sm font-medium text-gray-700">eSewa</span>
+                    <span className="text-sm font-medium text-gray-700">
+                      eSewa
+                    </span>
                   </div>
                   <div className="text-lg font-semibold text-blue-600">
                     {formatCurrency(paymentMethodBreakdown.esewa)}

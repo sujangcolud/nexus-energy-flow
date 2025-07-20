@@ -42,6 +42,8 @@ import {
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { extractErrorMessage, logError } from "@/utils/errorHandling";
+import { DateRangePicker } from "@/components/ui/date-range-picker";
+import { DateRange } from "react-day-picker";
 
 interface TransactionSummary {
   orders: {
@@ -94,12 +96,20 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
     useState<TransactionSummary | null>(null);
   const [isClosing, setIsClosing] = useState(false);
   const [alreadyClosed, setAlreadyClosed] = useState(false);
+  const [viewMode, setViewMode] = useState<"daily" | "alltime">("daily");
+  const [dateRange, setDateRange] = useState<DateRange | undefined>();
+  const [allTimeSummary, setAllTimeSummary] =
+    useState<TransactionSummary | null>(null);
 
   useEffect(() => {
     if (isOpen && user) {
-      fetchDayData();
+      if (viewMode === "daily") {
+        fetchDayData();
+      } else {
+        fetchAllTimeData();
+      }
     }
-  }, [isOpen, selectedDate, user]);
+  }, [isOpen, selectedDate, user, viewMode, dateRange]);
 
   const fetchDayData = async () => {
     if (!user) return;
@@ -196,6 +206,124 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
     } catch (error) {
       logError("fetching daily closing data", error);
       toast.error(`Error loading daily data: ${extractErrorMessage(error)}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchAllTimeData = async () => {
+    if (!user) return;
+
+    setLoading(true);
+    try {
+      let fromDate = "";
+      let toDate = "";
+
+      if (dateRange?.from) {
+        fromDate = format(dateRange.from, "yyyy-MM-dd");
+      }
+      if (dateRange?.to) {
+        toDate = format(dateRange.to, "yyyy-MM-dd");
+      }
+
+      // Fetch data from all tables within date range
+      let ordersQuery = supabase
+        .from("orders")
+        .select("*")
+        .eq("user_id", user.id);
+
+      let chargingQuery = supabase
+        .from("charging_sessions")
+        .select("*")
+        .eq("user_id", user.id);
+
+      let expensesQuery = supabase
+        .from("expenses")
+        .select("*")
+        .eq("user_id", user.id);
+
+      let depositsQuery = supabase
+        .from("deposits")
+        .select("*")
+        .eq("user_id", user.id);
+
+      let withdrawalsQuery = supabase
+        .from("withdrawals")
+        .select("*")
+        .eq("user_id", user.id);
+
+      let savingsQuery = supabase
+        .from("cooperative_savings")
+        .select("*")
+        .eq("user_id", user.id);
+
+      // Apply date filters if provided
+      if (fromDate) {
+        ordersQuery = ordersQuery.gte("order_date", fromDate);
+        chargingQuery = chargingQuery.gte("session_date", fromDate);
+        expensesQuery = expensesQuery.gte("expense_date", fromDate);
+        depositsQuery = depositsQuery.gte("deposit_date", fromDate);
+        withdrawalsQuery = withdrawalsQuery.gte("withdrawal_date", fromDate);
+        savingsQuery = savingsQuery.gte("contribution_date", fromDate);
+      }
+
+      if (toDate) {
+        ordersQuery = ordersQuery.lte("order_date", toDate);
+        chargingQuery = chargingQuery.lte("session_date", toDate);
+        expensesQuery = expensesQuery.lte("expense_date", toDate);
+        depositsQuery = depositsQuery.lte("deposit_date", toDate);
+        withdrawalsQuery = withdrawalsQuery.lte("withdrawal_date", toDate);
+        savingsQuery = savingsQuery.lte("contribution_date", toDate);
+      }
+
+      const [
+        { data: orders, error: ordersError },
+        { data: charging, error: chargingError },
+        { data: expenses, error: expensesError },
+        { data: deposits, error: depositsError },
+        { data: withdrawals, error: withdrawalsError },
+        { data: savings, error: savingsError },
+      ] = await Promise.all([
+        ordersQuery,
+        chargingQuery,
+        expensesQuery,
+        depositsQuery,
+        withdrawalsQuery,
+        savingsQuery,
+      ]);
+
+      if (ordersError) throw ordersError;
+      if (chargingError) throw chargingError;
+      if (expensesError) throw expensesError;
+      if (depositsError) throw depositsError;
+      if (withdrawalsError) throw withdrawalsError;
+      if (savingsError) throw savingsError;
+
+      const summary: TransactionSummary = {
+        orders: processTransactions(orders || [], "total", "payment_mode"),
+        charging: processTransactions(
+          charging || [],
+          "total_amount",
+          "payment_mode",
+        ),
+        expenses: processTransactions(expenses || [], "amount", "payment_mode"),
+        deposits: processTransactions(deposits || [], "amount", "mode"),
+        withdrawals: processTransactions(
+          withdrawals || [],
+          "amount",
+          "payment_mode",
+        ),
+        cooperative_savings: processTransactions(
+          savings || [],
+          "contribution_amount",
+          "payment_mode",
+        ),
+      };
+
+      setAllTimeSummary(summary);
+    } catch (error) {
+      logError("fetching all-time data", error);
+      toast.error(`Error loading all-time data: ${extractErrorMessage(error)}`);
     } finally {
       setLoading(false);
     }
@@ -307,7 +435,9 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
 
   const formatCurrency = (amount: number) => `NRs. ${amount.toFixed(2)}`;
 
-  if (!transactionSummary) {
+  const dataToShow = viewMode === "daily" ? transactionSummary : allTimeSummary;
+
+  if (!dataToShow) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-auto">
@@ -319,16 +449,24 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
           </DialogHeader>
           <div className="flex items-center justify-center p-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-            <span className="ml-2">Loading daily data...</span>
+            <span className="ml-2">
+              Loading {viewMode === "daily" ? "daily" : "all-time"} data...
+            </span>
           </div>
         </DialogContent>
       </Dialog>
     );
   }
 
+  // Use appropriate data source based on view mode
+  const currentSummary =
+    viewMode === "daily"
+      ? transactionSummary
+      : allTimeSummary || transactionSummary;
+
   const totalIncome =
-    transactionSummary.orders.total + transactionSummary.charging.total;
-  const totalExpenses = transactionSummary.expenses.total;
+    currentSummary.orders.total + currentSummary.charging.total;
+  const totalExpenses = currentSummary.expenses.total;
   const netProfit = totalIncome - totalExpenses;
 
   return (
@@ -337,32 +475,73 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Database className="h-5 w-5" />
-            Daily Closing System -{" "}
-            {format(new Date(selectedDate), "MMM dd, yyyy")}
+            {viewMode === "daily"
+              ? `Daily Closing System - ${format(new Date(selectedDate), "MMM dd, yyyy")}`
+              : "All-Time Summary"}
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6">
-          {/* Date Selector */}
-          <div className="flex items-center gap-4">
-            <Calendar className="h-5 w-5 text-blue-600" />
-            <input
-              type="date"
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              className="border rounded px-3 py-2"
-              max={new Date().toISOString().split("T")[0]}
-            />
-            {alreadyClosed && (
-              <Badge
-                variant="secondary"
-                className="bg-green-100 text-green-800"
-              >
-                <CheckCircle className="h-4 w-4 mr-1" />
-                Already Closed
-              </Badge>
-            )}
+          {/* View Mode Toggle */}
+          <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
+            <Button
+              variant={viewMode === "daily" ? "default" : "outline"}
+              onClick={() => setViewMode("daily")}
+              className="flex items-center gap-2"
+            >
+              <Calendar className="h-4 w-4" />
+              Daily View
+            </Button>
+            <Button
+              variant={viewMode === "alltime" ? "default" : "outline"}
+              onClick={() => setViewMode("alltime")}
+              className="flex items-center gap-2"
+            >
+              <BarChart3 className="h-4 w-4" />
+              All Time
+            </Button>
           </div>
+
+          {/* Date Controls */}
+          {viewMode === "daily" ? (
+            <div className="flex items-center gap-4">
+              <Calendar className="h-5 w-5 text-blue-600" />
+              <input
+                type="date"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                className="border rounded px-3 py-2"
+                max={new Date().toISOString().split("T")[0]}
+              />
+              {alreadyClosed && (
+                <Badge
+                  variant="secondary"
+                  className="bg-green-100 text-green-800"
+                >
+                  <CheckCircle className="h-4 w-4 mr-1" />
+                  Already Closed
+                </Badge>
+              )}
+            </div>
+          ) : (
+            <div className="flex items-center gap-4">
+              <Calendar className="h-5 w-5 text-blue-600" />
+              <DateRangePicker
+                onUpdate={(range) => {
+                  if (range?.from && range?.to) {
+                    setDateRange({ from: range.from, to: range.to });
+                  } else {
+                    setDateRange(undefined);
+                  }
+                }}
+              />
+              <span className="text-sm text-gray-600">
+                {dateRange?.from && dateRange?.to
+                  ? `${format(dateRange.from, "MMM dd, yyyy")} - ${format(dateRange.to, "MMM dd, yyyy")}`
+                  : "Select date range for all-time summary"}
+              </span>
+            </div>
+          )}
 
           {/* Summary Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -420,8 +599,8 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
                     </p>
                     <p className="text-lg font-bold text-purple-600">
                       {formatCurrency(
-                        transactionSummary.deposits.total -
-                          transactionSummary.withdrawals.total,
+                        currentSummary.deposits.total -
+                          currentSummary.withdrawals.total,
                       )}
                     </p>
                   </div>
@@ -489,7 +668,7 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {Object.entries(transactionSummary).map(([key, data]) => (
+                  {Object.entries(currentSummary).map(([key, data]) => (
                     <TableRow key={key}>
                       <TableCell className="font-medium">
                         {key.replace("_", " ").toUpperCase()}
@@ -561,21 +740,19 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
                   <div className="flex justify-between">
                     <span>Total Deposits:</span>
                     <span className="font-semibold">
-                      {formatCurrency(transactionSummary.deposits.total)}
+                      {formatCurrency(currentSummary.deposits.total)}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span>Total Withdrawals:</span>
                     <span className="font-semibold">
-                      {formatCurrency(transactionSummary.withdrawals.total)}
+                      {formatCurrency(currentSummary.withdrawals.total)}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span>Cooperative Savings:</span>
                     <span className="font-semibold">
-                      {formatCurrency(
-                        transactionSummary.cooperative_savings.total,
-                      )}
+                      {formatCurrency(currentSummary.cooperative_savings.total)}
                     </span>
                   </div>
                   <hr className="my-2" />
@@ -599,28 +776,30 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
           <Button variant="outline" onClick={onClose}>
             Close
           </Button>
-          <Button
-            onClick={handleDayClose}
-            disabled={isClosing || alreadyClosed}
-            className="bg-blue-600 hover:bg-blue-700"
-          >
-            {isClosing ? (
-              <>
-                <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin mr-2" />
-                Processing...
-              </>
-            ) : alreadyClosed ? (
-              <>
-                <CheckCircle className="h-4 w-4 mr-2" />
-                Already Closed
-              </>
-            ) : (
-              <>
-                <Save className="h-4 w-4 mr-2" />
-                Close Day
-              </>
-            )}
-          </Button>
+          {viewMode === "daily" && (
+            <Button
+              onClick={handleDayClose}
+              disabled={isClosing || alreadyClosed}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              {isClosing ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin mr-2" />
+                  Processing...
+                </>
+              ) : alreadyClosed ? (
+                <>
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  Already Closed
+                </>
+              ) : (
+                <>
+                  <Save className="h-4 w-4 mr-2" />
+                  Close Day
+                </>
+              )}
+            </Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>

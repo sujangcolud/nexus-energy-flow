@@ -185,28 +185,7 @@ const MobileDashboard = () => {
         description: "Inventory management",
         category: "management",
       },
-      {
-        id: "insights",
-        path: "insights",
-        label: "Insights",
-        icon: BarChart3,
-        roles: ["user", "data_entry", "reports_viewer", "super_admin"],
-        color: "from-blue-500 to-blue-600",
-        bgColor: "bg-blue-50",
-        description: "Analytics & insights",
-        category: "reports",
-      },
-      {
-        id: "reports",
-        path: "reports",
-        label: "Reports",
-        icon: FileText,
-        roles: ["user", "reports_viewer", "super_admin"],
-        color: "from-slate-500 to-slate-600",
-        bgColor: "bg-slate-50",
-        description: "Business reports",
-        category: "reports",
-      },
+
       {
         id: "bulk_import",
         path: "bulk-import",
@@ -251,6 +230,17 @@ const MobileDashboard = () => {
         description: "VAT entries",
         category: "transactions",
       },
+      {
+        id: "dashboard_studio",
+        path: "dashboard-studio",
+        label: "Dashboard Studio",
+        icon: BarChart3,
+        roles: ["user", "reports_viewer", "super_admin"],
+        color: "from-purple-500 to-purple-600",
+        bgColor: "bg-purple-50",
+        description: "Create custom dashboards",
+        category: "analytics",
+      },
     ];
 
     if (!userRole) return [];
@@ -283,8 +273,7 @@ const MobileDashboard = () => {
         return "Transactions";
       case "financial":
         return "Financial";
-      case "reports":
-        return "Analytics";
+
       case "management":
         return "Management";
       default:
@@ -298,8 +287,7 @@ const MobileDashboard = () => {
         return ShoppingCart;
       case "financial":
         return CreditCard;
-      case "reports":
-        return BarChart3;
+
       case "management":
         return Settings;
       default:
@@ -513,22 +501,6 @@ const MobileDashboard = () => {
           >
             <Receipt className="h-4 w-4" />
             <span className="text-xs">Add Expense</span>
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => navigate("insights")}
-            className="h-12 flex flex-col gap-1 border-2"
-          >
-            <BarChart3 className="h-4 w-4" />
-            <span className="text-xs">View Stats</span>
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => navigate("reports")}
-            className="h-12 flex flex-col gap-1 border-2"
-          >
-            <FileText className="h-4 w-4" />
-            <span className="text-xs">Reports</span>
           </Button>
         </div>
       </div>

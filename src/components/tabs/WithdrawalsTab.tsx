@@ -95,6 +95,8 @@ const WithdrawalsTab = () => {
     referenceNumber: "",
     remarks: "",
     payment_mode: "",
+    withdrawal_from: "",
+    cooperative_member_id: "",
   });
   const [newCategory, setNewCategory] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -210,6 +212,14 @@ const WithdrawalsTab = () => {
       return;
     }
 
+    if (
+      formData.withdrawal_from === "Cooperative" &&
+      !formData.cooperative_member_id
+    ) {
+      toast.error("Please enter the cooperative member ID");
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       let { data: balanceData, error: balanceError } = await supabase
@@ -260,21 +270,30 @@ const WithdrawalsTab = () => {
 
       if (updateBalanceError) throw updateBalanceError;
 
-      const { error } = await supabase.from("withdrawals").insert([
-        {
-          user_id: user.id,
-          amount: parseFloat(formData.amount),
-          purpose: formData.purpose,
-          recipient: formData.recipient || null,
-          reference_number: formData.referenceNumber || null,
-          remarks: formData.remarks || null,
-          withdrawal_date: transactionDate,
-          payment_mode: formData.payment_mode,
-          category: "General",
-        },
-      ]);
+      // Prepare withdrawal data with new database fields
+      const withdrawalData: any = {
+        user_id: user.id,
+        amount: parseFloat(formData.amount),
+        purpose: formData.purpose,
+        recipient: formData.recipient || null,
+        reference_number: formData.referenceNumber || null,
+        remarks: formData.remarks || null,
+        withdrawal_date: transactionDate,
+        payment_mode: formData.payment_mode,
+        withdrawal_from: formData.withdrawal_from || "Cash",
+        cooperative_member_id: formData.cooperative_member_id || null,
+        category: "General",
+      };
 
-      if (error) throw error;
+      console.log("Attempting to insert withdrawal data:", withdrawalData);
+      const { error } = await supabase
+        .from("withdrawals")
+        .insert([withdrawalData]);
+
+      if (error) {
+        console.error("Database error details:", error);
+        throw error;
+      }
 
       toast.success("Withdrawal recorded successfully!");
       setFormData({
@@ -284,11 +303,13 @@ const WithdrawalsTab = () => {
         referenceNumber: "",
         remarks: "",
         payment_mode: "",
+        withdrawal_from: "",
+        cooperative_member_id: "",
       });
       fetchWithdrawals();
     } catch (error) {
-      console.error("Error recording withdrawal:", error);
-      toast.error("Failed to record withdrawal");
+      logError("recording withdrawal", error);
+      toast.error(`Error recording withdrawal: ${extractErrorMessage(error)}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -677,6 +698,65 @@ const WithdrawalsTab = () => {
                     </SelectContent>
                   </Select>
                 </div>
+
+                {/* Withdrawal From */}
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="withdrawal_from"
+                    className="text-sm font-medium text-gray-700 flex items-center gap-2"
+                  >
+                    <ArrowDownCircle className="h-4 w-4 text-orange-600" />
+                    Withdrawal From (stored in purpose field)
+                  </Label>
+                  <Select
+                    value={formData.withdrawal_from}
+                    onValueChange={(value) =>
+                      setFormData({
+                        ...formData,
+                        withdrawal_from: value,
+                        cooperative_member_id:
+                          value !== "Cooperative"
+                            ? ""
+                            : formData.cooperative_member_id,
+                      })
+                    }
+                  >
+                    <SelectTrigger className="border-orange-200 focus:border-orange-500 focus:ring-orange-500 h-12">
+                      <SelectValue placeholder="Select withdrawal source" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Bank">Bank</SelectItem>
+                      <SelectItem value="Cooperative">Cooperative</SelectItem>
+                      <SelectItem value="Esewa">Esewa</SelectItem>
+                      <SelectItem value="Cash">Cash</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Cooperative Member ID - conditional */}
+                {formData.withdrawal_from === "Cooperative" && (
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="cooperative_member_id"
+                      className="text-sm font-medium text-gray-700 flex items-center gap-2"
+                    >
+                      <User className="h-4 w-4 text-purple-600" />
+                      Cooperative Member ID *
+                    </Label>
+                    <Input
+                      id="cooperative_member_id"
+                      value={formData.cooperative_member_id}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          cooperative_member_id: e.target.value,
+                        })
+                      }
+                      placeholder="Enter member ID (e.g., DF1, SF1)"
+                      className="border-purple-200 focus:border-purple-500 focus:ring-purple-500 h-12"
+                    />
+                  </div>
+                )}
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">

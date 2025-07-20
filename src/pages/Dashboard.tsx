@@ -65,9 +65,7 @@ import ExpensesTab from "@/components/tabs/ExpensesTab";
 import DepositsTab from "@/components/tabs/DepositsTab";
 import WithdrawalsTab from "@/components/tabs/WithdrawalsTab";
 import CooperativeSavingsTab from "@/components/tabs/CooperativeSavingsTab";
-import InsightsTab from "@/components/tabs/InsightsTab";
-import ReportsTab from "@/components/tabs/ReportsTab";
-import ReportsViewTab from "@/components/tabs/ReportsViewTab";
+
 import MenuManagementTab from "@/components/tabs/MenuManagementTab";
 import DataInputTab from "@/components/tabs/DataInputTab";
 import UserManagementTab from "@/components/tabs/UserManagementTab";
@@ -208,26 +206,7 @@ const Dashboard = () => {
         description: "Inventory tracking and management",
       },
       // Unified tabs - accessible to appropriate users
-      {
-        id: "insights",
-        path: "insights",
-        label: "Insights",
-        icon: BarChart3,
-        roles: ["user", "data_entry", "reports_viewer", "super_admin"],
-        color: "bg-blue-600",
-        bgColor: "bg-blue-50",
-        description: "Analytics, insights & visual dashboards",
-      },
-      {
-        id: "reports",
-        path: "reports",
-        label: "Reports",
-        icon: FileText,
-        roles: ["user", "reports_viewer", "super_admin"],
-        color: "bg-slate-600",
-        bgColor: "bg-slate-50",
-        description: "View reports, admin panel & custom reports",
-      },
+
       {
         id: "bulk_import",
         path: "bulk-import",
@@ -283,14 +262,14 @@ const Dashboard = () => {
         description: "Manage VAT entries",
       },
       {
-        id: "calculation_engine",
-        path: "calculation-engine",
-        label: "Calculation Engine",
-        icon: Settings,
-        roles: ["super_admin"],
-        color: "bg-purple-600",
-        bgColor: "bg-purple-50",
-        description: "Custom calculations & formulas",
+        id: "dashboard_studio",
+        path: "dashboard-studio",
+        label: "Dashboard Studio",
+        icon: BarChart3,
+        roles: ["user", "reports_viewer", "super_admin"],
+        color: "bg-indigo-600",
+        bgColor: "bg-indigo-50",
+        description: "Create custom dashboards with drag-and-drop",
       },
     ];
 
@@ -300,15 +279,7 @@ const Dashboard = () => {
     const tabSettings = storedSettings ? JSON.parse(storedSettings) : {};
 
     const showOrders = JSON.parse(localStorage.getItem("showOrders") || "true");
-    const showInsights = JSON.parse(
-      localStorage.getItem("showInsights") || "true",
-    );
-    const showReports = JSON.parse(
-      localStorage.getItem("showReports") || "true",
-    );
-    const showReportsView = JSON.parse(
-      localStorage.getItem("showReportsView") || "true",
-    );
+
     const showDataInput = JSON.parse(
       localStorage.getItem("showDataInput") || "true",
     );
@@ -327,9 +298,6 @@ const Dashboard = () => {
 
     const tabVisibility: Record<string, boolean> = {
       orders: showOrders,
-      insights: showInsights,
-      reports: showReports,
-      "reports-view": showReportsView,
       "data-input": showDataInput,
       "user-management": showUserManagement,
       "admin-panel": showAdminPanel,
@@ -666,12 +634,13 @@ const Dashboard = () => {
                 </CardContent>
               </Card>
             </div>
+
+            {/* All-Time Summary Widget */}
+            <AllTimeSummaryWidget className="my-8" />
           </div>
         ) : (
           <Outlet />
         )}
-        {/* All-Time Summary Widget */}
-        <AllTimeSummaryWidget className="my-8" />
       </main>
 
       {/* Enhanced ChatBot Component */}
