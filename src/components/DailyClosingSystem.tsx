@@ -664,7 +664,7 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {Object.entries(transactionSummary).map(([key, data]) => (
+                  {Object.entries(currentSummary).map(([key, data]) => (
                     <TableRow key={key}>
                       <TableCell className="font-medium">
                         {key.replace("_", " ").toUpperCase()}
