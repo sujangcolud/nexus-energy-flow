@@ -121,6 +121,26 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   useEffect(() => {
     console.log("Setting up auth state listener");
 
+    // Clear any potentially corrupted tokens first
+    const clearCorruptedTokens = () => {
+      try {
+        const storedSession = localStorage.getItem('supabase.auth.token');
+        if (storedSession) {
+          const parsed = JSON.parse(storedSession);
+          // Check if refresh token exists and is valid format
+          if (!parsed.refresh_token || parsed.refresh_token.length < 10) {
+            console.log("Clearing corrupted session data");
+            localStorage.removeItem('supabase.auth.token');
+          }
+        }
+      } catch (error) {
+        console.log("Error checking stored session, clearing:", error);
+        localStorage.removeItem('supabase.auth.token');
+      }
+    };
+
+    clearCorruptedTokens();
+
     // Set up auth state listener
     const {
       data: { subscription },
@@ -129,7 +149,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 
       // Handle token refresh errors
       if (event === "TOKEN_REFRESHED" && !session) {
-        console.log("Token refresh failed, signing out user");
+        console.log("Token refresh failed, clearing storage and signing out user");
+        localStorage.removeItem('supabase.auth.token');
         setUser(null);
         setSession(null);
         setLoading(false);
@@ -139,6 +160,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       // Handle sign out events
       if (event === "SIGNED_OUT") {
         console.log("User signed out");
+        localStorage.removeItem('supabase.auth.token');
         setUser(null);
         setSession(null);
         setLoading(false);
