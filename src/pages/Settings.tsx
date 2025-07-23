@@ -177,7 +177,7 @@ const Settings = () => {
   const [canAddMenuCategory, setCanAddMenuCategory] = useState(false);
   const [canAddExpenseCategory, setCanAddExpenseCategory] = useState(false);
   const [canDeleteTabs, setCanDeleteTabs] = useState(false);
-  const [showBatchClosing, setShowBatchClosing] = useState(true);
+  const [showBatchClosing, setShowBatchClosing] = useState(false);
   const [showOrders, setShowOrders] = useState(true);
 
   const [showDataInput, setShowDataInput] = useState(true);
