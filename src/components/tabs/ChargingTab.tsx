@@ -246,31 +246,9 @@ const ChargingTab = () => {
     } catch (error) {
       console.error("Error saving charging session:", error);
 
-      let errorMessage = "Failed to save charging session";
-      if (error && typeof error === "object") {
-        if (error.message) {
-          errorMessage = error.message;
-        } else if (error.details) {
-          errorMessage = error.details;
-        } else if (error.error_description) {
-          errorMessage = error.error_description;
-        } else if (error.hint) {
-          errorMessage = error.hint;
-        } else if (error.code) {
-          if (error.code === "PGRST204") {
-            errorMessage =
-              "Database schema error. Please run the latest migration or refresh the page.";
-          } else {
-            errorMessage = `Database error (${error.code})`;
-          }
-        } else {
-          errorMessage = JSON.stringify(error, null, 2);
-        }
-      } else if (typeof error === "string") {
-        errorMessage = error;
-      }
-
-      toast.error(`Error saving charging session: ${errorMessage}`);
+      const errorMessage = extractErrorMessage(error);
+      logError("insert charging session", error);
+      toast.error(`Failed to save charging session: ${errorMessage}`);
     } finally {
       setSubmitting(false);
     }
