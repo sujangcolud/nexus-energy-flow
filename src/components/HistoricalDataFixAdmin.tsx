@@ -147,7 +147,62 @@ const HistoricalDataFixAdmin: React.FC<HistoricalDataFixAdminProps> = ({ classNa
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          
+
+          {/* Schema Validation Section */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold">0. Validate Database Schema</h3>
+              <Button
+                onClick={handleSchemaValidation}
+                disabled={analyzing}
+                variant="outline"
+                size="sm"
+              >
+                {analyzing ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                    Validating...
+                  </>
+                ) : (
+                  <>
+                    <Database className="h-4 w-4 mr-2" />
+                    Check Schema
+                  </>
+                )}
+              </Button>
+            </div>
+
+            {schemaValid && (
+              <Alert className={schemaValid.success ? "border-green-200 bg-green-50" : "border-red-200 bg-red-50"}>
+                {schemaValid.success ? (
+                  <CheckCircle className="h-4 w-4 text-green-600" />
+                ) : (
+                  <AlertTriangle className="h-4 w-4 text-red-600" />
+                )}
+                <AlertDescription>
+                  <div className={schemaValid.success ? "text-green-800" : "text-red-800"}>
+                    <p className="font-medium">
+                      {schemaValid.success ? "✅ Database schema is valid" : "❌ Schema issues detected"}
+                    </p>
+                    {schemaValid.issues.length > 0 && (
+                      <div className="mt-2">
+                        <p className="text-sm font-medium">Issues found:</p>
+                        <ul className="text-sm list-disc list-inside mt-1">
+                          {schemaValid.issues.map((issue, index) => (
+                            <li key={index}>{issue}</li>
+                          ))}
+                        </ul>
+                        <p className="text-sm mt-2">
+                          <strong>Action:</strong> Run the database_schema_fix.sql file to resolve these issues.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </AlertDescription>
+              </Alert>
+            )}
+          </div>
+
           {/* Analysis Section */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
