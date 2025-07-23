@@ -110,10 +110,10 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
         console.log("✅ Fetching all-time summary from daily summary table...");
 
         // Set up date filters for daily summary query
+        // Note: daily_summary is a global table (no user_id column)
         let dailySummaryQuery = supabase
           .from("daily_summary")
           .select("*")
-          .eq("user_id", user.id)
           .order("summary_date", { ascending: true });
 
         if (dateRange?.from) {
