@@ -45,6 +45,13 @@ import { toast } from "sonner";
 import { extractErrorMessage, logError } from "@/utils/errorHandling";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { DateRange } from "react-day-picker";
+import {
+  processTransactions,
+  calculateFinancialSummary,
+  formatCurrency as formatCurrencyUtil,
+  validateCalculations,
+  type FinancialData,
+} from "@/utils/unifiedCalculations";
 
 interface TransactionSummary {
   orders: {
@@ -180,8 +187,8 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
           dailySummaryRes.data.total_withdrawals > 0);
       setAlreadyClosed(!!hasValidSummary);
 
-      // Process the data
-      const summary: TransactionSummary = {
+      // Process the data using unified calculation service
+      const financialData: FinancialData = {
         orders: processTransactions(
           ordersRes.data || [],
           "total",
@@ -208,6 +215,16 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
           "contribution_amount",
           "payment_mode",
         ),
+      };
+
+      // Convert to legacy format for compatibility
+      const summary: TransactionSummary = {
+        orders: financialData.orders,
+        charging: financialData.charging,
+        expenses: financialData.expenses,
+        deposits: financialData.deposits,
+        withdrawals: financialData.withdrawals,
+        cooperative_savings: financialData.cooperative_savings,
       };
 
       setTransactionSummary(summary);
@@ -307,7 +324,8 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
       if (withdrawalsError) throw withdrawalsError;
       if (savingsError) throw savingsError;
 
-      const summary: TransactionSummary = {
+      // Process using unified calculation service
+      const financialData: FinancialData = {
         orders: processTransactions(orders || [], "total", "payment_mode"),
         charging: processTransactions(
           charging || [],
@@ -326,6 +344,26 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
           "contribution_amount",
           "payment_mode",
         ),
+      };
+
+      // Calculate comprehensive summary
+      const calculatedSummary = calculateFinancialSummary(financialData);
+
+      // Validate calculations
+      const validation = validateCalculations(calculatedSummary);
+      if (!validation.isValid) {
+        console.warn("⚠️ Calculation validation failed:", validation.errors);
+        validation.errors.forEach(error => console.warn(`- ${error}`));
+      }
+
+      // Convert to legacy format for compatibility
+      const summary: TransactionSummary = {
+        orders: financialData.orders,
+        charging: financialData.charging,
+        expenses: financialData.expenses,
+        deposits: financialData.deposits,
+        withdrawals: financialData.withdrawals,
+        cooperative_savings: financialData.cooperative_savings,
       };
 
       console.log("All-time data fetched:", {
@@ -347,29 +385,7 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
     }
   };
 
-  const processTransactions = (
-    transactions: any[],
-    amountField: string,
-    paymentField: string,
-  ) => {
-    const count = transactions.length;
-    const total = transactions.reduce(
-      (sum, t) => sum + (t[amountField] || 0),
-      0,
-    );
-    const by_payment: Record<string, { count: number; total: number }> = {};
 
-    transactions.forEach((t) => {
-      const payment = t[paymentField] || "Unknown";
-      if (!by_payment[payment]) {
-        by_payment[payment] = { count: 0, total: 0 };
-      }
-      by_payment[payment].count++;
-      by_payment[payment].total += t[amountField] || 0;
-    });
-
-    return { count, total, by_payment };
-  };
 
   const getNextDay = (date: string) => {
     const nextDay = new Date(date);
@@ -411,11 +427,21 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
         }
       });
 
-      // Calculate withdrawal breakdown by source
-      // Note: This needs to be implemented with withdrawal_from field
-      const totalWithdrawalsBank = 0; // TODO: Filter by withdrawal_from = 'Bank'
-      const totalWithdrawalsCooperative = 0; // TODO: Filter by withdrawal_from = 'Cooperative'
-      const totalWithdrawalsEsewa = 0; // TODO: Filter by withdrawal_from = 'Esewa'
+      // Calculate withdrawal breakdown by source using raw data analysis
+      const withdrawalDetails = withdrawalsRes.data || [];
+      const totalWithdrawalsBank = withdrawalDetails
+        .filter(w => w.withdrawal_from?.toLowerCase().includes('bank') ||
+                    w.purpose?.toLowerCase().includes('bank') ||
+                    w.payment_mode?.toLowerCase().includes('fonepay'))
+        .reduce((sum, w) => sum + (Number(w.amount) || 0), 0);
+
+      const totalWithdrawalsCooperative = withdrawalDetails
+        .filter(w => w.withdrawal_from?.toLowerCase().includes('cooperative') ||
+                    w.purpose?.toLowerCase().includes('cooperative') ||
+                    (!w.withdrawal_from && !w.purpose?.toLowerCase().includes('bank')))
+        .reduce((sum, w) => sum + (Number(w.amount) || 0), 0);
+
+      const totalWithdrawalsEsewa = transactionSummary.withdrawals.by_payment.esewa?.total || 0;
 
       // Insert or update daily summary
       const dailySummaryData = {
@@ -433,12 +459,10 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
         total_withdrawals_cooperative: totalWithdrawalsCooperative,
         total_withdrawals_esewa: totalWithdrawalsEsewa,
         total_savings: totalSavings,
-        cash_balance:
-          totalIncomeCash + totalDeposits - totalExpenses - totalWithdrawals,
-        esewa_balance: totalIncomeEsewa,
-        fonepay_balance: totalIncomeFonepay,
-        total_balance:
-          totalIncome + totalDeposits - totalExpenses - totalWithdrawals,
+        cash_balance: calculatedSummary.balances.cash,
+        esewa_balance: calculatedSummary.balances.esewa,
+        fonepay_balance: calculatedSummary.balances.fonepay,
+        total_balance: calculatedSummary.balances.total,
         updated_at: new Date().toISOString(),
       };
 
@@ -460,7 +484,7 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
     }
   };
 
-  const formatCurrency = (amount: number) => `NRs. ${amount.toFixed(2)}`;
+  const formatCurrency = (amount: number) => formatCurrencyUtil(amount);
 
   // Balance calculation functions
   const getCashIncome = (summary: TransactionSummary) => {
