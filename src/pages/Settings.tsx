@@ -501,9 +501,17 @@ const Settings = () => {
   };
 
   const handleToggle = (tabId: string) => {
-    const newSettings = { ...tabSettings, [tabId]: !tabSettings[tabId] };
-    setTabSettings(newSettings);
-    localStorage.setItem("tabSettings", JSON.stringify(newSettings));
+    if (user && hasRole("super_admin")) {
+      const currentSetting = tabSettings[tabId] ?? true;
+      const newSettings = { ...tabSettings, [tabId]: !currentSetting };
+      setTabSettings(newSettings);
+      localStorage.setItem("tabSettings", JSON.stringify(newSettings));
+      updatePermissionMutation.mutate({
+        userId: user.id,
+        tabId,
+        enabled: !currentSetting,
+      });
+    }
   };
 
   const handleCreateUser = () => {
