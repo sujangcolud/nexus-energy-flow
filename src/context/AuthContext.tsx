@@ -98,7 +98,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
           id: userId,
           email: session?.user?.email || "",
           name: "User",
-          role: (userRole as UserRole) || "user",
+          role: (finalRole as UserRole) || "user",
         };
         setUser(basicUser);
       }
