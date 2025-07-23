@@ -221,6 +221,8 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
 
     setLoading(true);
     try {
+      console.log("📊 Fetching all-time data from daily_summary table...");
+
       let fromDate = "";
       let toDate = "";
 
@@ -231,146 +233,145 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
         toDate = format(dateRange.to, "yyyy-MM-dd");
       }
 
-      // Fetch data from all tables within date range
-      let ordersQuery = supabase
-        .from("orders")
+      // Fetch daily summaries within date range
+      let dailySummaryQuery = supabase
+        .from("daily_summary")
         .select("*")
-        .eq("user_id", user.id);
-
-      let chargingQuery = supabase
-        .from("charging_sessions")
-        .select("*")
-        .eq("user_id", user.id);
-
-      let expensesQuery = supabase
-        .from("expenses")
-        .select("*")
-        .eq("user_id", user.id);
-
-      let depositsQuery = supabase
-        .from("deposits")
-        .select("*")
-        .eq("user_id", user.id);
-
-      let withdrawalsQuery = supabase
-        .from("withdrawals")
-        .select("*")
-        .eq("user_id", user.id);
-
-      let savingsQuery = supabase
-        .from("cooperative_savings")
-        .select("*")
-        .eq("user_id", user.id);
+        .order("summary_date", { ascending: true });
 
       // Apply date filters if provided
       if (fromDate) {
-        ordersQuery = ordersQuery.gte("order_date", fromDate);
-        chargingQuery = chargingQuery.gte("session_date", fromDate);
-        expensesQuery = expensesQuery.gte("expense_date", fromDate);
-        depositsQuery = depositsQuery.gte("deposit_date", fromDate);
-        withdrawalsQuery = withdrawalsQuery.gte("withdrawal_date", fromDate);
-        savingsQuery = savingsQuery.gte("contribution_date", fromDate);
+        dailySummaryQuery = dailySummaryQuery.gte("summary_date", fromDate);
       }
-
       if (toDate) {
-        ordersQuery = ordersQuery.lte("order_date", toDate);
-        chargingQuery = chargingQuery.lte("session_date", toDate);
-        expensesQuery = expensesQuery.lte("expense_date", toDate);
-        depositsQuery = depositsQuery.lte("deposit_date", toDate);
-        withdrawalsQuery = withdrawalsQuery.lte("withdrawal_date", toDate);
-        savingsQuery = savingsQuery.lte("contribution_date", toDate);
+        dailySummaryQuery = dailySummaryQuery.lte("summary_date", toDate);
       }
 
-      const [
-        { data: orders, error: ordersError },
-        { data: charging, error: chargingError },
-        { data: expenses, error: expensesError },
-        { data: deposits, error: depositsError },
-        { data: withdrawals, error: withdrawalsError },
-        { data: savings, error: savingsError },
-      ] = await Promise.all([
-        ordersQuery,
-        chargingQuery,
-        expensesQuery,
-        depositsQuery,
-        withdrawalsQuery,
-        savingsQuery,
-      ]);
+      const { data: dailySummaries, error: summariesError } = await dailySummaryQuery;
 
-      if (ordersError) throw ordersError;
-      if (chargingError) throw chargingError;
-      if (expensesError) throw expensesError;
-      if (depositsError) throw depositsError;
-      if (withdrawalsError) throw withdrawalsError;
-      if (savingsError) throw savingsError;
-
-      // Prepare data in database schema format for all-time calculations
-      const databaseData: DatabaseTransactionData = {
-        orders: orders || [],
-        charging_sessions: charging || [],
-        expenses: expenses || [],
-        deposits: deposits || [],
-        withdrawals: withdrawals || [],
-        cooperative_savings: savings || [],
-      };
-
-      // Calculate using database-aware service
-      const calculatedSummary = calculateDatabaseFinancialSummary(databaseData);
-
-      // Validate calculations
-      const validation = validateDatabaseCalculations(calculatedSummary);
-      if (!validation.isValid) {
-        console.warn("⚠️ All-time calculation validation failed:", validation.errors);
-        validation.errors.forEach(error => console.warn(`- ${error}`));
+      if (summariesError) {
+        throw summariesError;
       }
 
-      // Debug in development
-      if (process.env.NODE_ENV === 'development') {
-        debugCalculations(calculatedSummary);
+      if (!dailySummaries || dailySummaries.length === 0) {
+        console.warn("⚠️ No daily summary data found for the selected period");
+        setAllTimeSummary({
+          orders: { count: 0, total: 0, by_payment: {} },
+          charging: { count: 0, total: 0, by_payment: {} },
+          expenses: { count: 0, total: 0, by_payment: {} },
+          deposits: { count: 0, total: 0, by_payment: {} },
+          withdrawals: { count: 0, total: 0, by_payment: {} },
+          cooperative_savings: { count: 0, total: 0, by_payment: {} },
+        });
+        return;
       }
 
-      // Convert to legacy format for UI compatibility
+      // Aggregate all daily summaries
+      const aggregated = dailySummaries.reduce((acc, daily) => {
+        return {
+          totalIncomeFromOrders: acc.totalIncomeFromOrders + (Number(daily.total_income_from_orders) || 0),
+          totalIncomeFromCharging: acc.totalIncomeFromCharging + (Number(daily.total_income_from_charging) || 0),
+          totalIncomeCash: acc.totalIncomeCash + (Number(daily.total_income_cash) || 0),
+          totalIncomeEsewa: acc.totalIncomeEsewa + (Number(daily.total_income_esewa) || 0),
+          totalIncomeFonepay: acc.totalIncomeFonepay + (Number(daily.total_income_fonepay) || 0),
+          totalExpenses: acc.totalExpenses + (Number(daily.total_expenses) || 0),
+          totalExpensesCash: acc.totalExpensesCash + (Number(daily.total_expenses_cash) || 0),
+          totalExpensesEsewa: acc.totalExpensesEsewa + (Number(daily.total_expenses_esewa) || 0),
+          totalExpensesFonepay: acc.totalExpensesFonepay + (Number(daily.total_expenses_fonepay) || 0),
+          totalDeposits: acc.totalDeposits + (Number(daily.total_deposits) || 0),
+          totalDepositsCash: acc.totalDepositsCash + (Number(daily.total_deposits_cash) || 0),
+          totalDepositsEsewa: acc.totalDepositsEsewa + (Number(daily.total_deposits_esewa) || 0),
+          totalSavings: acc.totalSavings + (Number(daily.total_savings) || 0),
+          totalSavingsCash: acc.totalSavingsCash + (Number(daily.total_savings_cash) || 0),
+          totalSavingsEsewa: acc.totalSavingsEsewa + (Number(daily.total_savings_esewa) || 0),
+          totalSavingsFonepay: acc.totalSavingsFonepay + (Number(daily.total_savings_fonepay) || 0),
+          totalWithdrawals: acc.totalWithdrawals + (Number(daily.total_withdrawals) || 0),
+          totalWithdrawalsCash: acc.totalWithdrawalsCash + (Number(daily.total_withdrawals_cash) || 0),
+          totalWithdrawalsBank: acc.totalWithdrawalsBank + (Number(daily.total_withdrawals_bank) || 0),
+          totalWithdrawalsCooperative: acc.totalWithdrawalsCooperative + (Number(daily.total_withdrawals_cooperative) || 0),
+        };
+      }, {
+        totalIncomeFromOrders: 0,
+        totalIncomeFromCharging: 0,
+        totalIncomeCash: 0,
+        totalIncomeEsewa: 0,
+        totalIncomeFonepay: 0,
+        totalExpenses: 0,
+        totalExpensesCash: 0,
+        totalExpensesEsewa: 0,
+        totalExpensesFonepay: 0,
+        totalDeposits: 0,
+        totalDepositsCash: 0,
+        totalDepositsEsewa: 0,
+        totalSavings: 0,
+        totalSavingsCash: 0,
+        totalSavingsEsewa: 0,
+        totalSavingsFonepay: 0,
+        totalWithdrawals: 0,
+        totalWithdrawalsCash: 0,
+        totalWithdrawalsBank: 0,
+        totalWithdrawalsCooperative: 0,
+      });
+
+      // Convert to TransactionSummary format for UI compatibility
       const summary: TransactionSummary = {
         orders: {
-          count: databaseData.orders.length,
-          total: calculatedSummary.incomeFromOrders,
-          by_payment: {}
+          count: dailySummaries.length, // Number of days with data
+          total: aggregated.totalIncomeFromOrders,
+          by_payment: {
+            cash: { count: 0, total: aggregated.totalIncomeCash },
+            esewa: { count: 0, total: aggregated.totalIncomeEsewa },
+            fonepay: { count: 0, total: aggregated.totalIncomeFonepay },
+          }
         },
         charging: {
-          count: databaseData.charging_sessions.length,
-          total: calculatedSummary.incomeFromCharging,
-          by_payment: {}
+          count: dailySummaries.length,
+          total: aggregated.totalIncomeFromCharging,
+          by_payment: {} // Charging is included in total income payment modes
         },
         expenses: {
-          count: databaseData.expenses.length,
-          total: calculatedSummary.totalExpenses,
-          by_payment: {}
+          count: dailySummaries.length,
+          total: aggregated.totalExpenses,
+          by_payment: {
+            cash: { count: 0, total: aggregated.totalExpensesCash },
+            esewa: { count: 0, total: aggregated.totalExpensesEsewa },
+            fonepay: { count: 0, total: aggregated.totalExpensesFonepay },
+          }
         },
         deposits: {
-          count: databaseData.deposits.length,
-          total: calculatedSummary.totalDeposits,
-          by_payment: {}
+          count: dailySummaries.length,
+          total: aggregated.totalDeposits,
+          by_payment: {
+            cash: { count: 0, total: aggregated.totalDepositsCash },
+            esewa: { count: 0, total: aggregated.totalDepositsEsewa },
+          }
         },
         withdrawals: {
-          count: databaseData.withdrawals.length,
-          total: calculatedSummary.totalWithdrawals,
-          by_payment: {}
+          count: dailySummaries.length,
+          total: aggregated.totalWithdrawals,
+          by_payment: {
+            cash: { count: 0, total: aggregated.totalWithdrawalsCash },
+            bank: { count: 0, total: aggregated.totalWithdrawalsBank },
+            cooperative: { count: 0, total: aggregated.totalWithdrawalsCooperative },
+          }
         },
         cooperative_savings: {
-          count: databaseData.cooperative_savings.length,
-          total: calculatedSummary.totalSavings,
-          by_payment: {}
+          count: dailySummaries.length,
+          total: aggregated.totalSavings,
+          by_payment: {
+            cash: { count: 0, total: aggregated.totalSavingsCash },
+            esewa: { count: 0, total: aggregated.totalSavingsEsewa },
+            fonepay: { count: 0, total: aggregated.totalSavingsFonepay },
+          }
         },
       };
 
-      console.log("All-time data fetched:", {
-        orders: orders?.length || 0,
-        charging: charging?.length || 0,
-        expenses: expenses?.length || 0,
-        deposits: deposits?.length || 0,
-        withdrawals: withdrawals?.length || 0,
-        savings: savings?.length || 0,
-        summary,
+      console.log("📈 All-time data aggregated from daily summaries:", {
+        dateRange: { from: fromDate, to: toDate },
+        daysProcessed: dailySummaries.length,
+        totalIncome: aggregated.totalIncomeFromOrders + aggregated.totalIncomeFromCharging,
+        totalExpenses: aggregated.totalExpenses,
+        summary
       });
 
       setAllTimeSummary(summary);
