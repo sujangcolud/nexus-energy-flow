@@ -22,14 +22,7 @@ import { toast } from "sonner";
 import { extractErrorMessage, logError } from "@/utils/errorHandling";
 import AllTimeSummaryModal from "./AllTimeSummaryModal";
 import { DateRange } from "react-day-picker";
-import {
-  calculateEnhancedFinancialSummary,
-  formatCurrency as formatCurrencyUtil,
-  validateEnhancedCalculations,
-  debugEnhancedCalculations,
-  enhancedDateParsing,
-  type EnhancedDatabaseTransactionData,
-} from "@/utils/enhancedDatabaseCalculations";
+import { formatCurrency as formatCurrencyUtil } from "@/lib/calculations";
 
 interface AllTimeSummaryData {
   totalIncome: number;
