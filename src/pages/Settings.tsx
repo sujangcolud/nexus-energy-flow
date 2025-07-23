@@ -533,6 +533,26 @@ const Settings = () => {
     setNewUser((prev) => ({ ...prev, password }));
   };
 
+  const handleFixAdminRole = async () => {
+    setIsFixingRole(true);
+    try {
+      const result = await fixAdminRole();
+      if (result.success) {
+        toast.success(result.message);
+        // Refresh the page to see role changes
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
+      } else {
+        toast.error(result.message);
+      }
+    } catch (error: any) {
+      toast.error(`Failed to fix admin role: ${error.message}`);
+    } finally {
+      setIsFixingRole(false);
+    }
+  };
+
   const getRoleIcon = (role: AppRole) => {
     switch (role) {
       case "super_admin":
