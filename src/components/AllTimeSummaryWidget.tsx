@@ -35,6 +35,8 @@ interface AllTimeSummaryData {
     cash: number;
     esewa: number;
     fonepay: number;
+    bank: number;
+    cooperative: number;
     total: number;
   };
   incomeBreakdown: {
@@ -133,7 +135,7 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
           throw summaryError;
         }
 
-        console.log("📊 Daily summaries fetched:", dailySummaries?.length || 0, "records");
+        console.log("��� Daily summaries fetched:", dailySummaries?.length || 0, "records");
 
         if (!dailySummaries || dailySummaries.length === 0) {
           console.warn("⚠️ No daily summary data found");
