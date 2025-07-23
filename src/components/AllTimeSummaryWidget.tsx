@@ -216,13 +216,34 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
         const totalIncome = aggregatedSummary.totalIncomeFromOrders + aggregatedSummary.totalIncomeFromCharging;
         const netProfit = totalIncome - aggregatedSummary.totalExpenses;
 
-        // Get the latest balances (from the most recent daily summary)
+        // Calculate current balances with updated formulas
         const latestSummary = dailySummaries[dailySummaries.length - 1];
+
+        // Cash Balance: Current calculations + Cash withdrawals from all sources
+        const cashBalance = (Number(latestSummary.cash_balance) || 0) + (aggregatedSummary.totalWithdrawalsCash || 0);
+
+        // Bank Balance: Current calculations + Cash Deposits + Esewa Deposits
+        const bankBalance = (Number(latestSummary.cash_balance) || 0) + (aggregatedSummary.totalDepositsCash || 0) + (aggregatedSummary.totalDepositsEsewa || 0);
+
+        // Esewa Balance: Keep current calculations (correct)
+        const esewaBalance = Number(latestSummary.esewa_balance) || 0;
+
+        // Fonepay Balance: Keep current calculations
+        const fonepayBalance = Number(latestSummary.fonepay_balance) || 0;
+
+        // Cooperative Balance: Keep current calculations
+        const cooperativeBalance = Number(latestSummary.cooperative_balance) || 0;
+
+        // Total Balance: Sum of all balances
+        const totalBalance = cashBalance + bankBalance + esewaBalance + fonepayBalance + cooperativeBalance;
+
         const currentBalances = {
-          cash: Number(latestSummary.cash_balance) || 0,
-          esewa: Number(latestSummary.esewa_balance) || 0,
-          fonepay: Number(latestSummary.fonepay_balance) || 0,
-          total: Number(latestSummary.total_balance) || 0,
+          cash: cashBalance,
+          esewa: esewaBalance,
+          fonepay: fonepayBalance,
+          bank: bankBalance,
+          cooperative: cooperativeBalance,
+          total: totalBalance,
         };
 
         // Get date range
