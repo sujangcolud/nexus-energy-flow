@@ -65,6 +65,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 
       console.log("Role data:", userRole, "Role error:", roleError);
 
+      // Fallback: if database role lookup fails but user is the admin email
+      let finalRole = userRole;
+      if (roleError || !userRole) {
+        console.log("Database role lookup failed, checking fallback...");
+        if (session?.user?.email === "sujan1nepal@gmail.com") {
+          console.log("Using super_admin fallback for sujan1nepal@gmail.com");
+          finalRole = "super_admin";
+        } else {
+          finalRole = "user";
+        }
+      }
+
       // If we have a profile, create the app user
       if (profile) {
         const appUser: AppUser = {
@@ -73,7 +85,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
           name:
             `${profile.first_name || ""} ${profile.last_name || ""}`.trim() ||
             "User",
-          role: (userRole as UserRole) || "user",
+          role: (finalRole as UserRole) || "user",
           first_name: profile.first_name,
           last_name: profile.last_name,
         };
@@ -86,7 +98,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
           id: userId,
           email: session?.user?.email || "",
           name: "User",
-          role: (userRole as UserRole) || "user",
+          role: (finalRole as UserRole) || "user",
         };
         setUser(basicUser);
       }

@@ -22,6 +22,7 @@ import { toast } from "sonner";
 import { extractErrorMessage, logError } from "@/utils/errorHandling";
 import AllTimeSummaryModal from "./AllTimeSummaryModal";
 import { DateRange } from "react-day-picker";
+import { formatCurrency as formatCurrencyUtil } from "@/lib/calculations";
 
 interface AllTimeSummaryData {
   totalIncome: number;
@@ -34,6 +35,8 @@ interface AllTimeSummaryData {
     cash: number;
     esewa: number;
     fonepay: number;
+    bank: number;
+    cooperative: number;
     total: number;
   };
   incomeBreakdown: {
@@ -79,7 +82,7 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
     totalWithdrawals: 0,
     cooperativeSavings: 0,
     netProfit: 0,
-    currentBalances: { cash: 0, esewa: 0, fonepay: 0, total: 0 },
+    currentBalances: { cash: 0, esewa: 0, fonepay: 0, bank: 0, cooperative: 0, total: 0 },
     incomeBreakdown: { fromOrders: 0, fromCharging: 0 },
     paymentMethodBreakdown: { cash: 0, esewa: 0, fonepay: 0 },
     withdrawalBreakdown: {
@@ -94,6 +97,8 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
   });
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+
+
   const fetchAllTimeSummary = useCallback(
     async (dateRange?: DateRange) => {
       if (!user) {
@@ -104,181 +109,44 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
       setLoading(true);
       setConnectionError(false);
       try {
-        // Check authentication status first
-        const {
-          data: { session },
-          error: sessionError,
-        } = await supabase.auth.getSession();
+        console.log("✅ Fetching all-time summary from daily summary table...");
 
-        if (sessionError) {
-          console.error("❌ Authentication error:", sessionError);
-          toast.error("Authentication expired. Please log in again.");
-          return;
-        }
-
-        if (!session) {
-          console.warn("❌ No active session found");
-          toast.error("Please log in to view summary data.");
-          return;
-        }
-
-        console.log("✅ Authentication verified, fetching daily summaries...");
-
-        // Test basic connectivity first
-        const { data: testData, error: testError } = await supabase
+        // Set up date filters for daily summary query
+        // Note: daily_summary is a global table (no user_id column)
+        let dailySummaryQuery = supabase
           .from("daily_summary")
-          .select("summary_date")
-          .limit(1);
+          .select("*")
+          .order("summary_date", { ascending: true });
 
-        if (testError) {
-          console.error("❌ Connectivity test failed:", testError);
-          if (testError.message?.includes("Failed to fetch")) {
-            toast.error(
-              "Network connection failed. Please check your internet connection.",
-            );
-          } else {
-            toast.error(`Database error: ${testError.message}`);
-          }
-          throw testError;
+        if (dateRange?.from) {
+          const fromDate = dateRange.from.toISOString().split("T")[0];
+          dailySummaryQuery = dailySummaryQuery.gte("summary_date", fromDate);
         }
 
-        console.log(
-          "✅ Connectivity test passed, proceeding with full query...",
-        );
-
-        let summariesData, error;
-
-        try {
-          // Try the main query first
-          let query = supabase
-            .from("daily_summary")
-            .select("*")
-            .order("summary_date", { ascending: true });
-
-          if (dateRange?.from) {
-            query = query.gte(
-              "summary_date",
-              dateRange.from.toISOString().split("T")[0],
-            );
-          }
-          if (dateRange?.to) {
-            query = query.lt(
-              "summary_date",
-              dateRange.to.toISOString().split("T")[0],
-            );
-          }
-
-          const result = await query;
-          summariesData = result.data;
-          error = result.error;
-        } catch (queryError) {
-          console.warn("⚠️ Main query failed, trying fallback...", queryError);
-
-          // Fallback: try simpler query without date range
-          try {
-            const fallbackResult = await supabase
-              .from("daily_summary")
-              .select(
-                "summary_date, total_income, total_expenses, total_deposits, total_withdrawals, total_savings, cash_balance, esewa_balance, fonepay_balance, total_balance",
-              )
-              .order("summary_date", { ascending: true })
-              .limit(100);
-
-            summariesData = fallbackResult.data;
-            error = fallbackResult.error;
-
-            if (!error) {
-              console.log("✅ Fallback query succeeded with limited data");
-              toast.info("Using simplified data due to connection issues");
-            }
-          } catch (fallbackError) {
-            console.error("❌ Fallback query also failed:", fallbackError);
-            error = fallbackError;
-          }
+        if (dateRange?.to) {
+          const toDate = dateRange.to.toISOString().split("T")[0];
+          dailySummaryQuery = dailySummaryQuery.lte("summary_date", toDate);
         }
 
-        if (error) {
-          console.error("❌ Error fetching daily summaries:", {
-            error,
-            message: error.message,
-            details: error.details,
-            hint: error.hint,
-            code: error.code,
-          });
-          logError("AllTimeSummaryWidget", error);
+        const { data: dailySummaries, error: summaryError } = await dailySummaryQuery;
 
-          // Provide specific error messages based on error type
-          if (error.message?.includes("Failed to fetch")) {
-            toast.error(
-              "Network connection lost. Please check your internet and try again.",
-            );
-          } else if (error.code === "PGRST116") {
-            toast.error("Database table not found. Please contact support.");
-          } else if (
-            error.message?.includes("JWT") ||
-            error.message?.includes("auth")
-          ) {
-            toast.error("Session expired. Please log in again.");
-          } else {
-            toast.error(
-              `Failed to load summary: ${error.message || "Unknown error"}`,
-            );
-          }
-          throw error;
+        if (summaryError) {
+          console.error("❌ Error fetching daily summaries:", summaryError);
+          throw summaryError;
         }
 
-        const summaries = summariesData || [];
-        console.log(`📊 Processing ${summaries.length} daily summaries...`);
+        console.log("📊 Daily summaries fetched:", dailySummaries?.length || 0, "records");
 
-        if (summaries.length === 0) {
-          console.warn("⚠️ No daily summaries found");
-          setSummaryData((prev) => ({
-            ...prev,
-            dataPoints: 0,
-            dateRange: { from: "", to: "" },
-          }));
-          return;
-        }
-
-        // Calculate totals from all daily summaries
-        const totals = summaries.reduce(
-          (acc, summary) => {
-            acc.totalIncome += summary.total_income || 0;
-            acc.totalExpenses += summary.total_expenses || 0;
-            acc.totalDeposits += summary.total_deposits || 0;
-            acc.totalWithdrawals += summary.total_withdrawals || 0;
-            acc.cooperativeSavings += summary.total_savings || 0;
-
-            // Income breakdown
-            acc.incomeBreakdown.fromOrders +=
-              summary.total_income_from_orders || 0;
-            acc.incomeBreakdown.fromCharging +=
-              summary.total_income_from_charging || 0;
-
-            // Payment method breakdown
-            acc.paymentMethodBreakdown.cash += summary.total_cash_income || 0;
-            acc.paymentMethodBreakdown.esewa += summary.total_esewa_income || 0;
-            acc.paymentMethodBreakdown.fonepay +=
-              summary.total_fonepay_income || 0;
-
-            // Withdrawal breakdown
-            acc.withdrawalBreakdown.fromBank +=
-              summary.total_withdrawals_bank || 0;
-            acc.withdrawalBreakdown.fromSavings +=
-              summary.total_withdrawals_cooperative || 0;
-            acc.withdrawalBreakdown.fromEsewa +=
-              summary.total_withdrawals_esewa || 0;
-            acc.withdrawalBreakdown.fromFonepay += 0; // Not tracked separately yet
-            acc.withdrawalBreakdown.total += summary.total_withdrawals || 0;
-
-            return acc;
-          },
-          {
+        if (!dailySummaries || dailySummaries.length === 0) {
+          console.warn("⚠️ No daily summary data found");
+          setSummaryData({
             totalIncome: 0,
             totalExpenses: 0,
             totalDeposits: 0,
             totalWithdrawals: 0,
             cooperativeSavings: 0,
+            netProfit: 0,
+            currentBalances: { cash: 0, esewa: 0, fonepay: 0, bank: 0, cooperative: 0, total: 0 },
             incomeBreakdown: { fromOrders: 0, fromCharging: 0 },
             paymentMethodBreakdown: { cash: 0, esewa: 0, fonepay: 0 },
             withdrawalBreakdown: {
@@ -288,59 +156,163 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
               fromFonepay: 0,
               total: 0,
             },
-          },
-        );
+            dataPoints: 0,
+            dateRange: { from: "", to: "" },
+          });
+          return;
+        }
 
-        // Get current balances from the latest summary
-        const latestSummary = summaries[summaries.length - 1];
+        // Aggregate all daily summaries into all-time totals
+        const aggregatedSummary = dailySummaries.reduce((acc, daily) => {
+          return {
+            // Income totals
+            totalIncomeFromOrders: acc.totalIncomeFromOrders + (Number(daily.total_income_from_orders) || 0),
+            totalIncomeFromCharging: acc.totalIncomeFromCharging + (Number(daily.total_income_from_charging) || 0),
+            totalIncomeCash: acc.totalIncomeCash + (Number(daily.total_income_cash) || 0),
+            totalIncomeEsewa: acc.totalIncomeEsewa + (Number(daily.total_income_esewa) || 0),
+            totalIncomeFonepay: acc.totalIncomeFonepay + (Number(daily.total_income_fonepay) || 0),
+
+            // Expense totals
+            totalExpenses: acc.totalExpenses + (Number(daily.total_expenses) || 0),
+            totalExpensesCash: acc.totalExpensesCash + (Number(daily.total_expenses_cash) || 0),
+            totalExpensesEsewa: acc.totalExpensesEsewa + (Number(daily.total_expenses_esewa) || 0),
+            totalExpensesFonepay: acc.totalExpensesFonepay + (Number(daily.total_expenses_fonepay) || 0),
+
+            // Deposit totals
+            totalDeposits: acc.totalDeposits + (Number(daily.total_deposits) || 0),
+            totalDepositsCash: acc.totalDepositsCash + (Number(daily.total_deposits_cash) || 0),
+            totalDepositsEsewa: acc.totalDepositsEsewa + (Number(daily.total_deposits_esewa) || 0),
+
+            // Savings totals
+            totalSavings: acc.totalSavings + (Number(daily.total_savings) || 0),
+
+            // Withdrawal totals
+            totalWithdrawals: acc.totalWithdrawals + (Number(daily.total_withdrawals) || 0),
+            totalWithdrawalsCash: acc.totalWithdrawalsCash + (Number(daily.total_withdrawals_cash) || 0),
+            totalWithdrawalsCooperative: acc.totalWithdrawalsCooperative + (Number(daily.total_withdrawals_cooperative) || 0),
+            totalWithdrawalsBank: acc.totalWithdrawalsBank + (Number(daily.total_withdrawals_bank) || 0),
+          };
+        }, {
+          totalIncomeFromOrders: 0,
+          totalIncomeFromCharging: 0,
+          totalIncomeCash: 0,
+          totalIncomeEsewa: 0,
+          totalIncomeFonepay: 0,
+          totalExpenses: 0,
+          totalExpensesCash: 0,
+          totalExpensesEsewa: 0,
+          totalExpensesFonepay: 0,
+          totalDeposits: 0,
+          totalDepositsCash: 0,
+          totalDepositsEsewa: 0,
+          totalSavings: 0,
+          totalWithdrawals: 0,
+          totalWithdrawalsCash: 0,
+          totalWithdrawalsCooperative: 0,
+          totalWithdrawalsBank: 0,
+        });
+
+        // Calculate derived totals
+        const totalIncome = aggregatedSummary.totalIncomeFromOrders + aggregatedSummary.totalIncomeFromCharging;
+        const netProfit = totalIncome - aggregatedSummary.totalExpenses;
+
+        // Calculate current balances with updated formulas
+        const latestSummary = dailySummaries[dailySummaries.length - 1];
+
+        // Cash Balance: Current calculations + Cash withdrawals from all sources
+        const cashBalance = (Number(latestSummary.cash_balance) || 0) + (aggregatedSummary.totalWithdrawalsCash || 0);
+
+        // Bank Balance: Current calculations + Cash Deposits + Esewa Deposits
+        const bankBalance = (Number(latestSummary.cash_balance) || 0) + (aggregatedSummary.totalDepositsCash || 0) + (aggregatedSummary.totalDepositsEsewa || 0);
+
+        // Esewa Balance: Keep current calculations (correct)
+        const esewaBalance = Number(latestSummary.esewa_balance) || 0;
+
+        // Fonepay Balance: Keep current calculations
+        const fonepayBalance = Number(latestSummary.fonepay_balance) || 0;
+
+        // Cooperative Balance: Keep current calculations
+        const cooperativeBalance = Number(latestSummary.cooperative_balance) || 0;
+
+        // Total Balance: Sum of all balances
+        const totalBalance = cashBalance + bankBalance + esewaBalance + fonepayBalance + cooperativeBalance;
+
         const currentBalances = {
-          cash: latestSummary?.cash_balance || 0,
-          esewa: latestSummary?.esewa_balance || 0,
-          fonepay: latestSummary?.fonepay_balance || 0,
-          total: latestSummary?.total_balance || 0,
+          cash: cashBalance,
+          esewa: esewaBalance,
+          fonepay: fonepayBalance,
+          bank: bankBalance,
+          cooperative: cooperativeBalance,
+          total: totalBalance,
         };
 
-        const netProfit = totals.totalIncome - totals.totalExpenses;
-        const firstDate = summaries[0]?.summary_date || "";
-        const lastDate = summaries[summaries.length - 1]?.summary_date || "";
+        // Get date range
+        const firstDate = dailySummaries[0]?.summary_date || "";
+        const lastDate = dailySummaries[dailySummaries.length - 1]?.summary_date || "";
+        const dataPoints = dailySummaries.length;
 
         const finalSummary: AllTimeSummaryData = {
-          ...totals,
+          totalIncome,
+          totalExpenses: aggregatedSummary.totalExpenses,
+          totalDeposits: aggregatedSummary.totalDeposits,
+          totalWithdrawals: aggregatedSummary.totalWithdrawals,
+          cooperativeSavings: aggregatedSummary.totalSavings,
           netProfit,
           currentBalances,
-          dataPoints: summaries.length,
+          incomeBreakdown: {
+            fromOrders: aggregatedSummary.totalIncomeFromOrders,
+            fromCharging: aggregatedSummary.totalIncomeFromCharging,
+          },
+          paymentMethodBreakdown: {
+            cash: aggregatedSummary.totalIncomeCash,
+            esewa: aggregatedSummary.totalIncomeEsewa,
+            fonepay: aggregatedSummary.totalIncomeFonepay,
+          },
+          withdrawalBreakdown: {
+            fromBank: aggregatedSummary.totalWithdrawalsBank,
+            fromSavings: aggregatedSummary.totalWithdrawalsCooperative,
+            fromEsewa: 0, // Not separately tracked in daily summary
+            fromFonepay: 0, // Not separately tracked in daily summary
+            total: aggregatedSummary.totalWithdrawals,
+          },
+          dataPoints,
           dateRange: {
             from: firstDate,
             to: lastDate,
           },
         };
 
-        console.log("📈 All-time summary calculated:", finalSummary);
+        console.log("📈 All-time summary calculated from daily summaries:", finalSummary);
+        console.log("📊 Summary breakdown:", {
+          income: {
+            orders: aggregatedSummary.totalIncomeFromOrders,
+            charging: aggregatedSummary.totalIncomeFromCharging,
+            cash: aggregatedSummary.totalIncomeCash,
+            esewa: aggregatedSummary.totalIncomeEsewa,
+            fonepay: aggregatedSummary.totalIncomeFonepay,
+          },
+          expenses: {
+            total: aggregatedSummary.totalExpenses,
+            cash: aggregatedSummary.totalExpensesCash,
+            esewa: aggregatedSummary.totalExpensesEsewa,
+            fonepay: aggregatedSummary.totalExpensesFonepay,
+          },
+          balances: currentBalances,
+        });
+
         setSummaryData(finalSummary);
-        setRetryCount(0); // Reset retry count on success
+        setRetryCount(0);
       } catch (error) {
         setConnectionError(true);
         const errorMessage = extractErrorMessage(error);
         console.error("❌ Error in fetchAllTimeSummary:", {
           errorMessage,
           error,
-          errorType: typeof error,
-          errorProperties: error ? Object.getOwnPropertyNames(error) : [],
           userAgent: navigator.userAgent,
           online: navigator.onLine,
           url: window.location.href,
           timestamp: new Date().toISOString(),
         });
-
-        // Additional diagnostic info
-        console.log("🔍 Diagnostic Information:");
-        console.log(
-          "- Network status:",
-          navigator.onLine ? "Online" : "Offline",
-        );
-        console.log("- User authenticated:", !!user);
-        console.log("- Supabase URL:", supabase.supabaseUrl);
-        console.log("- Error stack:", error?.stack || "No stack trace");
 
         logError("AllTimeSummaryWidget", error);
 
@@ -352,7 +324,7 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
           totalWithdrawals: 0,
           cooperativeSavings: 0,
           netProfit: 0,
-          currentBalances: { cash: 0, esewa: 0, fonepay: 0, total: 0 },
+          currentBalances: { cash: 0, esewa: 0, fonepay: 0, bank: 0, cooperative: 0, total: 0 },
           incomeBreakdown: { fromOrders: 0, fromCharging: 0 },
           paymentMethodBreakdown: { cash: 0, esewa: 0, fonepay: 0 },
           withdrawalBreakdown: {
@@ -366,14 +338,7 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
           dateRange: { from: "", to: "" },
         });
 
-        // Don't show error toast if we already handled it above
-        if (
-          !error?.message?.includes("Failed to fetch") &&
-          !error?.message?.includes("JWT") &&
-          error?.code !== "PGRST116"
-        ) {
-          toast.error(`Failed to load all-time summary: ${errorMessage}`);
-        }
+        toast.error(`Failed to load all-time summary: ${errorMessage}`);
       } finally {
         setLoading(false);
       }
@@ -385,43 +350,14 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
     try {
       console.log("🔍 Testing Supabase connection...");
 
-      // Test different tables to isolate the issue
-      const tests = [
-        { name: "Auth Check", test: () => supabase.auth.getSession() },
-        {
-          name: "Daily Summary",
-          test: () =>
-            supabase.from("daily_summary").select("summary_date").limit(1),
-        },
-        {
-          name: "Orders Table",
-          test: () => supabase.from("orders").select("id").limit(1),
-        },
-      ];
-
-      for (const test of tests) {
-        try {
-          console.log(`🔍 Testing ${test.name}...`);
-          const result = await test.test();
-
-          if (result.error) {
-            console.error(`❌ ${test.name} failed:`, result.error);
-          } else {
-            console.log(`✅ ${test.name} successful`);
-          }
-        } catch (error) {
-          console.error(`❌ ${test.name} threw error:`, error);
-        }
-      }
-
-      // Final simple test
+      // Test basic table access
       const { data, error } = await supabase
-        .from("daily_summary")
-        .select("summary_date")
+        .from("orders")
+        .select("id")
         .limit(1);
 
       if (error) {
-        console.error("❌ Final connection test failed:", error);
+        console.error("❌ Connection test failed:", error);
         return false;
       }
 
@@ -523,7 +459,7 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
     }
   };
 
-  const formatCurrency = (amount: number) => `NRs. ${amount.toFixed(2)}`;
+  const formatCurrency = (amount: number) => formatCurrencyUtil(amount);
 
   if (!user) {
     return null;
@@ -708,7 +644,7 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
                 <Banknote className="h-5 w-5" />
                 Current Balances
               </h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                 <div className="text-center">
                   <div className="text-sm text-gray-600">Cash</div>
                   <div className="text-lg font-semibold text-green-600">
@@ -725,6 +661,18 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
                   <div className="text-sm text-gray-600">Fonepay</div>
                   <div className="text-lg font-semibold text-purple-600">
                     {formatCurrency(summaryData.currentBalances.fonepay)}
+                  </div>
+                </div>
+                <div className="text-center">
+                  <div className="text-sm text-gray-600">Bank</div>
+                  <div className="text-lg font-semibold text-orange-600">
+                    {formatCurrency(summaryData.currentBalances.bank)}
+                  </div>
+                </div>
+                <div className="text-center">
+                  <div className="text-sm text-gray-600">Cooperative</div>
+                  <div className="text-lg font-semibold text-indigo-600">
+                    {formatCurrency(summaryData.currentBalances.cooperative)}
                   </div>
                 </div>
                 <div className="text-center">

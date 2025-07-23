@@ -23,6 +23,7 @@ import {
 import { toast } from "sonner";
 import { extractErrorMessage, logError } from "@/utils/errorHandling";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Label } from "@/components/ui/label";
 import {
   Zap,
   Plus,
@@ -140,18 +141,9 @@ const ChargingTab = () => {
     } catch (error) {
       console.error("Error fetching charging sessions:", error);
 
-      let errorMessage = "Failed to load charging sessions";
-      if (error && typeof error === "object") {
-        if (error.message) {
-          errorMessage = error.message;
-        } else if (error.details) {
-          errorMessage = error.details;
-        } else {
-          errorMessage = JSON.stringify(error, null, 2);
-        }
-      }
-
-      toast.error(errorMessage);
+      const errorMessage = extractErrorMessage(error);
+      logError("fetch charging sessions", error);
+      toast.error(`Failed to load charging sessions: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
@@ -255,31 +247,9 @@ const ChargingTab = () => {
     } catch (error) {
       console.error("Error saving charging session:", error);
 
-      let errorMessage = "Failed to save charging session";
-      if (error && typeof error === "object") {
-        if (error.message) {
-          errorMessage = error.message;
-        } else if (error.details) {
-          errorMessage = error.details;
-        } else if (error.error_description) {
-          errorMessage = error.error_description;
-        } else if (error.hint) {
-          errorMessage = error.hint;
-        } else if (error.code) {
-          if (error.code === "PGRST204") {
-            errorMessage =
-              "Database schema error. Please run the latest migration or refresh the page.";
-          } else {
-            errorMessage = `Database error (${error.code})`;
-          }
-        } else {
-          errorMessage = JSON.stringify(error, null, 2);
-        }
-      } else if (typeof error === "string") {
-        errorMessage = error;
-      }
-
-      toast.error(`Error saving charging session: ${errorMessage}`);
+      const errorMessage = extractErrorMessage(error);
+      logError("insert charging session", error);
+      toast.error(`Failed to save charging session: ${errorMessage}`);
     } finally {
       setSubmitting(false);
     }
@@ -358,18 +328,9 @@ const ChargingTab = () => {
     } catch (error) {
       console.error("Error deleting session:", error);
 
-      let errorMessage = "Failed to delete session";
-      if (error && typeof error === "object") {
-        if (error.message) {
-          errorMessage = error.message;
-        } else if (error.details) {
-          errorMessage = error.details;
-        } else {
-          errorMessage = JSON.stringify(error, null, 2);
-        }
-      }
-
-      toast.error(errorMessage);
+      const errorMessage = extractErrorMessage(error);
+      logError("delete charging session", error);
+      toast.error(`Failed to delete charging session: ${errorMessage}`);
     }
   };
 
@@ -391,18 +352,9 @@ const ChargingTab = () => {
     } catch (error) {
       console.error("Error updating session:", error);
 
-      let errorMessage = "Failed to update session";
-      if (error && typeof error === "object") {
-        if (error.message) {
-          errorMessage = error.message;
-        } else if (error.details) {
-          errorMessage = error.details;
-        } else {
-          errorMessage = JSON.stringify(error, null, 2);
-        }
-      }
-
-      toast.error(errorMessage);
+      const errorMessage = extractErrorMessage(error);
+      logError("update charging session", error);
+      toast.error(`Failed to update charging session: ${errorMessage}`);
     }
   };
 

@@ -64,7 +64,6 @@ import ChargingTab from "@/components/tabs/ChargingTab";
 import ExpensesTab from "@/components/tabs/ExpensesTab";
 import DepositsTab from "@/components/tabs/DepositsTab";
 import WithdrawalsTab from "@/components/tabs/WithdrawalsTab";
-import CooperativeSavingsTab from "@/components/tabs/CooperativeSavingsTab";
 import SavingsWithdrawalsTab from "@/components/tabs/SavingsWithdrawalsTab";
 
 import MenuManagementTab from "@/components/tabs/MenuManagementTab";
@@ -178,17 +177,6 @@ const Dashboard = () => {
         color: "bg-blue-600",
         bgColor: "bg-blue-50",
         description: "Manage savings and withdrawals",
-      },
-      {
-        id: "cooperative",
-        path: "cooperative",
-        label: "Savings & Withdrawals",
-        icon: Users,
-        component: SavingsWithdrawalsTab,
-        roles: ["user", "data_entry", "reports_viewer", "super_admin"],
-        color: "bg-teal-600",
-        bgColor: "bg-teal-50",
-        description: "Comprehensive savings and withdrawals management",
       },
       {
         id: "share_investments",

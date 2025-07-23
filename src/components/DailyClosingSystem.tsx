@@ -45,6 +45,7 @@ import { toast } from "sonner";
 import { extractErrorMessage, logError } from "@/utils/errorHandling";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { DateRange } from "react-day-picker";
+import { formatCurrency as formatCurrencyUtil } from "@/lib/calculations";
 
 interface TransactionSummary {
   orders: {
@@ -117,98 +118,88 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
 
     setLoading(true);
     try {
-      // Fetch all transaction data for the selected date
-      const [
-        ordersRes,
-        chargingRes,
-        expensesRes,
-        depositsRes,
-        withdrawalsRes,
-        cooperativeRes,
-        dailySummaryRes,
-      ] = await Promise.all([
-        supabase
-          .from("orders")
-          .select("*")
-          .eq("user_id", user.id)
-          .gte("order_date", selectedDate)
-          .lt("order_date", getNextDay(selectedDate)),
-        supabase
-          .from("charging_sessions")
-          .select("*")
-          .eq("user_id", user.id)
-          .gte("session_date", selectedDate)
-          .lt("session_date", getNextDay(selectedDate)),
-        supabase
-          .from("expenses")
-          .select("*")
-          .eq("user_id", user.id)
-          .gte("expense_date", selectedDate)
-          .lt("expense_date", getNextDay(selectedDate)),
-        supabase
-          .from("deposits")
-          .select("*")
-          .eq("user_id", user.id)
-          .gte("deposit_date", selectedDate)
-          .lt("deposit_date", getNextDay(selectedDate)),
-        supabase
-          .from("withdrawals")
-          .select("*")
-          .eq("user_id", user.id)
-          .gte("withdrawal_date", selectedDate)
-          .lt("withdrawal_date", getNextDay(selectedDate)),
-        supabase
-          .from("cooperative_savings")
-          .select("*")
-          .eq("user_id", user.id)
-          .gte("contribution_date", selectedDate)
-          .lt("contribution_date", getNextDay(selectedDate)),
-        supabase
-          .from("daily_summary")
-          .select("*")
-          .eq("summary_date", selectedDate)
-          .single(),
-      ]);
+      console.log("📅 Fetching daily data from daily_summary table for:", selectedDate);
+
+      // Fetch daily summary for the selected date
+      const { data: dailySummaryData, error: summaryError } = await supabase
+        .from("daily_summary")
+        .select("*")
+        .eq("summary_date", selectedDate)
+        .single();
 
       // Check if already closed - only if there's meaningful closing data with actual totals
       const hasValidSummary =
-        dailySummaryRes.data &&
-        !dailySummaryRes.error &&
-        (dailySummaryRes.data.total_income > 0 ||
-          dailySummaryRes.data.total_expenses > 0 ||
-          dailySummaryRes.data.total_deposits > 0 ||
-          dailySummaryRes.data.total_withdrawals > 0);
+        dailySummaryData &&
+        !summaryError &&
+        (dailySummaryData.total_income > 0 ||
+          dailySummaryData.total_expenses > 0 ||
+          dailySummaryData.total_deposits > 0 ||
+          dailySummaryData.total_withdrawals > 0);
       setAlreadyClosed(!!hasValidSummary);
 
-      // Process the data
+      if (summaryError && summaryError.code !== 'PGRST116') { // PGRST116 = no rows returned
+        throw summaryError;
+      }
+
+      // If no daily summary exists, initialize with zeros
       const summary: TransactionSummary = {
-        orders: processTransactions(
-          ordersRes.data || [],
-          "total",
-          "payment_mode",
-        ),
-        charging: processTransactions(
-          chargingRes.data || [],
-          "total_amount",
-          "payment_mode",
-        ),
-        expenses: processTransactions(
-          expensesRes.data || [],
-          "amount",
-          "payment_mode",
-        ),
-        deposits: processTransactions(depositsRes.data || [], "amount", "mode"),
-        withdrawals: processTransactions(
-          withdrawalsRes.data || [],
-          "amount",
-          "payment_mode",
-        ),
-        cooperative_savings: processTransactions(
-          cooperativeRes.data || [],
-          "contribution_amount",
-          "payment_mode",
-        ),
+        orders: {
+          count: 0,
+          total: Number(dailySummaryData?.total_income_from_orders) || 0,
+          by_payment: {
+            cash: { count: 0, total: Number(dailySummaryData?.total_income_cash) || 0 },
+            esewa: { count: 0, total: Number(dailySummaryData?.total_income_esewa) || 0 },
+            fonepay: { count: 0, total: Number(dailySummaryData?.total_income_fonepay) || 0 },
+          }
+        },
+        charging: {
+          count: 0,
+          total: Number(dailySummaryData?.total_income_from_charging) || 0,
+          by_payment: {} // Charging payment mode breakdown is included in total income payment modes
+        },
+        expenses: {
+          count: 0,
+          total: Number(dailySummaryData?.total_expenses) || 0,
+          by_payment: {
+            cash: { count: 0, total: Number(dailySummaryData?.total_expenses_cash) || 0 },
+            esewa: { count: 0, total: Number(dailySummaryData?.total_expenses_esewa) || 0 },
+            fonepay: { count: 0, total: Number(dailySummaryData?.total_expenses_fonepay) || 0 },
+          }
+        },
+        deposits: {
+          count: 0,
+          total: Number(dailySummaryData?.total_deposits) || 0,
+          by_payment: {
+            cash: { count: 0, total: Number(dailySummaryData?.total_deposits_cash) || 0 },
+            esewa: { count: 0, total: Number(dailySummaryData?.total_deposits_esewa) || 0 },
+          }
+        },
+        withdrawals: {
+          count: 0,
+          total: Number(dailySummaryData?.total_withdrawals) || 0,
+          by_payment: {
+            cash: { count: 0, total: Number(dailySummaryData?.total_withdrawals_cash) || 0 },
+            bank: { count: 0, total: Number(dailySummaryData?.total_withdrawals_bank) || 0 },
+            cooperative: { count: 0, total: Number(dailySummaryData?.total_withdrawals_cooperative) || 0 },
+          }
+        },
+        cooperative_savings: {
+          count: 0,
+          total: Number(dailySummaryData?.total_savings) || 0,
+          by_payment: {
+            cash: { count: 0, total: Number(dailySummaryData?.total_savings_cash) || 0 },
+            esewa: { count: 0, total: Number(dailySummaryData?.total_savings_esewa) || 0 },
+            fonepay: { count: 0, total: Number(dailySummaryData?.total_savings_fonepay) || 0 },
+          }
+        },
       };
+
+      console.log("📊 Daily summary data processed:", {
+        date: selectedDate,
+        totalIncome: summary.orders.total + summary.charging.total,
+        totalExpenses: summary.expenses.total,
+        alreadyClosed: hasValidSummary
+      });
 
       setTransactionSummary(summary);
     } catch (error) {
@@ -224,6 +215,8 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
 
     setLoading(true);
     try {
+      console.log("📊 Fetching all-time data from daily_summary table...");
+
       let fromDate = "";
       let toDate = "";
 
@@ -234,108 +227,145 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
         toDate = format(dateRange.to, "yyyy-MM-dd");
       }
 
-      // Fetch data from all tables within date range
-      let ordersQuery = supabase
-        .from("orders")
+      // Fetch daily summaries within date range
+      let dailySummaryQuery = supabase
+        .from("daily_summary")
         .select("*")
-        .eq("user_id", user.id);
-
-      let chargingQuery = supabase
-        .from("charging_sessions")
-        .select("*")
-        .eq("user_id", user.id);
-
-      let expensesQuery = supabase
-        .from("expenses")
-        .select("*")
-        .eq("user_id", user.id);
-
-      let depositsQuery = supabase
-        .from("deposits")
-        .select("*")
-        .eq("user_id", user.id);
-
-      let withdrawalsQuery = supabase
-        .from("withdrawals")
-        .select("*")
-        .eq("user_id", user.id);
-
-      let savingsQuery = supabase
-        .from("cooperative_savings")
-        .select("*")
-        .eq("user_id", user.id);
+        .order("summary_date", { ascending: true });
 
       // Apply date filters if provided
       if (fromDate) {
-        ordersQuery = ordersQuery.gte("order_date", fromDate);
-        chargingQuery = chargingQuery.gte("session_date", fromDate);
-        expensesQuery = expensesQuery.gte("expense_date", fromDate);
-        depositsQuery = depositsQuery.gte("deposit_date", fromDate);
-        withdrawalsQuery = withdrawalsQuery.gte("withdrawal_date", fromDate);
-        savingsQuery = savingsQuery.gte("contribution_date", fromDate);
+        dailySummaryQuery = dailySummaryQuery.gte("summary_date", fromDate);
       }
-
       if (toDate) {
-        ordersQuery = ordersQuery.lte("order_date", toDate);
-        chargingQuery = chargingQuery.lte("session_date", toDate);
-        expensesQuery = expensesQuery.lte("expense_date", toDate);
-        depositsQuery = depositsQuery.lte("deposit_date", toDate);
-        withdrawalsQuery = withdrawalsQuery.lte("withdrawal_date", toDate);
-        savingsQuery = savingsQuery.lte("contribution_date", toDate);
+        dailySummaryQuery = dailySummaryQuery.lte("summary_date", toDate);
       }
 
-      const [
-        { data: orders, error: ordersError },
-        { data: charging, error: chargingError },
-        { data: expenses, error: expensesError },
-        { data: deposits, error: depositsError },
-        { data: withdrawals, error: withdrawalsError },
-        { data: savings, error: savingsError },
-      ] = await Promise.all([
-        ordersQuery,
-        chargingQuery,
-        expensesQuery,
-        depositsQuery,
-        withdrawalsQuery,
-        savingsQuery,
-      ]);
+      const { data: dailySummaries, error: summariesError } = await dailySummaryQuery;
 
-      if (ordersError) throw ordersError;
-      if (chargingError) throw chargingError;
-      if (expensesError) throw expensesError;
-      if (depositsError) throw depositsError;
-      if (withdrawalsError) throw withdrawalsError;
-      if (savingsError) throw savingsError;
+      if (summariesError) {
+        throw summariesError;
+      }
 
+      if (!dailySummaries || dailySummaries.length === 0) {
+        console.warn("⚠️ No daily summary data found for the selected period");
+        setAllTimeSummary({
+          orders: { count: 0, total: 0, by_payment: {} },
+          charging: { count: 0, total: 0, by_payment: {} },
+          expenses: { count: 0, total: 0, by_payment: {} },
+          deposits: { count: 0, total: 0, by_payment: {} },
+          withdrawals: { count: 0, total: 0, by_payment: {} },
+          cooperative_savings: { count: 0, total: 0, by_payment: {} },
+        });
+        return;
+      }
+
+      // Aggregate all daily summaries
+      const aggregated = dailySummaries.reduce((acc, daily) => {
+        return {
+          totalIncomeFromOrders: acc.totalIncomeFromOrders + (Number(daily.total_income_from_orders) || 0),
+          totalIncomeFromCharging: acc.totalIncomeFromCharging + (Number(daily.total_income_from_charging) || 0),
+          totalIncomeCash: acc.totalIncomeCash + (Number(daily.total_income_cash) || 0),
+          totalIncomeEsewa: acc.totalIncomeEsewa + (Number(daily.total_income_esewa) || 0),
+          totalIncomeFonepay: acc.totalIncomeFonepay + (Number(daily.total_income_fonepay) || 0),
+          totalExpenses: acc.totalExpenses + (Number(daily.total_expenses) || 0),
+          totalExpensesCash: acc.totalExpensesCash + (Number(daily.total_expenses_cash) || 0),
+          totalExpensesEsewa: acc.totalExpensesEsewa + (Number(daily.total_expenses_esewa) || 0),
+          totalExpensesFonepay: acc.totalExpensesFonepay + (Number(daily.total_expenses_fonepay) || 0),
+          totalDeposits: acc.totalDeposits + (Number(daily.total_deposits) || 0),
+          totalDepositsCash: acc.totalDepositsCash + (Number(daily.total_deposits_cash) || 0),
+          totalDepositsEsewa: acc.totalDepositsEsewa + (Number(daily.total_deposits_esewa) || 0),
+          totalSavings: acc.totalSavings + (Number(daily.total_savings) || 0),
+          totalSavingsCash: acc.totalSavingsCash + (Number(daily.total_savings_cash) || 0),
+          totalSavingsEsewa: acc.totalSavingsEsewa + (Number(daily.total_savings_esewa) || 0),
+          totalSavingsFonepay: acc.totalSavingsFonepay + (Number(daily.total_savings_fonepay) || 0),
+          totalWithdrawals: acc.totalWithdrawals + (Number(daily.total_withdrawals) || 0),
+          totalWithdrawalsCash: acc.totalWithdrawalsCash + (Number(daily.total_withdrawals_cash) || 0),
+          totalWithdrawalsBank: acc.totalWithdrawalsBank + (Number(daily.total_withdrawals_bank) || 0),
+          totalWithdrawalsCooperative: acc.totalWithdrawalsCooperative + (Number(daily.total_withdrawals_cooperative) || 0),
+        };
+      }, {
+        totalIncomeFromOrders: 0,
+        totalIncomeFromCharging: 0,
+        totalIncomeCash: 0,
+        totalIncomeEsewa: 0,
+        totalIncomeFonepay: 0,
+        totalExpenses: 0,
+        totalExpensesCash: 0,
+        totalExpensesEsewa: 0,
+        totalExpensesFonepay: 0,
+        totalDeposits: 0,
+        totalDepositsCash: 0,
+        totalDepositsEsewa: 0,
+        totalSavings: 0,
+        totalSavingsCash: 0,
+        totalSavingsEsewa: 0,
+        totalSavingsFonepay: 0,
+        totalWithdrawals: 0,
+        totalWithdrawalsCash: 0,
+        totalWithdrawalsBank: 0,
+        totalWithdrawalsCooperative: 0,
+      });
+
+      // Convert to TransactionSummary format for UI compatibility
       const summary: TransactionSummary = {
-        orders: processTransactions(orders || [], "total", "payment_mode"),
-        charging: processTransactions(
-          charging || [],
-          "total_amount",
-          "payment_mode",
-        ),
-        expenses: processTransactions(expenses || [], "amount", "payment_mode"),
-        deposits: processTransactions(deposits || [], "amount", "mode"),
-        withdrawals: processTransactions(
-          withdrawals || [],
-          "amount",
-          "payment_mode",
-        ),
-        cooperative_savings: processTransactions(
-          savings || [],
-          "contribution_amount",
-          "payment_mode",
-        ),
+        orders: {
+          count: dailySummaries.length, // Number of days with data
+          total: aggregated.totalIncomeFromOrders,
+          by_payment: {
+            cash: { count: 0, total: aggregated.totalIncomeCash },
+            esewa: { count: 0, total: aggregated.totalIncomeEsewa },
+            fonepay: { count: 0, total: aggregated.totalIncomeFonepay },
+          }
+        },
+        charging: {
+          count: dailySummaries.length,
+          total: aggregated.totalIncomeFromCharging,
+          by_payment: {} // Charging is included in total income payment modes
+        },
+        expenses: {
+          count: dailySummaries.length,
+          total: aggregated.totalExpenses,
+          by_payment: {
+            cash: { count: 0, total: aggregated.totalExpensesCash },
+            esewa: { count: 0, total: aggregated.totalExpensesEsewa },
+            fonepay: { count: 0, total: aggregated.totalExpensesFonepay },
+          }
+        },
+        deposits: {
+          count: dailySummaries.length,
+          total: aggregated.totalDeposits,
+          by_payment: {
+            cash: { count: 0, total: aggregated.totalDepositsCash },
+            esewa: { count: 0, total: aggregated.totalDepositsEsewa },
+          }
+        },
+        withdrawals: {
+          count: dailySummaries.length,
+          total: aggregated.totalWithdrawals,
+          by_payment: {
+            cash: { count: 0, total: aggregated.totalWithdrawalsCash },
+            bank: { count: 0, total: aggregated.totalWithdrawalsBank },
+            cooperative: { count: 0, total: aggregated.totalWithdrawalsCooperative },
+          }
+        },
+        cooperative_savings: {
+          count: dailySummaries.length,
+          total: aggregated.totalSavings,
+          by_payment: {
+            cash: { count: 0, total: aggregated.totalSavingsCash },
+            esewa: { count: 0, total: aggregated.totalSavingsEsewa },
+            fonepay: { count: 0, total: aggregated.totalSavingsFonepay },
+          }
+        },
       };
 
-      console.log("All-time data fetched:", {
-        orders: orders?.length || 0,
-        charging: charging?.length || 0,
-        expenses: expenses?.length || 0,
-        deposits: deposits?.length || 0,
-        withdrawals: withdrawals?.length || 0,
-        savings: savings?.length || 0,
-        summary,
+      console.log("📈 All-time data aggregated from daily summaries:", {
+        dateRange: { from: fromDate, to: toDate },
+        daysProcessed: dailySummaries.length,
+        totalIncome: aggregated.totalIncomeFromOrders + aggregated.totalIncomeFromCharging,
+        totalExpenses: aggregated.totalExpenses,
+        summary
       });
 
       setAllTimeSummary(summary);
@@ -347,29 +377,7 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
     }
   };
 
-  const processTransactions = (
-    transactions: any[],
-    amountField: string,
-    paymentField: string,
-  ) => {
-    const count = transactions.length;
-    const total = transactions.reduce(
-      (sum, t) => sum + (t[amountField] || 0),
-      0,
-    );
-    const by_payment: Record<string, { count: number; total: number }> = {};
 
-    transactions.forEach((t) => {
-      const payment = t[paymentField] || "Unknown";
-      if (!by_payment[payment]) {
-        by_payment[payment] = { count: 0, total: 0 };
-      }
-      by_payment[payment].count++;
-      by_payment[payment].total += t[amountField] || 0;
-    });
-
-    return { count, total, by_payment };
-  };
 
   const getNextDay = (date: string) => {
     const nextDay = new Date(date);
@@ -411,11 +419,40 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
         }
       });
 
-      // Calculate withdrawal breakdown by source
-      // Note: This needs to be implemented with withdrawal_from field
-      const totalWithdrawalsBank = 0; // TODO: Filter by withdrawal_from = 'Bank'
-      const totalWithdrawalsCooperative = 0; // TODO: Filter by withdrawal_from = 'Cooperative'
-      const totalWithdrawalsEsewa = 0; // TODO: Filter by withdrawal_from = 'Esewa'
+      // Fetch withdrawal data to calculate breakdown for daily summary
+      const { data: withdrawalData, error: withdrawalError } = await supabase
+        .from("withdrawals")
+        .select("*")
+        .eq("user_id", user.id)
+        .gte("withdrawal_date", selectedDate)
+        .lt("withdrawal_date", getNextDay(selectedDate));
+
+      if (withdrawalError) {
+        console.warn("⚠️ Error fetching withdrawal data for breakdown:", withdrawalError);
+      }
+
+      // Calculate withdrawal breakdown using database schema
+      const withdrawalDetails = withdrawalData || [];
+      const totalWithdrawalsBank = withdrawalDetails
+        .filter(w => w.withdrawal_from === 'Bank')
+        .reduce((sum, w) => sum + (Number(w.amount) || 0), 0);
+
+      const totalWithdrawalsCooperative = withdrawalDetails
+        .filter(w => w.withdrawal_from === 'Cooperative')
+        .reduce((sum, w) => sum + (Number(w.amount) || 0), 0);
+
+      const totalWithdrawalsEsewa = withdrawalDetails
+        .filter(w => w.withdrawal_from === 'Esewa')
+        .reduce((sum, w) => sum + (Number(w.amount) || 0), 0);
+
+      console.log('🔍 Daily withdrawal breakdown:', {
+        totalWithdrawalsBank,
+        totalWithdrawalsCooperative,
+        totalWithdrawalsEsewa,
+        totalWithdrawals,
+        rawWithdrawals: withdrawalDetails.length,
+        withdrawalDetails: withdrawalDetails.map(w => ({ amount: w.amount, from: w.withdrawal_from, mode: w.payment_mode }))
+      });
 
       // Insert or update daily summary
       const dailySummaryData = {
@@ -460,80 +497,89 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
     }
   };
 
-  const formatCurrency = (amount: number) => `NRs. ${amount.toFixed(2)}`;
+  const formatCurrency = (amount: number) => formatCurrencyUtil(amount);
 
-  // Balance calculation functions
+  // Updated balance calculation functions that work with the new data format
   const getCashIncome = (summary: TransactionSummary) => {
     return (
-      (summary.orders.by_payment.Cash?.total || 0) +
-      (summary.charging.by_payment.Cash?.total || 0)
+      (summary.orders.by_payment?.cash?.total || summary.orders.by_payment?.Cash?.total || 0) +
+      (summary.charging.by_payment?.cash?.total || summary.charging.by_payment?.Cash?.total || 0)
     );
   };
 
   const getCashExpenses = (summary: TransactionSummary) => {
-    return summary.expenses.by_payment.Cash?.total || 0;
+    return summary.expenses.by_payment?.cash?.total || summary.expenses.by_payment?.Cash?.total || 0;
   };
 
   const getCashSavings = (summary: TransactionSummary) => {
-    return summary.cooperative_savings.by_payment.Cash?.total || 0;
+    return summary.cooperative_savings.by_payment?.cash?.total || summary.cooperative_savings.by_payment?.Cash?.total || 0;
   };
 
   const getCashDeposits = (summary: TransactionSummary) => {
-    return summary.deposits.by_payment.Cash?.total || 0;
+    return summary.deposits.by_payment?.cash?.total || summary.deposits.by_payment?.Cash?.total || 0;
   };
 
   const getCashWithdrawals = (summary: TransactionSummary) => {
-    return summary.withdrawals.by_payment.Cash?.total || 0;
+    return summary.withdrawals.by_payment?.cash?.total || summary.withdrawals.by_payment?.Cash?.total || 0;
   };
 
   const calculateCashBalance = (summary: TransactionSummary) => {
-    return (
-      getCashIncome(summary) -
+    // Cash Balance: Current calculations + Cash withdrawals from ALL sources (cooperative, esewa, fonepay)
+    const currentBalance = getCashIncome(summary) -
       getCashExpenses(summary) -
       getCashSavings(summary) -
       getCashDeposits(summary) +
-      getCashWithdrawals(summary)
-    );
+      getCashWithdrawals(summary);
+
+    // Add all cash withdrawals (including from different sources)
+    const allCashWithdrawals = getCashWithdrawals(summary);
+
+    return currentBalance + allCashWithdrawals;
   };
 
   const getFonepayIncome = (summary: TransactionSummary) => {
     return (
-      (summary.orders.by_payment.Fonepay?.total || 0) +
-      (summary.charging.by_payment.Fonepay?.total || 0)
+      (summary.orders.by_payment?.fonepay?.total || summary.orders.by_payment?.Fonepay?.total || 0) +
+      (summary.charging.by_payment?.fonepay?.total || summary.charging.by_payment?.Fonepay?.total || 0)
     );
   };
 
   const getFonepayExpenses = (summary: TransactionSummary) => {
-    return summary.expenses.by_payment.Fonepay?.total || 0;
+    return summary.expenses.by_payment?.fonepay?.total || summary.expenses.by_payment?.Fonepay?.total || 0;
   };
 
   const getBankWithdrawals = (summary: TransactionSummary) => {
-    // This would need to be filtered by withdrawal_from = 'Bank' in actual implementation
-    return summary.withdrawals.by_payment.Fonepay?.total || 0;
+    // Now properly calculated from database schema in the summary data
+    return summary.withdrawals.by_payment?.bank?.total || summary.withdrawals.by_payment?.fonepay?.total || 0;
   };
 
   const calculateBankBalance = (summary: TransactionSummary) => {
-    return (
-      getFonepayIncome(summary) -
+    // Bank Balance: Current calculations + Cash Deposits + Esewa Deposits
+    const currentBalance = getFonepayIncome(summary) -
       getFonepayExpenses(summary) -
-      getBankWithdrawals(summary)
-    );
+      getBankWithdrawals(summary);
+
+    // Add cash deposits and esewa deposits
+    const cashDeposits = getCashDeposits(summary);
+    const esewaDeposits = summary.deposits.by_payment?.esewa?.total || summary.deposits.by_payment?.Esewa?.total || 0;
+
+    return currentBalance + cashDeposits + esewaDeposits;
   };
 
   const getEsewaIncome = (summary: TransactionSummary) => {
     return (
-      (summary.orders.by_payment.Esewa?.total || 0) +
-      (summary.charging.by_payment.Esewa?.total || 0)
+      (summary.orders.by_payment?.esewa?.total || summary.orders.by_payment?.Esewa?.total || 0) +
+      (summary.charging.by_payment?.esewa?.total || summary.charging.by_payment?.Esewa?.total || 0)
     );
   };
 
   const getEsewaExpenses = (summary: TransactionSummary) => {
-    return summary.expenses.by_payment.Esewa?.total || 0;
+    return summary.expenses.by_payment?.esewa?.total || summary.expenses.by_payment?.Esewa?.total || 0;
   };
 
   const getEsewaWithdrawals = (summary: TransactionSummary) => {
-    // This would need to be filtered by withdrawal_from = 'Esewa' in actual implementation
-    return summary.withdrawals.by_payment.Esewa?.total || 0;
+    // Now properly calculated from database schema
+    return summary.withdrawals.by_payment?.esewa?.total || summary.withdrawals.by_payment?.Esewa?.total || 0;
   };
 
   const calculateEsewaBalance = (summary: TransactionSummary) => {

@@ -50,9 +50,11 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import PasswordChangeForm from "@/components/PasswordChangeForm";
+import HistoricalDataFixAdmin from "@/components/HistoricalDataFixAdmin";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { fixAdminRole } from "@/utils/emergencyAdminFix";
 
 type AppRole = "user" | "data_entry" | "reports_viewer" | "super_admin";
 
@@ -176,7 +178,7 @@ const Settings = () => {
   const [canAddMenuCategory, setCanAddMenuCategory] = useState(false);
   const [canAddExpenseCategory, setCanAddExpenseCategory] = useState(false);
   const [canDeleteTabs, setCanDeleteTabs] = useState(false);
-  const [showBatchClosing, setShowBatchClosing] = useState(true);
+  const [showBatchClosing, setShowBatchClosing] = useState(false);
   const [showOrders, setShowOrders] = useState(true);
 
   const [showDataInput, setShowDataInput] = useState(true);
@@ -187,6 +189,7 @@ const Settings = () => {
   const [showCreateUserForm, setShowCreateUserForm] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
+  const [isFixingRole, setIsFixingRole] = useState(false);
   const [logs, setLogs] = useState<
     Array<{
       id: string;
@@ -538,6 +541,26 @@ const Settings = () => {
     setNewUser((prev) => ({ ...prev, password }));
   };
 
+  const handleFixAdminRole = async () => {
+    setIsFixingRole(true);
+    try {
+      const result = await fixAdminRole();
+      if (result.success) {
+        toast.success(result.message);
+        // Refresh the page to see role changes
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
+      } else {
+        toast.error(result.message);
+      }
+    } catch (error: any) {
+      toast.error(`Failed to fix admin role: ${error.message}`);
+    } finally {
+      setIsFixingRole(false);
+    }
+  };
+
   const getRoleIcon = (role: AppRole) => {
     switch (role) {
       case "super_admin":
@@ -710,8 +733,44 @@ const Settings = () => {
                   {user?.name || "User Profile"}
                 </CardTitle>
                 <p className="text-sm text-gray-600">{user?.email}</p>
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="text-gray-500">Role:</span>
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    user?.role === 'super_admin'
+                      ? 'bg-purple-100 text-purple-700 border border-purple-200'
+                      : 'bg-gray-100 text-gray-700 border border-gray-200'
+                  }`}>
+                    {user?.role}
+                  </span>
+                </div>
               </CardHeader>
               <CardContent className="space-y-4">
+                {/* Emergency Admin Fix - only show for sujan1nepal@gmail.com if not super_admin */}
+                {user?.email === "sujan1nepal@gmail.com" && user?.role !== "super_admin" && (
+                  <div className="text-center mb-4">
+                    <Button
+                      onClick={handleFixAdminRole}
+                      disabled={isFixingRole}
+                      className="w-full bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white transition-all duration-200 transform hover:scale-105"
+                    >
+                      {isFixingRole ? (
+                        <>
+                          <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                          Fixing Admin Role...
+                        </>
+                      ) : (
+                        <>
+                          <UserCog className="h-4 w-4 mr-2" />
+                          Fix My Admin Role
+                        </>
+                      )}
+                    </Button>
+                    <p className="text-xs text-orange-600 mt-2">
+                      Your account should be super admin. Click to fix this issue.
+                    </p>
+                  </div>
+                )}
+
                 <div className="text-center">
                   <Button
                     onClick={() => setShowPasswordForm(!showPasswordForm)}
@@ -1250,6 +1309,14 @@ const Settings = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* Historical Data Fix - Only visible to super admin */}
+        {hasRole("super_admin") && (
+          <div className="mt-8">
+            <HistoricalDataFixAdmin />
+          </div>
+        )}
+
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
           <Card className="bg-gradient-to-br from-orange-50 to-red-50 border-0 shadow-lg hover:shadow-xl transition-all duration-300">

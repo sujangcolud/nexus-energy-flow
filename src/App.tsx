@@ -4,13 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import {
-  BrowserRouter,
-  Routes,
-  Route,
-  Navigate,
-  useLocation,
-} from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { setupGlobalErrorHandler } from "./utils/supabaseErrorHandler";
 import Index from "./pages/Index";
@@ -24,7 +18,6 @@ import ChargingTab from "./components/tabs/ChargingTab";
 import ExpensesTab from "./components/tabs/ExpensesTab";
 import DepositsTab from "./components/tabs/DepositsTab";
 import WithdrawalsTab from "./components/tabs/WithdrawalsTab";
-import CooperativeSavingsTab from "./components/tabs/CooperativeSavingsTab";
 import SavingsWithdrawalsTab from "./components/tabs/SavingsWithdrawalsTab";
 import MenuManagementTab from "./components/tabs/MenuManagementTab"; // Consider admin roles for this route
 
@@ -75,7 +68,10 @@ const ChatBotWrapper = () => {
   }
 
   return (
-    <EnhancedChatBot isOpen={isChatBotOpen} onToggle={handleToggleChatBot} />
+    <EnhancedChatBot
+      isOpen={isChatBotOpen}
+      onToggle={handleToggleChatBot}
+    />
   );
 };
 
@@ -123,7 +119,6 @@ const App = () => {
                 <Route path="expenses" element={<ExpensesTab />} />
                 <Route path="deposits" element={<DepositsTab />} />
                 <Route path="withdrawals" element={<SavingsWithdrawalsTab />} />
-                <Route path="cooperative" element={<SavingsWithdrawalsTab />} />
                 <Route
                   path="share-investments"
                   element={<ShareInvestmentsTab />}
@@ -158,7 +153,7 @@ const App = () => {
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
-            <ChatBotWrapper />
+                        <ChatBotWrapper />
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
