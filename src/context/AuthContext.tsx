@@ -85,7 +85,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
           name:
             `${profile.first_name || ""} ${profile.last_name || ""}`.trim() ||
             "User",
-          role: (userRole as UserRole) || "user",
+          role: (finalRole as UserRole) || "user",
           first_name: profile.first_name,
           last_name: profile.last_name,
         };
