@@ -22,6 +22,13 @@ import { toast } from "sonner";
 import { extractErrorMessage, logError } from "@/utils/errorHandling";
 import AllTimeSummaryModal from "./AllTimeSummaryModal";
 import { DateRange } from "react-day-picker";
+import {
+  processTransactions,
+  calculateFinancialSummary,
+  formatCurrency as formatCurrencyUtil,
+  validateCalculations,
+  type FinancialData,
+} from "@/utils/unifiedCalculations";
 
 interface AllTimeSummaryData {
   totalIncome: number;
@@ -94,35 +101,7 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
   });
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const processTransactions = (
-    transactions: any[],
-    amountField: string,
-    paymentField: string,
-  ) => {
-    const count = transactions.length;
-    const total = transactions.reduce(
-      (sum, t) => sum + (t[amountField] || 0),
-      0,
-    );
-    const by_payment: Record<string, { count: number; total: number }> = {};
 
-    transactions.forEach((t) => {
-      const payment = t[paymentField] || "Unknown";
-      const normalizedPayment = payment.toLowerCase().includes("esewa") ? "esewa" :
-                                payment.toLowerCase().includes("fonepay") ? "fonepay" :
-                                payment.toLowerCase().includes("cash") ? "cash" :
-                                payment.toLowerCase().includes("bank") ? "fonepay" : // Bank transfers counted as fonepay
-                                payment;
-
-      if (!by_payment[normalizedPayment]) {
-        by_payment[normalizedPayment] = { count: 0, total: 0 };
-      }
-      by_payment[normalizedPayment].count++;
-      by_payment[normalizedPayment].total += t[amountField] || 0;
-    });
-
-    return { count, total, by_payment };
-  };
 
   const fetchAllTimeSummary = useCallback(
     async (dateRange?: DateRange) => {
@@ -249,56 +228,25 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
           savings: savings?.length || 0,
         });
 
-        // Process transactions using the same logic as DailyClosingSystem
-        const ordersData = processTransactions(orders || [], "total", "payment_mode");
-        const chargingData = processTransactions(charging || [], "total_amount", "payment_mode");
-        const expensesData = processTransactions(expenses || [], "amount", "payment_mode");
-        const depositsData = processTransactions(deposits || [], "amount", "mode");
-        const withdrawalsData = processTransactions(withdrawals || [], "amount", "payment_mode");
-        const savingsData = processTransactions(savings || [], "contribution_amount", "payment_mode");
-
-        // Calculate totals
-        const totalIncome = ordersData.total + chargingData.total;
-        const totalExpenses = expensesData.total;
-        const totalDeposits = depositsData.total;
-        const totalWithdrawals = withdrawalsData.total;
-        const cooperativeSavings = savingsData.total;
-
-        // Calculate payment method breakdowns
-        const cashIncome = (ordersData.by_payment.cash?.total || 0) + (chargingData.by_payment.cash?.total || 0);
-        const esewaIncome = (ordersData.by_payment.esewa?.total || 0) + (chargingData.by_payment.esewa?.total || 0);
-        const fonepayIncome = (ordersData.by_payment.fonepay?.total || 0) + (chargingData.by_payment.fonepay?.total || 0);
-
-        // Calculate withdrawal breakdown
-        const withdrawalBreakdown = {
-          fromBank: withdrawalsData.by_payment.fonepay?.total || 0, // Bank withdrawals via Fonepay
-          fromSavings: withdrawalsData.total, // Most withdrawals are from cooperative savings
-          fromEsewa: withdrawalsData.by_payment.esewa?.total || 0,
-          fromFonepay: withdrawalsData.by_payment.fonepay?.total || 0,
-          total: withdrawalsData.total,
+        // Process transactions using unified calculation service
+        const financialData: FinancialData = {
+          orders: processTransactions(orders || [], "total", "payment_mode"),
+          charging: processTransactions(charging || [], "total_amount", "payment_mode"),
+          expenses: processTransactions(expenses || [], "amount", "payment_mode"),
+          deposits: processTransactions(deposits || [], "amount", "mode"),
+          withdrawals: processTransactions(withdrawals || [], "amount", "payment_mode"),
+          cooperative_savings: processTransactions(savings || [], "contribution_amount", "payment_mode"),
         };
 
-        // Calculate current balances using the same logic as DailyClosingSystem
-        const cashExpenses = expensesData.by_payment.cash?.total || 0;
-        const esewaExpenses = expensesData.by_payment.esewa?.total || 0;
-        const fonepayExpenses = expensesData.by_payment.fonepay?.total || 0;
+        // Calculate comprehensive financial summary
+        const summary = calculateFinancialSummary(financialData);
 
-        const cashSavings = savingsData.by_payment.cash?.total || savingsData.total; // Assume cash if not specified
-        const cashDeposits = depositsData.by_payment.cash?.total || 0;
-        const cashWithdrawals = withdrawalsData.by_payment.cash?.total || 0;
-
-        const currentBalances = {
-          cash: cashIncome - cashExpenses - cashSavings - cashDeposits + cashWithdrawals,
-          esewa: esewaIncome - esewaExpenses,
-          fonepay: fonepayIncome - fonepayExpenses - (withdrawalsData.by_payment.fonepay?.total || 0),
-          total: 0, // Will be calculated below
-        };
-
-        // Calculate cooperative balance
-        const cooperativeBalance = cooperativeSavings - withdrawalsData.total;
-        currentBalances.total = currentBalances.cash + currentBalances.esewa + currentBalances.fonepay + cooperativeBalance;
-
-        const netProfit = totalIncome - totalExpenses;
+        // Validate calculations
+        const validation = validateCalculations(summary);
+        if (!validation.isValid) {
+          console.warn("⚠️ Calculation validation failed:", validation.errors);
+          validation.errors.forEach(error => console.warn(`- ${error}`));
+        }
 
         // Get date range for display
         const allDates = [
@@ -315,23 +263,34 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
         const dataPoints = new Set(allDates).size;
 
         const finalSummary: AllTimeSummaryData = {
-          totalIncome,
-          totalExpenses,
-          totalDeposits,
-          totalWithdrawals,
-          cooperativeSavings,
-          netProfit,
-          currentBalances,
+          totalIncome: summary.income.total,
+          totalExpenses: summary.expenses.total,
+          totalDeposits: summary.deposits.total,
+          totalWithdrawals: summary.withdrawals.total,
+          cooperativeSavings: summary.savings.total,
+          netProfit: summary.netProfit,
+          currentBalances: {
+            cash: summary.balances.cash,
+            esewa: summary.balances.esewa,
+            fonepay: summary.balances.fonepay,
+            total: summary.balances.total,
+          },
           incomeBreakdown: {
-            fromOrders: ordersData.total,
-            fromCharging: chargingData.total,
+            fromOrders: summary.income.fromOrders,
+            fromCharging: summary.income.fromCharging,
           },
           paymentMethodBreakdown: {
-            cash: cashIncome,
-            esewa: esewaIncome,
-            fonepay: fonepayIncome,
+            cash: summary.paymentModes.cash,
+            esewa: summary.paymentModes.esewa,
+            fonepay: summary.paymentModes.fonepay,
           },
-          withdrawalBreakdown,
+          withdrawalBreakdown: {
+            fromBank: summary.withdrawals.fromBank,
+            fromSavings: summary.withdrawals.fromSavings,
+            fromEsewa: summary.withdrawals.fromEsewa,
+            fromFonepay: summary.withdrawals.fromFonepay,
+            total: summary.withdrawals.total,
+          },
           dataPoints,
           dateRange: {
             from: firstDate,
@@ -340,6 +299,7 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
         };
 
         console.log("📈 All-time summary calculated from raw data:", finalSummary);
+        console.log("🔍 Calculation validation:", validation.isValid ? "✅ Passed" : "❌ Failed", validation.errors);
         setSummaryData(finalSummary);
         setRetryCount(0); // Reset retry count on success
       } catch (error) {
@@ -501,7 +461,7 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
     }
   };
 
-  const formatCurrency = (amount: number) => `NRs. ${amount.toFixed(2)}`;
+  const formatCurrency = (amount: number) => formatCurrencyUtil(amount);
 
   if (!user) {
     return null;
