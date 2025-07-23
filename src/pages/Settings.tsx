@@ -1243,6 +1243,14 @@ const Settings = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* Historical Data Fix - Only visible to super admin */}
+        {hasRole("super_admin") && (
+          <div className="mt-8">
+            <HistoricalDataFixAdmin />
+          </div>
+        )}
+
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
           <Card className="bg-gradient-to-br from-orange-50 to-red-50 border-0 shadow-lg hover:shadow-xl transition-all duration-300">
