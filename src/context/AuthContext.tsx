@@ -331,6 +331,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       setUser(null);
       setSession(null);
 
+      // Clear all auth-related storage
+      localStorage.removeItem('supabase.auth.token');
+
       // Try to sign out from Supabase, but don't fail if there's no session
       const { error } = await supabase.auth.signOut();
 
@@ -346,6 +349,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
           return;
         }
 
+        // For refresh token errors during logout, just clear everything
+        if (
+          error.message?.includes("refresh_token_not_found") ||
+          error.message?.includes("Invalid Refresh Token")
+        ) {
+          console.log("Refresh token error during logout, clearing all data");
+          localStorage.clear();
+          return;
+        }
+
         // For other errors, log them but don't throw to avoid breaking the UX
         console.error("Error signing out:", error);
       }
@@ -358,6 +371,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         console.log(
           "No active session to sign out from, local state already cleared",
         );
+        return;
+      }
+
+      // For refresh token errors, clear storage
+      if (
+        error.message?.includes("refresh_token_not_found") ||
+        error.message?.includes("Invalid Refresh Token")
+      ) {
+        console.log("Refresh token error during logout, clearing storage");
+        localStorage.clear();
         return;
       }
 
