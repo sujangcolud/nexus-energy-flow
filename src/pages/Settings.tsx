@@ -725,8 +725,44 @@ const Settings = () => {
                   {user?.name || "User Profile"}
                 </CardTitle>
                 <p className="text-sm text-gray-600">{user?.email}</p>
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="text-gray-500">Role:</span>
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    user?.role === 'super_admin'
+                      ? 'bg-purple-100 text-purple-700 border border-purple-200'
+                      : 'bg-gray-100 text-gray-700 border border-gray-200'
+                  }`}>
+                    {user?.role}
+                  </span>
+                </div>
               </CardHeader>
               <CardContent className="space-y-4">
+                {/* Emergency Admin Fix - only show for sujan1nepal@gmail.com if not super_admin */}
+                {user?.email === "sujan1nepal@gmail.com" && user?.role !== "super_admin" && (
+                  <div className="text-center mb-4">
+                    <Button
+                      onClick={handleFixAdminRole}
+                      disabled={isFixingRole}
+                      className="w-full bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white transition-all duration-200 transform hover:scale-105"
+                    >
+                      {isFixingRole ? (
+                        <>
+                          <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                          Fixing Admin Role...
+                        </>
+                      ) : (
+                        <>
+                          <UserCog className="h-4 w-4 mr-2" />
+                          Fix My Admin Role
+                        </>
+                      )}
+                    </Button>
+                    <p className="text-xs text-orange-600 mt-2">
+                      Your account should be super admin. Click to fix this issue.
+                    </p>
+                  </div>
+                )}
+
                 <div className="text-center">
                   <Button
                     onClick={() => setShowPasswordForm(!showPasswordForm)}
