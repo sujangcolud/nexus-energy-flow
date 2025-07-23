@@ -189,6 +189,7 @@ const Settings = () => {
   const [showCreateUserForm, setShowCreateUserForm] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
+  const [isFixingRole, setIsFixingRole] = useState(false);
   const [logs, setLogs] = useState<
     Array<{
       id: string;
