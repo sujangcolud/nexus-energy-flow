@@ -43,6 +43,24 @@ const HistoricalDataFixAdmin: React.FC<HistoricalDataFixAdminProps> = ({ classNa
   const [progress, setProgress] = useState(0);
   const [schemaValid, setSchemaValid] = useState<{ success: boolean; issues: string[] } | null>(null);
 
+  const handleSchemaValidation = async () => {
+    setAnalyzing(true);
+    try {
+      const result = await quickSchemaTest();
+      setSchemaValid(result);
+
+      if (result.success) {
+        toast.success("All database schemas are valid!");
+      } else {
+        toast.warning(`Found ${result.issues.length} schema issues`);
+      }
+    } catch (error) {
+      toast.error(`Schema validation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setAnalyzing(false);
+    }
+  };
+
   const handleAnalyze = async () => {
     if (!user) return;
 
@@ -50,7 +68,7 @@ const HistoricalDataFixAdmin: React.FC<HistoricalDataFixAdminProps> = ({ classNa
     try {
       const result = await identifyDatesNeedingFix(user.id);
       setAnalysisResult(result);
-      
+
       if (result.datesNeedingFix.length > 0) {
         toast.info(`Found ${result.datesNeedingFix.length} dates needing fixes`);
       } else {
