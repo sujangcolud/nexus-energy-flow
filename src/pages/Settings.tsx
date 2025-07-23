@@ -54,6 +54,7 @@ import HistoricalDataFixAdmin from "@/components/HistoricalDataFixAdmin";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { fixAdminRole } from "@/utils/emergencyAdminFix";
 
 type AppRole = "user" | "data_entry" | "reports_viewer" | "super_admin";
 
