@@ -23,12 +23,12 @@ import { extractErrorMessage, logError } from "@/utils/errorHandling";
 import AllTimeSummaryModal from "./AllTimeSummaryModal";
 import { DateRange } from "react-day-picker";
 import {
-  processTransactions,
-  calculateFinancialSummary,
+  calculateDatabaseFinancialSummary,
   formatCurrency as formatCurrencyUtil,
-  validateCalculations,
-  type FinancialData,
-} from "@/utils/unifiedCalculations";
+  validateDatabaseCalculations,
+  debugCalculations,
+  type DatabaseTransactionData,
+} from "@/utils/databaseCalculations";
 
 interface AllTimeSummaryData {
   totalIncome: number;
@@ -228,24 +228,29 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
           savings: savings?.length || 0,
         });
 
-        // Process transactions using unified calculation service
-        const financialData: FinancialData = {
-          orders: processTransactions(orders || [], "total", "payment_mode"),
-          charging: processTransactions(charging || [], "total_amount", "payment_mode"),
-          expenses: processTransactions(expenses || [], "amount", "payment_mode"),
-          deposits: processTransactions(deposits || [], "amount", "mode"),
-          withdrawals: processTransactions(withdrawals || [], "amount", "payment_mode"),
-          cooperative_savings: processTransactions(savings || [], "contribution_amount", "payment_mode"),
+        // Prepare data in database schema format
+        const databaseData: DatabaseTransactionData = {
+          orders: orders || [],
+          charging_sessions: charging || [],
+          expenses: expenses || [],
+          deposits: deposits || [],
+          withdrawals: withdrawals || [],
+          cooperative_savings: savings || [],
         };
 
-        // Calculate comprehensive financial summary
-        const summary = calculateFinancialSummary(financialData);
+        // Calculate financial summary using database-aware service
+        const summary = calculateDatabaseFinancialSummary(databaseData);
 
-        // Validate calculations
-        const validation = validateCalculations(summary);
+        // Validate and debug calculations
+        const validation = validateDatabaseCalculations(summary);
         if (!validation.isValid) {
-          console.warn("⚠️ Calculation validation failed:", validation.errors);
+          console.warn("⚠️ Database calculation validation failed:", validation.errors);
           validation.errors.forEach(error => console.warn(`- ${error}`));
+        }
+
+        // Debug calculations in development
+        if (process.env.NODE_ENV === 'development') {
+          debugCalculations(summary);
         }
 
         // Get date range for display
@@ -263,11 +268,11 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
         const dataPoints = new Set(allDates).size;
 
         const finalSummary: AllTimeSummaryData = {
-          totalIncome: summary.income.total,
-          totalExpenses: summary.expenses.total,
-          totalDeposits: summary.deposits.total,
-          totalWithdrawals: summary.withdrawals.total,
-          cooperativeSavings: summary.savings.total,
+          totalIncome: summary.totalIncome,
+          totalExpenses: summary.totalExpenses,
+          totalDeposits: summary.totalDeposits,
+          totalWithdrawals: summary.totalWithdrawals,
+          cooperativeSavings: summary.totalSavings,
           netProfit: summary.netProfit,
           currentBalances: {
             cash: summary.balances.cash,
@@ -276,20 +281,20 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
             total: summary.balances.total,
           },
           incomeBreakdown: {
-            fromOrders: summary.income.fromOrders,
-            fromCharging: summary.income.fromCharging,
+            fromOrders: summary.incomeFromOrders,
+            fromCharging: summary.incomeFromCharging,
           },
           paymentMethodBreakdown: {
-            cash: summary.paymentModes.cash,
-            esewa: summary.paymentModes.esewa,
-            fonepay: summary.paymentModes.fonepay,
+            cash: summary.incomeByPaymentMode.cash,
+            esewa: summary.incomeByPaymentMode.esewa,
+            fonepay: summary.incomeByPaymentMode.fonepay,
           },
           withdrawalBreakdown: {
-            fromBank: summary.withdrawals.fromBank,
-            fromSavings: summary.withdrawals.fromSavings,
-            fromEsewa: summary.withdrawals.fromEsewa,
-            fromFonepay: summary.withdrawals.fromFonepay,
-            total: summary.withdrawals.total,
+            fromBank: summary.withdrawalsBySource.fromBank,
+            fromSavings: summary.withdrawalsBySource.fromCooperative,
+            fromEsewa: summary.withdrawalsBySource.fromEsewa,
+            fromFonepay: 0, // No direct fonepay withdrawals in schema
+            total: summary.totalWithdrawals,
           },
           dataPoints,
           dateRange: {
@@ -298,8 +303,14 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
           },
         };
 
-        console.log("📈 All-time summary calculated from raw data:", finalSummary);
-        console.log("🔍 Calculation validation:", validation.isValid ? "✅ Passed" : "❌ Failed", validation.errors);
+        console.log("📈 Database-aware all-time summary calculated:", finalSummary);
+        console.log("🔍 Database calculation validation:", validation.isValid ? "✅ Passed" : "❌ Failed", validation.errors);
+
+        if (validation.isValid) {
+          console.log("✅ All calculations validated successfully");
+        } else {
+          console.warn("⚠️ Calculation validation issues detected - please review");
+        }
         setSummaryData(finalSummary);
         setRetryCount(0); // Reset retry count on success
       } catch (error) {
