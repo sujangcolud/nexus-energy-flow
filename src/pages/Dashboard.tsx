@@ -64,7 +64,6 @@ import ChargingTab from "@/components/tabs/ChargingTab";
 import ExpensesTab from "@/components/tabs/ExpensesTab";
 import DepositsTab from "@/components/tabs/DepositsTab";
 import WithdrawalsTab from "@/components/tabs/WithdrawalsTab";
-import CooperativeSavingsTab from "@/components/tabs/CooperativeSavingsTab";
 import SavingsWithdrawalsTab from "@/components/tabs/SavingsWithdrawalsTab";
 
 import MenuManagementTab from "@/components/tabs/MenuManagementTab";
