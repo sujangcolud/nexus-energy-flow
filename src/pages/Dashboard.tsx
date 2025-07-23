@@ -180,17 +180,6 @@ const Dashboard = () => {
         description: "Manage savings and withdrawals",
       },
       {
-        id: "cooperative",
-        path: "cooperative",
-        label: "Savings & Withdrawals",
-        icon: Users,
-        component: SavingsWithdrawalsTab,
-        roles: ["user", "data_entry", "reports_viewer", "super_admin"],
-        color: "bg-teal-600",
-        bgColor: "bg-teal-50",
-        description: "Comprehensive savings and withdrawals management",
-      },
-      {
         id: "share_investments",
         path: "share-investments",
         label: "Share Investments",
