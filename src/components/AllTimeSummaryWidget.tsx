@@ -303,7 +303,7 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
           totalWithdrawals: 0,
           cooperativeSavings: 0,
           netProfit: 0,
-          currentBalances: { cash: 0, esewa: 0, fonepay: 0, total: 0 },
+          currentBalances: { cash: 0, esewa: 0, fonepay: 0, bank: 0, cooperative: 0, total: 0 },
           incomeBreakdown: { fromOrders: 0, fromCharging: 0 },
           paymentMethodBreakdown: { cash: 0, esewa: 0, fonepay: 0 },
           withdrawalBreakdown: {
