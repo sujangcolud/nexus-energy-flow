@@ -45,13 +45,7 @@ import { toast } from "sonner";
 import { extractErrorMessage, logError } from "@/utils/errorHandling";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { DateRange } from "react-day-picker";
-import {
-  calculateDatabaseFinancialSummary,
-  formatCurrency as formatCurrencyUtil,
-  validateDatabaseCalculations,
-  debugCalculations,
-  type DatabaseTransactionData,
-} from "@/utils/databaseCalculations";
+import { formatCurrency as formatCurrencyUtil } from "@/lib/calculations";
 
 interface TransactionSummary {
   orders: {
