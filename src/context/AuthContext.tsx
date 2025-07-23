@@ -171,7 +171,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       setLoading(false);
     });
 
-    // Check for existing session with error handling
+    // Check for existing session with enhanced error handling
     supabase.auth
       .getSession()
       .then(({ data: { session }, error }) => {
@@ -182,9 +182,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
           // If there's an error getting the session (like invalid refresh token), clear everything
           if (
             error.message?.includes("refresh_token_not_found") ||
-            error.message?.includes("Invalid Refresh Token")
+            error.message?.includes("Invalid Refresh Token") ||
+            error.message?.includes("AuthApiError")
           ) {
-            console.log("Invalid refresh token detected, clearing session");
+            console.log("Invalid refresh token detected, clearing all auth data");
+            localStorage.removeItem('supabase.auth.token');
+            localStorage.clear(); // Clear all localStorage to prevent stale auth data
             setUser(null);
             setSession(null);
           }
@@ -196,7 +199,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       })
       .catch((error) => {
         console.error("Unexpected error during session check:", error);
-        // Clear session on any unexpected errors
+        // Clear session and storage on any unexpected errors
+        console.log("Clearing auth data due to unexpected error");
+        localStorage.removeItem('supabase.auth.token');
         setUser(null);
         setSession(null);
         setLoading(false);
