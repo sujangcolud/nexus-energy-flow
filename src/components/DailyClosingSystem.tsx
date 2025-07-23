@@ -124,137 +124,88 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
 
     setLoading(true);
     try {
-      // Fetch all transaction data for the selected date
-      const [
-        ordersRes,
-        chargingRes,
-        expensesRes,
-        depositsRes,
-        withdrawalsRes,
-        cooperativeRes,
-        dailySummaryRes,
-      ] = await Promise.all([
-        supabase
-          .from("orders")
-          .select("*")
-          .eq("user_id", user.id)
-          .gte("order_date", selectedDate)
-          .lt("order_date", getNextDay(selectedDate)),
-        supabase
-          .from("charging_sessions")
-          .select("*")
-          .eq("user_id", user.id)
-          .gte("session_date", selectedDate)
-          .lt("session_date", getNextDay(selectedDate)),
-        supabase
-          .from("expenses")
-          .select("*")
-          .eq("user_id", user.id)
-          .gte("expense_date", selectedDate)
-          .lt("expense_date", getNextDay(selectedDate)),
-        supabase
-          .from("deposits")
-          .select("*")
-          .eq("user_id", user.id)
-          .gte("deposit_date", selectedDate)
-          .lt("deposit_date", getNextDay(selectedDate)),
-        supabase
-          .from("withdrawals")
-          .select("*")
-          .eq("user_id", user.id)
-          .gte("withdrawal_date", selectedDate)
-          .lt("withdrawal_date", getNextDay(selectedDate)),
-        supabase
-          .from("cooperative_savings")
-          .select("*")
-          .eq("user_id", user.id)
-          .gte("contribution_date", selectedDate)
-          .lt("contribution_date", getNextDay(selectedDate)),
-        supabase
-          .from("daily_summary")
-          .select("*")
-          .eq("summary_date", selectedDate)
-          .single(),
-      ]);
+      console.log("📅 Fetching daily data from daily_summary table for:", selectedDate);
+
+      // Fetch daily summary for the selected date
+      const { data: dailySummaryData, error: summaryError } = await supabase
+        .from("daily_summary")
+        .select("*")
+        .eq("summary_date", selectedDate)
+        .single();
 
       // Check if already closed - only if there's meaningful closing data with actual totals
       const hasValidSummary =
-        dailySummaryRes.data &&
-        !dailySummaryRes.error &&
-        (dailySummaryRes.data.total_income > 0 ||
-          dailySummaryRes.data.total_expenses > 0 ||
-          dailySummaryRes.data.total_deposits > 0 ||
-          dailySummaryRes.data.total_withdrawals > 0);
+        dailySummaryData &&
+        !summaryError &&
+        (dailySummaryData.total_income > 0 ||
+          dailySummaryData.total_expenses > 0 ||
+          dailySummaryData.total_deposits > 0 ||
+          dailySummaryData.total_withdrawals > 0);
       setAlreadyClosed(!!hasValidSummary);
 
-      // Prepare data in database schema format for accurate calculations
-      const databaseData: DatabaseTransactionData = {
-        orders: ordersRes.data || [],
-        charging_sessions: chargingRes.data || [],
-        expenses: expensesRes.data || [],
-        deposits: depositsRes.data || [],
-        withdrawals: withdrawalsRes.data || [],
-        cooperative_savings: cooperativeRes.data || [],
-      };
-
-      // Calculate using database-aware service
-      const calculatedSummary = calculateDatabaseFinancialSummary(databaseData);
-
-      // Validate calculations
-      const validation = validateDatabaseCalculations(calculatedSummary);
-      if (!validation.isValid) {
-        console.warn("⚠️ Daily calculation validation failed:", validation.errors);
-        validation.errors.forEach(error => console.warn(`- ${error}`));
+      if (summaryError && summaryError.code !== 'PGRST116') { // PGRST116 = no rows returned
+        throw summaryError;
       }
 
-      // Convert to legacy format for UI compatibility
+      // If no daily summary exists, initialize with zeros
       const summary: TransactionSummary = {
         orders: {
-          count: databaseData.orders.length,
-          total: calculatedSummary.incomeFromOrders,
-          by_payment: Object.entries(calculatedSummary.incomeByPaymentMode).reduce((acc, [key, value]) => {
-            if (value > 0) acc[key] = { count: 0, total: value };
-            return acc;
-          }, {} as Record<string, { count: number; total: number }>)
+          count: 0,
+          total: Number(dailySummaryData?.total_income_from_orders) || 0,
+          by_payment: {
+            cash: { count: 0, total: Number(dailySummaryData?.total_income_cash) || 0 },
+            esewa: { count: 0, total: Number(dailySummaryData?.total_income_esewa) || 0 },
+            fonepay: { count: 0, total: Number(dailySummaryData?.total_income_fonepay) || 0 },
+          }
         },
         charging: {
-          count: databaseData.charging_sessions.length,
-          total: calculatedSummary.incomeFromCharging,
-          by_payment: {} // Will be calculated from raw data if needed
+          count: 0,
+          total: Number(dailySummaryData?.total_income_from_charging) || 0,
+          by_payment: {} // Charging payment mode breakdown is included in total income payment modes
         },
         expenses: {
-          count: databaseData.expenses.length,
-          total: calculatedSummary.totalExpenses,
-          by_payment: Object.entries(calculatedSummary.expensesByPaymentMode).reduce((acc, [key, value]) => {
-            if (value > 0) acc[key] = { count: 0, total: value };
-            return acc;
-          }, {} as Record<string, { count: number; total: number }>)
+          count: 0,
+          total: Number(dailySummaryData?.total_expenses) || 0,
+          by_payment: {
+            cash: { count: 0, total: Number(dailySummaryData?.total_expenses_cash) || 0 },
+            esewa: { count: 0, total: Number(dailySummaryData?.total_expenses_esewa) || 0 },
+            fonepay: { count: 0, total: Number(dailySummaryData?.total_expenses_fonepay) || 0 },
+          }
         },
         deposits: {
-          count: databaseData.deposits.length,
-          total: calculatedSummary.totalDeposits,
-          by_payment: Object.entries(calculatedSummary.depositsByDestination).reduce((acc, [key, value]) => {
-            if (value > 0) acc[key] = { count: 0, total: value };
-            return acc;
-          }, {} as Record<string, { count: number; total: number }>)
+          count: 0,
+          total: Number(dailySummaryData?.total_deposits) || 0,
+          by_payment: {
+            cash: { count: 0, total: Number(dailySummaryData?.total_deposits_cash) || 0 },
+            esewa: { count: 0, total: Number(dailySummaryData?.total_deposits_esewa) || 0 },
+          }
         },
         withdrawals: {
-          count: databaseData.withdrawals.length,
-          total: calculatedSummary.totalWithdrawals,
-          by_payment: Object.entries(calculatedSummary.withdrawalsByPaymentMode).reduce((acc, [key, value]) => {
-            if (value > 0) acc[key] = { count: 0, total: value };
-            return acc;
-          }, {} as Record<string, { count: number; total: number }>)
+          count: 0,
+          total: Number(dailySummaryData?.total_withdrawals) || 0,
+          by_payment: {
+            cash: { count: 0, total: Number(dailySummaryData?.total_withdrawals_cash) || 0 },
+            bank: { count: 0, total: Number(dailySummaryData?.total_withdrawals_bank) || 0 },
+            cooperative: { count: 0, total: Number(dailySummaryData?.total_withdrawals_cooperative) || 0 },
+          }
         },
         cooperative_savings: {
-          count: databaseData.cooperative_savings.length,
-          total: calculatedSummary.totalSavings,
-          by_payment: Object.entries(calculatedSummary.savingsByPaymentMode).reduce((acc, [key, value]) => {
-            if (value > 0) acc[key] = { count: 0, total: value };
-            return acc;
-          }, {} as Record<string, { count: number; total: number }>)
+          count: 0,
+          total: Number(dailySummaryData?.total_savings) || 0,
+          by_payment: {
+            cash: { count: 0, total: Number(dailySummaryData?.total_savings_cash) || 0 },
+            esewa: { count: 0, total: Number(dailySummaryData?.total_savings_esewa) || 0 },
+            fonepay: { count: 0, total: Number(dailySummaryData?.total_savings_fonepay) || 0 },
+          }
         },
       };
+
+      console.log("📊 Daily summary data processed:", {
+        date: selectedDate,
+        totalIncome: summary.orders.total + summary.charging.total,
+        totalExpenses: summary.expenses.total,
+        alreadyClosed: hasValidSummary
+      });
 
       setTransactionSummary(summary);
     } catch (error) {
