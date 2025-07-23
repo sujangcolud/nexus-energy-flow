@@ -644,7 +644,7 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
                 <Banknote className="h-5 w-5" />
                 Current Balances
               </h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                 <div className="text-center">
                   <div className="text-sm text-gray-600">Cash</div>
                   <div className="text-lg font-semibold text-green-600">
@@ -661,6 +661,18 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
                   <div className="text-sm text-gray-600">Fonepay</div>
                   <div className="text-lg font-semibold text-purple-600">
                     {formatCurrency(summaryData.currentBalances.fonepay)}
+                  </div>
+                </div>
+                <div className="text-center">
+                  <div className="text-sm text-gray-600">Bank</div>
+                  <div className="text-lg font-semibold text-orange-600">
+                    {formatCurrency(summaryData.currentBalances.bank)}
+                  </div>
+                </div>
+                <div className="text-center">
+                  <div className="text-sm text-gray-600">Cooperative</div>
+                  <div className="text-lg font-semibold text-indigo-600">
+                    {formatCurrency(summaryData.currentBalances.cooperative)}
                   </div>
                 </div>
                 <div className="text-center">
