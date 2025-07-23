@@ -23,12 +23,13 @@ import { extractErrorMessage, logError } from "@/utils/errorHandling";
 import AllTimeSummaryModal from "./AllTimeSummaryModal";
 import { DateRange } from "react-day-picker";
 import {
-  calculateDatabaseFinancialSummary,
+  calculateEnhancedFinancialSummary,
   formatCurrency as formatCurrencyUtil,
-  validateDatabaseCalculations,
-  debugCalculations,
-  type DatabaseTransactionData,
-} from "@/utils/databaseCalculations";
+  validateEnhancedCalculations,
+  debugEnhancedCalculations,
+  enhancedDateParsing,
+  type EnhancedDatabaseTransactionData,
+} from "@/utils/enhancedDatabaseCalculations";
 
 interface AllTimeSummaryData {
   totalIncome: number;
@@ -228,29 +229,47 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
           savings: savings?.length || 0,
         });
 
-        // Prepare data in database schema format
-        const databaseData: DatabaseTransactionData = {
-          orders: orders || [],
-          charging_sessions: charging || [],
-          expenses: expenses || [],
-          deposits: deposits || [],
-          withdrawals: withdrawals || [],
-          cooperative_savings: savings || [],
+        // Prepare data with enhanced date parsing and validation
+        const enhancedData: EnhancedDatabaseTransactionData = {
+          orders: (orders || []).map(o => ({
+            ...o,
+            order_date: enhancedDateParsing(o.order_date || o.date)
+          })),
+          charging_sessions: (charging || []).map(c => ({
+            ...c,
+            session_date: enhancedDateParsing(c.session_date || c.date)
+          })),
+          expenses: (expenses || []).map(e => ({
+            ...e,
+            expense_date: enhancedDateParsing(e.expense_date || e.date)
+          })),
+          deposits: (deposits || []).map(d => ({
+            ...d,
+            deposit_date: enhancedDateParsing(d.deposit_date || d.date)
+          })),
+          withdrawals: (withdrawals || []).map(w => ({
+            ...w,
+            withdrawal_date: enhancedDateParsing(w.withdrawal_date || w.date)
+          })),
+          cooperative_savings: (savings || []).map(s => ({
+            ...s,
+            contribution_date: enhancedDateParsing(s.contribution_date || s.date)
+          })),
         };
 
-        // Calculate financial summary using database-aware service
-        const summary = calculateDatabaseFinancialSummary(databaseData);
+        // Calculate financial summary using enhanced service
+        const summary = calculateEnhancedFinancialSummary(enhancedData, 'all-time');
 
         // Validate and debug calculations
-        const validation = validateDatabaseCalculations(summary);
+        const validation = validateEnhancedCalculations(summary);
         if (!validation.isValid) {
-          console.warn("⚠️ Database calculation validation failed:", validation.errors);
+          console.warn("⚠️ Enhanced calculation validation failed:", validation.errors);
           validation.errors.forEach(error => console.warn(`- ${error}`));
         }
 
         // Debug calculations in development
         if (process.env.NODE_ENV === 'development') {
-          debugCalculations(summary);
+          debugEnhancedCalculations(summary, 'all-time');
         }
 
         // Get date range for display
@@ -303,13 +322,18 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
           },
         };
 
-        console.log("📈 Database-aware all-time summary calculated:", finalSummary);
-        console.log("🔍 Database calculation validation:", validation.isValid ? "✅ Passed" : "❌ Failed", validation.errors);
+        console.log("📈 Enhanced all-time summary calculated:", finalSummary);
+        console.log("🔍 Enhanced calculation validation:", validation.isValid ? "✅ Passed" : "❌ Failed", validation.errors);
 
         if (validation.isValid) {
-          console.log("✅ All calculations validated successfully");
+          console.log("✅ All enhanced calculations validated successfully");
+          console.log("📊 Payment mode breakdown validated:", {
+            income: summary.incomeByPaymentMode,
+            expenses: summary.expensesByPaymentMode,
+            withdrawals: summary.withdrawalsByPaymentMode
+          });
         } else {
-          console.warn("⚠️ Calculation validation issues detected - please review");
+          console.warn("⚠️ Enhanced calculation validation issues detected - please review");
         }
         setSummaryData(finalSummary);
         setRetryCount(0); // Reset retry count on success
