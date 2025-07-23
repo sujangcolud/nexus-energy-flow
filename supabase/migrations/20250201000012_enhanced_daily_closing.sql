@@ -40,8 +40,6 @@ DECLARE
     
     withdrawals_total numeric := 0;
     withdrawals_cash numeric := 0;
-    withdrawals_fonepay numeric := 0;
-    withdrawals_cooperative numeric := 0;
     
     cooperative_total numeric := 0;
     
@@ -117,10 +115,8 @@ BEGIN
     -- Calculate withdrawals
     SELECT 
         COALESCE(SUM(amount), 0),
-        COALESCE(SUM(CASE WHEN LOWER(payment_mode) = 'cash' THEN amount ELSE 0 END), 0),
-        COALESCE(SUM(CASE WHEN LOWER(payment_mode) = 'fonepay' THEN amount ELSE 0 END), 0),
-        COALESCE(SUM(CASE WHEN LOWER(payment_mode) = 'cooperative' THEN amount ELSE 0 END), 0)
-    INTO withdrawals_total, withdrawals_cash, withdrawals_fonepay, withdrawals_cooperative
+        COALESCE(SUM(CASE WHEN LOWER(payment_mode) = 'cash' THEN amount ELSE 0 END), 0)
+    INTO withdrawals_total, withdrawals_cash
     FROM withdrawals 
     WHERE user_id = p_user_id AND withdrawal_date = p_closing_date;
     
@@ -136,11 +132,11 @@ BEGIN
     total_digital_income := total_income - total_cash_income;
     
     -- Calculate net balances (income - expenses + deposits - withdrawals - savings)
-    net_cash_balance := total_cash_income - expenses_cash - cooperative_total + withdrawals_cash;
-    net_fonepay_balance := orders_fonepay + charging_fonepay + deposits_fonepay - withdrawals_fonepay;
+    net_cash_balance := total_cash_income - expenses_cash + withdrawals_cash - cooperative_total;
+    net_fonepay_balance := orders_fonepay + charging_fonepay + deposits_fonepay;
     net_esewa_balance := orders_esewa + charging_esewa + deposits_esewa;
-    net_bank_balance := orders_bank + charging_bank + orders_cheque + charging_cheque + deposits_bank - expenses_bank - withdrawals_total + withdrawals_cash + withdrawals_fonepay + withdrawals_cooperative;
-    net_cooperative_balance := cooperative_total - withdrawals_cooperative;
+    net_bank_balance := orders_bank + charging_bank + orders_cheque + charging_cheque + deposits_bank - expenses_bank - withdrawals_total + withdrawals_cash;
+    net_cooperative_balance := cooperative_total;
     
     total_net_balance := net_cash_balance + net_fonepay_balance + net_esewa_balance + net_bank_balance + net_cooperative_balance;
     
@@ -185,9 +181,7 @@ BEGIN
             ),
             'withdrawals', jsonb_build_object(
                 'total', withdrawals_total,
-                'cash', withdrawals_cash,
-                'fonepay', withdrawals_fonepay,
-                'cooperative', withdrawals_cooperative
+                'cash', withdrawals_cash
             ),
             'cooperative_savings', cooperative_total
         ),

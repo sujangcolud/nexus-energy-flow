@@ -181,7 +181,6 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
             cash: { count: 0, total: Number(dailySummaryData?.total_withdrawals_cash) || 0 },
             bank: { count: 0, total: Number(dailySummaryData?.total_withdrawals_bank) || 0 },
             cooperative: { count: 0, total: Number(dailySummaryData?.total_withdrawals_cooperative) || 0 },
-            fonepay: { count: 0, total: Number(dailySummaryData?.total_withdrawals_fonepay) || 0 },
           }
         },
         cooperative_savings: {
@@ -284,7 +283,6 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
           totalWithdrawalsCash: acc.totalWithdrawalsCash + (Number(daily.total_withdrawals_cash) || 0),
           totalWithdrawalsBank: acc.totalWithdrawalsBank + (Number(daily.total_withdrawals_bank) || 0),
           totalWithdrawalsCooperative: acc.totalWithdrawalsCooperative + (Number(daily.total_withdrawals_cooperative) || 0),
-          total_withdrawals_fonepay: acc.totalWithdrawalsFonepay + (Number(daily.total_withdrawals_fonepay) || 0),
         };
       }, {
         totalIncomeFromOrders: 0,
@@ -307,7 +305,6 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
         totalWithdrawalsCash: 0,
         totalWithdrawalsBank: 0,
         totalWithdrawalsCooperative: 0,
-        total_withdrawals_fonepay: 0,
       });
 
       // Convert to TransactionSummary format for UI compatibility
@@ -350,7 +347,6 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
             cash: { count: 0, total: aggregated.totalWithdrawalsCash },
             bank: { count: 0, total: aggregated.totalWithdrawalsBank },
             cooperative: { count: 0, total: aggregated.totalWithdrawalsCooperative },
-            fonepay: { count: 0, total: aggregated.total_withdrawals_fonepay },
           }
         },
         cooperative_savings: {
@@ -438,29 +434,24 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
       // Calculate withdrawal breakdown using database schema
       const withdrawalDetails = withdrawalData || [];
       const totalWithdrawalsBank = withdrawalDetails
-        .filter(w => w.payment_mode === 'Bank')
+        .filter(w => w.withdrawal_from === 'Bank')
         .reduce((sum, w) => sum + (Number(w.amount) || 0), 0);
 
       const totalWithdrawalsCooperative = withdrawalDetails
-        .filter(w => w.payment_mode === 'Cooperative')
+        .filter(w => w.withdrawal_from === 'Cooperative')
         .reduce((sum, w) => sum + (Number(w.amount) || 0), 0);
 
       const totalWithdrawalsEsewa = withdrawalDetails
-        .filter(w => w.payment_mode === 'Esewa')
-        .reduce((sum, w) => sum + (Number(w.amount) || 0), 0);
-
-      const totalWithdrawalsFonepay = withdrawalDetails
-        .filter(w => w.payment_mode === 'Fonepay')
+        .filter(w => w.withdrawal_from === 'Esewa')
         .reduce((sum, w) => sum + (Number(w.amount) || 0), 0);
 
       console.log('🔍 Daily withdrawal breakdown:', {
         totalWithdrawalsBank,
         totalWithdrawalsCooperative,
         totalWithdrawalsEsewa,
-        totalWithdrawalsFonepay,
         totalWithdrawals,
         rawWithdrawals: withdrawalDetails.length,
-        withdrawalDetails: withdrawalDetails.map(w => ({ amount: w.amount, mode: w.payment_mode }))
+        withdrawalDetails: withdrawalDetails.map(w => ({ amount: w.amount, from: w.withdrawal_from, mode: w.payment_mode }))
       });
 
       // Insert or update daily summary
@@ -478,7 +469,6 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
         total_withdrawals_bank: totalWithdrawalsBank,
         total_withdrawals_cooperative: totalWithdrawalsCooperative,
         total_withdrawals_esewa: totalWithdrawalsEsewa,
-        total_withdrawals_fonepay: totalWithdrawalsFonepay,
         total_savings: totalSavings,
         cash_balance:
           totalIncomeCash + totalDeposits - totalExpenses - totalWithdrawals,
@@ -534,12 +524,17 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
   };
 
   const calculateCashBalance = (summary: TransactionSummary) => {
-    // Cash Balance: Income - Expenses - Savings - Deposits + Withdrawals
-    return getCashIncome(summary) -
+    // Cash Balance: Current calculations + Cash withdrawals from ALL sources (cooperative, esewa, fonepay)
+    const currentBalance = getCashIncome(summary) -
       getCashExpenses(summary) -
       getCashSavings(summary) -
       getCashDeposits(summary) +
       getCashWithdrawals(summary);
+
+    // Add all cash withdrawals (including from different sources)
+    const allCashWithdrawals = getCashWithdrawals(summary);
+
+    return currentBalance + allCashWithdrawals;
   };
 
   const getFonepayIncome = (summary: TransactionSummary) => {
@@ -782,7 +777,7 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
 
           {/* Detailed Tabs */}
           <Tabs defaultValue="overview" className="w-full">
-            <TabsList className="grid w-full grid-cols-1 md:grid-cols-5">
+            <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="transactions">
                 By Transaction Type
