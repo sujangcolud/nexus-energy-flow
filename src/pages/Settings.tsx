@@ -50,6 +50,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import PasswordChangeForm from "@/components/PasswordChangeForm";
+import HistoricalDataFixAdmin from "@/components/HistoricalDataFixAdmin";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
