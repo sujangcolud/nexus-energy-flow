@@ -140,18 +140,9 @@ const ChargingTab = () => {
     } catch (error) {
       console.error("Error fetching charging sessions:", error);
 
-      let errorMessage = "Failed to load charging sessions";
-      if (error && typeof error === "object") {
-        if (error.message) {
-          errorMessage = error.message;
-        } else if (error.details) {
-          errorMessage = error.details;
-        } else {
-          errorMessage = JSON.stringify(error, null, 2);
-        }
-      }
-
-      toast.error(errorMessage);
+      const errorMessage = extractErrorMessage(error);
+      logError("fetch charging sessions", error);
+      toast.error(`Failed to load charging sessions: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
