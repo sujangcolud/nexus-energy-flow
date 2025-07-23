@@ -473,18 +473,39 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
         }
       });
 
-      // Calculate withdrawal breakdown using database schema withdrawal_from field
-      const withdrawalDetails = withdrawalsRes.data || [];
-      const totalWithdrawalsBank = calculatedSummary.withdrawalsBySource.fromBank;
-      const totalWithdrawalsCooperative = calculatedSummary.withdrawalsBySource.fromCooperative;
-      const totalWithdrawalsEsewa = calculatedSummary.withdrawalsBySource.fromEsewa;
+      // Fetch withdrawal data to calculate breakdown for daily summary
+      const { data: withdrawalData, error: withdrawalError } = await supabase
+        .from("withdrawals")
+        .select("*")
+        .eq("user_id", user.id)
+        .gte("withdrawal_date", selectedDate)
+        .lt("withdrawal_date", getNextDay(selectedDate));
 
-      console.log('🔍 Withdrawal breakdown:', {
+      if (withdrawalError) {
+        console.warn("⚠️ Error fetching withdrawal data for breakdown:", withdrawalError);
+      }
+
+      // Calculate withdrawal breakdown using database schema
+      const withdrawalDetails = withdrawalData || [];
+      const totalWithdrawalsBank = withdrawalDetails
+        .filter(w => w.withdrawal_from === 'Bank')
+        .reduce((sum, w) => sum + (Number(w.amount) || 0), 0);
+
+      const totalWithdrawalsCooperative = withdrawalDetails
+        .filter(w => w.withdrawal_from === 'Cooperative')
+        .reduce((sum, w) => sum + (Number(w.amount) || 0), 0);
+
+      const totalWithdrawalsEsewa = withdrawalDetails
+        .filter(w => w.withdrawal_from === 'Esewa')
+        .reduce((sum, w) => sum + (Number(w.amount) || 0), 0);
+
+      console.log('🔍 Daily withdrawal breakdown:', {
         totalWithdrawalsBank,
         totalWithdrawalsCooperative,
         totalWithdrawalsEsewa,
-        totalWithdrawals: calculatedSummary.totalWithdrawals,
-        rawWithdrawals: withdrawalDetails.length
+        totalWithdrawals,
+        rawWithdrawals: withdrawalDetails.length,
+        withdrawalDetails: withdrawalDetails.map(w => ({ amount: w.amount, from: w.withdrawal_from, mode: w.payment_mode }))
       });
 
       // Insert or update daily summary
@@ -503,10 +524,12 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
         total_withdrawals_cooperative: totalWithdrawalsCooperative,
         total_withdrawals_esewa: totalWithdrawalsEsewa,
         total_savings: totalSavings,
-        cash_balance: calculatedSummary.balances.cash,
-        esewa_balance: calculatedSummary.balances.esewa,
-        fonepay_balance: calculatedSummary.balances.fonepay,
-        total_balance: calculatedSummary.balances.total,
+        cash_balance:
+          totalIncomeCash + totalDeposits - totalExpenses - totalWithdrawals,
+        esewa_balance: totalIncomeEsewa,
+        fonepay_balance: totalIncomeFonepay,
+        total_balance:
+          totalIncome + totalDeposits - totalExpenses - totalWithdrawals,
         updated_at: new Date().toISOString(),
       };
 
