@@ -392,43 +392,14 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
     try {
       console.log("🔍 Testing Supabase connection...");
 
-      // Test different tables to isolate the issue
-      const tests = [
-        { name: "Auth Check", test: () => supabase.auth.getSession() },
-        {
-          name: "Daily Summary",
-          test: () =>
-            supabase.from("daily_summary").select("summary_date").limit(1),
-        },
-        {
-          name: "Orders Table",
-          test: () => supabase.from("orders").select("id").limit(1),
-        },
-      ];
-
-      for (const test of tests) {
-        try {
-          console.log(`🔍 Testing ${test.name}...`);
-          const result = await test.test();
-
-          if (result.error) {
-            console.error(`❌ ${test.name} failed:`, result.error);
-          } else {
-            console.log(`✅ ${test.name} successful`);
-          }
-        } catch (error) {
-          console.error(`❌ ${test.name} threw error:`, error);
-        }
-      }
-
-      // Final simple test
+      // Test basic table access
       const { data, error } = await supabase
-        .from("daily_summary")
-        .select("summary_date")
+        .from("orders")
+        .select("id")
         .limit(1);
 
       if (error) {
-        console.error("❌ Final connection test failed:", error);
+        console.error("❌ Connection test failed:", error);
         return false;
       }
 
