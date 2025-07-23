@@ -327,18 +327,9 @@ const ChargingTab = () => {
     } catch (error) {
       console.error("Error deleting session:", error);
 
-      let errorMessage = "Failed to delete session";
-      if (error && typeof error === "object") {
-        if (error.message) {
-          errorMessage = error.message;
-        } else if (error.details) {
-          errorMessage = error.details;
-        } else {
-          errorMessage = JSON.stringify(error, null, 2);
-        }
-      }
-
-      toast.error(errorMessage);
+      const errorMessage = extractErrorMessage(error);
+      logError("delete charging session", error);
+      toast.error(`Failed to delete charging session: ${errorMessage}`);
     }
   };
 
