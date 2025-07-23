@@ -24,6 +24,9 @@ import {
   previewHistoricalFix,
   type HistoricalFixResult
 } from "@/utils/historicalDataFix";
+import {
+  quickSchemaTest
+} from "@/utils/formValidation";
 
 interface HistoricalDataFixAdminProps {
   className?: string;
