@@ -553,28 +553,28 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
 
   const formatCurrency = (amount: number) => formatCurrencyUtil(amount);
 
-  // Balance calculation functions
+  // Updated balance calculation functions that work with the new data format
   const getCashIncome = (summary: TransactionSummary) => {
     return (
-      (summary.orders.by_payment.Cash?.total || 0) +
-      (summary.charging.by_payment.Cash?.total || 0)
+      (summary.orders.by_payment?.cash?.total || summary.orders.by_payment?.Cash?.total || 0) +
+      (summary.charging.by_payment?.cash?.total || summary.charging.by_payment?.Cash?.total || 0)
     );
   };
 
   const getCashExpenses = (summary: TransactionSummary) => {
-    return summary.expenses.by_payment.Cash?.total || 0;
+    return summary.expenses.by_payment?.cash?.total || summary.expenses.by_payment?.Cash?.total || 0;
   };
 
   const getCashSavings = (summary: TransactionSummary) => {
-    return summary.cooperative_savings.by_payment.Cash?.total || 0;
+    return summary.cooperative_savings.by_payment?.cash?.total || summary.cooperative_savings.by_payment?.Cash?.total || 0;
   };
 
   const getCashDeposits = (summary: TransactionSummary) => {
-    return summary.deposits.by_payment.Cash?.total || 0;
+    return summary.deposits.by_payment?.cash?.total || summary.deposits.by_payment?.Cash?.total || 0;
   };
 
   const getCashWithdrawals = (summary: TransactionSummary) => {
-    return summary.withdrawals.by_payment.Cash?.total || 0;
+    return summary.withdrawals.by_payment?.cash?.total || summary.withdrawals.by_payment?.Cash?.total || 0;
   };
 
   const calculateCashBalance = (summary: TransactionSummary) => {
@@ -589,18 +589,18 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
 
   const getFonepayIncome = (summary: TransactionSummary) => {
     return (
-      (summary.orders.by_payment.Fonepay?.total || 0) +
-      (summary.charging.by_payment.Fonepay?.total || 0)
+      (summary.orders.by_payment?.fonepay?.total || summary.orders.by_payment?.Fonepay?.total || 0) +
+      (summary.charging.by_payment?.fonepay?.total || summary.charging.by_payment?.Fonepay?.total || 0)
     );
   };
 
   const getFonepayExpenses = (summary: TransactionSummary) => {
-    return summary.expenses.by_payment.Fonepay?.total || 0;
+    return summary.expenses.by_payment?.fonepay?.total || summary.expenses.by_payment?.Fonepay?.total || 0;
   };
 
   const getBankWithdrawals = (summary: TransactionSummary) => {
-    // This would need to be filtered by withdrawal_from = 'Bank' in actual implementation
-    return summary.withdrawals.by_payment.Fonepay?.total || 0;
+    // Now properly calculated from database schema in the summary data
+    return summary.withdrawals.by_payment?.bank?.total || summary.withdrawals.by_payment?.fonepay?.total || 0;
   };
 
   const calculateBankBalance = (summary: TransactionSummary) => {
@@ -613,18 +613,18 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
 
   const getEsewaIncome = (summary: TransactionSummary) => {
     return (
-      (summary.orders.by_payment.Esewa?.total || 0) +
-      (summary.charging.by_payment.Esewa?.total || 0)
+      (summary.orders.by_payment?.esewa?.total || summary.orders.by_payment?.Esewa?.total || 0) +
+      (summary.charging.by_payment?.esewa?.total || summary.charging.by_payment?.Esewa?.total || 0)
     );
   };
 
   const getEsewaExpenses = (summary: TransactionSummary) => {
-    return summary.expenses.by_payment.Esewa?.total || 0;
+    return summary.expenses.by_payment?.esewa?.total || summary.expenses.by_payment?.Esewa?.total || 0;
   };
 
   const getEsewaWithdrawals = (summary: TransactionSummary) => {
-    // This would need to be filtered by withdrawal_from = 'Esewa' in actual implementation
-    return summary.withdrawals.by_payment.Esewa?.total || 0;
+    // Now properly calculated from database schema
+    return summary.withdrawals.by_payment?.esewa?.total || summary.withdrawals.by_payment?.Esewa?.total || 0;
   };
 
   const calculateEsewaBalance = (summary: TransactionSummary) => {
