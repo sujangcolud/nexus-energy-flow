@@ -46,12 +46,12 @@ import { extractErrorMessage, logError } from "@/utils/errorHandling";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { DateRange } from "react-day-picker";
 import {
-  processTransactions,
-  calculateFinancialSummary,
+  calculateDatabaseFinancialSummary,
   formatCurrency as formatCurrencyUtil,
-  validateCalculations,
-  type FinancialData,
-} from "@/utils/unifiedCalculations";
+  validateDatabaseCalculations,
+  debugCalculations,
+  type DatabaseTransactionData,
+} from "@/utils/databaseCalculations";
 
 interface TransactionSummary {
   orders: {
@@ -187,44 +187,73 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
           dailySummaryRes.data.total_withdrawals > 0);
       setAlreadyClosed(!!hasValidSummary);
 
-      // Process the data using unified calculation service
-      const financialData: FinancialData = {
-        orders: processTransactions(
-          ordersRes.data || [],
-          "total",
-          "payment_mode",
-        ),
-        charging: processTransactions(
-          chargingRes.data || [],
-          "total_amount",
-          "payment_mode",
-        ),
-        expenses: processTransactions(
-          expensesRes.data || [],
-          "amount",
-          "payment_mode",
-        ),
-        deposits: processTransactions(depositsRes.data || [], "amount", "mode"),
-        withdrawals: processTransactions(
-          withdrawalsRes.data || [],
-          "amount",
-          "payment_mode",
-        ),
-        cooperative_savings: processTransactions(
-          cooperativeRes.data || [],
-          "contribution_amount",
-          "payment_mode",
-        ),
+      // Prepare data in database schema format for accurate calculations
+      const databaseData: DatabaseTransactionData = {
+        orders: ordersRes.data || [],
+        charging_sessions: chargingRes.data || [],
+        expenses: expensesRes.data || [],
+        deposits: depositsRes.data || [],
+        withdrawals: withdrawalsRes.data || [],
+        cooperative_savings: cooperativeRes.data || [],
       };
 
-      // Convert to legacy format for compatibility
+      // Calculate using database-aware service
+      const calculatedSummary = calculateDatabaseFinancialSummary(databaseData);
+
+      // Validate calculations
+      const validation = validateDatabaseCalculations(calculatedSummary);
+      if (!validation.isValid) {
+        console.warn("⚠️ Daily calculation validation failed:", validation.errors);
+        validation.errors.forEach(error => console.warn(`- ${error}`));
+      }
+
+      // Convert to legacy format for UI compatibility
       const summary: TransactionSummary = {
-        orders: financialData.orders,
-        charging: financialData.charging,
-        expenses: financialData.expenses,
-        deposits: financialData.deposits,
-        withdrawals: financialData.withdrawals,
-        cooperative_savings: financialData.cooperative_savings,
+        orders: {
+          count: databaseData.orders.length,
+          total: calculatedSummary.incomeFromOrders,
+          by_payment: Object.entries(calculatedSummary.incomeByPaymentMode).reduce((acc, [key, value]) => {
+            if (value > 0) acc[key] = { count: 0, total: value };
+            return acc;
+          }, {} as Record<string, { count: number; total: number }>)
+        },
+        charging: {
+          count: databaseData.charging_sessions.length,
+          total: calculatedSummary.incomeFromCharging,
+          by_payment: {} // Will be calculated from raw data if needed
+        },
+        expenses: {
+          count: databaseData.expenses.length,
+          total: calculatedSummary.totalExpenses,
+          by_payment: Object.entries(calculatedSummary.expensesByPaymentMode).reduce((acc, [key, value]) => {
+            if (value > 0) acc[key] = { count: 0, total: value };
+            return acc;
+          }, {} as Record<string, { count: number; total: number }>)
+        },
+        deposits: {
+          count: databaseData.deposits.length,
+          total: calculatedSummary.totalDeposits,
+          by_payment: Object.entries(calculatedSummary.depositsByDestination).reduce((acc, [key, value]) => {
+            if (value > 0) acc[key] = { count: 0, total: value };
+            return acc;
+          }, {} as Record<string, { count: number; total: number }>)
+        },
+        withdrawals: {
+          count: databaseData.withdrawals.length,
+          total: calculatedSummary.totalWithdrawals,
+          by_payment: Object.entries(calculatedSummary.withdrawalsByPaymentMode).reduce((acc, [key, value]) => {
+            if (value > 0) acc[key] = { count: 0, total: value };
+            return acc;
+          }, {} as Record<string, { count: number; total: number }>)
+        },
+        cooperative_savings: {
+          count: databaseData.cooperative_savings.length,
+          total: calculatedSummary.totalSavings,
+          by_payment: Object.entries(calculatedSummary.savingsByPaymentMode).reduce((acc, [key, value]) => {
+            if (value > 0) acc[key] = { count: 0, total: value };
+            return acc;
+          }, {} as Record<string, { count: number; total: number }>)
+        },
       };
 
       setTransactionSummary(summary);
@@ -324,46 +353,63 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
       if (withdrawalsError) throw withdrawalsError;
       if (savingsError) throw savingsError;
 
-      // Process using unified calculation service
-      const financialData: FinancialData = {
-        orders: processTransactions(orders || [], "total", "payment_mode"),
-        charging: processTransactions(
-          charging || [],
-          "total_amount",
-          "payment_mode",
-        ),
-        expenses: processTransactions(expenses || [], "amount", "payment_mode"),
-        deposits: processTransactions(deposits || [], "amount", "mode"),
-        withdrawals: processTransactions(
-          withdrawals || [],
-          "amount",
-          "payment_mode",
-        ),
-        cooperative_savings: processTransactions(
-          savings || [],
-          "contribution_amount",
-          "payment_mode",
-        ),
+      // Prepare data in database schema format for all-time calculations
+      const databaseData: DatabaseTransactionData = {
+        orders: orders || [],
+        charging_sessions: charging || [],
+        expenses: expenses || [],
+        deposits: deposits || [],
+        withdrawals: withdrawals || [],
+        cooperative_savings: savings || [],
       };
 
-      // Calculate comprehensive summary
-      const calculatedSummary = calculateFinancialSummary(financialData);
+      // Calculate using database-aware service
+      const calculatedSummary = calculateDatabaseFinancialSummary(databaseData);
 
       // Validate calculations
-      const validation = validateCalculations(calculatedSummary);
+      const validation = validateDatabaseCalculations(calculatedSummary);
       if (!validation.isValid) {
-        console.warn("⚠️ Calculation validation failed:", validation.errors);
+        console.warn("⚠️ All-time calculation validation failed:", validation.errors);
         validation.errors.forEach(error => console.warn(`- ${error}`));
       }
 
-      // Convert to legacy format for compatibility
+      // Debug in development
+      if (process.env.NODE_ENV === 'development') {
+        debugCalculations(calculatedSummary);
+      }
+
+      // Convert to legacy format for UI compatibility
       const summary: TransactionSummary = {
-        orders: financialData.orders,
-        charging: financialData.charging,
-        expenses: financialData.expenses,
-        deposits: financialData.deposits,
-        withdrawals: financialData.withdrawals,
-        cooperative_savings: financialData.cooperative_savings,
+        orders: {
+          count: databaseData.orders.length,
+          total: calculatedSummary.incomeFromOrders,
+          by_payment: {}
+        },
+        charging: {
+          count: databaseData.charging_sessions.length,
+          total: calculatedSummary.incomeFromCharging,
+          by_payment: {}
+        },
+        expenses: {
+          count: databaseData.expenses.length,
+          total: calculatedSummary.totalExpenses,
+          by_payment: {}
+        },
+        deposits: {
+          count: databaseData.deposits.length,
+          total: calculatedSummary.totalDeposits,
+          by_payment: {}
+        },
+        withdrawals: {
+          count: databaseData.withdrawals.length,
+          total: calculatedSummary.totalWithdrawals,
+          by_payment: {}
+        },
+        cooperative_savings: {
+          count: databaseData.cooperative_savings.length,
+          total: calculatedSummary.totalSavings,
+          by_payment: {}
+        },
       };
 
       console.log("All-time data fetched:", {
