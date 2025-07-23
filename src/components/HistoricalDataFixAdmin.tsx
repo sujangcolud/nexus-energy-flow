@@ -41,6 +41,7 @@ const HistoricalDataFixAdmin: React.FC<HistoricalDataFixAdminProps> = ({ classNa
   const [analysisResult, setAnalysisResult] = useState<{ datesNeedingFix: string[]; totalDates: number } | null>(null);
   const [fixResult, setFixResult] = useState<HistoricalFixResult | null>(null);
   const [progress, setProgress] = useState(0);
+  const [schemaValid, setSchemaValid] = useState<{ success: boolean; issues: string[] } | null>(null);
 
   const handleAnalyze = async () => {
     if (!user) return;
