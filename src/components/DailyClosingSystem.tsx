@@ -554,11 +554,16 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
   };
 
   const calculateBankBalance = (summary: TransactionSummary) => {
-    return (
-      getFonepayIncome(summary) -
+    // Bank Balance: Current calculations + Cash Deposits + Esewa Deposits
+    const currentBalance = getFonepayIncome(summary) -
       getFonepayExpenses(summary) -
-      getBankWithdrawals(summary)
-    );
+      getBankWithdrawals(summary);
+
+    // Add cash deposits and esewa deposits
+    const cashDeposits = getCashDeposits(summary);
+    const esewaDeposits = summary.deposits.by_payment?.esewa?.total || summary.deposits.by_payment?.Esewa?.total || 0;
+
+    return currentBalance + cashDeposits + esewaDeposits;
   };
 
   const getEsewaIncome = (summary: TransactionSummary) => {
