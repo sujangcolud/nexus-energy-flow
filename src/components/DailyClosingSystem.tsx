@@ -473,21 +473,19 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
         }
       });
 
-      // Calculate withdrawal breakdown by source using raw data analysis
+      // Calculate withdrawal breakdown using database schema withdrawal_from field
       const withdrawalDetails = withdrawalsRes.data || [];
-      const totalWithdrawalsBank = withdrawalDetails
-        .filter(w => w.withdrawal_from?.toLowerCase().includes('bank') ||
-                    w.purpose?.toLowerCase().includes('bank') ||
-                    w.payment_mode?.toLowerCase().includes('fonepay'))
-        .reduce((sum, w) => sum + (Number(w.amount) || 0), 0);
+      const totalWithdrawalsBank = calculatedSummary.withdrawalsBySource.fromBank;
+      const totalWithdrawalsCooperative = calculatedSummary.withdrawalsBySource.fromCooperative;
+      const totalWithdrawalsEsewa = calculatedSummary.withdrawalsBySource.fromEsewa;
 
-      const totalWithdrawalsCooperative = withdrawalDetails
-        .filter(w => w.withdrawal_from?.toLowerCase().includes('cooperative') ||
-                    w.purpose?.toLowerCase().includes('cooperative') ||
-                    (!w.withdrawal_from && !w.purpose?.toLowerCase().includes('bank')))
-        .reduce((sum, w) => sum + (Number(w.amount) || 0), 0);
-
-      const totalWithdrawalsEsewa = transactionSummary.withdrawals.by_payment.esewa?.total || 0;
+      console.log('🔍 Withdrawal breakdown:', {
+        totalWithdrawalsBank,
+        totalWithdrawalsCooperative,
+        totalWithdrawalsEsewa,
+        totalWithdrawals: calculatedSummary.totalWithdrawals,
+        rawWithdrawals: withdrawalDetails.length
+      });
 
       // Insert or update daily summary
       const dailySummaryData = {
