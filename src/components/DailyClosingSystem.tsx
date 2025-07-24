@@ -229,11 +229,11 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
       const summary: TransactionSummary = {
         orders: {
           count: ordersData?.length || 0,
-          total: safeGet(dailySummaryData, 'total_income_from_orders', 'total_income'),
+          total: safeGet(dailySummaryData, 'total_income_from_orders') || safeGet(dailySummaryData, 'total_income') || (ordersData?.reduce((sum, o) => sum + (Number(o.total) || 0), 0) || 0),
           by_payment: {
-            cash: ordersByPayment.cash || { count: 0, total: safeGet(dailySummaryData, 'total_income_from_orders_cash', 'total_cash_income') },
-            esewa: ordersByPayment.esewa || { count: 0, total: safeGet(dailySummaryData, 'total_income_from_orders_esewa', 'total_esewa_income') },
-            fonepay: ordersByPayment.fonepay || { count: 0, total: safeGet(dailySummaryData, 'total_income_from_orders_fonepay', 'total_fonepay_income') },
+            cash: ordersByPayment.cash || { count: 0, total: safeGet(dailySummaryData, 'total_income_from_orders_cash') },
+            esewa: ordersByPayment.esewa || { count: 0, total: safeGet(dailySummaryData, 'total_income_from_orders_esewa') },
+            fonepay: ordersByPayment.fonepay || { count: 0, total: safeGet(dailySummaryData, 'total_income_from_orders_fonepay') },
           }
         },
         charging: {
