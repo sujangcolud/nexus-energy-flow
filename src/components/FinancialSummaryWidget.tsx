@@ -30,7 +30,7 @@ interface DailySummary {
   total_income_from_charging: number;
   total_income_cash: number;
   total_income_esewa: number;
-  total_income_fonepay?: number;
+  total_income_fonepay: number;
   total_expenses: number;
   total_deposits: number;
   total_withdrawals: number;
