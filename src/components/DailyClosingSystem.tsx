@@ -141,6 +141,12 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
         throw summaryError;
       }
 
+      // Initialize empty data for variables that were not defined
+      const ordersData: any[] = [];
+      const ordersByPayment = { cash: null, esewa: null, fonepay: null };
+      const chargingData: any[] = [];
+      const chargingByPayment = { cash: null, esewa: null, fonepay: null };
+
       // If no daily summary exists, initialize with zeros
       const summary: TransactionSummary = {
         orders: {
