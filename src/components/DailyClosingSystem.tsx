@@ -135,14 +135,41 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
         .eq("summary_date", selectedDate)
         .single();
 
-      // Safe accessor function to handle missing columns with fallbacks
+      // Safe accessor function to handle missing columns with multiple fallbacks
       const safeGet = (obj: any, field: string, fallbackField?: string) => {
-        if (obj && typeof obj[field] !== 'undefined' && obj[field] !== null) {
+        if (!obj) return 0;
+
+        // Try primary field
+        if (typeof obj[field] !== 'undefined' && obj[field] !== null) {
           return Number(obj[field]) || 0;
         }
-        if (fallbackField && obj && typeof obj[fallbackField] !== 'undefined' && obj[fallbackField] !== null) {
+
+        // Try fallback field
+        if (fallbackField && typeof obj[fallbackField] !== 'undefined' && obj[fallbackField] !== null) {
           return Number(obj[fallbackField]) || 0;
         }
+
+        // If enhanced columns don't exist, try to calculate from existing data
+        if (field.includes('total_income_from_orders')) {
+          return ordersData?.reduce((sum, order) => {
+            const mode = (order.payment_mode || 'cash').toLowerCase();
+            if (field.includes('cash') && mode.includes('cash')) return sum + (Number(order.total) || 0);
+            if (field.includes('fonepay') && (mode.includes('fonepay') || mode.includes('bank'))) return sum + (Number(order.total) || 0);
+            if (field.includes('esewa') && mode.includes('esewa')) return sum + (Number(order.total) || 0);
+            return sum;
+          }, 0) || 0;
+        }
+
+        if (field.includes('total_income_from_charging')) {
+          return chargingData?.reduce((sum, charge) => {
+            const mode = (charge.payment_mode || 'cash').toLowerCase();
+            if (field.includes('cash') && mode.includes('cash')) return sum + (Number(charge.total_amount) || 0);
+            if (field.includes('fonepay') && (mode.includes('fonepay') || mode.includes('bank'))) return sum + (Number(charge.total_amount) || 0);
+            if (field.includes('esewa') && mode.includes('esewa')) return sum + (Number(charge.total_amount) || 0);
+            return sum;
+          }, 0) || 0;
+        }
+
         return 0;
       };
 
