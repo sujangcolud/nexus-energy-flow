@@ -742,14 +742,14 @@ const ChargingTab = () => {
                       <SelectValue placeholder="Select category (optional)" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">None / Skip Category</SelectItem>
+                      <SelectItem value="none">None / Skip Category</SelectItem>
                       {categories.map((cat) => (
                         <SelectItem key={cat.id} value={cat.name}>
                           {cat.name}
                         </SelectItem>
                       ))}
                       {categories.length === 0 && (
-                        <SelectItem value="" disabled>
+                        <SelectItem value="no-categories" disabled>
                           No categories available
                         </SelectItem>
                       )}
