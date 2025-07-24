@@ -118,16 +118,33 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
 
     setLoading(true);
     try {
-      console.log("📅 Fetching daily data from daily_summary table for:", selectedDate);
+      console.log("📅 Fetching daily data with real transaction counts for:", selectedDate);
 
-      // Fetch daily summary for the selected date
+      // Fetch daily summary for calculations
       const { data: dailySummaryData, error: summaryError } = await supabase
         .from("daily_summary")
         .select("*")
         .eq("summary_date", selectedDate)
         .single();
 
-      // Check if already closed - only if there's meaningful closing data with actual totals
+      // Fetch real transaction counts for accuracy
+      const [
+        { data: ordersData, error: ordersError },
+        { data: chargingData, error: chargingError },
+        { data: expensesData, error: expensesError },
+        { data: depositsData, error: depositsError },
+        { data: withdrawalsData, error: withdrawalsError },
+        { data: savingsData, error: savingsError },
+      ] = await Promise.all([
+        supabase.from("orders").select("id, payment_mode, total").eq("order_date", selectedDate),
+        supabase.from("charging_sessions").select("id, payment_mode, total_amount").eq("session_date", selectedDate),
+        supabase.from("expenses").select("id, payment_mode, amount").eq("expense_date", selectedDate),
+        supabase.from("deposits").select("id, mode, amount").eq("deposit_date", selectedDate),
+        supabase.from("withdrawals").select("id, payment_mode, amount, withdrawal_from").eq("withdrawal_date", selectedDate),
+        supabase.from("cooperative_savings").select("id, payment_mode, contribution_amount").eq("contribution_date", selectedDate),
+      ]);
+
+      // Check if already closed
       const hasValidSummary =
         dailySummaryData &&
         !summaryError &&
@@ -137,67 +154,102 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
           dailySummaryData.total_withdrawals > 0);
       setAlreadyClosed(!!hasValidSummary);
 
-      if (summaryError && summaryError.code !== 'PGRST116') { // PGRST116 = no rows returned
-        throw summaryError;
-      }
+      // Helper function to count by payment mode
+      const countByPaymentMode = (data: any[], amountField: string) => {
+        const result: Record<string, { count: number; total: number }> = {};
+        data?.forEach(item => {
+          const mode = (item.payment_mode || item.mode || 'cash').toLowerCase();
+          const normalizedMode = mode.includes('esewa') ? 'esewa' :
+                               mode.includes('fonepay') ? 'fonepay' :
+                               mode.includes('bank') ? 'fonepay' : 'cash';
 
-      // If no daily summary exists, initialize with zeros
+          if (!result[normalizedMode]) {
+            result[normalizedMode] = { count: 0, total: 0 };
+          }
+          result[normalizedMode].count += 1;
+          result[normalizedMode].total += Number(item[amountField]) || 0;
+        });
+        return result;
+      };
+
+      // Process real transaction data with enhanced charging breakdown
+      const ordersByPayment = countByPaymentMode(ordersData || [], 'total');
+      const chargingByPayment = countByPaymentMode(chargingData || [], 'total_amount');
+      const expensesByPayment = countByPaymentMode(expensesData || [], 'amount');
+      const depositsByPayment = countByPaymentMode(depositsData || [], 'amount');
+      const withdrawalsByPayment = countByPaymentMode(withdrawalsData || [], 'amount');
+      const savingsByPayment = countByPaymentMode(savingsData || [], 'contribution_amount');
+
       const summary: TransactionSummary = {
         orders: {
-          count: 0,
+          count: ordersData?.length || 0,
           total: Number(dailySummaryData?.total_income_from_orders) || 0,
           by_payment: {
-            cash: { count: 0, total: Number(dailySummaryData?.total_income_cash) || 0 },
-            esewa: { count: 0, total: Number(dailySummaryData?.total_income_esewa) || 0 },
-            fonepay: { count: 0, total: Number(dailySummaryData?.total_income_fonepay) || 0 },
+            cash: ordersByPayment.cash || { count: 0, total: Number(dailySummaryData?.total_income_from_orders_cash) || 0 },
+            esewa: ordersByPayment.esewa || { count: 0, total: Number(dailySummaryData?.total_income_from_orders_esewa) || 0 },
+            fonepay: ordersByPayment.fonepay || { count: 0, total: Number(dailySummaryData?.total_income_from_orders_fonepay) || 0 },
           }
         },
         charging: {
-          count: 0,
+          count: chargingData?.length || 0,
           total: Number(dailySummaryData?.total_income_from_charging) || 0,
-          by_payment: {} // Charging payment mode breakdown is included in total income payment modes
+          by_payment: {
+            cash: chargingByPayment.cash || { count: 0, total: Number(dailySummaryData?.total_income_from_charging_cash) || 0 },
+            esewa: chargingByPayment.esewa || { count: 0, total: Number(dailySummaryData?.total_income_from_charging_esewa) || 0 },
+            fonepay: chargingByPayment.fonepay || { count: 0, total: Number(dailySummaryData?.total_income_from_charging_fonepay) || 0 },
+          }
         },
         expenses: {
-          count: 0,
+          count: expensesData?.length || 0,
           total: Number(dailySummaryData?.total_expenses) || 0,
           by_payment: {
-            cash: { count: 0, total: Number(dailySummaryData?.total_expenses_cash) || 0 },
-            esewa: { count: 0, total: Number(dailySummaryData?.total_expenses_esewa) || 0 },
-            fonepay: { count: 0, total: Number(dailySummaryData?.total_expenses_fonepay) || 0 },
+            cash: expensesByPayment.cash || { count: 0, total: Number(dailySummaryData?.total_expenses_cash) || 0 },
+            esewa: expensesByPayment.esewa || { count: 0, total: Number(dailySummaryData?.total_expenses_esewa) || 0 },
+            fonepay: expensesByPayment.fonepay || { count: 0, total: Number(dailySummaryData?.total_expenses_fonepay) || 0 },
           }
         },
         deposits: {
-          count: 0,
+          count: depositsData?.length || 0,
           total: Number(dailySummaryData?.total_deposits) || 0,
           by_payment: {
-            cash: { count: 0, total: Number(dailySummaryData?.total_deposits_cash) || 0 },
-            esewa: { count: 0, total: Number(dailySummaryData?.total_deposits_esewa) || 0 },
+            cash: depositsByPayment.cash || { count: 0, total: Number(dailySummaryData?.total_deposits_cash) || 0 },
+            esewa: depositsByPayment.esewa || { count: 0, total: Number(dailySummaryData?.total_deposits_esewa) || 0 },
           }
         },
         withdrawals: {
-          count: 0,
+          count: withdrawalsData?.length || 0,
           total: Number(dailySummaryData?.total_withdrawals) || 0,
           by_payment: {
-            cash: { count: 0, total: Number(dailySummaryData?.total_withdrawals_cash) || 0 },
+            cash: withdrawalsByPayment.cash || { count: 0, total: Number(dailySummaryData?.total_withdrawals_cooperative_cash) + Number(dailySummaryData?.total_withdrawals_bank_cash) || 0 },
             bank: { count: 0, total: Number(dailySummaryData?.total_withdrawals_bank) || 0 },
             cooperative: { count: 0, total: Number(dailySummaryData?.total_withdrawals_cooperative) || 0 },
           }
         },
         cooperative_savings: {
-          count: 0,
+          count: savingsData?.length || 0,
           total: Number(dailySummaryData?.total_savings) || 0,
           by_payment: {
-            cash: { count: 0, total: Number(dailySummaryData?.total_savings_cash) || 0 },
-            esewa: { count: 0, total: Number(dailySummaryData?.total_savings_esewa) || 0 },
-            fonepay: { count: 0, total: Number(dailySummaryData?.total_savings_fonepay) || 0 },
+            cash: savingsByPayment.cash || { count: 0, total: Number(dailySummaryData?.total_savings_cash) || 0 },
+            esewa: savingsByPayment.esewa || { count: 0, total: Number(dailySummaryData?.total_savings_esewa) || 0 },
+            fonepay: savingsByPayment.fonepay || { count: 0, total: Number(dailySummaryData?.total_savings_fonepay) || 0 },
           }
         },
       };
 
-      console.log("📊 Daily summary data processed:", {
+      console.log("📊 Daily data with real counts processed:", {
         date: selectedDate,
-        totalIncome: summary.orders.total + summary.charging.total,
-        totalExpenses: summary.expenses.total,
+        realCounts: {
+          orders: summary.orders.count,
+          charging: summary.charging.count,
+          expenses: summary.expenses.count,
+          deposits: summary.deposits.count,
+          withdrawals: summary.withdrawals.count,
+          savings: summary.cooperative_savings.count,
+        },
+        totals: {
+          income: summary.orders.total + summary.charging.total,
+          expenses: summary.expenses.total,
+        },
         alreadyClosed: hasValidSummary
       });
 
