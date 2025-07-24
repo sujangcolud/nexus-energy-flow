@@ -23,7 +23,7 @@ export async function checkSchemaColumns(): Promise<{ [key: string]: boolean }> 
     // Try to select the enhanced columns to see which ones exist
     const { error } = await supabase
       .from('daily_summary')
-      .select('total_income_from_orders_cash, total_esewa_income')
+      .select('total_income_from_orders_cash, total_income_fonepay, total_esewa_income')
       .limit(1);
     
     if (error && error.code === '42703') {
