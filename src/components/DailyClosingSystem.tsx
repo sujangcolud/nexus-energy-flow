@@ -782,14 +782,21 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
 
           {/* Detailed Tabs */}
           <Tabs defaultValue="overview" className="w-full">
-            <TabsList className="grid w-full grid-cols-5">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="transactions">
-                By Transaction Type
+            <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-1">
+              <TabsTrigger value="overview" className="text-xs sm:text-sm">Overview</TabsTrigger>
+              <TabsTrigger value="transactions" className="text-xs sm:text-sm">
+                <span className="hidden sm:inline">By Transaction Type</span>
+                <span className="sm:hidden">Transactions</span>
               </TabsTrigger>
-              <TabsTrigger value="payment">By Payment Mode</TabsTrigger>
-              <TabsTrigger value="balances">Balances</TabsTrigger>
-              <TabsTrigger value="details">Detailed Breakdown</TabsTrigger>
+              <TabsTrigger value="payment" className="text-xs sm:text-sm">
+                <span className="hidden sm:inline">By Payment Mode</span>
+                <span className="sm:hidden">Payment</span>
+              </TabsTrigger>
+              <TabsTrigger value="balances" className="text-xs sm:text-sm">Balances</TabsTrigger>
+              <TabsTrigger value="details" className="text-xs sm:text-sm">
+                <span className="hidden md:inline">Detailed Breakdown</span>
+                <span className="md:hidden">Details</span>
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="overview" className="space-y-4">
