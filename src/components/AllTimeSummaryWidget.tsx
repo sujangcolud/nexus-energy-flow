@@ -220,16 +220,22 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
             totalWithdrawalsBank: acc.totalWithdrawalsBank + safeGet(daily, 'total_withdrawals_bank'),
           };
         }, {
-          totalIncome: 0,
           totalIncomeFromOrders: 0,
           totalIncomeFromCharging: 0,
+          totalIncomeCash: 0,
+          totalIncomeEsewa: 0,
+          totalIncomeFonepay: 0,
           totalExpenses: 0,
+          totalExpensesCash: 0,
+          totalExpensesEsewa: 0,
+          totalExpensesFonepay: 0,
           totalDeposits: 0,
-          totalWithdrawals: 0,
+          totalDepositsCash: 0,
+          totalDepositsEsewa: 0,
           totalSavings: 0,
-          cashBalance: 0,
-          esewaBalance: 0,
-          totalBalance: 0,
+          totalWithdrawals: 0,
+          totalWithdrawalsCooperative: 0,
+          totalWithdrawalsBank: 0,
         });
 
         // Calculate derived totals
