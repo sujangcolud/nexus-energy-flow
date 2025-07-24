@@ -110,6 +110,7 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
       setConnectionError(false);
       try {
         console.log("✅ Fetching all-time summary from daily summary table...");
+        console.log("📅 Date range provided:", dateRange);
 
         // Set up date filters for daily summary query
         // Note: daily_summary is a global table (no user_id column)
@@ -120,12 +121,18 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
 
         if (dateRange?.from) {
           const fromDate = dateRange.from.toISOString().split("T")[0];
+          console.log("📅 Filtering from date:", fromDate);
           dailySummaryQuery = dailySummaryQuery.gte("summary_date", fromDate);
         }
 
         if (dateRange?.to) {
           const toDate = dateRange.to.toISOString().split("T")[0];
+          console.log("📅 Filtering to date:", toDate);
           dailySummaryQuery = dailySummaryQuery.lte("summary_date", toDate);
+        }
+
+        if (!dateRange?.from && !dateRange?.to) {
+          console.log("📅 No date filter - fetching ALL historical data");
         }
 
         const { data: dailySummaries, error: summaryError } = await dailySummaryQuery;
