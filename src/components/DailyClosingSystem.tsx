@@ -402,7 +402,7 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
           count: dailySummaries.length,
           total: aggregated.totalWithdrawals,
           by_payment: {
-            cash: { count: 0, total: aggregated.totalWithdrawalsCash },
+            cash: { count: 0, total: 0 },
             bank: { count: 0, total: aggregated.totalWithdrawalsBank },
             cooperative: { count: 0, total: aggregated.totalWithdrawalsCooperative },
           }
