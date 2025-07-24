@@ -482,6 +482,7 @@ const DailyReportsList: React.FC = () => {
             setIsDailyModalOpen(false);
             setSelectedDate(null);
           }}
+          initialDate={selectedDate}
         />
       )}
     </>
