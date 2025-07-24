@@ -207,12 +207,7 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
           totalSavings: 0,
           totalWithdrawals: 0,
           totalWithdrawalsCooperative: 0,
-          totalWithdrawalsCooperativeCash: 0,
-          totalWithdrawalsCooperativeEsewa: 0,
-          totalWithdrawalsCooperativeFonepay: 0,
           totalWithdrawalsBank: 0,
-          totalWithdrawalsBankCash: 0,
-          totalWithdrawalsBankEsewa: 0,
         });
 
         // Calculate derived totals
