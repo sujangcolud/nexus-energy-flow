@@ -848,18 +848,24 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
 
           {/* Detailed Tabs */}
           <Tabs defaultValue="overview" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-1">
-              <TabsTrigger value="overview" className="text-xs sm:text-sm">Overview</TabsTrigger>
-              <TabsTrigger value="transactions" className="text-xs sm:text-sm">
-                <span className="hidden sm:inline">By Transaction Type</span>
-                <span className="sm:hidden">Transactions</span>
+            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-0.5 sm:gap-1 h-auto p-1">
+              <TabsTrigger value="overview" className="text-xs sm:text-sm px-1 sm:px-2 py-1.5 sm:py-2">
+                <span className="hidden sm:inline">Overview</span>
+                <span className="sm:hidden">Overview</span>
               </TabsTrigger>
-              <TabsTrigger value="payment" className="text-xs sm:text-sm">
+              <TabsTrigger value="transactions" className="text-xs sm:text-sm px-1 sm:px-2 py-1.5 sm:py-2">
+                <span className="hidden sm:inline">By Transaction Type</span>
+                <span className="sm:hidden">Txns</span>
+              </TabsTrigger>
+              <TabsTrigger value="payment" className="text-xs sm:text-sm px-1 sm:px-2 py-1.5 sm:py-2">
                 <span className="hidden sm:inline">By Payment Mode</span>
                 <span className="sm:hidden">Payment</span>
               </TabsTrigger>
-              <TabsTrigger value="balances" className="text-xs sm:text-sm">Balances</TabsTrigger>
-              <TabsTrigger value="details" className="text-xs sm:text-sm">
+              <TabsTrigger value="balances" className="text-xs sm:text-sm px-1 sm:px-2 py-1.5 sm:py-2">
+                <span className="hidden sm:inline">Balances</span>
+                <span className="sm:hidden">Balance</span>
+              </TabsTrigger>
+              <TabsTrigger value="details" className="text-xs sm:text-sm px-1 sm:px-2 py-1.5 sm:py-2">
                 <span className="hidden md:inline">Detailed Breakdown</span>
                 <span className="md:hidden">Details</span>
               </TabsTrigger>
