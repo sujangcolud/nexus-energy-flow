@@ -202,9 +202,9 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
           count: chargingData?.length || 0,
           total: Number(dailySummaryData?.total_income_from_charging) || 0,
           by_payment: {
-            cash: chargingByPayment.cash || { count: 0, total: 0 },
-            esewa: chargingByPayment.esewa || { count: 0, total: 0 },
-            fonepay: chargingByPayment.fonepay || { count: 0, total: 0 },
+            cash: chargingByPayment.cash || { count: 0, total: Number(dailySummaryData?.total_income_from_charging_cash) || 0 },
+            esewa: chargingByPayment.esewa || { count: 0, total: Number(dailySummaryData?.total_income_from_charging_esewa) || 0 },
+            fonepay: chargingByPayment.fonepay || { count: 0, total: Number(dailySummaryData?.total_income_from_charging_fonepay) || 0 },
           }
         },
         expenses: {
