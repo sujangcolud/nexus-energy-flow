@@ -223,9 +223,8 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
         const fonepayBalance = Number(latestSummary.fonepay_balance) || 0;
         const cooperativeBalance = Number(latestSummary.cooperative_balance) || 0;
 
-        // Bank Balance: Enhanced calculation based on CSV formula
-        // Bank Balance = Current calculations + Cash Deposits + Esewa Deposits
-        const bankBalance = fonepayBalance + (aggregatedSummary.totalDepositsCash || 0) + (aggregatedSummary.totalDepositsEsewa || 0);
+        // Bank Balance: Using fonepay balance as base (represents bank/fonepay transactions)
+        const bankBalance = fonepayBalance;
 
         // Total Balance: Sum of all balances
         const totalBalance = cashBalance + bankBalance + esewaBalance + cooperativeBalance;
