@@ -735,18 +735,24 @@ const ChargingTab = () => {
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-gray-700">
-                    Category
+                    Category (Optional)
                   </label>
-                  <Select value={category} onValueChange={setCategory} required>
+                  <Select value={category} onValueChange={setCategory}>
                     <SelectTrigger className="border-blue-200 focus:border-blue-500 focus:ring-blue-500">
-                      <SelectValue placeholder="Select category" />
+                      <SelectValue placeholder="Select category (optional)" />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="">None / Skip Category</SelectItem>
                       {categories.map((cat) => (
                         <SelectItem key={cat.id} value={cat.name}>
                           {cat.name}
                         </SelectItem>
                       ))}
+                      {categories.length === 0 && (
+                        <SelectItem value="" disabled>
+                          No categories available
+                        </SelectItem>
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
