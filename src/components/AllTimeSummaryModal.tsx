@@ -106,6 +106,11 @@ const AllTimeSummaryModal: React.FC<AllTimeSummaryModalProps> = ({
     }
   }, [dateRange, onDateRangeChange]);
 
+  const handleShowAllTime = () => {
+    setDateRange(undefined);
+    onDateRangeChange({} as DateRange); // Trigger fetch with no date filter
+  };
+
   const formatCurrency = (amount: number) => `NRs. ${amount.toFixed(2)}`;
 
   if (!summaryData) {
