@@ -162,15 +162,15 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
           return;
         }
 
-        // Aggregate all daily summaries with enhanced schema fields
+        // Aggregate all daily summaries using existing schema fields
         const aggregatedSummary = dailySummaries.reduce((acc, daily) => {
           return {
-            // Income totals with enhanced breakdown
+            // Income totals using existing schema
             totalIncomeFromOrders: acc.totalIncomeFromOrders + (Number(daily.total_income_from_orders) || 0),
             totalIncomeFromCharging: acc.totalIncomeFromCharging + (Number(daily.total_income_from_charging) || 0),
-            totalIncomeCash: acc.totalIncomeCash + (Number(daily.total_cash_income) || 0),
-            totalIncomeEsewa: acc.totalIncomeEsewa + (Number(daily.total_esewa_income) || 0),
-            totalIncomeFonepay: acc.totalIncomeFonepay + (Number(daily.total_fonepay_income) || 0),
+            totalIncomeCash: acc.totalIncomeCash + (Number(daily.total_income_cash) || 0),
+            totalIncomeEsewa: acc.totalIncomeEsewa + (Number(daily.total_income_esewa) || 0),
+            totalIncomeFonepay: acc.totalIncomeFonepay + (Number(daily.total_income_fonepay) || 0),
 
             // Expense totals
             totalExpenses: acc.totalExpenses + (Number(daily.total_expenses) || 0),
