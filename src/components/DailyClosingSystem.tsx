@@ -1100,7 +1100,7 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div className="text-center p-3 bg-green-50 rounded-lg">
                       <div className="text-sm text-gray-600">Cash Balance</div>
                       <div className="text-lg font-bold text-green-700">
