@@ -118,11 +118,9 @@ const FinancialInsightsWidget: React.FC<FinancialInsightsWidgetProps> = ({
       const totalEsewa =
         data?.reduce((sum, item) => sum + (item.total_income_esewa || 0), 0) ||
         0;
-      const totalFonepay =
-        data?.reduce(
-          (sum, item) => sum + (item.total_income_fonepay || 0),
-          0,
-        ) || 0;
+      // Calculate fonepay as remainder since the column doesn't exist
+      const totalIncomeFromDB = data?.reduce((sum, item) => sum + (item.total_income || 0), 0) || 0;
+      const totalFonepay = Math.max(0, totalIncomeFromDB - totalCash - totalEsewa);
       const totalIncome = totalCash + totalEsewa + totalFonepay;
 
       if (totalIncome > 0) {
