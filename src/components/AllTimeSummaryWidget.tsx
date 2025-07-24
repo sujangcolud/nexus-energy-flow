@@ -219,8 +219,13 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
         // Calculate current balances with updated formulas
         const latestSummary = dailySummaries[dailySummaries.length - 1];
 
-        // Cash Balance: Current calculations + Cash withdrawals from all sources
-        const cashBalance = (Number(latestSummary.cash_balance) || 0) + (aggregatedSummary.totalWithdrawalsCash || 0);
+        // Cash Balance: Current calculations + Cash withdrawals from fonepay and cooperative (these become cash)
+        const baseCashBalance = Number(latestSummary.cash_balance) || 0;
+        const cashWithdrawals = aggregatedSummary.totalWithdrawalsCash || 0;
+        const cooperativeWithdrawals = aggregatedSummary.totalWithdrawalsCooperative || 0;
+        const fonepayWithdrawals = aggregatedSummary.totalWithdrawalsFonepay || 0;
+
+        const cashBalance = baseCashBalance + cashWithdrawals + cooperativeWithdrawals + fonepayWithdrawals;
 
         // Bank Balance: Current calculations + Cash Deposits + Esewa Deposits
         const bankBalance = (Number(latestSummary.cash_balance) || 0) + (aggregatedSummary.totalDepositsCash || 0) + (aggregatedSummary.totalDepositsEsewa || 0);
