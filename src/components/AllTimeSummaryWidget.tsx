@@ -186,15 +186,10 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
             // Savings totals
             totalSavings: acc.totalSavings + (Number(daily.total_savings) || 0),
 
-            // Enhanced withdrawal totals by source and payment mode
+            // Withdrawal totals using existing schema
             totalWithdrawals: acc.totalWithdrawals + (Number(daily.total_withdrawals) || 0),
             totalWithdrawalsCooperative: acc.totalWithdrawalsCooperative + (Number(daily.total_withdrawals_cooperative) || 0),
-            totalWithdrawalsCooperativeCash: acc.totalWithdrawalsCooperativeCash + (Number(daily.total_withdrawals_cooperative_cash) || 0),
-            totalWithdrawalsCooperativeEsewa: acc.totalWithdrawalsCooperativeEsewa + (Number(daily.total_withdrawals_cooperative_esewa) || 0),
-            totalWithdrawalsCooperativeFonepay: acc.totalWithdrawalsCooperativeFonepay + (Number(daily.total_withdrawals_cooperative_fonepay) || 0),
             totalWithdrawalsBank: acc.totalWithdrawalsBank + (Number(daily.total_withdrawals_bank) || 0),
-            totalWithdrawalsBankCash: acc.totalWithdrawalsBankCash + (Number(daily.total_withdrawals_bank_cash) || 0),
-            totalWithdrawalsBankEsewa: acc.totalWithdrawalsBankEsewa + (Number(daily.total_withdrawals_bank_esewa) || 0),
           };
         }, {
           totalIncomeFromOrders: 0,
