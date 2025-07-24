@@ -35,6 +35,7 @@ import {
   getTabsByCategory,
   isRoleTransitionAllowed,
 } from "@/utils/roleBasedAccess";
+import EnhancedDailySummaryManager from "@/components/EnhancedDailySummaryManager";
 import {
   Users,
   UserPlus,
