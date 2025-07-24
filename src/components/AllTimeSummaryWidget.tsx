@@ -164,16 +164,24 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
 
         // Aggregate all daily summaries with safe field access
         const aggregatedSummary = dailySummaries.reduce((acc, daily) => {
-          // Safe accessor function to handle missing columns
-          const safeGet = (obj: any, field: string) => Number(obj?.[field]) || 0;
+          // Safe accessor function to handle missing columns with fallbacks
+          const safeGet = (obj: any, field: string, fallbackField?: string) => {
+            if (obj && typeof obj[field] !== 'undefined' && obj[field] !== null) {
+              return Number(obj[field]) || 0;
+            }
+            if (fallbackField && obj && typeof obj[fallbackField] !== 'undefined' && obj[fallbackField] !== null) {
+              return Number(obj[fallbackField]) || 0;
+            }
+            return 0;
+          };
 
           return {
-            // Income totals with safe access
-            totalIncomeFromOrders: acc.totalIncomeFromOrders + safeGet(daily, 'total_income_from_orders'),
+            // Income totals with safe access and fallbacks
+            totalIncomeFromOrders: acc.totalIncomeFromOrders + safeGet(daily, 'total_income_from_orders', 'total_income'),
             totalIncomeFromCharging: acc.totalIncomeFromCharging + safeGet(daily, 'total_income_from_charging'),
-            totalIncomeCash: acc.totalIncomeCash + (safeGet(daily, 'total_income_cash') || safeGet(daily, 'total_cash_income')),
-            totalIncomeEsewa: acc.totalIncomeEsewa + (safeGet(daily, 'total_income_esewa') || safeGet(daily, 'total_esewa_income')),
-            totalIncomeFonepay: acc.totalIncomeFonepay + (safeGet(daily, 'total_income_fonepay') || safeGet(daily, 'total_fonepay_income')),
+            totalIncomeCash: acc.totalIncomeCash + safeGet(daily, 'total_cash_income', 'total_income_cash'),
+            totalIncomeEsewa: acc.totalIncomeEsewa + safeGet(daily, 'total_esewa_income', 'total_income_esewa'),
+            totalIncomeFonepay: acc.totalIncomeFonepay + safeGet(daily, 'total_fonepay_income', 'total_income_fonepay'),
 
             // Expense totals with safe access
             totalExpenses: acc.totalExpenses + safeGet(daily, 'total_expenses'),
