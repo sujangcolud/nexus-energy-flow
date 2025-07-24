@@ -654,7 +654,7 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
 
         <div className="space-y-6">
           {/* View Mode Toggle */}
-          <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 bg-gray-50 rounded-lg">
             <Button
               variant={viewMode === "daily" ? "default" : "outline"}
               onClick={() => setViewMode("daily")}
