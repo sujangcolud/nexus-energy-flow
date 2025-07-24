@@ -901,7 +901,7 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
             </TabsContent>
 
             <TabsContent value="balances" className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
                 {/* Cash Balance Card */}
                 <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200">
                   <CardHeader>
