@@ -35,6 +35,7 @@ import {
   getTabsByCategory,
   isRoleTransitionAllowed,
 } from "@/utils/roleBasedAccess";
+import EnhancedDailySummaryManager from "@/components/EnhancedDailySummaryManager";
 import {
   Users,
   UserPlus,
@@ -807,6 +808,11 @@ const EnhancedUserManagementTab = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* Enhanced Daily Summary Manager */}
+        {userPermissions.canManageSystem && (
+          <EnhancedDailySummaryManager />
+        )}
       </div>
 
       {/* Create User Dialog */}
