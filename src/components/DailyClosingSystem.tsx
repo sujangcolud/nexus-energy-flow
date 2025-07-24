@@ -695,18 +695,20 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
               )}
             </div>
           ) : (
-            <div className="flex items-center gap-4">
-              <Calendar className="h-5 w-5 text-blue-600" />
-              <DateRangePicker
-                onUpdate={(range) => {
-                  if (range?.from && range?.to) {
-                    setDateRange({ from: range.from, to: range.to });
-                  } else {
-                    setDateRange(undefined);
-                  }
-                }}
-              />
-              <span className="text-sm text-gray-600">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
+              <div className="flex items-center gap-2">
+                <Calendar className="h-5 w-5 text-blue-600" />
+                <DateRangePicker
+                  onUpdate={(range) => {
+                    if (range?.from && range?.to) {
+                      setDateRange({ from: range.from, to: range.to });
+                    } else {
+                      setDateRange(undefined);
+                    }
+                  }}
+                />
+              </div>
+              <span className="text-xs sm:text-sm text-gray-600">
                 {dateRange?.from && dateRange?.to
                   ? `${format(dateRange.from, "MMM dd, yyyy")} - ${format(dateRange.to, "MMM dd, yyyy")}`
                   : "Select date range for all-time summary"}
