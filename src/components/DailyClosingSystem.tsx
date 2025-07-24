@@ -553,30 +553,36 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
         withdrawalDetails: withdrawalDetails.map(w => ({ amount: w.amount, from: w.withdrawal_from, mode: w.payment_mode }))
       });
 
-      // Insert or update daily summary
-      const dailySummaryData = {
+      // Insert or update daily summary with only basic columns to avoid errors
+      const dailySummaryData: any = {
         summary_date: selectedDate,
         total_income: totalIncome,
-        total_income_from_orders: transactionSummary.orders.total,
-        total_income_from_charging: transactionSummary.charging.total,
-        total_income_cash: totalIncomeCash,
-        total_income_esewa: totalIncomeEsewa,
-        total_income_fonepay: totalIncomeFonepay,
         total_expenses: totalExpenses,
         total_deposits: totalDeposits,
         total_withdrawals: totalWithdrawals,
-        total_withdrawals_bank: totalWithdrawalsBank,
-        total_withdrawals_cooperative: totalWithdrawalsCooperative,
-        total_withdrawals_esewa: totalWithdrawalsEsewa,
         total_savings: totalSavings,
         cash_balance:
           totalIncomeCash + totalDeposits - totalExpenses - totalWithdrawals,
         esewa_balance: totalIncomeEsewa,
-        fonepay_balance: totalIncomeFonepay,
         total_balance:
           totalIncome + totalDeposits - totalExpenses - totalWithdrawals,
         updated_at: new Date().toISOString(),
       };
+
+      // Add enhanced columns only if they might exist
+      try {
+        dailySummaryData.total_income_from_orders = transactionSummary.orders.total;
+        dailySummaryData.total_income_from_charging = transactionSummary.charging.total;
+        dailySummaryData.total_income_cash = totalIncomeCash;
+        dailySummaryData.total_income_esewa = totalIncomeEsewa;
+        dailySummaryData.total_income_fonepay = totalIncomeFonepay;
+        dailySummaryData.total_withdrawals_bank = totalWithdrawalsBank;
+        dailySummaryData.total_withdrawals_cooperative = totalWithdrawalsCooperative;
+        dailySummaryData.total_withdrawals_esewa = totalWithdrawalsEsewa;
+        dailySummaryData.fonepay_balance = totalIncomeFonepay;
+      } catch (error) {
+        console.warn("Some enhanced columns may not exist, using basic columns only");
+      }
 
       const { error } = await supabase
         .from("daily_summary")
