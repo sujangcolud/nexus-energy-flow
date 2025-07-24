@@ -238,7 +238,7 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
         },
         charging: {
           count: chargingData?.length || 0,
-          total: safeGet(dailySummaryData, 'total_income_from_charging'),
+          total: safeGet(dailySummaryData, 'total_income_from_charging') || (chargingData?.reduce((sum, c) => sum + (Number(c.total_amount) || 0), 0) || 0),
           by_payment: {
             cash: chargingByPayment.cash || { count: 0, total: safeGet(dailySummaryData, 'total_income_from_charging_cash') },
             esewa: chargingByPayment.esewa || { count: 0, total: safeGet(dailySummaryData, 'total_income_from_charging_esewa') },
