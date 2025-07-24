@@ -323,6 +323,9 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
         return;
       }
 
+      // Safe accessor function for daily summaries
+      const safeGet = (obj: any, field: string) => Number(obj?.[field]) || 0;
+
       // Aggregate all daily summaries
       const aggregated = dailySummaries.reduce((acc, daily) => {
         return {
