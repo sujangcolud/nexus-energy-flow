@@ -217,14 +217,15 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
         const totalIncome = aggregatedSummary.totalIncomeFromOrders + aggregatedSummary.totalIncomeFromCharging;
         const netProfit = totalIncome - aggregatedSummary.totalExpenses;
 
-        // Get the most recent balances (calculated using CSV formulas)
+        // Get the most recent balances with safe field access
         const latestSummary = dailySummaries[dailySummaries.length - 1];
+        const safeGet = (obj: any, field: string) => Number(obj?.[field]) || 0;
 
-        // Use the calculated balances from the latest daily summary (these follow CSV formulas)
-        const cashBalance = Number(latestSummary.cash_balance) || 0;
-        const esewaBalance = Number(latestSummary.esewa_balance) || 0;
-        const fonepayBalance = Number(latestSummary.fonepay_balance) || 0;
-        const cooperativeBalance = Number(latestSummary.cooperative_balance) || 0;
+        // Use the calculated balances from the latest daily summary with safe access
+        const cashBalance = safeGet(latestSummary, 'cash_balance');
+        const esewaBalance = safeGet(latestSummary, 'esewa_balance');
+        const fonepayBalance = safeGet(latestSummary, 'fonepay_balance');
+        const cooperativeBalance = safeGet(latestSummary, 'cooperative_balance');
 
         // Bank Balance: Using fonepay balance as base (represents bank/fonepay transactions)
         const bankBalance = fonepayBalance;
