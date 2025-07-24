@@ -339,6 +339,9 @@ const AllTimeSummaryModal: React.FC<AllTimeSummaryModalProps> = ({
           </Card>
         </div>
 
+        {/* Daily Reports List */}
+        <DailyReportsList />
+
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>
             Close
