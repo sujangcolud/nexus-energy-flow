@@ -191,6 +191,7 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
             totalWithdrawalsCash: acc.totalWithdrawalsCash + (Number(daily.total_withdrawals_cash) || 0),
             totalWithdrawalsCooperative: acc.totalWithdrawalsCooperative + (Number(daily.total_withdrawals_cooperative) || 0),
             totalWithdrawalsBank: acc.totalWithdrawalsBank + (Number(daily.total_withdrawals_bank) || 0),
+            totalWithdrawalsFonepay: acc.totalWithdrawalsFonepay + (Number(daily.total_withdrawals_fonepay) || 0),
           };
         }, {
           totalIncomeFromOrders: 0,
