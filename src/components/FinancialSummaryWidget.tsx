@@ -660,7 +660,7 @@ const FinancialSummaryWidget: React.FC<FinancialSummaryWidgetProps> = ({
                   </span>
                 </div>
                 <div className="text-lg font-semibold text-purple-600">
-                  NRs. {Math.max(0, todaySummary.total_income - todaySummary.total_income_cash - todaySummary.total_income_esewa).toFixed(2)}
+                  NRs. {(todaySummary.total_income_fonepay || 0).toFixed(2)}
                 </div>
               </div>
             </div>
