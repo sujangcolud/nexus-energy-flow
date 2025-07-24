@@ -91,7 +91,7 @@ const FinancialInsightsWidget: React.FC<FinancialInsightsWidgetProps> = ({
       const { data, error } = await supabase
         .from("daily_summary")
         .select(
-          "summary_date, total_income, total_expenses, total_income_cash, total_income_esewa",
+          "summary_date, total_income, total_expenses, total_income_cash, total_income_esewa, total_income_fonepay",
         )
         .gte("summary_date", format(startDate, "yyyy-MM-dd"))
         .lte("summary_date", format(endDate, "yyyy-MM-dd"))
