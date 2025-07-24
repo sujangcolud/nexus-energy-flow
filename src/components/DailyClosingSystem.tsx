@@ -543,6 +543,7 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
         total_income_from_charging: transactionSummary.charging.total,
         total_income_cash: totalIncomeCash,
         total_income_esewa: totalIncomeEsewa,
+        total_income_fonepay: totalIncomeFonepay,
         total_expenses: totalExpenses,
         total_deposits: totalDeposits,
         total_withdrawals: totalWithdrawals,
