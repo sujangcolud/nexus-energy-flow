@@ -194,20 +194,20 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
       const summary: TransactionSummary = {
         orders: {
           count: ordersData?.length || 0,
-          total: Number(dailySummaryData?.total_income_from_orders) || 0,
+          total: safeGet(dailySummaryData, 'total_income_from_orders'),
           by_payment: {
-            cash: ordersByPayment.cash || { count: 0, total: Number(dailySummaryData?.total_income_from_orders_cash) || Number(dailySummaryData?.total_income_cash) || 0 },
-            esewa: ordersByPayment.esewa || { count: 0, total: Number(dailySummaryData?.total_income_from_orders_esewa) || Number(dailySummaryData?.total_income_esewa) || 0 },
-            fonepay: ordersByPayment.fonepay || { count: 0, total: Number(dailySummaryData?.total_income_from_orders_fonepay) || Number(dailySummaryData?.total_income_fonepay) || 0 },
+            cash: ordersByPayment.cash || { count: 0, total: safeGet(dailySummaryData, 'total_income_from_orders_cash') || safeGet(dailySummaryData, 'total_income_cash') },
+            esewa: ordersByPayment.esewa || { count: 0, total: safeGet(dailySummaryData, 'total_income_from_orders_esewa') || safeGet(dailySummaryData, 'total_income_esewa') },
+            fonepay: ordersByPayment.fonepay || { count: 0, total: safeGet(dailySummaryData, 'total_income_from_orders_fonepay') || safeGet(dailySummaryData, 'total_income_fonepay') },
           }
         },
         charging: {
           count: chargingData?.length || 0,
-          total: Number(dailySummaryData?.total_income_from_charging) || 0,
+          total: safeGet(dailySummaryData, 'total_income_from_charging'),
           by_payment: {
-            cash: chargingByPayment.cash || { count: 0, total: Number(dailySummaryData?.total_income_from_charging_cash) || 0 },
-            esewa: chargingByPayment.esewa || { count: 0, total: Number(dailySummaryData?.total_income_from_charging_esewa) || 0 },
-            fonepay: chargingByPayment.fonepay || { count: 0, total: Number(dailySummaryData?.total_income_from_charging_fonepay) || 0 },
+            cash: chargingByPayment.cash || { count: 0, total: safeGet(dailySummaryData, 'total_income_from_charging_cash') },
+            esewa: chargingByPayment.esewa || { count: 0, total: safeGet(dailySummaryData, 'total_income_from_charging_esewa') },
+            fonepay: chargingByPayment.fonepay || { count: 0, total: safeGet(dailySummaryData, 'total_income_from_charging_fonepay') },
           }
         },
         expenses: {
