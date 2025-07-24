@@ -216,7 +216,8 @@ const ChargingTab = () => {
 
       const sessionDate = transactionDate;
 
-      const { error } = await supabase.from("charging_sessions").insert({
+      // Prepare session data with safe category handling
+      const sessionData: any = {
         user_id: user.id,
         start_percentage: startPercentage,
         end_percentage: endPercentage,
@@ -227,8 +228,14 @@ const ChargingTab = () => {
         payment_mode: paymentMode,
         session_date: sessionDate,
         date: sessionDate, // Add date field for compatibility
-        category: category,
-      });
+      };
+
+      // Only add category if it's selected and exists in categories
+      if (category && category.trim() !== "" && categories.some(cat => cat.name === category)) {
+        sessionData.category = category;
+      }
+
+      const { error } = await supabase.from("charging_sessions").insert(sessionData);
 
       if (error) throw error;
 
