@@ -361,7 +361,6 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
         totalSavingsEsewa: 0,
         totalSavingsFonepay: 0,
         totalWithdrawals: 0,
-        totalWithdrawalsCash: 0,
         totalWithdrawalsBank: 0,
         totalWithdrawalsCooperative: 0,
       });
