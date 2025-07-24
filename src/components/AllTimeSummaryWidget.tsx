@@ -166,12 +166,29 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
         const aggregatedSummary = dailySummaries.reduce((acc, daily) => {
           // Safe accessor function to handle missing columns with fallbacks
           const safeGet = (obj: any, field: string, fallbackField?: string) => {
-            if (obj && typeof obj[field] !== 'undefined' && obj[field] !== null) {
+            if (!obj) return 0;
+
+            // Try primary field
+            if (typeof obj[field] !== 'undefined' && obj[field] !== null) {
               return Number(obj[field]) || 0;
             }
-            if (fallbackField && obj && typeof obj[fallbackField] !== 'undefined' && obj[fallbackField] !== null) {
+
+            // Try fallback field
+            if (fallbackField && typeof obj[fallbackField] !== 'undefined' && obj[fallbackField] !== null) {
               return Number(obj[fallbackField]) || 0;
             }
+
+            // For missing enhanced columns, use existing basic columns
+            if (field === 'total_cash_income' || field === 'total_income_cash') {
+              return Number(obj.cash_balance) || 0;
+            }
+            if (field === 'total_fonepay_income' || field === 'total_income_fonepay') {
+              return Number(obj.fonepay_balance) || 0;
+            }
+            if (field === 'total_esewa_income' || field === 'total_income_esewa') {
+              return Number(obj.esewa_balance) || 0;
+            }
+
             return 0;
           };
 
