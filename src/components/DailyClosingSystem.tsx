@@ -1101,29 +1101,29 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div className="text-center p-3 bg-green-50 rounded-lg">
-                      <div className="text-sm text-gray-600">Cash Balance</div>
-                      <div className="text-lg font-bold text-green-700">
+                    <div className="text-center p-2 sm:p-3 bg-green-50 rounded-lg">
+                      <div className="text-xs sm:text-sm text-gray-600">Cash Balance</div>
+                      <div className="text-sm sm:text-lg font-bold text-green-700">
                         {formatCurrency(calculateCashBalance(currentSummary))}
                       </div>
                     </div>
-                    <div className="text-center p-3 bg-blue-50 rounded-lg">
-                      <div className="text-sm text-gray-600">Bank Balance</div>
-                      <div className="text-lg font-bold text-blue-700">
+                    <div className="text-center p-2 sm:p-3 bg-blue-50 rounded-lg">
+                      <div className="text-xs sm:text-sm text-gray-600">Bank Balance</div>
+                      <div className="text-sm sm:text-lg font-bold text-blue-700">
                         {formatCurrency(calculateBankBalance(currentSummary))}
                       </div>
                     </div>
-                    <div className="text-center p-3 bg-purple-50 rounded-lg">
-                      <div className="text-sm text-gray-600">Esewa Balance</div>
-                      <div className="text-lg font-bold text-purple-700">
+                    <div className="text-center p-2 sm:p-3 bg-purple-50 rounded-lg">
+                      <div className="text-xs sm:text-sm text-gray-600">Esewa Balance</div>
+                      <div className="text-sm sm:text-lg font-bold text-purple-700">
                         {formatCurrency(calculateEsewaBalance(currentSummary))}
                       </div>
                     </div>
-                    <div className="text-center p-3 bg-teal-50 rounded-lg">
-                      <div className="text-sm text-gray-600">
+                    <div className="text-center p-2 sm:p-3 bg-teal-50 rounded-lg">
+                      <div className="text-xs sm:text-sm text-gray-600">
                         Cooperative Balance
                       </div>
-                      <div className="text-lg font-bold text-teal-700">
+                      <div className="text-sm sm:text-lg font-bold text-teal-700">
                         {formatCurrency(
                           calculateCooperativeBalance(currentSummary),
                         )}
