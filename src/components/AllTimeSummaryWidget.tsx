@@ -162,10 +162,22 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
           return;
         }
 
+        // Helper function for safe field access with fallback support
+        const safeGet = (obj: any, primaryField: string, fallbackField?: string): number => {
+          const primaryValue = Number(obj?.[primaryField]);
+          if (!isNaN(primaryValue) && primaryValue !== 0) {
+            return primaryValue;
+          }
+          if (fallbackField) {
+            const fallbackValue = Number(obj?.[fallbackField]);
+            return isNaN(fallbackValue) ? 0 : fallbackValue;
+          }
+          return 0;
+        };
+
         // Aggregate all daily summaries into all-time totals
         const aggregatedSummary = dailySummaries.reduce((acc, daily) => {
           return {
-<<<<<<< HEAD
             // Income totals with safe access and enhanced columns
             totalIncomeFromOrders: acc.totalIncomeFromOrders + safeGet(daily, 'total_income_from_orders', 'total_income'),
             totalIncomeFromCharging: acc.totalIncomeFromCharging + safeGet(daily, 'total_income_from_charging'),
@@ -189,36 +201,9 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
 
             // Withdrawal totals with safe access
             totalWithdrawals: acc.totalWithdrawals + safeGet(daily, 'total_withdrawals'),
+            totalWithdrawalsCash: acc.totalWithdrawalsCash + safeGet(daily, 'total_withdrawals_cash'),
             totalWithdrawalsCooperative: acc.totalWithdrawalsCooperative + safeGet(daily, 'total_withdrawals_cooperative'),
             totalWithdrawalsBank: acc.totalWithdrawalsBank + safeGet(daily, 'total_withdrawals_bank'),
-=======
-            // Income totals
-            totalIncomeFromOrders: acc.totalIncomeFromOrders + (Number(daily.total_income_from_orders) || 0),
-            totalIncomeFromCharging: acc.totalIncomeFromCharging + (Number(daily.total_income_from_charging) || 0),
-            totalIncomeCash: acc.totalIncomeCash + (Number(daily.total_income_cash) || 0),
-            totalIncomeEsewa: acc.totalIncomeEsewa + (Number(daily.total_income_esewa) || 0),
-            totalIncomeFonepay: acc.totalIncomeFonepay + (Number(daily.total_income_fonepay) || 0),
-
-            // Expense totals
-            totalExpenses: acc.totalExpenses + (Number(daily.total_expenses) || 0),
-            totalExpensesCash: acc.totalExpensesCash + (Number(daily.total_expenses_cash) || 0),
-            totalExpensesEsewa: acc.totalExpensesEsewa + (Number(daily.total_expenses_esewa) || 0),
-            totalExpensesFonepay: acc.totalExpensesFonepay + (Number(daily.total_expenses_fonepay) || 0),
-
-            // Deposit totals
-            totalDeposits: acc.totalDeposits + (Number(daily.total_deposits) || 0),
-            totalDepositsCash: acc.totalDepositsCash + (Number(daily.total_deposits_cash) || 0),
-            totalDepositsEsewa: acc.totalDepositsEsewa + (Number(daily.total_deposits_esewa) || 0),
-
-            // Savings totals
-            totalSavings: acc.totalSavings + (Number(daily.total_savings) || 0),
-
-            // Withdrawal totals
-            totalWithdrawals: acc.totalWithdrawals + (Number(daily.total_withdrawals) || 0),
-            totalWithdrawalsCash: acc.totalWithdrawalsCash + (Number(daily.total_withdrawals_cash) || 0),
-            totalWithdrawalsCooperative: acc.totalWithdrawalsCooperative + (Number(daily.total_withdrawals_cooperative) || 0),
-            totalWithdrawalsBank: acc.totalWithdrawalsBank + (Number(daily.total_withdrawals_bank) || 0),
->>>>>>> origin/main
           };
         }, {
           totalIncomeFromOrders: 0,
@@ -235,10 +220,7 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
           totalDepositsEsewa: 0,
           totalSavings: 0,
           totalWithdrawals: 0,
-<<<<<<< HEAD
-=======
           totalWithdrawalsCash: 0,
->>>>>>> origin/main
           totalWithdrawalsCooperative: 0,
           totalWithdrawalsBank: 0,
         });
