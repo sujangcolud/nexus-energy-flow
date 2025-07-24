@@ -236,10 +236,9 @@ const EnhancedInsightsTab = () => {
       (sum, s) => sum + (s.total_income_esewa || 0),
       0,
     );
-    const totalFonepayIncome = summaries.reduce(
-      (sum, s) => sum + (s.total_income_fonepay || 0),
-      0,
-    );
+    // Calculate fonepay as remainder since column doesn't exist
+    const totalIncome = summaries.reduce((sum, s) => sum + (s.total_income || 0), 0);
+    const totalFonepayIncome = Math.max(0, totalIncome - totalCashIncome - totalEsewaIncome);
 
     // Calculate expense totals by payment method
     const totalExpensesCash = summaries.reduce(
