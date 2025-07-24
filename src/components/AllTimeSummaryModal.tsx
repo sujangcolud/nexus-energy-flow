@@ -48,7 +48,6 @@ import { toast } from "sonner";
 import { extractErrorMessage, logError } from "@/utils/errorHandling";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { DateRange } from "react-day-picker";
-import DailyClosingSystem from "./DailyClosingSystem";
 
 interface AllTimeSummaryData {
   totalIncome: number;
@@ -341,9 +340,6 @@ const AllTimeSummaryModal: React.FC<AllTimeSummaryModalProps> = ({
           </Card>
         </div>
 
-        {/* Daily Reports List */}
-        <DailyReportsList />
-
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>
             Close
@@ -351,142 +347,6 @@ const AllTimeSummaryModal: React.FC<AllTimeSummaryModalProps> = ({
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  );
-};
-
-// Daily Reports List Component
-const DailyReportsList: React.FC = () => {
-  const { user } = useAuth();
-  const [loading, setLoading] = useState(false);
-  const [dailyReports, setDailyReports] = useState<any[]>([]);
-  const [selectedDate, setSelectedDate] = useState<string | null>(null);
-  const [isDailyModalOpen, setIsDailyModalOpen] = useState(false);
-
-  useEffect(() => {
-    fetchDailyReports();
-  }, []);
-
-  const fetchDailyReports = async () => {
-    if (!user) return;
-
-    setLoading(true);
-    try {
-      console.log("📅 Fetching daily reports list...");
-
-      // Fetch all daily summaries ordered by date
-      const { data: dailySummaries, error } = await supabase
-        .from("daily_summary")
-        .select("*")
-        .order("summary_date", { ascending: false })
-        .limit(30); // Show last 30 days
-
-      if (error) {
-        throw error;
-      }
-
-      setDailyReports(dailySummaries || []);
-    } catch (error) {
-      logError("fetching daily reports list", error);
-      toast.error(`Error loading daily reports: ${extractErrorMessage(error)}`);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDailyViewClick = (date: string) => {
-    setSelectedDate(date);
-    setIsDailyModalOpen(true);
-  };
-
-  const formatCurrency = (amount: number) => `NRs. ${amount.toFixed(2)}`;
-
-  return (
-    <>
-      <Card className="mt-6">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Calendar className="h-5 w-5" />
-            Daily Reports
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <div className="flex items-center justify-center py-8">
-              <RefreshCw className="h-6 w-6 animate-spin mr-2" />
-              Loading daily reports...
-            </div>
-          ) : dailyReports.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              <AlertCircle className="h-8 w-8 mx-auto mb-2" />
-              No daily reports found
-            </div>
-          ) : (
-            <div className="space-y-2 max-h-96 overflow-y-auto">
-              <div className="grid grid-cols-12 gap-2 text-sm font-medium text-gray-600 border-b pb-2">
-                <div className="col-span-2">Date</div>
-                <div className="col-span-2 text-right">Income</div>
-                <div className="col-span-2 text-right">Expenses</div>
-                <div className="col-span-2 text-right">Net Profit</div>
-                <div className="col-span-2 text-right">Total Balance</div>
-                <div className="col-span-2 text-center">Action</div>
-              </div>
-              {dailyReports.map((report) => {
-                const totalIncome = (Number(report.total_income_from_orders) || 0) + (Number(report.total_income_from_charging) || 0);
-                const totalExpenses = Number(report.total_expenses) || 0;
-                const netProfit = totalIncome - totalExpenses;
-                const totalBalance = Number(report.total_balance) || 0;
-
-                return (
-                  <div
-                    key={report.id}
-                    className="grid grid-cols-12 gap-2 py-3 text-sm border-b border-gray-100 hover:bg-gray-50 rounded-lg transition-colors"
-                  >
-                    <div className="col-span-2 font-medium">
-                      {format(new Date(report.summary_date), "MMM dd, yyyy")}
-                    </div>
-                    <div className="col-span-2 text-right text-green-600 font-medium">
-                      {formatCurrency(totalIncome)}
-                    </div>
-                    <div className="col-span-2 text-right text-red-600 font-medium">
-                      {formatCurrency(totalExpenses)}
-                    </div>
-                    <div className={`col-span-2 text-right font-medium ${netProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                      {formatCurrency(netProfit)}
-                    </div>
-                    <div className="col-span-2 text-right text-blue-600 font-medium">
-                      {formatCurrency(totalBalance)}
-                    </div>
-                    <div className="col-span-2 text-center">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleDailyViewClick(report.summary_date)}
-                        className="text-xs px-2 py-1"
-                      >
-                        <Eye className="h-3 w-3 mr-1" />
-                        View Details
-                      </Button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Daily Closing Modal */}
-      {selectedDate && (
-        <DailyClosingSystem
-          isOpen={isDailyModalOpen}
-          onClose={() => {
-            setIsDailyModalOpen(false);
-            setSelectedDate(null);
-          }}
-          initialDate={selectedDate}
-        />
-      )}
-    </>
   );
 };
 

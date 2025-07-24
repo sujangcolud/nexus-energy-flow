@@ -162,37 +162,10 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
           return;
         }
 
-        // Aggregate all daily summaries with safe field access
+        // Aggregate all daily summaries into all-time totals
         const aggregatedSummary = dailySummaries.reduce((acc, daily) => {
-          // Safe accessor function to handle missing columns with fallbacks
-          const safeGet = (obj: any, field: string, fallbackField?: string) => {
-            if (!obj) return 0;
-
-            // Try primary field
-            if (typeof obj[field] !== 'undefined' && obj[field] !== null) {
-              return Number(obj[field]) || 0;
-            }
-
-            // Try fallback field
-            if (fallbackField && typeof obj[fallbackField] !== 'undefined' && obj[fallbackField] !== null) {
-              return Number(obj[fallbackField]) || 0;
-            }
-
-            // For missing enhanced columns, use existing basic columns
-            if (field === 'total_cash_income' || field === 'total_income_cash') {
-              return Number(obj.cash_balance) || 0;
-            }
-            if (field === 'total_fonepay_income' || field === 'total_income_fonepay') {
-              return Number(obj.fonepay_balance) || 0;
-            }
-            if (field === 'total_esewa_income' || field === 'total_income_esewa') {
-              return Number(obj.esewa_balance) || 0;
-            }
-
-            return 0;
-          };
-
           return {
+<<<<<<< HEAD
             // Income totals with safe access and enhanced columns
             totalIncomeFromOrders: acc.totalIncomeFromOrders + safeGet(daily, 'total_income_from_orders', 'total_income'),
             totalIncomeFromCharging: acc.totalIncomeFromCharging + safeGet(daily, 'total_income_from_charging'),
@@ -218,6 +191,34 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
             totalWithdrawals: acc.totalWithdrawals + safeGet(daily, 'total_withdrawals'),
             totalWithdrawalsCooperative: acc.totalWithdrawalsCooperative + safeGet(daily, 'total_withdrawals_cooperative'),
             totalWithdrawalsBank: acc.totalWithdrawalsBank + safeGet(daily, 'total_withdrawals_bank'),
+=======
+            // Income totals
+            totalIncomeFromOrders: acc.totalIncomeFromOrders + (Number(daily.total_income_from_orders) || 0),
+            totalIncomeFromCharging: acc.totalIncomeFromCharging + (Number(daily.total_income_from_charging) || 0),
+            totalIncomeCash: acc.totalIncomeCash + (Number(daily.total_income_cash) || 0),
+            totalIncomeEsewa: acc.totalIncomeEsewa + (Number(daily.total_income_esewa) || 0),
+            totalIncomeFonepay: acc.totalIncomeFonepay + (Number(daily.total_income_fonepay) || 0),
+
+            // Expense totals
+            totalExpenses: acc.totalExpenses + (Number(daily.total_expenses) || 0),
+            totalExpensesCash: acc.totalExpensesCash + (Number(daily.total_expenses_cash) || 0),
+            totalExpensesEsewa: acc.totalExpensesEsewa + (Number(daily.total_expenses_esewa) || 0),
+            totalExpensesFonepay: acc.totalExpensesFonepay + (Number(daily.total_expenses_fonepay) || 0),
+
+            // Deposit totals
+            totalDeposits: acc.totalDeposits + (Number(daily.total_deposits) || 0),
+            totalDepositsCash: acc.totalDepositsCash + (Number(daily.total_deposits_cash) || 0),
+            totalDepositsEsewa: acc.totalDepositsEsewa + (Number(daily.total_deposits_esewa) || 0),
+
+            // Savings totals
+            totalSavings: acc.totalSavings + (Number(daily.total_savings) || 0),
+
+            // Withdrawal totals
+            totalWithdrawals: acc.totalWithdrawals + (Number(daily.total_withdrawals) || 0),
+            totalWithdrawalsCash: acc.totalWithdrawalsCash + (Number(daily.total_withdrawals_cash) || 0),
+            totalWithdrawalsCooperative: acc.totalWithdrawalsCooperative + (Number(daily.total_withdrawals_cooperative) || 0),
+            totalWithdrawalsBank: acc.totalWithdrawalsBank + (Number(daily.total_withdrawals_bank) || 0),
+>>>>>>> origin/main
           };
         }, {
           totalIncomeFromOrders: 0,
@@ -234,6 +235,10 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
           totalDepositsEsewa: 0,
           totalSavings: 0,
           totalWithdrawals: 0,
+<<<<<<< HEAD
+=======
+          totalWithdrawalsCash: 0,
+>>>>>>> origin/main
           totalWithdrawalsCooperative: 0,
           totalWithdrawalsBank: 0,
         });
@@ -242,21 +247,26 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
         const totalIncome = aggregatedSummary.totalIncomeFromOrders + aggregatedSummary.totalIncomeFromCharging;
         const netProfit = totalIncome - aggregatedSummary.totalExpenses;
 
-        // Get the most recent balances with safe field access
+        // Calculate current balances with updated formulas
         const latestSummary = dailySummaries[dailySummaries.length - 1];
-        const safeGet = (obj: any, field: string) => Number(obj?.[field]) || 0;
 
-        // Use the calculated balances from the latest daily summary with safe access
-        const cashBalance = safeGet(latestSummary, 'cash_balance');
-        const esewaBalance = safeGet(latestSummary, 'esewa_balance');
-        const fonepayBalance = safeGet(latestSummary, 'fonepay_balance');
-        const cooperativeBalance = safeGet(latestSummary, 'cooperative_balance');
+        // Cash Balance: Current calculations + Cash withdrawals from all sources
+        const cashBalance = (Number(latestSummary.cash_balance) || 0) + (aggregatedSummary.totalWithdrawalsCash || 0);
 
-        // Bank Balance: Using fonepay balance as base (represents bank/fonepay transactions)
-        const bankBalance = fonepayBalance;
+        // Bank Balance: Current calculations + Cash Deposits + Esewa Deposits
+        const bankBalance = (Number(latestSummary.cash_balance) || 0) + (aggregatedSummary.totalDepositsCash || 0) + (aggregatedSummary.totalDepositsEsewa || 0);
+
+        // Esewa Balance: Keep current calculations (correct)
+        const esewaBalance = Number(latestSummary.esewa_balance) || 0;
+
+        // Fonepay Balance: Keep current calculations
+        const fonepayBalance = Number(latestSummary.fonepay_balance) || 0;
+
+        // Cooperative Balance: Keep current calculations
+        const cooperativeBalance = Number(latestSummary.cooperative_balance) || 0;
 
         // Total Balance: Sum of all balances
-        const totalBalance = cashBalance + bankBalance + esewaBalance + cooperativeBalance;
+        const totalBalance = cashBalance + bankBalance + esewaBalance + fonepayBalance + cooperativeBalance;
 
         const currentBalances = {
           cash: cashBalance,
