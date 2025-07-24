@@ -361,19 +361,28 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
       // Safe accessor function for daily summaries
       const safeGet = (obj: any, field: string) => Number(obj?.[field]) || 0;
 
-      // Aggregate all daily summaries using only basic columns that exist
+      // Aggregate all daily summaries with enhanced columns
       const aggregated = dailySummaries.reduce((acc, daily) => {
         return {
-          totalIncomeFromOrders: acc.totalIncomeFromOrders + (Number(daily.total_income_from_orders) || 0),
-          totalIncomeFromCharging: acc.totalIncomeFromCharging + (Number(daily.total_income_from_charging) || 0),
-          totalIncome: acc.totalIncome + (Number(daily.total_income) || 0),
-          totalExpenses: acc.totalExpenses + (Number(daily.total_expenses) || 0),
-          totalDeposits: acc.totalDeposits + (Number(daily.total_deposits) || 0),
-          totalWithdrawals: acc.totalWithdrawals + (Number(daily.total_withdrawals) || 0),
-          totalSavings: acc.totalSavings + (Number(daily.total_savings) || 0),
-          cashBalance: acc.cashBalance + (Number(daily.cash_balance) || 0),
-          esewaBalance: acc.esewaBalance + (Number(daily.esewa_balance) || 0),
-          totalBalance: acc.totalBalance + (Number(daily.total_balance) || 0),
+          totalIncomeFromOrders: acc.totalIncomeFromOrders + safeGet(daily, 'total_income_from_orders'),
+          totalIncomeFromCharging: acc.totalIncomeFromCharging + safeGet(daily, 'total_income_from_charging'),
+          totalIncomeCash: acc.totalIncomeCash + safeGet(daily, 'total_cash_income', 'total_income_cash'),
+          totalIncomeEsewa: acc.totalIncomeEsewa + safeGet(daily, 'total_esewa_income', 'total_income_esewa'),
+          totalIncomeFonepay: acc.totalIncomeFonepay + safeGet(daily, 'total_fonepay_income', 'total_income_fonepay'),
+          totalExpenses: acc.totalExpenses + safeGet(daily, 'total_expenses'),
+          totalExpensesCash: acc.totalExpensesCash + safeGet(daily, 'total_expenses_cash'),
+          totalExpensesEsewa: acc.totalExpensesEsewa + safeGet(daily, 'total_expenses_esewa'),
+          totalExpensesFonepay: acc.totalExpensesFonepay + safeGet(daily, 'total_expenses_fonepay'),
+          totalDeposits: acc.totalDeposits + safeGet(daily, 'total_deposits'),
+          totalDepositsCash: acc.totalDepositsCash + safeGet(daily, 'total_deposits_cash'),
+          totalDepositsEsewa: acc.totalDepositsEsewa + safeGet(daily, 'total_deposits_esewa'),
+          totalSavings: acc.totalSavings + safeGet(daily, 'total_savings'),
+          totalSavingsCash: acc.totalSavingsCash + safeGet(daily, 'total_savings_cash'),
+          totalSavingsEsewa: acc.totalSavingsEsewa + safeGet(daily, 'total_savings_esewa'),
+          totalSavingsFonepay: acc.totalSavingsFonepay + safeGet(daily, 'total_savings_fonepay'),
+          totalWithdrawals: acc.totalWithdrawals + safeGet(daily, 'total_withdrawals'),
+          totalWithdrawalsBank: acc.totalWithdrawalsBank + safeGet(daily, 'total_withdrawals_bank'),
+          totalWithdrawalsCooperative: acc.totalWithdrawalsCooperative + safeGet(daily, 'total_withdrawals_cooperative'),
         };
       }, {
         totalIncomeFromOrders: 0,
