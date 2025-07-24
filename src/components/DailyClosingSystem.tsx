@@ -144,7 +144,6 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
       // If no daily summary exists, initialize with zeros
       const summary: TransactionSummary = {
         orders: {
-<<<<<<< HEAD
           count: ordersData?.length || 0,
           total: safeGet(dailySummaryData, 'total_income_from_orders', 'total_income'),
           by_payment: {
@@ -161,20 +160,6 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
             esewa: chargingByPayment.esewa || { count: 0, total: safeGet(dailySummaryData, 'total_income_from_charging_esewa') },
             fonepay: chargingByPayment.fonepay || { count: 0, total: safeGet(dailySummaryData, 'total_income_from_charging_fonepay') },
           }
-=======
-          count: 0,
-          total: Number(dailySummaryData?.total_income_from_orders) || 0,
-          by_payment: {
-            cash: { count: 0, total: Number(dailySummaryData?.total_income_cash) || 0 },
-            esewa: { count: 0, total: Number(dailySummaryData?.total_income_esewa) || 0 },
-            fonepay: { count: 0, total: Number(dailySummaryData?.total_income_fonepay) || 0 },
-          }
-        },
-        charging: {
-          count: 0,
-          total: Number(dailySummaryData?.total_income_from_charging) || 0,
-          by_payment: {} // Charging payment mode breakdown is included in total income payment modes
->>>>>>> origin/main
         },
         expenses: {
           count: 0,
@@ -279,7 +264,6 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
         return;
       }
 
-<<<<<<< HEAD
       // Safe accessor function for daily summaries
       const safeGet = (obj: any, field: string) => Number(obj?.[field]) || 0;
 
@@ -305,31 +289,6 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
           totalWithdrawals: acc.totalWithdrawals + safeGet(daily, 'total_withdrawals'),
           totalWithdrawalsBank: acc.totalWithdrawalsBank + safeGet(daily, 'total_withdrawals_bank'),
           totalWithdrawalsCooperative: acc.totalWithdrawalsCooperative + safeGet(daily, 'total_withdrawals_cooperative'),
-=======
-      // Aggregate all daily summaries
-      const aggregated = dailySummaries.reduce((acc, daily) => {
-        return {
-          totalIncomeFromOrders: acc.totalIncomeFromOrders + (Number(daily.total_income_from_orders) || 0),
-          totalIncomeFromCharging: acc.totalIncomeFromCharging + (Number(daily.total_income_from_charging) || 0),
-          totalIncomeCash: acc.totalIncomeCash + (Number(daily.total_income_cash) || 0),
-          totalIncomeEsewa: acc.totalIncomeEsewa + (Number(daily.total_income_esewa) || 0),
-          totalIncomeFonepay: acc.totalIncomeFonepay + (Number(daily.total_income_fonepay) || 0),
-          totalExpenses: acc.totalExpenses + (Number(daily.total_expenses) || 0),
-          totalExpensesCash: acc.totalExpensesCash + (Number(daily.total_expenses_cash) || 0),
-          totalExpensesEsewa: acc.totalExpensesEsewa + (Number(daily.total_expenses_esewa) || 0),
-          totalExpensesFonepay: acc.totalExpensesFonepay + (Number(daily.total_expenses_fonepay) || 0),
-          totalDeposits: acc.totalDeposits + (Number(daily.total_deposits) || 0),
-          totalDepositsCash: acc.totalDepositsCash + (Number(daily.total_deposits_cash) || 0),
-          totalDepositsEsewa: acc.totalDepositsEsewa + (Number(daily.total_deposits_esewa) || 0),
-          totalSavings: acc.totalSavings + (Number(daily.total_savings) || 0),
-          totalSavingsCash: acc.totalSavingsCash + (Number(daily.total_savings_cash) || 0),
-          totalSavingsEsewa: acc.totalSavingsEsewa + (Number(daily.total_savings_esewa) || 0),
-          totalSavingsFonepay: acc.totalSavingsFonepay + (Number(daily.total_savings_fonepay) || 0),
-          totalWithdrawals: acc.totalWithdrawals + (Number(daily.total_withdrawals) || 0),
-          totalWithdrawalsCash: acc.totalWithdrawalsCash + (Number(daily.total_withdrawals_cash) || 0),
-          totalWithdrawalsBank: acc.totalWithdrawalsBank + (Number(daily.total_withdrawals_bank) || 0),
-          totalWithdrawalsCooperative: acc.totalWithdrawalsCooperative + (Number(daily.total_withdrawals_cooperative) || 0),
->>>>>>> origin/main
         };
       }, {
         totalIncomeFromOrders: 0,
@@ -349,19 +308,11 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
         totalSavingsEsewa: 0,
         totalSavingsFonepay: 0,
         totalWithdrawals: 0,
-<<<<<<< HEAD
-=======
-        totalWithdrawalsCash: 0,
->>>>>>> origin/main
         totalWithdrawalsBank: 0,
         totalWithdrawalsCooperative: 0,
       });
 
-<<<<<<< HEAD
       // Convert to TransactionSummary format for UI compatibility using enhanced schema
-=======
-      // Convert to TransactionSummary format for UI compatibility
->>>>>>> origin/main
       const summary: TransactionSummary = {
         orders: {
           count: dailySummaries.length, // Number of days with data
@@ -398,11 +349,7 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
           count: dailySummaries.length,
           total: aggregated.totalWithdrawals,
           by_payment: {
-<<<<<<< HEAD
             cash: { count: 0, total: 0 },
-=======
-            cash: { count: 0, total: aggregated.totalWithdrawalsCash },
->>>>>>> origin/main
             bank: { count: 0, total: aggregated.totalWithdrawalsBank },
             cooperative: { count: 0, total: aggregated.totalWithdrawalsCooperative },
           }
