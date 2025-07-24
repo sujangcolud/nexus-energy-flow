@@ -175,24 +175,24 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
             totalIncomeEsewa: acc.totalIncomeEsewa + (safeGet(daily, 'total_income_esewa') || safeGet(daily, 'total_esewa_income')),
             totalIncomeFonepay: acc.totalIncomeFonepay + (safeGet(daily, 'total_income_fonepay') || safeGet(daily, 'total_fonepay_income')),
 
-            // Expense totals
-            totalExpenses: acc.totalExpenses + (Number(daily.total_expenses) || 0),
-            totalExpensesCash: acc.totalExpensesCash + (Number(daily.total_expenses_cash) || 0),
-            totalExpensesEsewa: acc.totalExpensesEsewa + (Number(daily.total_expenses_esewa) || 0),
-            totalExpensesFonepay: acc.totalExpensesFonepay + (Number(daily.total_expenses_fonepay) || 0),
+            // Expense totals with safe access
+            totalExpenses: acc.totalExpenses + safeGet(daily, 'total_expenses'),
+            totalExpensesCash: acc.totalExpensesCash + safeGet(daily, 'total_expenses_cash'),
+            totalExpensesEsewa: acc.totalExpensesEsewa + safeGet(daily, 'total_expenses_esewa'),
+            totalExpensesFonepay: acc.totalExpensesFonepay + safeGet(daily, 'total_expenses_fonepay'),
 
-            // Deposit totals
-            totalDeposits: acc.totalDeposits + (Number(daily.total_deposits) || 0),
-            totalDepositsCash: acc.totalDepositsCash + (Number(daily.total_deposits_cash) || 0),
-            totalDepositsEsewa: acc.totalDepositsEsewa + (Number(daily.total_deposits_esewa) || 0),
+            // Deposit totals with safe access
+            totalDeposits: acc.totalDeposits + safeGet(daily, 'total_deposits'),
+            totalDepositsCash: acc.totalDepositsCash + safeGet(daily, 'total_deposits_cash'),
+            totalDepositsEsewa: acc.totalDepositsEsewa + safeGet(daily, 'total_deposits_esewa'),
 
-            // Savings totals
-            totalSavings: acc.totalSavings + (Number(daily.total_savings) || 0),
+            // Savings totals with safe access
+            totalSavings: acc.totalSavings + safeGet(daily, 'total_savings'),
 
-            // Withdrawal totals using existing schema
-            totalWithdrawals: acc.totalWithdrawals + (Number(daily.total_withdrawals) || 0),
-            totalWithdrawalsCooperative: acc.totalWithdrawalsCooperative + (Number(daily.total_withdrawals_cooperative) || 0),
-            totalWithdrawalsBank: acc.totalWithdrawalsBank + (Number(daily.total_withdrawals_bank) || 0),
+            // Withdrawal totals with safe access
+            totalWithdrawals: acc.totalWithdrawals + safeGet(daily, 'total_withdrawals'),
+            totalWithdrawalsCooperative: acc.totalWithdrawalsCooperative + safeGet(daily, 'total_withdrawals_cooperative'),
+            totalWithdrawalsBank: acc.totalWithdrawalsBank + safeGet(daily, 'total_withdrawals_bank'),
           };
         }, {
           totalIncomeFromOrders: 0,
