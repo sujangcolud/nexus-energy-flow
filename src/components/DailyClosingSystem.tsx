@@ -865,6 +865,7 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
             </TabsContent>
 
             <TabsContent value="payment" className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
               {Object.entries(currentSummary).map(([transactionType, data]) => (
                 <Card key={transactionType}>
                   <CardHeader>
@@ -900,6 +901,7 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
                   </CardContent>
                 </Card>
               ))}
+              </div>
             </TabsContent>
 
             <TabsContent value="balances" className="space-y-4">
