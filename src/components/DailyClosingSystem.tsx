@@ -106,6 +106,12 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
     useState<TransactionSummary | null>(null);
 
   useEffect(() => {
+    if (initialDate) {
+      setSelectedDate(initialDate);
+    }
+  }, [initialDate]);
+
+  useEffect(() => {
     if (isOpen && user) {
       if (viewMode === "daily") {
         fetchDayData();
