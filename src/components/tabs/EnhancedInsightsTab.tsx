@@ -374,10 +374,7 @@ const EnhancedInsightsTab = () => {
     const paymentMethodBreakdown = {
       cash: summaries.reduce((sum, s) => sum + (s.total_income_cash || 0), 0),
       esewa: summaries.reduce((sum, s) => sum + (s.total_income_esewa || 0), 0),
-      fonepay: summaries.reduce(
-        (sum, s) => sum + (s.total_income_fonepay || 0),
-        0,
-      ),
+      fonepay: totalFonepayIncome, // Use the calculated value from above
     };
 
     // Break-even calculation (revenue needed to cover expenses)
