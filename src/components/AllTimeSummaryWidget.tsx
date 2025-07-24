@@ -466,7 +466,9 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
   const handleDateRangeChange = async (dateRange: DateRange) => {
     setLoading(true);
     try {
-      await fetchAllTimeSummary(dateRange);
+      // If dateRange is empty object or no from/to, treat as "all time"
+      const isAllTime = !dateRange || (!dateRange.from && !dateRange.to);
+      await fetchAllTimeSummary(isAllTime ? undefined : dateRange);
     } finally {
       setLoading(false);
     }
