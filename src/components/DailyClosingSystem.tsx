@@ -135,6 +135,9 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
         .eq("summary_date", selectedDate)
         .single();
 
+      // Safe accessor function to handle missing columns
+      const safeGet = (obj: any, field: string) => Number(obj?.[field]) || 0;
+
       // Fetch real transaction counts for accuracy
       const [
         { data: ordersData, error: ordersError },
