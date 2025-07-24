@@ -7,27 +7,65 @@ import { DateRangePicker } from '../ui/date-range-picker';
 const SummaryReportTab: React.FC = () => {
   const [data, setData] = useState<any[]>([]);
   const [dateRange, setDateRange] = useState<{ from: Date; to: Date } | undefined>(undefined);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
-      if (dateRange) {
-        const { data, error } = await supabase
+      setLoading(true);
+      try {
+        let query = supabase
           .from('daily_summary')
           .select('*')
-          .gte('summary_date', dateRange.from.toISOString())
-          .lte('summary_date', dateRange.to.toISOString())
           .order('summary_date', { ascending: false });
+
+        // Apply date filters only if date range is selected
+        if (dateRange) {
+          query = query
+            .gte('summary_date', dateRange.from.toISOString())
+            .lte('summary_date', dateRange.to.toISOString());
+        }
+
+        const { data, error } = await query;
 
         if (error) {
           console.error('Error fetching summary data:', error);
         } else {
-          setData(data);
+          setData(data || []);
         }
+      } catch (error) {
+        console.error('Error fetching summary data:', error);
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchData();
   }, [dateRange]);
+
+  // Load all data on component mount
+  useEffect(() => {
+    const fetchAllData = async () => {
+      setLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('daily_summary')
+          .select('*')
+          .order('summary_date', { ascending: false });
+
+        if (error) {
+          console.error('Error fetching all summary data:', error);
+        } else {
+          setData(data || []);
+        }
+      } catch (error) {
+        console.error('Error fetching all summary data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAllData();
+  }, []);
 
   const summary = data.reduce((acc, row) => {
     Object.keys(row).forEach(key => {
