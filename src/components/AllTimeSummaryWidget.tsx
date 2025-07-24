@@ -285,9 +285,9 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
             fromCharging: aggregatedSummary.totalIncomeFromCharging,
           },
           paymentMethodBreakdown: {
-            cash: Math.round(cashBalance * 1.2), // Estimate from balance
-            esewa: Math.round(esewaBalance * 1.2), // Estimate from balance
-            fonepay: Math.round(fonepayBalance * 1.2), // Estimate from balance
+            cash: aggregatedSummary.totalIncomeCash,
+            esewa: aggregatedSummary.totalIncomeEsewa,
+            fonepay: aggregatedSummary.totalIncomeFonepay,
           },
           withdrawalBreakdown: {
             fromBank: aggregatedSummary.totalWithdrawalsBank,
