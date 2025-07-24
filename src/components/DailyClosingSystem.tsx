@@ -141,6 +141,19 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
         throw summaryError;
       }
 
+      // Helper function for safe field access with fallback support
+      const safeGet = (obj: any, primaryField: string, fallbackField?: string): number => {
+        const primaryValue = Number(obj?.[primaryField]);
+        if (!isNaN(primaryValue) && primaryValue !== 0) {
+          return primaryValue;
+        }
+        if (fallbackField) {
+          const fallbackValue = Number(obj?.[fallbackField]);
+          return isNaN(fallbackValue) ? 0 : fallbackValue;
+        }
+        return 0;
+      };
+
       // Initialize empty data for variables that were not defined
       const ordersData: any[] = [];
       const ordersByPayment = { cash: null, esewa: null, fonepay: null };
