@@ -83,16 +83,18 @@ interface TransactionSummary {
 interface DailyClosingSystemProps {
   isOpen: boolean;
   onClose: () => void;
+  initialDate?: string;
 }
 
 const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
   isOpen,
   onClose,
+  initialDate,
 }) => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [selectedDate, setSelectedDate] = useState(
-    new Date().toISOString().split("T")[0],
+    initialDate || new Date().toISOString().split("T")[0],
   );
   const [transactionSummary, setTransactionSummary] =
     useState<TransactionSummary | null>(null);
