@@ -808,6 +808,11 @@ const EnhancedUserManagementTab = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* Enhanced Daily Summary Manager */}
+        {userPermissions.canManageSystem && (
+          <EnhancedDailySummaryManager />
+        )}
       </div>
 
       {/* Create User Dialog */}
