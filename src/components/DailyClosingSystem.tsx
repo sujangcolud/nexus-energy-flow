@@ -524,17 +524,22 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
   };
 
   const calculateCashBalance = (summary: TransactionSummary) => {
-    // Cash Balance: Current calculations + Cash withdrawals from ALL sources (cooperative, esewa, fonepay)
-    const currentBalance = getCashIncome(summary) -
+    // Cash Balance: Income - Expenses - Savings - Deposits + Withdrawals (from fonepay and cooperative)
+    const baseBalance = getCashIncome(summary) -
       getCashExpenses(summary) -
       getCashSavings(summary) -
-      getCashDeposits(summary) +
-      getCashWithdrawals(summary);
+      getCashDeposits(summary);
 
-    // Add all cash withdrawals (including from different sources)
-    const allCashWithdrawals = getCashWithdrawals(summary);
+    // Add cash withdrawals from all sources
+    const cashWithdrawals = getCashWithdrawals(summary);
 
-    return currentBalance + allCashWithdrawals;
+    // Add withdrawals from cooperative (savings) - these become cash
+    const cooperativeWithdrawals = summary.withdrawals.by_payment?.cooperative?.total || 0;
+
+    // Add withdrawals from fonepay - these become cash
+    const fonepayWithdrawals = summary.withdrawals.by_payment?.fonepay?.total || summary.withdrawals.by_payment?.Fonepay?.total || 0;
+
+    return baseBalance + cashWithdrawals + cooperativeWithdrawals + fonepayWithdrawals;
   };
 
   const getFonepayIncome = (summary: TransactionSummary) => {
