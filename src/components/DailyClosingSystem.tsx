@@ -126,7 +126,7 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
 
     setLoading(true);
     try {
-      console.log("📅 Fetching daily data with real transaction counts for:", selectedDate);
+      console.log("��� Fetching daily data with real transaction counts for:", selectedDate);
 
       // Fetch daily summary for calculations
       const { data: dailySummaryData, error: summaryError } = await supabase
@@ -340,7 +340,6 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
           totalSavingsEsewa: acc.totalSavingsEsewa + (Number(daily.total_savings_esewa) || 0),
           totalSavingsFonepay: acc.totalSavingsFonepay + (Number(daily.total_savings_fonepay) || 0),
           totalWithdrawals: acc.totalWithdrawals + (Number(daily.total_withdrawals) || 0),
-          totalWithdrawalsCash: acc.totalWithdrawalsCash + (Number(daily.total_withdrawals_cash) || 0),
           totalWithdrawalsBank: acc.totalWithdrawalsBank + (Number(daily.total_withdrawals_bank) || 0),
           totalWithdrawalsCooperative: acc.totalWithdrawalsCooperative + (Number(daily.total_withdrawals_cooperative) || 0),
         };
