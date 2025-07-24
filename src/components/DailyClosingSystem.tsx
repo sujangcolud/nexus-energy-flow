@@ -212,37 +212,37 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
         },
         expenses: {
           count: expensesData?.length || 0,
-          total: Number(dailySummaryData?.total_expenses) || 0,
+          total: safeGet(dailySummaryData, 'total_expenses'),
           by_payment: {
-            cash: expensesByPayment.cash || { count: 0, total: Number(dailySummaryData?.total_expenses_cash) || 0 },
-            esewa: expensesByPayment.esewa || { count: 0, total: Number(dailySummaryData?.total_expenses_esewa) || 0 },
-            fonepay: expensesByPayment.fonepay || { count: 0, total: Number(dailySummaryData?.total_expenses_fonepay) || 0 },
+            cash: expensesByPayment.cash || { count: 0, total: safeGet(dailySummaryData, 'total_expenses_cash') },
+            esewa: expensesByPayment.esewa || { count: 0, total: safeGet(dailySummaryData, 'total_expenses_esewa') },
+            fonepay: expensesByPayment.fonepay || { count: 0, total: safeGet(dailySummaryData, 'total_expenses_fonepay') },
           }
         },
         deposits: {
           count: depositsData?.length || 0,
-          total: Number(dailySummaryData?.total_deposits) || 0,
+          total: safeGet(dailySummaryData, 'total_deposits'),
           by_payment: {
-            cash: depositsByPayment.cash || { count: 0, total: Number(dailySummaryData?.total_deposits_cash) || 0 },
-            esewa: depositsByPayment.esewa || { count: 0, total: Number(dailySummaryData?.total_deposits_esewa) || 0 },
+            cash: depositsByPayment.cash || { count: 0, total: safeGet(dailySummaryData, 'total_deposits_cash') },
+            esewa: depositsByPayment.esewa || { count: 0, total: safeGet(dailySummaryData, 'total_deposits_esewa') },
           }
         },
         withdrawals: {
           count: withdrawalsData?.length || 0,
-          total: Number(dailySummaryData?.total_withdrawals) || 0,
+          total: safeGet(dailySummaryData, 'total_withdrawals'),
           by_payment: {
-            cash: withdrawalsByPayment.cash || { count: 0, total: Number(dailySummaryData?.total_withdrawals_cash) || 0 },
-            bank: { count: 0, total: Number(dailySummaryData?.total_withdrawals_bank) || 0 },
-            cooperative: { count: 0, total: Number(dailySummaryData?.total_withdrawals_cooperative) || 0 },
+            cash: withdrawalsByPayment.cash || { count: 0, total: safeGet(dailySummaryData, 'total_withdrawals_cash') },
+            bank: { count: 0, total: safeGet(dailySummaryData, 'total_withdrawals_bank') },
+            cooperative: { count: 0, total: safeGet(dailySummaryData, 'total_withdrawals_cooperative') },
           }
         },
         cooperative_savings: {
           count: savingsData?.length || 0,
-          total: Number(dailySummaryData?.total_savings) || 0,
+          total: safeGet(dailySummaryData, 'total_savings'),
           by_payment: {
-            cash: savingsByPayment.cash || { count: 0, total: Number(dailySummaryData?.total_savings_cash) || 0 },
-            esewa: savingsByPayment.esewa || { count: 0, total: Number(dailySummaryData?.total_savings_esewa) || 0 },
-            fonepay: savingsByPayment.fonepay || { count: 0, total: Number(dailySummaryData?.total_savings_fonepay) || 0 },
+            cash: savingsByPayment.cash || { count: 0, total: safeGet(dailySummaryData, 'total_savings_cash') },
+            esewa: savingsByPayment.esewa || { count: 0, total: safeGet(dailySummaryData, 'total_savings_esewa') },
+            fonepay: savingsByPayment.fonepay || { count: 0, total: safeGet(dailySummaryData, 'total_savings_fonepay') },
           }
         },
       };
