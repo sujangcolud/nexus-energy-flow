@@ -228,7 +228,7 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
           count: withdrawalsData?.length || 0,
           total: Number(dailySummaryData?.total_withdrawals) || 0,
           by_payment: {
-            cash: withdrawalsByPayment.cash || { count: 0, total: 0 },
+            cash: withdrawalsByPayment.cash || { count: 0, total: Number(dailySummaryData?.total_withdrawals_cash) || 0 },
             bank: { count: 0, total: Number(dailySummaryData?.total_withdrawals_bank) || 0 },
             cooperative: { count: 0, total: Number(dailySummaryData?.total_withdrawals_cooperative) || 0 },
           }
