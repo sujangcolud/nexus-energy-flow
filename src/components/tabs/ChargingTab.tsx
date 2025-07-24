@@ -230,8 +230,8 @@ const ChargingTab = () => {
         date: sessionDate, // Add date field for compatibility
       };
 
-      // Only add category if it's selected and exists in categories
-      if (category && category.trim() !== "" && categories.some(cat => cat.name === category)) {
+      // Only add category if it's selected, not "none", and exists in categories
+      if (category && category.trim() !== "" && category !== "none" && categories.some(cat => cat.name === category)) {
         sessionData.category = category;
       }
 
