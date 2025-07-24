@@ -1173,32 +1173,62 @@ const Settings = () => {
                   <FileText className="h-5 w-5" />
                   Activity Logs
                 </CardTitle>
+                <div className="text-sm text-gray-600">
+                  Recent user activity and system events
+                </div>
               </CardHeader>
               <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>User</TableHead>
-                      <TableHead>Action</TableHead>
-                      <TableHead>Table</TableHead>
-                      <TableHead>Record ID</TableHead>
-                      <TableHead>Timestamp</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {logs.map((log) => (
-                      <TableRow key={log.id}>
-                        <TableCell>{log.user_id}</TableCell>
-                        <TableCell>{log.action}</TableCell>
-                        <TableCell>{log.table_name}</TableCell>
-                        <TableCell>{log.record_id}</TableCell>
-                        <TableCell>
-                          {new Date(log.created_at).toLocaleString()}
-                        </TableCell>
+                <div className="max-h-96 overflow-auto border rounded-lg bg-white">
+                  <Table>
+                    <TableHeader className="sticky top-0 bg-gray-50">
+                      <TableRow>
+                        <TableHead className="font-semibold">User</TableHead>
+                        <TableHead className="font-semibold">Action</TableHead>
+                        <TableHead className="font-semibold">Table</TableHead>
+                        <TableHead className="font-semibold">Record ID</TableHead>
+                        <TableHead className="font-semibold">Timestamp</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {logs.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={5} className="text-center py-8 text-gray-500">
+                            No activity logs found
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        logs.map((log) => (
+                          <TableRow key={log.id} className="hover:bg-gray-50">
+                            <TableCell className="font-medium text-sm">
+                              {log.user_id.substring(0, 8)}...
+                            </TableCell>
+                            <TableCell className="text-sm">
+                              <Badge variant="outline" className="text-xs">
+                                {log.action}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-sm">
+                              <code className="bg-gray-100 px-1 rounded text-xs">
+                                {log.table_name}
+                              </code>
+                            </TableCell>
+                            <TableCell className="text-xs text-gray-600">
+                              {log.record_id.substring(0, 8)}...
+                            </TableCell>
+                            <TableCell className="text-xs text-gray-600">
+                              {new Date(log.created_at).toLocaleString()}
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+                {logs.length > 10 && (
+                  <div className="mt-2 text-sm text-gray-500 text-center">
+                    Showing {logs.length} activity logs (scroll to see more)
+                  </div>
+                )}
               </CardContent>
             </Card>
           </>
