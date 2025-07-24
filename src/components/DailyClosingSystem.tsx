@@ -873,28 +873,30 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Payment Mode</TableHead>
-                          <TableHead>Count</TableHead>
-                          <TableHead className="text-right">Amount</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {Object.entries(data.by_payment).map(
-                          ([paymentMode, paymentData]) => (
-                            <TableRow key={paymentMode}>
-                              <TableCell>{paymentMode}</TableCell>
-                              <TableCell>{paymentData.count}</TableCell>
-                              <TableCell className="text-right">
-                                {formatCurrency(paymentData.total)}
-                              </TableCell>
-                            </TableRow>
-                          ),
-                        )}
-                      </TableBody>
-                    </Table>
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="text-xs sm:text-sm">Payment Mode</TableHead>
+                            <TableHead className="text-xs sm:text-sm">Count</TableHead>
+                            <TableHead className="text-right text-xs sm:text-sm">Amount</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {Object.entries(data.by_payment).map(
+                            ([paymentMode, paymentData]) => (
+                              <TableRow key={paymentMode}>
+                                <TableCell className="text-xs sm:text-sm">{paymentMode}</TableCell>
+                                <TableCell className="text-xs sm:text-sm">{paymentData.count}</TableCell>
+                                <TableCell className="text-right text-xs sm:text-sm">
+                                  {formatCurrency(paymentData.total)}
+                                </TableCell>
+                              </TableRow>
+                            ),
+                          )}
+                        </TableBody>
+                      </Table>
+                    </div>
                   </CardContent>
                 </Card>
               ))}
