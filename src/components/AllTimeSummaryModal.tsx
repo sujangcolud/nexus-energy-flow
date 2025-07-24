@@ -156,7 +156,7 @@ const AllTimeSummaryModal: React.FC<AllTimeSummaryModalProps> = ({
         </DialogHeader>
 
         <div className="space-y-6">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 flex-wrap">
             <Calendar className="h-5 w-5 text-blue-600" />
             <DateRangePicker
               onUpdate={(range) => {
@@ -165,6 +165,12 @@ const AllTimeSummaryModal: React.FC<AllTimeSummaryModalProps> = ({
                 }
               }}
             />
+            <button
+              onClick={handleShowAllTime}
+              className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+            >
+              Show All Time
+            </button>
             <Badge
               variant="outline"
               className="text-purple-600 border-purple-300"
