@@ -13,13 +13,13 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     storage: localStorage,
     persistSession: true,
     autoRefreshToken: true,
-<<<<<<< HEAD
     detectSessionInUrl: true,
     flowType: 'pkce',
   },
   global: {
     headers: {
       'x-application-name': 'dashboard-app',
+      Accept: "application/json",
     },
   },
 });
@@ -38,12 +38,3 @@ supabase.auth.onAuthStateChange((event, session) => {
     localStorage.removeItem('supabase.auth.token');
   }
 });
-=======
-  },
-  global: {
-    headers: {
-      Accept: "application/json",
-    },
-  },
-});
->>>>>>> origin/main
