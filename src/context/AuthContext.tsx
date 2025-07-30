@@ -188,27 +188,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log("Auth state changed:", event, session);
 
-<<<<<<< HEAD
-      // Handle token refresh errors
-      if (event === "TOKEN_REFRESHED" && !session) {
-        console.log("Token refresh failed, clearing storage and signing out user");
-        localStorage.removeItem('supabase.auth.token');
-        setUser(null);
-        setSession(null);
-        setLoading(false);
-        return;
-      }
-
-      // Handle sign out events
-      if (event === "SIGNED_OUT") {
-        console.log("User signed out");
-        localStorage.removeItem('supabase.auth.token');
-        setUser(null);
-        setSession(null);
-        setLoading(false);
-        return;
-      }
-=======
       try {
         // Handle token refresh errors
         if (event === "TOKEN_REFRESHED" && !session) {
@@ -221,12 +200,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         // Handle sign out events
         if (event === "SIGNED_OUT") {
           console.log("User signed out");
+          localStorage.removeItem('supabase.auth.token');
           setUser(null);
           setSession(null);
           setLoading(false);
           return;
         }
->>>>>>> origin/main
 
         setSession(session);
         setLoading(false);
@@ -244,27 +223,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         console.log("Initial session check:", session, "Error:", error);
 
         if (error) {
-<<<<<<< HEAD
-          console.error("Session check error:", error);
-          // If there's an error getting the session (like invalid refresh token), clear everything
-          if (
-            error.message?.includes("refresh_token_not_found") ||
-            error.message?.includes("Invalid Refresh Token") ||
-            error.message?.includes("AuthApiError")
-          ) {
-            console.log("Invalid refresh token detected, clearing all auth data");
-            localStorage.removeItem('supabase.auth.token');
-            localStorage.clear(); // Clear all localStorage to prevent stale auth data
-            setUser(null);
-            setSession(null);
-=======
           // Handle authentication errors using the centralized handler
           if (handleAuthError(error, 'session check')) {
             // Error was handled, don't set session
           } else {
             // Other errors, still try to set session if it exists
             setSession(session);
->>>>>>> origin/main
           }
         } else {
           setSession(session);
@@ -273,16 +237,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         setLoading(false);
       })
       .catch((error) => {
-<<<<<<< HEAD
-        console.error("Unexpected error during session check:", error);
-        // Clear session and storage on any unexpected errors
-        console.log("Clearing auth data due to unexpected error");
-        localStorage.removeItem('supabase.auth.token');
-        setUser(null);
-        setSession(null);
-=======
         handleAuthError(error, 'session check catch');
->>>>>>> origin/main
         setLoading(false);
       });
 
