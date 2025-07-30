@@ -6,7 +6,9 @@ import React, {
   ReactNode,
 } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { User, Session } from "@supabase/supabase-js";
+import { User, Session, AuthError } from "@supabase/supabase-js";
+import { toast } from "sonner";
+import { clearAuthErrorFlag } from "@/utils/globalErrorHandler";
 
 export type UserRole = "user" | "data_entry" | "reports_viewer" | "super_admin";
 
@@ -45,6 +47,42 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Helper function to handle auth errors
+  const handleAuthError = (error: AuthError | Error | any, context: string = 'auth') => {
+    console.error(`Auth error in ${context}:`, error);
+
+    const errorMessage = error?.message || error?.toString() || 'Unknown error';
+
+    // Check for refresh token errors
+    if (
+      errorMessage.includes('refresh_token_not_found') ||
+      errorMessage.includes('Invalid Refresh Token') ||
+      errorMessage.includes('Refresh Token Not Found') ||
+      error?.message?.includes('refresh_token_not_found') ||
+      error?.message?.includes('Invalid Refresh Token')
+    ) {
+      console.log('Detected invalid refresh token, clearing session');
+
+      // Clear local storage and session state
+      localStorage.removeItem('supabase.auth.token');
+      sessionStorage.removeItem('supabase.auth.token');
+
+      // Clear state
+      setUser(null);
+      setSession(null);
+
+      // Sign out silently to clean up server-side session
+      supabase.auth.signOut().catch(console.error);
+
+      // Show user-friendly message
+      toast.info('Your session has expired. Please sign in again.');
+
+      return true; // Indicates this was a handled auth error
+    }
+
+    return false; // Not a handled auth error
+  };
+
   const fetchUserProfile = async (userId: string) => {
     try {
       console.log("Fetching profile for user:", userId);
@@ -65,6 +103,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 
       console.log("Role data:", userRole, "Role error:", roleError);
 
+      // Fallback: if database role lookup fails but user is the admin email
+      let finalRole = userRole;
+      if (roleError || !userRole) {
+        console.log("Database role lookup failed, checking fallback...");
+        if (session?.user?.email === "sujan1nepal@gmail.com") {
+          console.log("Using super_admin fallback for sujan1nepal@gmail.com");
+          finalRole = "super_admin";
+        } else {
+          finalRole = "user";
+        }
+      }
+
       // If we have a profile, create the app user
       if (profile) {
         const appUser: AppUser = {
@@ -73,7 +123,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
           name:
             `${profile.first_name || ""} ${profile.last_name || ""}`.trim() ||
             "User",
-          role: (userRole as UserRole) || "user",
+          role: (finalRole as UserRole) || "user",
           first_name: profile.first_name,
           last_name: profile.last_name,
         };
@@ -86,24 +136,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
           id: userId,
           email: session?.user?.email || "",
           name: "User",
-          role: (userRole as UserRole) || "user",
+          role: (finalRole as UserRole) || "user",
         };
         setUser(basicUser);
       }
     } catch (error: any) {
       console.error("Error fetching user profile:", error);
 
-      // Check for refresh token errors
-      if (
-        error?.message?.includes("refresh_token_not_found") ||
-        error?.message?.includes("Invalid Refresh Token") ||
-        error?.message?.includes("AuthApiError: Invalid Refresh Token")
-      ) {
-        console.log("Refresh token error in profile fetch, signing out");
-        // Clear everything and let the auth state listener handle it
-        setUser(null);
-        setSession(null);
-        supabase.auth.signOut().catch(console.error);
+      // Handle authentication errors using the centralized handler
+      if (handleAuthError(error, 'profile fetch')) {
         return;
       }
 
@@ -147,6 +188,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log("Auth state changed:", event, session);
 
+<<<<<<< HEAD
       // Handle token refresh errors
       if (event === "TOKEN_REFRESHED" && !session) {
         console.log("Token refresh failed, clearing storage and signing out user");
@@ -166,9 +208,33 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         setLoading(false);
         return;
       }
+=======
+      try {
+        // Handle token refresh errors
+        if (event === "TOKEN_REFRESHED" && !session) {
+          console.log("Token refresh failed, signing out user");
+          handleAuthError(new Error('Token refresh failed'), 'token refresh');
+          setLoading(false);
+          return;
+        }
 
-      setSession(session);
-      setLoading(false);
+        // Handle sign out events
+        if (event === "SIGNED_OUT") {
+          console.log("User signed out");
+          setUser(null);
+          setSession(null);
+          setLoading(false);
+          return;
+        }
+>>>>>>> origin/main
+
+        setSession(session);
+        setLoading(false);
+      } catch (error) {
+        console.error('Error in auth state change handler:', error);
+        handleAuthError(error, 'auth state change');
+        setLoading(false);
+      }
     });
 
     // Check for existing session with enhanced error handling
@@ -178,6 +244,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         console.log("Initial session check:", session, "Error:", error);
 
         if (error) {
+<<<<<<< HEAD
           console.error("Session check error:", error);
           // If there's an error getting the session (like invalid refresh token), clear everything
           if (
@@ -190,6 +257,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
             localStorage.clear(); // Clear all localStorage to prevent stale auth data
             setUser(null);
             setSession(null);
+=======
+          // Handle authentication errors using the centralized handler
+          if (handleAuthError(error, 'session check')) {
+            // Error was handled, don't set session
+          } else {
+            // Other errors, still try to set session if it exists
+            setSession(session);
+>>>>>>> origin/main
           }
         } else {
           setSession(session);
@@ -198,12 +273,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         setLoading(false);
       })
       .catch((error) => {
+<<<<<<< HEAD
         console.error("Unexpected error during session check:", error);
         // Clear session and storage on any unexpected errors
         console.log("Clearing auth data due to unexpected error");
         localStorage.removeItem('supabase.auth.token');
         setUser(null);
         setSession(null);
+=======
+        handleAuthError(error, 'session check catch');
+>>>>>>> origin/main
         setLoading(false);
       });
 
@@ -251,6 +330,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       }
 
       console.log("Login successful");
+      clearAuthErrorFlag(); // Clear any previous auth error flags
     } catch (error: any) {
       console.error("Login error:", error);
       throw error;

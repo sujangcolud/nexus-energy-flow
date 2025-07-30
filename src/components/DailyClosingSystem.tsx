@@ -38,12 +38,14 @@ import {
   Save,
   Eye,
   BarChart3,
+  Smartphone,
 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { extractErrorMessage, logError } from "@/utils/errorHandling";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { DateRange } from "react-day-picker";
+import { formatCurrency as formatCurrencyUtil } from "@/lib/calculations";
 
 interface TransactionSummary {
   orders: {
@@ -116,91 +118,111 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
 
     setLoading(true);
     try {
-      // Fetch all transaction data for the selected date
-      const [
-        ordersRes,
-        chargingRes,
-        expensesRes,
-        depositsRes,
-        withdrawalsRes,
-        cooperativeRes,
-        dailySummaryRes,
-      ] = await Promise.all([
-        supabase
-          .from("orders")
-          .select("*")
-          .eq("user_id", user.id)
-          .gte("order_date", selectedDate)
-          .lt("order_date", getNextDay(selectedDate)),
-        supabase
-          .from("charging_sessions")
-          .select("*")
-          .eq("user_id", user.id)
-          .gte("session_date", selectedDate)
-          .lt("session_date", getNextDay(selectedDate)),
-        supabase
-          .from("expenses")
-          .select("*")
-          .eq("user_id", user.id)
-          .gte("expense_date", selectedDate)
-          .lt("expense_date", getNextDay(selectedDate)),
-        supabase
-          .from("deposits")
-          .select("*")
-          .eq("user_id", user.id)
-          .gte("deposit_date", selectedDate)
-          .lt("deposit_date", getNextDay(selectedDate)),
-        supabase
-          .from("withdrawals")
-          .select("*")
-          .eq("user_id", user.id)
-          .gte("withdrawal_date", selectedDate)
-          .lt("withdrawal_date", getNextDay(selectedDate)),
-        supabase
-          .from("cooperative_savings")
-          .select("*")
-          .eq("user_id", user.id)
-          .gte("contribution_date", selectedDate)
-          .lt("contribution_date", getNextDay(selectedDate)),
-        supabase
-          .from("daily_summary")
-          .select("*")
-          .eq("summary_date", selectedDate)
-          .single(),
-      ]);
+      console.log("📅 Fetching daily data from daily_summary table for:", selectedDate);
 
-      // Check if already closed
-      setAlreadyClosed(!!dailySummaryRes.data);
+      // Fetch daily summary for the selected date
+      const { data: dailySummaryData, error: summaryError } = await supabase
+        .from("daily_summary")
+        .select("*")
+        .eq("summary_date", selectedDate)
+        .single();
 
-      // Process the data
-      const summary: TransactionSummary = {
-        orders: processTransactions(
-          ordersRes.data || [],
-          "total",
-          "payment_mode",
-        ),
-        charging: processTransactions(
-          chargingRes.data || [],
-          "total_amount",
-          "payment_mode",
-        ),
-        expenses: processTransactions(
-          expensesRes.data || [],
-          "amount",
-          "payment_mode",
-        ),
-        deposits: processTransactions(depositsRes.data || [], "amount", "mode"),
-        withdrawals: processTransactions(
-          withdrawalsRes.data || [],
-          "amount",
-          "mode",
-        ),
-        cooperative_savings: processTransactions(
-          cooperativeRes.data || [],
-          "contribution_amount",
-          "payment_mode",
-        ),
+      // Check if already closed - only if there's meaningful closing data with actual totals
+      const hasValidSummary =
+        dailySummaryData &&
+        !summaryError &&
+        (dailySummaryData.total_income > 0 ||
+          dailySummaryData.total_expenses > 0 ||
+          dailySummaryData.total_deposits > 0 ||
+          dailySummaryData.total_withdrawals > 0);
+      setAlreadyClosed(!!hasValidSummary);
+
+      if (summaryError && summaryError.code !== 'PGRST116') { // PGRST116 = no rows returned
+        throw summaryError;
+      }
+
+      // Helper function for safe field access with fallback support
+      const safeGet = (obj: any, primaryField: string, fallbackField?: string): number => {
+        const primaryValue = Number(obj?.[primaryField]);
+        if (!isNaN(primaryValue) && primaryValue !== 0) {
+          return primaryValue;
+        }
+        if (fallbackField) {
+          const fallbackValue = Number(obj?.[fallbackField]);
+          return isNaN(fallbackValue) ? 0 : fallbackValue;
+        }
+        return 0;
       };
+
+      // Initialize empty data for variables that were not defined
+      const ordersData: any[] = [];
+      const ordersByPayment = { cash: null, esewa: null, fonepay: null };
+      const chargingData: any[] = [];
+      const chargingByPayment = { cash: null, esewa: null, fonepay: null };
+
+      // If no daily summary exists, initialize with zeros
+      const summary: TransactionSummary = {
+        orders: {
+          count: ordersData?.length || 0,
+          total: safeGet(dailySummaryData, 'total_income_from_orders', 'total_income'),
+          by_payment: {
+            cash: ordersByPayment.cash || { count: 0, total: safeGet(dailySummaryData, 'total_income_from_orders_cash', 'total_cash_income') },
+            esewa: ordersByPayment.esewa || { count: 0, total: safeGet(dailySummaryData, 'total_income_from_orders_esewa', 'total_esewa_income') },
+            fonepay: ordersByPayment.fonepay || { count: 0, total: safeGet(dailySummaryData, 'total_income_from_orders_fonepay', 'total_fonepay_income') },
+          }
+        },
+        charging: {
+          count: chargingData?.length || 0,
+          total: safeGet(dailySummaryData, 'total_income_from_charging'),
+          by_payment: {
+            cash: chargingByPayment.cash || { count: 0, total: safeGet(dailySummaryData, 'total_income_from_charging_cash') },
+            esewa: chargingByPayment.esewa || { count: 0, total: safeGet(dailySummaryData, 'total_income_from_charging_esewa') },
+            fonepay: chargingByPayment.fonepay || { count: 0, total: safeGet(dailySummaryData, 'total_income_from_charging_fonepay') },
+          }
+        },
+        expenses: {
+          count: 0,
+          total: Number(dailySummaryData?.total_expenses) || 0,
+          by_payment: {
+            cash: { count: 0, total: Number(dailySummaryData?.total_expenses_cash) || 0 },
+            esewa: { count: 0, total: Number(dailySummaryData?.total_expenses_esewa) || 0 },
+            fonepay: { count: 0, total: Number(dailySummaryData?.total_expenses_fonepay) || 0 },
+          }
+        },
+        deposits: {
+          count: 0,
+          total: Number(dailySummaryData?.total_deposits) || 0,
+          by_payment: {
+            cash: { count: 0, total: Number(dailySummaryData?.total_deposits_cash) || 0 },
+            esewa: { count: 0, total: Number(dailySummaryData?.total_deposits_esewa) || 0 },
+          }
+        },
+        withdrawals: {
+          count: 0,
+          total: Number(dailySummaryData?.total_withdrawals) || 0,
+          by_payment: {
+            cash: { count: 0, total: Number(dailySummaryData?.total_withdrawals_cash) || 0 },
+            bank: { count: 0, total: Number(dailySummaryData?.total_withdrawals_bank) || 0 },
+            cooperative: { count: 0, total: Number(dailySummaryData?.total_withdrawals_cooperative) || 0 },
+          }
+        },
+        cooperative_savings: {
+          count: 0,
+          total: Number(dailySummaryData?.total_savings) || 0,
+          by_payment: {
+            cash: { count: 0, total: Number(dailySummaryData?.total_savings_cash) || 0 },
+            esewa: { count: 0, total: Number(dailySummaryData?.total_savings_esewa) || 0 },
+            fonepay: { count: 0, total: Number(dailySummaryData?.total_savings_fonepay) || 0 },
+          }
+        },
+      };
+
+      console.log("📊 Daily summary data processed:", {
+        date: selectedDate,
+        totalIncome: summary.orders.total + summary.charging.total,
+        totalExpenses: summary.expenses.total,
+        alreadyClosed: hasValidSummary
+      });
 
       setTransactionSummary(summary);
     } catch (error) {
@@ -216,6 +238,8 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
 
     setLoading(true);
     try {
+      console.log("📊 Fetching all-time data from daily_summary table...");
+
       let fromDate = "";
       let toDate = "";
 
@@ -226,99 +250,147 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
         toDate = format(dateRange.to, "yyyy-MM-dd");
       }
 
-      // Fetch data from all tables within date range
-      let ordersQuery = supabase
-        .from("orders")
+      // Fetch daily summaries within date range
+      let dailySummaryQuery = supabase
+        .from("daily_summary")
         .select("*")
-        .eq("user_id", user.id);
-
-      let chargingQuery = supabase
-        .from("charging_sessions")
-        .select("*")
-        .eq("user_id", user.id);
-
-      let expensesQuery = supabase
-        .from("expenses")
-        .select("*")
-        .eq("user_id", user.id);
-
-      let depositsQuery = supabase
-        .from("deposits")
-        .select("*")
-        .eq("user_id", user.id);
-
-      let withdrawalsQuery = supabase
-        .from("withdrawals")
-        .select("*")
-        .eq("user_id", user.id);
-
-      let savingsQuery = supabase
-        .from("cooperative_savings")
-        .select("*")
-        .eq("user_id", user.id);
+        .order("summary_date", { ascending: true });
 
       // Apply date filters if provided
       if (fromDate) {
-        ordersQuery = ordersQuery.gte("order_date", fromDate);
-        chargingQuery = chargingQuery.gte("session_date", fromDate);
-        expensesQuery = expensesQuery.gte("expense_date", fromDate);
-        depositsQuery = depositsQuery.gte("deposit_date", fromDate);
-        withdrawalsQuery = withdrawalsQuery.gte("withdrawal_date", fromDate);
-        savingsQuery = savingsQuery.gte("contribution_date", fromDate);
+        dailySummaryQuery = dailySummaryQuery.gte("summary_date", fromDate);
       }
-
       if (toDate) {
-        ordersQuery = ordersQuery.lte("order_date", toDate);
-        chargingQuery = chargingQuery.lte("session_date", toDate);
-        expensesQuery = expensesQuery.lte("expense_date", toDate);
-        depositsQuery = depositsQuery.lte("deposit_date", toDate);
-        withdrawalsQuery = withdrawalsQuery.lte("withdrawal_date", toDate);
-        savingsQuery = savingsQuery.lte("contribution_date", toDate);
+        dailySummaryQuery = dailySummaryQuery.lte("summary_date", toDate);
       }
 
-      const [
-        { data: orders, error: ordersError },
-        { data: charging, error: chargingError },
-        { data: expenses, error: expensesError },
-        { data: deposits, error: depositsError },
-        { data: withdrawals, error: withdrawalsError },
-        { data: savings, error: savingsError },
-      ] = await Promise.all([
-        ordersQuery,
-        chargingQuery,
-        expensesQuery,
-        depositsQuery,
-        withdrawalsQuery,
-        savingsQuery,
-      ]);
+      const { data: dailySummaries, error: summariesError } = await dailySummaryQuery;
 
-      if (ordersError) throw ordersError;
-      if (chargingError) throw chargingError;
-      if (expensesError) throw expensesError;
-      if (depositsError) throw depositsError;
-      if (withdrawalsError) throw withdrawalsError;
-      if (savingsError) throw savingsError;
+      if (summariesError) {
+        throw summariesError;
+      }
 
+      if (!dailySummaries || dailySummaries.length === 0) {
+        console.warn("⚠️ No daily summary data found for the selected period");
+        setAllTimeSummary({
+          orders: { count: 0, total: 0, by_payment: {} },
+          charging: { count: 0, total: 0, by_payment: {} },
+          expenses: { count: 0, total: 0, by_payment: {} },
+          deposits: { count: 0, total: 0, by_payment: {} },
+          withdrawals: { count: 0, total: 0, by_payment: {} },
+          cooperative_savings: { count: 0, total: 0, by_payment: {} },
+        });
+        return;
+      }
+
+      // Safe accessor function for daily summaries
+      const safeGet = (obj: any, field: string) => Number(obj?.[field]) || 0;
+
+      // Aggregate all daily summaries with enhanced columns
+      const aggregated = dailySummaries.reduce((acc, daily) => {
+        return {
+          totalIncomeFromOrders: acc.totalIncomeFromOrders + safeGet(daily, 'total_income_from_orders'),
+          totalIncomeFromCharging: acc.totalIncomeFromCharging + safeGet(daily, 'total_income_from_charging'),
+          totalIncomeCash: acc.totalIncomeCash + safeGet(daily, 'total_cash_income', 'total_income_cash'),
+          totalIncomeEsewa: acc.totalIncomeEsewa + safeGet(daily, 'total_esewa_income', 'total_income_esewa'),
+          totalIncomeFonepay: acc.totalIncomeFonepay + safeGet(daily, 'total_fonepay_income', 'total_income_fonepay'),
+          totalExpenses: acc.totalExpenses + safeGet(daily, 'total_expenses'),
+          totalExpensesCash: acc.totalExpensesCash + safeGet(daily, 'total_expenses_cash'),
+          totalExpensesEsewa: acc.totalExpensesEsewa + safeGet(daily, 'total_expenses_esewa'),
+          totalExpensesFonepay: acc.totalExpensesFonepay + safeGet(daily, 'total_expenses_fonepay'),
+          totalDeposits: acc.totalDeposits + safeGet(daily, 'total_deposits'),
+          totalDepositsCash: acc.totalDepositsCash + safeGet(daily, 'total_deposits_cash'),
+          totalDepositsEsewa: acc.totalDepositsEsewa + safeGet(daily, 'total_deposits_esewa'),
+          totalSavings: acc.totalSavings + safeGet(daily, 'total_savings'),
+          totalSavingsCash: acc.totalSavingsCash + safeGet(daily, 'total_savings_cash'),
+          totalSavingsEsewa: acc.totalSavingsEsewa + safeGet(daily, 'total_savings_esewa'),
+          totalSavingsFonepay: acc.totalSavingsFonepay + safeGet(daily, 'total_savings_fonepay'),
+          totalWithdrawals: acc.totalWithdrawals + safeGet(daily, 'total_withdrawals'),
+          totalWithdrawalsBank: acc.totalWithdrawalsBank + safeGet(daily, 'total_withdrawals_bank'),
+          totalWithdrawalsCooperative: acc.totalWithdrawalsCooperative + safeGet(daily, 'total_withdrawals_cooperative'),
+        };
+      }, {
+        totalIncomeFromOrders: 0,
+        totalIncomeFromCharging: 0,
+        totalIncomeCash: 0,
+        totalIncomeEsewa: 0,
+        totalIncomeFonepay: 0,
+        totalExpenses: 0,
+        totalExpensesCash: 0,
+        totalExpensesEsewa: 0,
+        totalExpensesFonepay: 0,
+        totalDeposits: 0,
+        totalDepositsCash: 0,
+        totalDepositsEsewa: 0,
+        totalSavings: 0,
+        totalSavingsCash: 0,
+        totalSavingsEsewa: 0,
+        totalSavingsFonepay: 0,
+        totalWithdrawals: 0,
+        totalWithdrawalsBank: 0,
+        totalWithdrawalsCooperative: 0,
+      });
+
+      // Convert to TransactionSummary format for UI compatibility using enhanced schema
       const summary: TransactionSummary = {
-        orders: processTransactions(orders || [], "total", "payment_mode"),
-        charging: processTransactions(
-          charging || [],
-          "total_amount",
-          "payment_mode",
-        ),
-        expenses: processTransactions(expenses || [], "amount", "payment_mode"),
-        deposits: processTransactions(deposits || [], "amount", "mode"),
-        withdrawals: processTransactions(
-          withdrawals || [],
-          "amount",
-          "payment_mode",
-        ),
-        cooperative_savings: processTransactions(
-          savings || [],
-          "contribution_amount",
-          "payment_mode",
-        ),
+        orders: {
+          count: dailySummaries.length, // Number of days with data
+          total: aggregated.totalIncomeFromOrders,
+          by_payment: {
+            cash: { count: 0, total: aggregated.totalIncomeCash },
+            esewa: { count: 0, total: aggregated.totalIncomeEsewa },
+            fonepay: { count: 0, total: aggregated.totalIncomeFonepay },
+          }
+        },
+        charging: {
+          count: dailySummaries.length,
+          total: aggregated.totalIncomeFromCharging,
+          by_payment: {} // Charging is included in total income payment modes
+        },
+        expenses: {
+          count: dailySummaries.length,
+          total: aggregated.totalExpenses,
+          by_payment: {
+            cash: { count: 0, total: aggregated.totalExpensesCash },
+            esewa: { count: 0, total: aggregated.totalExpensesEsewa },
+            fonepay: { count: 0, total: aggregated.totalExpensesFonepay },
+          }
+        },
+        deposits: {
+          count: dailySummaries.length,
+          total: aggregated.totalDeposits,
+          by_payment: {
+            cash: { count: 0, total: aggregated.totalDepositsCash },
+            esewa: { count: 0, total: aggregated.totalDepositsEsewa },
+          }
+        },
+        withdrawals: {
+          count: dailySummaries.length,
+          total: aggregated.totalWithdrawals,
+          by_payment: {
+            cash: { count: 0, total: 0 },
+            bank: { count: 0, total: aggregated.totalWithdrawalsBank },
+            cooperative: { count: 0, total: aggregated.totalWithdrawalsCooperative },
+          }
+        },
+        cooperative_savings: {
+          count: dailySummaries.length,
+          total: aggregated.totalSavings,
+          by_payment: {
+            cash: { count: 0, total: aggregated.totalSavingsCash },
+            esewa: { count: 0, total: aggregated.totalSavingsEsewa },
+            fonepay: { count: 0, total: aggregated.totalSavingsFonepay },
+          }
+        },
       };
+
+      console.log("📈 All-time data aggregated from daily summaries:", {
+        dateRange: { from: fromDate, to: toDate },
+        daysProcessed: dailySummaries.length,
+        totalIncome: aggregated.totalIncomeFromOrders + aggregated.totalIncomeFromCharging,
+        totalExpenses: aggregated.totalExpenses,
+        summary
+      });
 
       setAllTimeSummary(summary);
     } catch (error) {
@@ -329,29 +401,7 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
     }
   };
 
-  const processTransactions = (
-    transactions: any[],
-    amountField: string,
-    paymentField: string,
-  ) => {
-    const count = transactions.length;
-    const total = transactions.reduce(
-      (sum, t) => sum + (t[amountField] || 0),
-      0,
-    );
-    const by_payment: Record<string, { count: number; total: number }> = {};
 
-    transactions.forEach((t) => {
-      const payment = t[paymentField] || "Unknown";
-      if (!by_payment[payment]) {
-        by_payment[payment] = { count: 0, total: 0 };
-      }
-      by_payment[payment].count++;
-      by_payment[payment].total += t[amountField] || 0;
-    });
-
-    return { count, total, by_payment };
-  };
 
   const getNextDay = (date: string) => {
     const nextDay = new Date(date);
@@ -393,15 +443,45 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
         }
       });
 
-      // Insert or update daily summary
-      const dailySummaryData = {
+      // Fetch withdrawal data to calculate breakdown for daily summary
+      const { data: withdrawalData, error: withdrawalError } = await supabase
+        .from("withdrawals")
+        .select("*")
+        .eq("user_id", user.id)
+        .gte("withdrawal_date", selectedDate)
+        .lt("withdrawal_date", getNextDay(selectedDate));
+
+      if (withdrawalError) {
+        console.warn("⚠️ Error fetching withdrawal data for breakdown:", withdrawalError);
+      }
+
+      // Calculate withdrawal breakdown using database schema
+      const withdrawalDetails = withdrawalData || [];
+      const totalWithdrawalsBank = withdrawalDetails
+        .filter(w => w.withdrawal_from === 'Bank')
+        .reduce((sum, w) => sum + (Number(w.amount) || 0), 0);
+
+      const totalWithdrawalsCooperative = withdrawalDetails
+        .filter(w => w.withdrawal_from === 'Cooperative')
+        .reduce((sum, w) => sum + (Number(w.amount) || 0), 0);
+
+      const totalWithdrawalsEsewa = withdrawalDetails
+        .filter(w => w.withdrawal_from === 'Esewa')
+        .reduce((sum, w) => sum + (Number(w.amount) || 0), 0);
+
+      console.log('🔍 Daily withdrawal breakdown:', {
+        totalWithdrawalsBank,
+        totalWithdrawalsCooperative,
+        totalWithdrawalsEsewa,
+        totalWithdrawals,
+        rawWithdrawals: withdrawalDetails.length,
+        withdrawalDetails: withdrawalDetails.map(w => ({ amount: w.amount, from: w.withdrawal_from, mode: w.payment_mode }))
+      });
+
+      // Insert or update daily summary with only basic columns to avoid errors
+      const dailySummaryData: any = {
         summary_date: selectedDate,
         total_income: totalIncome,
-        total_income_from_orders: transactionSummary.orders.total,
-        total_income_from_charging: transactionSummary.charging.total,
-        total_income_cash: totalIncomeCash,
-        total_income_esewa: totalIncomeEsewa,
-        total_income_fonepay: totalIncomeFonepay,
         total_expenses: totalExpenses,
         total_deposits: totalDeposits,
         total_withdrawals: totalWithdrawals,
@@ -409,11 +489,25 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
         cash_balance:
           totalIncomeCash + totalDeposits - totalExpenses - totalWithdrawals,
         esewa_balance: totalIncomeEsewa,
-        fonepay_balance: totalIncomeFonepay,
         total_balance:
           totalIncome + totalDeposits - totalExpenses - totalWithdrawals,
         updated_at: new Date().toISOString(),
       };
+
+      // Add enhanced columns only if they might exist
+      try {
+        dailySummaryData.total_income_from_orders = transactionSummary.orders.total;
+        dailySummaryData.total_income_from_charging = transactionSummary.charging.total;
+        dailySummaryData.total_income_cash = totalIncomeCash;
+        dailySummaryData.total_income_esewa = totalIncomeEsewa;
+        dailySummaryData.total_income_fonepay = totalIncomeFonepay;
+        dailySummaryData.total_withdrawals_bank = totalWithdrawalsBank;
+        dailySummaryData.total_withdrawals_cooperative = totalWithdrawalsCooperative;
+        dailySummaryData.total_withdrawals_esewa = totalWithdrawalsEsewa;
+        dailySummaryData.fonepay_balance = totalIncomeFonepay;
+      } catch (error) {
+        console.warn("Some enhanced columns may not exist, using basic columns only");
+      }
 
       const { error } = await supabase
         .from("daily_summary")
@@ -433,7 +527,109 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
     }
   };
 
-  const formatCurrency = (amount: number) => `NRs. ${amount.toFixed(2)}`;
+  const formatCurrency = (amount: number) => formatCurrencyUtil(amount);
+
+  // Updated balance calculation functions that work with the new data format
+  const getCashIncome = (summary: TransactionSummary) => {
+    return (
+      (summary.orders.by_payment?.cash?.total || summary.orders.by_payment?.Cash?.total || 0) +
+      (summary.charging.by_payment?.cash?.total || summary.charging.by_payment?.Cash?.total || 0)
+    );
+  };
+
+  const getCashExpenses = (summary: TransactionSummary) => {
+    return summary.expenses.by_payment?.cash?.total || summary.expenses.by_payment?.Cash?.total || 0;
+  };
+
+  const getCashSavings = (summary: TransactionSummary) => {
+    return summary.cooperative_savings.by_payment?.cash?.total || summary.cooperative_savings.by_payment?.Cash?.total || 0;
+  };
+
+  const getCashDeposits = (summary: TransactionSummary) => {
+    return summary.deposits.by_payment?.cash?.total || summary.deposits.by_payment?.Cash?.total || 0;
+  };
+
+  const getCashWithdrawals = (summary: TransactionSummary) => {
+    return summary.withdrawals.by_payment?.cash?.total || summary.withdrawals.by_payment?.Cash?.total || 0;
+  };
+
+  const calculateCashBalance = (summary: TransactionSummary) => {
+    // Cash Balance: Current calculations + Cash withdrawals from ALL sources (cooperative, esewa, fonepay)
+    const currentBalance = getCashIncome(summary) -
+      getCashExpenses(summary) -
+      getCashSavings(summary) -
+      getCashDeposits(summary) +
+      getCashWithdrawals(summary);
+
+    // Add all cash withdrawals (including from different sources)
+    const allCashWithdrawals = getCashWithdrawals(summary);
+
+    return currentBalance + allCashWithdrawals;
+  };
+
+  const getFonepayIncome = (summary: TransactionSummary) => {
+    return (
+      (summary.orders.by_payment?.fonepay?.total || summary.orders.by_payment?.Fonepay?.total || 0) +
+      (summary.charging.by_payment?.fonepay?.total || summary.charging.by_payment?.Fonepay?.total || 0)
+    );
+  };
+
+  const getFonepayExpenses = (summary: TransactionSummary) => {
+    return summary.expenses.by_payment?.fonepay?.total || summary.expenses.by_payment?.Fonepay?.total || 0;
+  };
+
+  const getBankWithdrawals = (summary: TransactionSummary) => {
+    // Now properly calculated from database schema in the summary data
+    return summary.withdrawals.by_payment?.bank?.total || summary.withdrawals.by_payment?.fonepay?.total || 0;
+  };
+
+  const calculateBankBalance = (summary: TransactionSummary) => {
+    // Bank Balance: Current calculations + Cash Deposits + Esewa Deposits
+    const currentBalance = getFonepayIncome(summary) -
+      getFonepayExpenses(summary) -
+      getBankWithdrawals(summary);
+
+    // Add cash deposits and esewa deposits
+    const cashDeposits = getCashDeposits(summary);
+    const esewaDeposits = summary.deposits.by_payment?.esewa?.total || summary.deposits.by_payment?.Esewa?.total || 0;
+
+    return currentBalance + cashDeposits + esewaDeposits;
+  };
+
+  const getEsewaIncome = (summary: TransactionSummary) => {
+    return (
+      (summary.orders.by_payment?.esewa?.total || summary.orders.by_payment?.Esewa?.total || 0) +
+      (summary.charging.by_payment?.esewa?.total || summary.charging.by_payment?.Esewa?.total || 0)
+    );
+  };
+
+  const getEsewaExpenses = (summary: TransactionSummary) => {
+    return summary.expenses.by_payment?.esewa?.total || summary.expenses.by_payment?.Esewa?.total || 0;
+  };
+
+  const getEsewaWithdrawals = (summary: TransactionSummary) => {
+    // Now properly calculated from database schema
+    return summary.withdrawals.by_payment?.esewa?.total || summary.withdrawals.by_payment?.Esewa?.total || 0;
+  };
+
+  const calculateEsewaBalance = (summary: TransactionSummary) => {
+    return (
+      getEsewaIncome(summary) -
+      getEsewaExpenses(summary) -
+      getEsewaWithdrawals(summary)
+    );
+  };
+
+  const getCooperativeWithdrawals = (summary: TransactionSummary) => {
+    // Currently all withdrawals are from Cooperative as per requirements
+    return summary.withdrawals.total;
+  };
+
+  const calculateCooperativeBalance = (summary: TransactionSummary) => {
+    return (
+      summary.cooperative_savings.total - getCooperativeWithdrawals(summary)
+    );
+  };
 
   const dataToShow = viewMode === "daily" ? transactionSummary : allTimeSummary;
 
@@ -611,18 +807,19 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
 
           {/* Detailed Tabs */}
           <Tabs defaultValue="overview" className="w-full">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="transactions">
                 By Transaction Type
               </TabsTrigger>
               <TabsTrigger value="payment">By Payment Mode</TabsTrigger>
+              <TabsTrigger value="balances">Balances</TabsTrigger>
               <TabsTrigger value="details">Detailed Breakdown</TabsTrigger>
             </TabsList>
 
             <TabsContent value="overview" className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {Object.entries(transactionSummary).map(([key, data]) => (
+                {Object.entries(currentSummary).map(([key, data]) => (
                   <Card key={key}>
                     <CardHeader className="pb-2">
                       <CardTitle className="text-sm flex items-center gap-2">
@@ -684,46 +881,293 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
             </TabsContent>
 
             <TabsContent value="payment" className="space-y-4">
-              {Object.entries(transactionSummary).map(
-                ([transactionType, data]) => (
-                  <Card key={transactionType}>
-                    <CardHeader>
-                      <CardTitle className="text-sm">
-                        {transactionType.replace("_", " ").toUpperCase()}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Payment Mode</TableHead>
-                            <TableHead>Count</TableHead>
-                            <TableHead className="text-right">Amount</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {Object.entries(data.by_payment).map(
-                            ([paymentMode, paymentData]) => (
-                              <TableRow key={paymentMode}>
-                                <TableCell>{paymentMode}</TableCell>
-                                <TableCell>{paymentData.count}</TableCell>
-                                <TableCell className="text-right">
-                                  {formatCurrency(paymentData.total)}
-                                </TableCell>
-                              </TableRow>
-                            ),
-                          )}
-                        </TableBody>
-                      </Table>
-                    </CardContent>
-                  </Card>
-                ),
-              )}
+              {Object.entries(currentSummary).map(([transactionType, data]) => (
+                <Card key={transactionType}>
+                  <CardHeader>
+                    <CardTitle className="text-sm">
+                      {transactionType.replace("_", " ").toUpperCase()}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Payment Mode</TableHead>
+                          <TableHead>Count</TableHead>
+                          <TableHead className="text-right">Amount</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {Object.entries(data.by_payment).map(
+                          ([paymentMode, paymentData]) => (
+                            <TableRow key={paymentMode}>
+                              <TableCell>{paymentMode}</TableCell>
+                              <TableCell>{paymentData.count}</TableCell>
+                              <TableCell className="text-right">
+                                {formatCurrency(paymentData.total)}
+                              </TableCell>
+                            </TableRow>
+                          ),
+                        )}
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
+              ))}
+            </TabsContent>
+
+            <TabsContent value="balances" className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Cash Balance Card */}
+                <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-green-700">
+                      <Banknote className="h-5 w-5" />
+                      Cash Balance
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <div className="text-2xl font-bold text-green-800">
+                        {formatCurrency(calculateCashBalance(currentSummary))}
+                      </div>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">
+                            Cash Income (Charging + Orders):
+                          </span>
+                          <span className="font-medium text-green-600">
+                            +{formatCurrency(getCashIncome(currentSummary))}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Cash Expenses:</span>
+                          <span className="font-medium text-red-600">
+                            -{formatCurrency(getCashExpenses(currentSummary))}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Cash Savings:</span>
+                          <span className="font-medium text-red-600">
+                            -{formatCurrency(getCashSavings(currentSummary))}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Cash Deposits:</span>
+                          <span className="font-medium text-red-600">
+                            -{formatCurrency(getCashDeposits(currentSummary))}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">
+                            Cash Withdrawals:
+                          </span>
+                          <span className="font-medium text-green-600">
+                            +
+                            {formatCurrency(getCashWithdrawals(currentSummary))}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Bank Balance Card */}
+                <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-blue-700">
+                      <CreditCard className="h-5 w-5" />
+                      Bank Balance (Fonepay)
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <div className="text-2xl font-bold text-blue-800">
+                        {formatCurrency(calculateBankBalance(currentSummary))}
+                      </div>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">
+                            Fonepay Income (Charging + Orders):
+                          </span>
+                          <span className="font-medium text-green-600">
+                            +{formatCurrency(getFonepayIncome(currentSummary))}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">
+                            Fonepay Expenses:
+                          </span>
+                          <span className="font-medium text-red-600">
+                            -
+                            {formatCurrency(getFonepayExpenses(currentSummary))}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">
+                            Bank Withdrawals:
+                          </span>
+                          <span className="font-medium text-red-600">
+                            -
+                            {formatCurrency(getBankWithdrawals(currentSummary))}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Esewa Balance Card */}
+                <Card className="bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-200">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-purple-700">
+                      <Smartphone className="h-5 w-5" />
+                      Esewa Balance
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <div className="text-2xl font-bold text-purple-800">
+                        {formatCurrency(calculateEsewaBalance(currentSummary))}
+                      </div>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">
+                            Esewa Income (Charging + Orders):
+                          </span>
+                          <span className="font-medium text-green-600">
+                            +{formatCurrency(getEsewaIncome(currentSummary))}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Esewa Expenses:</span>
+                          <span className="font-medium text-red-600">
+                            -{formatCurrency(getEsewaExpenses(currentSummary))}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">
+                            Esewa Withdrawals:
+                          </span>
+                          <span className="font-medium text-red-600">
+                            -
+                            {formatCurrency(
+                              getEsewaWithdrawals(currentSummary),
+                            )}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Cooperative Balance Card */}
+                <Card className="bg-gradient-to-br from-teal-50 to-cyan-50 border border-teal-200">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-teal-700">
+                      <PiggyBank className="h-5 w-5" />
+                      Cooperative Balance
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <div className="text-2xl font-bold text-teal-800">
+                        {formatCurrency(
+                          calculateCooperativeBalance(currentSummary),
+                        )}
+                      </div>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Total Savings:</span>
+                          <span className="font-medium text-green-600">
+                            +
+                            {formatCurrency(
+                              currentSummary.cooperative_savings.total,
+                            )}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">
+                            Cooperative Withdrawals:
+                          </span>
+                          <span className="font-medium text-red-600">
+                            -
+                            {formatCurrency(
+                              getCooperativeWithdrawals(currentSummary),
+                            )}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Balance Summary */}
+              <Card className="bg-gradient-to-br from-gray-50 to-slate-50 border border-gray-200">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-gray-700">
+                    <BarChart3 className="h-5 w-5" />
+                    Balance Summary
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="text-center p-3 bg-green-50 rounded-lg">
+                      <div className="text-sm text-gray-600">Cash Balance</div>
+                      <div className="text-lg font-bold text-green-700">
+                        {formatCurrency(calculateCashBalance(currentSummary))}
+                      </div>
+                    </div>
+                    <div className="text-center p-3 bg-blue-50 rounded-lg">
+                      <div className="text-sm text-gray-600">Bank Balance</div>
+                      <div className="text-lg font-bold text-blue-700">
+                        {formatCurrency(calculateBankBalance(currentSummary))}
+                      </div>
+                    </div>
+                    <div className="text-center p-3 bg-purple-50 rounded-lg">
+                      <div className="text-sm text-gray-600">Esewa Balance</div>
+                      <div className="text-lg font-bold text-purple-700">
+                        {formatCurrency(calculateEsewaBalance(currentSummary))}
+                      </div>
+                    </div>
+                    <div className="text-center p-3 bg-teal-50 rounded-lg">
+                      <div className="text-sm text-gray-600">
+                        Cooperative Balance
+                      </div>
+                      <div className="text-lg font-bold text-teal-700">
+                        {formatCurrency(
+                          calculateCooperativeBalance(currentSummary),
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-4 pt-4 border-t border-gray-200">
+                    <div className="flex justify-between items-center">
+                      <span className="text-lg font-semibold text-gray-700">
+                        Total Net Balance:
+                      </span>
+                      <span className="text-xl font-bold text-gray-900">
+                        {formatCurrency(
+                          calculateCashBalance(currentSummary) +
+                            calculateBankBalance(currentSummary) +
+                            calculateEsewaBalance(currentSummary) +
+                            calculateCooperativeBalance(currentSummary),
+                        )}
+                      </span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </TabsContent>
 
             <TabsContent value="details" className="space-y-4">
               <div className="bg-gray-50 p-4 rounded-lg">
-                <h3 className="font-semibold mb-2">Day Closing Summary</h3>
+                <h3 className="font-semibold mb-2">
+                  {viewMode === "daily"
+                    ? "Day Closing Summary"
+                    : "All-Time Summary"}
+                </h3>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span>Total Income (Orders + Charging):</span>

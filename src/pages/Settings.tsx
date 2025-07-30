@@ -11,6 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -50,9 +51,11 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import PasswordChangeForm from "@/components/PasswordChangeForm";
+import HistoricalDataFixAdmin from "@/components/HistoricalDataFixAdmin";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { fixAdminRole } from "@/utils/emergencyAdminFix";
 
 type AppRole = "user" | "data_entry" | "reports_viewer" | "super_admin";
 
@@ -176,6 +179,7 @@ const Settings = () => {
   const [canAddMenuCategory, setCanAddMenuCategory] = useState(false);
   const [canAddExpenseCategory, setCanAddExpenseCategory] = useState(false);
   const [canDeleteTabs, setCanDeleteTabs] = useState(false);
+  const [showBatchClosing, setShowBatchClosing] = useState(false);
   const [showOrders, setShowOrders] = useState(true);
 
   const [showDataInput, setShowDataInput] = useState(true);
@@ -186,6 +190,7 @@ const Settings = () => {
   const [showCreateUserForm, setShowCreateUserForm] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
+  const [isFixingRole, setIsFixingRole] = useState(false);
   const [logs, setLogs] = useState<
     Array<{
       id: string;
@@ -357,6 +362,11 @@ const Settings = () => {
       setCanEditTransactions(JSON.parse(canEdit));
     }
 
+    const batchClosingSetting = localStorage.getItem("showBatchClosing");
+    if (batchClosingSetting !== null) {
+      setShowBatchClosing(JSON.parse(batchClosingSetting));
+    }
+
     const canAddCharging = localStorage.getItem("canAddChargingCategory");
     if (canAddCharging) {
       setCanAddChargingCategory(JSON.parse(canAddCharging));
@@ -492,9 +502,17 @@ const Settings = () => {
   };
 
   const handleToggle = (tabId: string) => {
-    const newSettings = { ...tabSettings, [tabId]: !tabSettings[tabId] };
-    setTabSettings(newSettings);
-    localStorage.setItem("tabSettings", JSON.stringify(newSettings));
+    if (user && hasRole("super_admin")) {
+      const currentSetting = tabSettings[tabId] ?? true;
+      const newSettings = { ...tabSettings, [tabId]: !currentSetting };
+      setTabSettings(newSettings);
+      localStorage.setItem("tabSettings", JSON.stringify(newSettings));
+      updatePermissionMutation.mutate({
+        userId: user.id,
+        tabId,
+        enabled: !currentSetting,
+      });
+    }
   };
 
   const handleCreateUser = () => {
@@ -522,6 +540,26 @@ const Settings = () => {
       password += chars.charAt(Math.floor(Math.random() * chars.length));
     }
     setNewUser((prev) => ({ ...prev, password }));
+  };
+
+  const handleFixAdminRole = async () => {
+    setIsFixingRole(true);
+    try {
+      const result = await fixAdminRole();
+      if (result.success) {
+        toast.success(result.message);
+        // Refresh the page to see role changes
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
+      } else {
+        toast.error(result.message);
+      }
+    } catch (error: any) {
+      toast.error(`Failed to fix admin role: ${error.message}`);
+    } finally {
+      setIsFixingRole(false);
+    }
   };
 
   const getRoleIcon = (role: AppRole) => {
@@ -572,6 +610,7 @@ const Settings = () => {
       "canEditTransactions",
       JSON.stringify(canEditTransactions),
     );
+    localStorage.setItem("showBatchClosing", JSON.stringify(showBatchClosing));
     localStorage.setItem(
       "canAddChargingCategory",
       JSON.stringify(canAddChargingCategory),
@@ -617,6 +656,7 @@ const Settings = () => {
   }, [
     canEditTransactions,
     canDeleteTabs,
+    showBatchClosing,
     canAddChargingCategory,
     canAddSavingsCategory,
     canAddWithdrawalCategory,
@@ -694,8 +734,44 @@ const Settings = () => {
                   {user?.name || "User Profile"}
                 </CardTitle>
                 <p className="text-sm text-gray-600">{user?.email}</p>
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="text-gray-500">Role:</span>
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    user?.role === 'super_admin'
+                      ? 'bg-purple-100 text-purple-700 border border-purple-200'
+                      : 'bg-gray-100 text-gray-700 border border-gray-200'
+                  }`}>
+                    {user?.role}
+                  </span>
+                </div>
               </CardHeader>
               <CardContent className="space-y-4">
+                {/* Emergency Admin Fix - only show for sujan1nepal@gmail.com if not super_admin */}
+                {user?.email === "sujan1nepal@gmail.com" && user?.role !== "super_admin" && (
+                  <div className="text-center mb-4">
+                    <Button
+                      onClick={handleFixAdminRole}
+                      disabled={isFixingRole}
+                      className="w-full bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white transition-all duration-200 transform hover:scale-105"
+                    >
+                      {isFixingRole ? (
+                        <>
+                          <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                          Fixing Admin Role...
+                        </>
+                      ) : (
+                        <>
+                          <UserCog className="h-4 w-4 mr-2" />
+                          Fix My Admin Role
+                        </>
+                      )}
+                    </Button>
+                    <p className="text-xs text-orange-600 mt-2">
+                      Your account should be super admin. Click to fix this issue.
+                    </p>
+                  </div>
+                )}
+
                 <div className="text-center">
                   <Button
                     onClick={() => setShowPasswordForm(!showPasswordForm)}
@@ -1098,32 +1174,62 @@ const Settings = () => {
                   <FileText className="h-5 w-5" />
                   Activity Logs
                 </CardTitle>
+                <div className="text-sm text-gray-600">
+                  Recent user activity and system events
+                </div>
               </CardHeader>
               <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>User</TableHead>
-                      <TableHead>Action</TableHead>
-                      <TableHead>Table</TableHead>
-                      <TableHead>Record ID</TableHead>
-                      <TableHead>Timestamp</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {logs.map((log) => (
-                      <TableRow key={log.id}>
-                        <TableCell>{log.user_id}</TableCell>
-                        <TableCell>{log.action}</TableCell>
-                        <TableCell>{log.table_name}</TableCell>
-                        <TableCell>{log.record_id}</TableCell>
-                        <TableCell>
-                          {new Date(log.created_at).toLocaleString()}
-                        </TableCell>
+                <div className="max-h-96 overflow-auto border rounded-lg bg-white">
+                  <Table>
+                    <TableHeader className="sticky top-0 bg-gray-50">
+                      <TableRow>
+                        <TableHead className="font-semibold">User</TableHead>
+                        <TableHead className="font-semibold">Action</TableHead>
+                        <TableHead className="font-semibold">Table</TableHead>
+                        <TableHead className="font-semibold">Record ID</TableHead>
+                        <TableHead className="font-semibold">Timestamp</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {logs.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={5} className="text-center py-8 text-gray-500">
+                            No activity logs found
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        logs.map((log) => (
+                          <TableRow key={log.id} className="hover:bg-gray-50">
+                            <TableCell className="font-medium text-sm">
+                              {log.user_id.substring(0, 8)}...
+                            </TableCell>
+                            <TableCell className="text-sm">
+                              <Badge variant="outline" className="text-xs">
+                                {log.action}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-sm">
+                              <code className="bg-gray-100 px-1 rounded text-xs">
+                                {log.table_name}
+                              </code>
+                            </TableCell>
+                            <TableCell className="text-xs text-gray-600">
+                              {log.record_id.substring(0, 8)}...
+                            </TableCell>
+                            <TableCell className="text-xs text-gray-600">
+                              {new Date(log.created_at).toLocaleString()}
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+                {logs.length > 10 && (
+                  <div className="mt-2 text-sm text-gray-500 text-center">
+                    Showing {logs.length} activity logs (scroll to see more)
+                  </div>
+                )}
               </CardContent>
             </Card>
           </>
@@ -1222,8 +1328,26 @@ const Settings = () => {
                 onCheckedChange={setCanDeleteTabs}
               />
             </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="show-batch-closing">
+                Show Batch Closing Button
+              </Label>
+              <Switch
+                id="show-batch-closing"
+                checked={showBatchClosing}
+                onCheckedChange={setShowBatchClosing}
+              />
+            </div>
           </CardContent>
         </Card>
+
+        {/* Historical Data Fix - Only visible to super admin */}
+        {hasRole("super_admin") && (
+          <div className="mt-8">
+            <HistoricalDataFixAdmin />
+          </div>
+        )}
+
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
           <Card className="bg-gradient-to-br from-orange-50 to-red-50 border-0 shadow-lg hover:shadow-xl transition-all duration-300">

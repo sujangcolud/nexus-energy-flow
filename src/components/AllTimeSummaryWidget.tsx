@@ -22,6 +22,7 @@ import { toast } from "sonner";
 import { extractErrorMessage, logError } from "@/utils/errorHandling";
 import AllTimeSummaryModal from "./AllTimeSummaryModal";
 import { DateRange } from "react-day-picker";
+import { formatCurrency as formatCurrencyUtil } from "@/lib/calculations";
 
 interface AllTimeSummaryData {
   totalIncome: number;
@@ -34,6 +35,8 @@ interface AllTimeSummaryData {
     cash: number;
     esewa: number;
     fonepay: number;
+    bank: number;
+    cooperative: number;
     total: number;
   };
   incomeBreakdown: {
@@ -69,6 +72,9 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [connectionError, setConnectionError] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+  const [networkStatus, setNetworkStatus] = useState(navigator.onLine);
   const [summaryData, setSummaryData] = useState<AllTimeSummaryData>({
     totalIncome: 0,
     totalExpenses: 0,
@@ -76,7 +82,7 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
     totalWithdrawals: 0,
     cooperativeSavings: 0,
     netProfit: 0,
-    currentBalances: { cash: 0, esewa: 0, fonepay: 0, total: 0 },
+    currentBalances: { cash: 0, esewa: 0, fonepay: 0, bank: 0, cooperative: 0, total: 0 },
     incomeBreakdown: { fromOrders: 0, fromCharging: 0 },
     paymentMethodBreakdown: { cash: 0, esewa: 0, fonepay: 0 },
     withdrawalBreakdown: {
@@ -91,90 +97,63 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
   });
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+
+
   const fetchAllTimeSummary = useCallback(
     async (dateRange?: DateRange) => {
-      if (!user) return;
+      if (!user) {
+        console.warn("❌ No user found, cannot fetch summary");
+        return;
+      }
 
       setLoading(true);
+      setConnectionError(false);
       try {
-        let query = supabase
+        console.log("✅ Fetching all-time summary from daily summary table...");
+        console.log("📅 Date range provided:", dateRange);
+
+        // Set up date filters for daily summary query
+        // Note: daily_summary is a global table (no user_id column)
+        let dailySummaryQuery = supabase
           .from("daily_summary")
           .select("*")
           .order("summary_date", { ascending: true });
 
         if (dateRange?.from) {
-          query = query.gte(
-            "summary_date",
-            dateRange.from.toISOString().split("T")[0],
-          );
+          const fromDate = dateRange.from.toISOString().split("T")[0];
+          console.log("📅 Filtering from date:", fromDate);
+          dailySummaryQuery = dailySummaryQuery.gte("summary_date", fromDate);
         }
+
         if (dateRange?.to) {
-          query = query.lt(
-            "summary_date",
-            dateRange.to.toISOString().split("T")[0],
-          );
+          const toDate = dateRange.to.toISOString().split("T")[0];
+          console.log("📅 Filtering to date:", toDate);
+          dailySummaryQuery = dailySummaryQuery.lte("summary_date", toDate);
         }
 
-        const { data: summariesData, error } = await query;
-
-        if (error) {
-          console.error("Error fetching daily summaries:", error);
-          logError("AllTimeSummaryWidget", error);
-          throw error;
+        if (!dateRange?.from && !dateRange?.to) {
+          console.log("📅 No date filter - fetching ALL historical data");
         }
 
-        const summaries = summariesData || [];
-        console.log(`📊 Processing ${summaries.length} daily summaries...`);
+        const { data: dailySummaries, error: summaryError } = await dailySummaryQuery;
 
-        if (summaries.length === 0) {
-          console.warn("⚠️ No daily summaries found");
-          setSummaryData((prev) => ({
-            ...prev,
-            dataPoints: 0,
-            dateRange: { from: "", to: "" },
-          }));
-          return;
+        if (summaryError) {
+          console.error("❌ Error fetching daily summaries:", summaryError);
+          throw summaryError;
         }
 
-        // Calculate totals from all daily summaries
-        const totals = summaries.reduce(
-          (acc, summary) => {
-            acc.totalIncome += summary.total_income || 0;
-            acc.totalExpenses += summary.total_expenses || 0;
-            acc.totalDeposits += summary.total_deposits || 0;
-            acc.totalWithdrawals += summary.total_withdrawals || 0;
-            acc.cooperativeSavings += summary.total_savings || 0;
+        console.log("📊 Daily summaries fetched:", dailySummaries?.length || 0, "records");
 
-            // Income breakdown
-            acc.incomeBreakdown.fromOrders +=
-              summary.total_income_from_orders || 0;
-            acc.incomeBreakdown.fromCharging +=
-              summary.total_income_from_charging || 0;
-
-            // Payment method breakdown
-            acc.paymentMethodBreakdown.cash += summary.total_cash_income || 0;
-            acc.paymentMethodBreakdown.esewa += summary.total_esewa_income || 0;
-            acc.paymentMethodBreakdown.fonepay +=
-              summary.total_fonepay_income || 0;
-
-            // Withdrawal breakdown
-            acc.withdrawalBreakdown.fromBank +=
-              summary.total_withdrawals_bank || 0;
-            acc.withdrawalBreakdown.fromSavings +=
-              summary.total_withdrawals_cooperative || 0;
-            acc.withdrawalBreakdown.fromEsewa +=
-              summary.total_withdrawals_esewa || 0;
-            acc.withdrawalBreakdown.fromFonepay += 0; // Not tracked separately yet
-            acc.withdrawalBreakdown.total += summary.total_withdrawals || 0;
-
-            return acc;
-          },
-          {
+        if (!dailySummaries || dailySummaries.length === 0) {
+          console.warn("⚠️ No daily summary data found");
+          setSummaryData({
             totalIncome: 0,
             totalExpenses: 0,
             totalDeposits: 0,
             totalWithdrawals: 0,
             cooperativeSavings: 0,
+            netProfit: 0,
+            currentBalances: { cash: 0, esewa: 0, fonepay: 0, bank: 0, cooperative: 0, total: 0 },
             incomeBreakdown: { fromOrders: 0, fromCharging: 0 },
             paymentMethodBreakdown: { cash: 0, esewa: 0, fonepay: 0 },
             withdrawalBreakdown: {
@@ -184,39 +163,201 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
               fromFonepay: 0,
               total: 0,
             },
-          },
-        );
+            dataPoints: 0,
+            dateRange: { from: "", to: "" },
+          });
+          return;
+        }
 
-        // Get current balances from the latest summary
-        const latestSummary = summaries[summaries.length - 1];
-        const currentBalances = {
-          cash: latestSummary?.cash_balance || 0,
-          esewa: latestSummary?.esewa_balance || 0,
-          fonepay: latestSummary?.fonepay_balance || 0,
-          total: latestSummary?.total_balance || 0,
+        // Helper function for safe field access with fallback support
+        const safeGet = (obj: any, primaryField: string, fallbackField?: string): number => {
+          const primaryValue = Number(obj?.[primaryField]);
+          if (!isNaN(primaryValue) && primaryValue !== 0) {
+            return primaryValue;
+          }
+          if (fallbackField) {
+            const fallbackValue = Number(obj?.[fallbackField]);
+            return isNaN(fallbackValue) ? 0 : fallbackValue;
+          }
+          return 0;
         };
 
-        const netProfit = totals.totalIncome - totals.totalExpenses;
-        const firstDate = summaries[0]?.summary_date || "";
-        const lastDate = summaries[summaries.length - 1]?.summary_date || "";
+        // Aggregate all daily summaries into all-time totals
+        const aggregatedSummary = dailySummaries.reduce((acc, daily) => {
+          return {
+            // Income totals with safe access and enhanced columns
+            totalIncomeFromOrders: acc.totalIncomeFromOrders + safeGet(daily, 'total_income_from_orders', 'total_income'),
+            totalIncomeFromCharging: acc.totalIncomeFromCharging + safeGet(daily, 'total_income_from_charging'),
+            totalIncomeCash: acc.totalIncomeCash + safeGet(daily, 'total_cash_income', 'total_income_cash'),
+            totalIncomeEsewa: acc.totalIncomeEsewa + safeGet(daily, 'total_esewa_income', 'total_income_esewa'),
+            totalIncomeFonepay: acc.totalIncomeFonepay + safeGet(daily, 'total_fonepay_income', 'total_income_fonepay'),
+
+            // Expense totals with safe access
+            totalExpenses: acc.totalExpenses + safeGet(daily, 'total_expenses'),
+            totalExpensesCash: acc.totalExpensesCash + safeGet(daily, 'total_expenses_cash'),
+            totalExpensesEsewa: acc.totalExpensesEsewa + safeGet(daily, 'total_expenses_esewa'),
+            totalExpensesFonepay: acc.totalExpensesFonepay + safeGet(daily, 'total_expenses_fonepay'),
+
+            // Deposit totals with safe access
+            totalDeposits: acc.totalDeposits + safeGet(daily, 'total_deposits'),
+            totalDepositsCash: acc.totalDepositsCash + safeGet(daily, 'total_deposits_cash'),
+            totalDepositsEsewa: acc.totalDepositsEsewa + safeGet(daily, 'total_deposits_esewa'),
+
+            // Savings totals with safe access
+            totalSavings: acc.totalSavings + safeGet(daily, 'total_savings'),
+
+            // Withdrawal totals with safe access
+            totalWithdrawals: acc.totalWithdrawals + safeGet(daily, 'total_withdrawals'),
+            totalWithdrawalsCash: acc.totalWithdrawalsCash + safeGet(daily, 'total_withdrawals_cash'),
+            totalWithdrawalsCooperative: acc.totalWithdrawalsCooperative + safeGet(daily, 'total_withdrawals_cooperative'),
+            totalWithdrawalsBank: acc.totalWithdrawalsBank + safeGet(daily, 'total_withdrawals_bank'),
+          };
+        }, {
+          totalIncomeFromOrders: 0,
+          totalIncomeFromCharging: 0,
+          totalIncomeCash: 0,
+          totalIncomeEsewa: 0,
+          totalIncomeFonepay: 0,
+          totalExpenses: 0,
+          totalExpensesCash: 0,
+          totalExpensesEsewa: 0,
+          totalExpensesFonepay: 0,
+          totalDeposits: 0,
+          totalDepositsCash: 0,
+          totalDepositsEsewa: 0,
+          totalSavings: 0,
+          totalWithdrawals: 0,
+          totalWithdrawalsCash: 0,
+          totalWithdrawalsCooperative: 0,
+          totalWithdrawalsBank: 0,
+        });
+
+        // Calculate derived totals
+        const totalIncome = aggregatedSummary.totalIncomeFromOrders + aggregatedSummary.totalIncomeFromCharging;
+        const netProfit = totalIncome - aggregatedSummary.totalExpenses;
+
+        // Calculate current balances with updated formulas
+        const latestSummary = dailySummaries[dailySummaries.length - 1];
+
+        // Cash Balance: Current calculations + Cash withdrawals from all sources
+        const cashBalance = (Number(latestSummary.cash_balance) || 0) + (aggregatedSummary.totalWithdrawalsCash || 0);
+
+        // Bank Balance: Current calculations + Cash Deposits + Esewa Deposits
+        const bankBalance = (Number(latestSummary.cash_balance) || 0) + (aggregatedSummary.totalDepositsCash || 0) + (aggregatedSummary.totalDepositsEsewa || 0);
+
+        // Esewa Balance: Keep current calculations (correct)
+        const esewaBalance = Number(latestSummary.esewa_balance) || 0;
+
+        // Fonepay Balance: Keep current calculations
+        const fonepayBalance = Number(latestSummary.fonepay_balance) || 0;
+
+        // Cooperative Balance: Keep current calculations
+        const cooperativeBalance = Number(latestSummary.cooperative_balance) || 0;
+
+        // Total Balance: Sum of all balances
+        const totalBalance = cashBalance + bankBalance + esewaBalance + fonepayBalance + cooperativeBalance;
+
+        const currentBalances = {
+          cash: cashBalance,
+          esewa: esewaBalance,
+          fonepay: fonepayBalance,
+          bank: bankBalance,
+          cooperative: cooperativeBalance,
+          total: totalBalance,
+        };
+
+        // Get date range
+        const firstDate = dailySummaries[0]?.summary_date || "";
+        const lastDate = dailySummaries[dailySummaries.length - 1]?.summary_date || "";
+        const dataPoints = dailySummaries.length;
 
         const finalSummary: AllTimeSummaryData = {
-          ...totals,
+          totalIncome,
+          totalExpenses: aggregatedSummary.totalExpenses,
+          totalDeposits: aggregatedSummary.totalDeposits,
+          totalWithdrawals: aggregatedSummary.totalWithdrawals,
+          cooperativeSavings: aggregatedSummary.totalSavings,
           netProfit,
           currentBalances,
-          dataPoints: summaries.length,
+          incomeBreakdown: {
+            fromOrders: aggregatedSummary.totalIncomeFromOrders,
+            fromCharging: aggregatedSummary.totalIncomeFromCharging,
+          },
+          paymentMethodBreakdown: {
+            cash: aggregatedSummary.totalIncomeCash,
+            esewa: aggregatedSummary.totalIncomeEsewa,
+            fonepay: aggregatedSummary.totalIncomeFonepay,
+          },
+          withdrawalBreakdown: {
+            fromBank: aggregatedSummary.totalWithdrawalsBank,
+            fromSavings: aggregatedSummary.totalWithdrawalsCooperative,
+            fromEsewa: 0, // Not separately tracked in daily summary
+            fromFonepay: 0, // Not separately tracked in daily summary
+            total: aggregatedSummary.totalWithdrawals,
+          },
+          dataPoints,
           dateRange: {
             from: firstDate,
             to: lastDate,
           },
         };
 
-        console.log("📈 All-time summary calculated:", finalSummary);
+        console.log("📈 All-time summary calculated from daily summaries:", finalSummary);
+        console.log("📊 Summary breakdown:", {
+          income: {
+            orders: aggregatedSummary.totalIncomeFromOrders,
+            charging: aggregatedSummary.totalIncomeFromCharging,
+            cash: aggregatedSummary.totalIncomeCash,
+            esewa: aggregatedSummary.totalIncomeEsewa,
+            fonepay: aggregatedSummary.totalIncomeFonepay,
+          },
+          expenses: {
+            total: aggregatedSummary.totalExpenses,
+            cash: aggregatedSummary.totalExpensesCash,
+            esewa: aggregatedSummary.totalExpensesEsewa,
+            fonepay: aggregatedSummary.totalExpensesFonepay,
+          },
+          balances: currentBalances,
+        });
+
         setSummaryData(finalSummary);
+        setRetryCount(0);
       } catch (error) {
+        setConnectionError(true);
         const errorMessage = extractErrorMessage(error);
-        console.error("❌ Error in fetchAllTimeSummary:", errorMessage);
+        console.error("❌ Error in fetchAllTimeSummary:", {
+          errorMessage,
+          error,
+          userAgent: navigator.userAgent,
+          online: navigator.onLine,
+          url: window.location.href,
+          timestamp: new Date().toISOString(),
+        });
+
         logError("AllTimeSummaryWidget", error);
+
+        // Set fallback/empty data to prevent UI crash
+        setSummaryData({
+          totalIncome: 0,
+          totalExpenses: 0,
+          totalDeposits: 0,
+          totalWithdrawals: 0,
+          cooperativeSavings: 0,
+          netProfit: 0,
+          currentBalances: { cash: 0, esewa: 0, fonepay: 0, bank: 0, cooperative: 0, total: 0 },
+          incomeBreakdown: { fromOrders: 0, fromCharging: 0 },
+          paymentMethodBreakdown: { cash: 0, esewa: 0, fonepay: 0 },
+          withdrawalBreakdown: {
+            fromBank: 0,
+            fromSavings: 0,
+            fromEsewa: 0,
+            fromFonepay: 0,
+            total: 0,
+          },
+          dataPoints: 0,
+          dateRange: { from: "", to: "" },
+        });
+
         toast.error(`Failed to load all-time summary: ${errorMessage}`);
       } finally {
         setLoading(false);
@@ -224,6 +365,50 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
     },
     [user],
   );
+
+  const checkConnection = async () => {
+    try {
+      console.log("🔍 Testing Supabase connection...");
+
+      // Test basic table access
+      const { data, error } = await supabase
+        .from("orders")
+        .select("id")
+        .limit(1);
+
+      if (error) {
+        console.error("❌ Connection test failed:", error);
+        return false;
+      }
+
+      console.log("✅ Connection test successful");
+      return true;
+    } catch (error) {
+      console.error("❌ Connection test error:", error);
+      return false;
+    }
+  };
+
+  const retryFetch = async () => {
+    if (retryCount >= 3) {
+      toast.error("Maximum retry attempts reached. Please refresh the page.");
+      return;
+    }
+
+    setRetryCount((prev) => prev + 1);
+    console.log(`🔄 Retrying fetch attempt ${retryCount + 1}/3...`);
+
+    // Test connection first
+    const isConnected = await checkConnection();
+    if (!isConnected) {
+      toast.error(
+        "Still unable to connect to database. Please check your internet connection.",
+      );
+      return;
+    }
+
+    await fetchAllTimeSummary();
+  };
 
   const forceUpdateDailySummaries = async () => {
     if (!user) return;
@@ -258,16 +443,45 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
     }
   }, [user, fetchAllTimeSummary]);
 
+  // Monitor network status
+  useEffect(() => {
+    const handleOnline = () => {
+      console.log("🟢 Network connection restored");
+      setNetworkStatus(true);
+      if (connectionError) {
+        toast.success("Network connection restored. Retrying...");
+        fetchAllTimeSummary();
+      }
+    };
+
+    const handleOffline = () => {
+      console.log("🔴 Network connection lost");
+      setNetworkStatus(false);
+      setConnectionError(true);
+      toast.error("Network connection lost");
+    };
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, [connectionError, fetchAllTimeSummary]);
+
   const handleDateRangeChange = async (dateRange: DateRange) => {
     setLoading(true);
     try {
-      await fetchAllTimeSummary(dateRange);
+      // If dateRange is empty object or no from/to, treat as "all time"
+      const isAllTime = !dateRange || (!dateRange.from && !dateRange.to);
+      await fetchAllTimeSummary(isAllTime ? undefined : dateRange);
     } finally {
       setLoading(false);
     }
   };
 
-  const formatCurrency = (amount: number) => `NRs. ${amount.toFixed(2)}`;
+  const formatCurrency = (amount: number) => formatCurrencyUtil(amount);
 
   if (!user) {
     return null;
@@ -282,47 +496,42 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
         onDateRangeChange={handleDateRangeChange}
       />
       {/* Header with Refresh Button */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-2">
-          <Clock className="h-6 w-6 text-purple-600" />
-          <h2 className="text-2xl font-bold text-gray-800">All-Time Summary</h2>
+          <Clock className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600" />
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-800">
+            All-Time Summary
+          </h2>
           <Badge
             variant="outline"
-            className="text-purple-600 border-purple-300"
+            className="text-purple-600 border-purple-300 text-xs"
           >
-            {summaryData.dataPoints} days of data
+            {summaryData.dataPoints} days
           </Badge>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
           <Button
             onClick={() => setIsModalOpen(true)}
-            className="bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white"
+            className="bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white text-xs sm:text-sm px-2 sm:px-3"
             size="sm"
           >
-            <Eye className="h-4 w-4 mr-2" />
-            View Details
+            <Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">View Details</span>
+            <span className="sm:hidden">Details</span>
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={forceUpdateDailySummaries}
-            disabled={refreshing}
-            className="flex items-center gap-2 text-orange-600 border-orange-300 hover:bg-orange-50"
-          >
-            <Database
-              className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
-            />
-            Force Update
-          </Button>
+
           <Button
             variant="outline"
             size="sm"
             onClick={() => fetchAllTimeSummary()}
             disabled={loading}
-            className="flex items-center gap-2"
+            className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3"
           >
-            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-            Refresh
+            <RefreshCw
+              className={`h-3 w-3 sm:h-4 sm:w-4 ${loading ? "animate-spin" : ""}`}
+            />
+            <span className="hidden sm:inline">Refresh</span>
+            <span className="sm:hidden">↻</span>
           </Button>
         </div>
       </div>
@@ -332,6 +541,60 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
           <div className="flex items-center justify-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
             <span className="ml-2 text-gray-600">Loading summary...</span>
+          </div>
+        ) : connectionError ? (
+          <div className="flex flex-col items-center justify-center py-8 text-gray-500 space-y-4">
+            <AlertCircle className="h-8 w-8 text-red-500" />
+            <div className="text-center">
+              <p className="font-medium text-red-600">Connection Error</p>
+              <p className="text-sm">Failed to load summary data</p>
+              <div className="flex items-center justify-center mt-2 space-x-2">
+                <div
+                  className={`w-2 h-2 rounded-full ${networkStatus ? "bg-green-500" : "bg-red-500"}`}
+                ></div>
+                <p className="text-xs text-gray-400">
+                  Network: {networkStatus ? "Online" : "Offline"} | Attempt{" "}
+                  {retryCount}/3
+                </p>
+              </div>
+            </div>
+            <div className="flex space-x-2">
+              <Button
+                onClick={retryFetch}
+                variant="outline"
+                size="sm"
+                disabled={loading || retryCount >= 3 || !networkStatus}
+              >
+                <RefreshCw
+                  className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`}
+                />
+                {loading ? "Retrying..." : "Retry Connection"}
+              </Button>
+              <Button
+                onClick={() => window.location.reload()}
+                variant="outline"
+                size="sm"
+              >
+                Refresh Page
+              </Button>
+            </div>
+
+            {/* Debug Information (only show in development or for admins) */}
+            {process.env.NODE_ENV === "development" && (
+              <details className="mt-4 text-xs text-gray-500">
+                <summary className="cursor-pointer hover:text-gray-700">
+                  Debug Info
+                </summary>
+                <div className="mt-2 p-2 bg-gray-100 rounded text-left">
+                  <p>• URL: {window.location.href}</p>
+                  <p>• User Agent: {navigator.userAgent.substring(0, 50)}...</p>
+                  <p>• Online: {navigator.onLine ? "Yes" : "No"}</p>
+                  <p>• User: {user?.email || "Not logged in"}</p>
+                  <p>• Retry Count: {retryCount}</p>
+                  <p>• Timestamp: {new Date().toISOString()}</p>
+                </div>
+              </details>
+            )}
           </div>
         ) : summaryData.dataPoints === 0 ? (
           <div className="flex items-center justify-center py-8 text-gray-500">
@@ -403,7 +666,7 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
                 <Banknote className="h-5 w-5" />
                 Current Balances
               </h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                 <div className="text-center">
                   <div className="text-sm text-gray-600">Cash</div>
                   <div className="text-lg font-semibold text-green-600">
@@ -420,6 +683,18 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
                   <div className="text-sm text-gray-600">Fonepay</div>
                   <div className="text-lg font-semibold text-purple-600">
                     {formatCurrency(summaryData.currentBalances.fonepay)}
+                  </div>
+                </div>
+                <div className="text-center">
+                  <div className="text-sm text-gray-600">Bank</div>
+                  <div className="text-lg font-semibold text-orange-600">
+                    {formatCurrency(summaryData.currentBalances.bank)}
+                  </div>
+                </div>
+                <div className="text-center">
+                  <div className="text-sm text-gray-600">Cooperative</div>
+                  <div className="text-lg font-semibold text-indigo-600">
+                    {formatCurrency(summaryData.currentBalances.cooperative)}
                   </div>
                 </div>
                 <div className="text-center">

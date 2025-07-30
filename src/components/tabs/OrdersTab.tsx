@@ -102,6 +102,7 @@ interface CartItem {
 const OrdersTab = () => {
   const { user } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
+  const [totalOrdersCount, setTotalOrdersCount] = useState(0);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [paymentMode, setPaymentMode] = useState("");
@@ -152,6 +153,16 @@ const OrdersTab = () => {
 
       if (error) throw error;
       setOrders(data || []);
+
+      // Get total count without pagination
+      const { count: totalCount, error: countError } = await supabase
+        .from("orders")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", user.id);
+
+      if (!countError && totalCount !== null) {
+        setTotalOrdersCount(totalCount);
+      }
     } catch (error) {
       console.error("Error fetching orders:", error);
       toast.error("Failed to load orders");
@@ -653,7 +664,7 @@ const OrdersTab = () => {
                     Total Orders
                   </p>
                   <p className="text-2xl font-bold text-purple-800">
-                    {orders.length}
+                    {totalOrdersCount}
                   </p>
                 </div>
                 <div className="p-3 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-xl text-white">
@@ -697,42 +708,51 @@ const OrdersTab = () => {
               </CardHeader>
               <CardContent className="p-6 space-y-6">
                 {/* Search and Filters */}
-                <div className="flex flex-col sm:flex-row gap-4">
+                <div className="flex flex-col gap-3">
                   <div className="flex-grow">
                     <Input
                       placeholder="Search delicious items... 🔍"
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="border-orange-200 focus:border-orange-500 focus:ring-orange-500 h-12"
+                      className="border-orange-200 focus:border-orange-500 focus:ring-orange-500 h-10 sm:h-12 text-sm sm:text-base"
                     />
                   </div>
                 </div>
 
                 {/* Category Filters */}
-                <div className="flex items-center gap-2 flex-wrap pb-2">
-                  <Filter className="h-5 w-5 text-gray-600" />
-                  <Button
-                    key="all-categories"
-                    onClick={() => setSelectedCategory(null)}
-                    variant={selectedCategory === null ? "default" : "outline"}
-                    size="sm"
-                    className={`transition-all duration-150 ${selectedCategory === null ? "bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-md" : "hover:bg-orange-50"}`}
-                  >
-                    All Categories
-                  </Button>
-                  {productCategories.map((category) => (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Filter className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600" />
+                    <span className="text-sm font-medium text-gray-700">
+                      Filter by Category
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
                     <Button
-                      key={category}
-                      onClick={() => setSelectedCategory(category)}
+                      key="all-categories"
+                      onClick={() => setSelectedCategory(null)}
                       variant={
-                        selectedCategory === category ? "default" : "outline"
+                        selectedCategory === null ? "default" : "outline"
                       }
                       size="sm"
-                      className={`transition-all duration-150 ${selectedCategory === category ? `bg-gradient-to-r ${categoryColors[category as keyof typeof categoryColors] || "from-gray-500 to-slate-500"} text-white shadow-md` : "hover:bg-orange-50"}`}
+                      className={`transition-all duration-150 text-xs sm:text-sm px-2 sm:px-3 ${selectedCategory === null ? "bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-md" : "hover:bg-orange-50"}`}
                     >
-                      {category}
+                      All
                     </Button>
-                  ))}
+                    {productCategories.map((category) => (
+                      <Button
+                        key={category}
+                        onClick={() => setSelectedCategory(category)}
+                        variant={
+                          selectedCategory === category ? "default" : "outline"
+                        }
+                        size="sm"
+                        className={`transition-all duration-150 text-xs sm:text-sm px-2 sm:px-3 ${selectedCategory === category ? `bg-gradient-to-r ${categoryColors[category as keyof typeof categoryColors] || "from-gray-500 to-slate-500"} text-white shadow-md` : "hover:bg-orange-50"}`}
+                      >
+                        {category}
+                      </Button>
+                    ))}
+                  </div>
                 </div>
 
                 {/* Menu Items Display */}
@@ -759,7 +779,7 @@ const OrdersTab = () => {
                             {category}
                           </h3>
                         </div>
-                        <div className="grid grid-cols-3 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                           {items.map((item, index) => (
                             <Card
                               key={item.id}
@@ -767,32 +787,34 @@ const OrdersTab = () => {
                               onClick={() => addToCart(item)}
                               style={{ animationDelay: `${index * 50}ms` }}
                             >
-                              <CardContent className="p-2 sm:p-4">
-                                <div className="flex justify-between items-start mb-3">
-                                  <div className="flex-1">
-                                    <h4 className="font-bold text-sm sm:text-lg text-gray-800 group-hover:text-orange-600 transition-colors mb-1">
-                                      {item.name}
-                                    </h4>
-                                    {item.description && (
-                                      <p className="text-xs sm:text-sm text-gray-600 line-clamp-2 mb-2">
-                                        {item.description}
-                                      </p>
-                                    )}
+                              <CardContent className="p-3 sm:p-4">
+                                <div className="space-y-2 sm:space-y-3">
+                                  <div className="flex justify-between items-start">
+                                    <div className="flex-1 min-w-0">
+                                      <h4 className="font-bold text-sm sm:text-base lg:text-lg text-gray-800 group-hover:text-orange-600 transition-colors mb-1 line-clamp-1">
+                                        {item.name}
+                                      </h4>
+                                      {item.description && (
+                                        <p className="text-xs sm:text-sm text-gray-600 line-clamp-2 mb-2">
+                                          {item.description}
+                                        </p>
+                                      )}
+                                    </div>
                                   </div>
-                                  <div className="ml-3">
+                                  <div className="flex justify-center">
                                     <Badge
-                                      className={`bg-gradient-to-r ${categoryColors[item.category as keyof typeof categoryColors] || "from-gray-500 to-slate-500"} text-white border-0 text-xs sm:text-sm px-2 sm:px-3 py-1`}
+                                      className={`bg-gradient-to-r ${categoryColors[item.category as keyof typeof categoryColors] || "from-gray-500 to-slate-500"} text-white border-0 text-sm sm:text-base px-3 py-1.5 font-semibold`}
                                     >
                                       NRs. {item.price}
                                     </Badge>
                                   </div>
                                 </div>
-                                <div className="flex items-center justify-between">
-                                  <span className="text-xs text-gray-500 bg-gray-100 px-1 sm:px-2 py-1 rounded-full">
+                                <div className="flex items-center justify-between mt-2">
+                                  <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full truncate max-w-20 sm:max-w-none">
                                     {item.category}
                                   </span>
                                   <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                                    <Plus className="h-5 w-5 text-orange-600" />
+                                    <Plus className="h-4 w-4 sm:h-5 sm:w-5 text-orange-600" />
                                   </div>
                                 </div>
                               </CardContent>
@@ -855,16 +877,16 @@ const OrdersTab = () => {
                   </div>
                 ) : (
                   <>
-                    <div className="space-y-3 max-h-64 overflow-y-auto">
+                    <div className="space-y-3 max-h-48 sm:max-h-64 overflow-y-auto">
                       {cart.map((item, index) => (
                         <div
                           key={item.id}
-                          className="flex items-center justify-between p-3 bg-gradient-to-r from-white to-pink-50 rounded-lg border border-pink-100"
+                          className="flex items-center justify-between p-2 sm:p-3 bg-gradient-to-r from-white to-pink-50 rounded-lg border border-pink-100"
                           style={{ animationDelay: `${index * 100}ms` }}
                         >
                           <div className="flex-1 min-w-0 mr-2">
                             <h4
-                              className="font-medium text-sm truncate"
+                              className="font-medium text-xs sm:text-sm truncate"
                               title={item.name}
                             >
                               {item.name}
@@ -880,11 +902,11 @@ const OrdersTab = () => {
                               onClick={() =>
                                 updateCartQuantity(item.id, item.quantity - 1)
                               }
-                              className="h-6 w-6 hover:bg-red-50 hover:border-red-300"
+                              className="h-6 w-6 hover:bg-red-50 hover:border-red-300 flex-shrink-0"
                             >
                               <Minus className="h-3 w-3" />
                             </Button>
-                            <span className="text-sm font-semibold w-8 text-center">
+                            <span className="text-xs sm:text-sm font-semibold w-6 sm:w-8 text-center flex-shrink-0">
                               {item.quantity}
                             </span>
                             <Button
@@ -893,7 +915,7 @@ const OrdersTab = () => {
                               onClick={() =>
                                 updateCartQuantity(item.id, item.quantity + 1)
                               }
-                              className="h-6 w-6 hover:bg-green-50 hover:border-green-300"
+                              className="h-6 w-6 hover:bg-green-50 hover:border-green-300 flex-shrink-0"
                             >
                               <Plus className="h-3 w-3" />
                             </Button>
@@ -901,7 +923,7 @@ const OrdersTab = () => {
                               variant="ghost"
                               size="icon"
                               onClick={() => removeFromCart(item.id)}
-                              className="h-6 w-6 text-red-500 hover:text-red-700 hover:bg-red-50"
+                              className="h-6 w-6 text-red-500 hover:text-red-700 hover:bg-red-50 flex-shrink-0"
                             >
                               <Trash2 className="h-3 w-3" />
                             </Button>
@@ -983,47 +1005,53 @@ const OrdersTab = () => {
 
         {/* Order History */}
         <Card className="bg-gradient-to-br from-white/90 to-gray-50/90 backdrop-blur-sm border-0 shadow-2xl">
-          <CardHeader className="border-b border-gray-200/50 flex flex-row items-center justify-between">
-            <CardTitle className="text-2xl font-bold bg-gradient-to-r from-gray-700 to-gray-900 bg-clip-text text-transparent flex items-center gap-2">
-              <Clock className="h-6 w-6 text-gray-600" />
-              Order History
-            </CardTitle>
-            <div className="flex items-center gap-2">
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-[300px] justify-start text-left font-normal hover:bg-gradient-to-r hover:from-orange-50 hover:to-pink-50",
-                      !range && "text-muted-foreground",
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {range?.from ? (
-                      range.to ? (
-                        <>
-                          {format(range.from, "LLL dd, y")} -{" "}
-                          {format(range.to, "LLL dd, y")}
-                        </>
+          <CardHeader className="border-b border-gray-200/50 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <CardTitle className="text-lg sm:text-2xl font-bold bg-gradient-to-r from-gray-700 to-gray-900 bg-clip-text text-transparent flex items-center gap-2">
+                <Clock className="h-5 w-5 sm:h-6 sm:w-6 text-gray-600" />
+                Order History
+              </CardTitle>
+              <div className="flex items-center gap-2">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full sm:w-[280px] justify-start text-left font-normal hover:bg-gradient-to-r hover:from-orange-50 hover:to-pink-50 text-xs sm:text-sm",
+                        !range && "text-muted-foreground",
+                      )}
+                    >
+                      <CalendarIcon className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                      {range?.from ? (
+                        range.to ? (
+                          <>
+                            {format(range.from, "LLL dd, y")} -{" "}
+                            {format(range.to, "LLL dd, y")}
+                          </>
+                        ) : (
+                          format(range.from, "LLL dd, y")
+                        )
                       ) : (
-                        format(range.from, "LLL dd, y")
-                      )
-                    ) : (
-                      <span>Pick a date range</span>
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="end">
-                  <Calendar
-                    initialFocus
-                    mode="range"
-                    defaultMonth={range?.from}
-                    selected={range}
-                    onSelect={onRangeChange}
-                    numberOfMonths={2}
-                  />
-                </PopoverContent>
-              </Popover>
+                        <span className="truncate">Pick date range</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent
+                    className="w-auto p-0"
+                    align="end"
+                    side="bottom"
+                  >
+                    <Calendar
+                      initialFocus
+                      mode="range"
+                      defaultMonth={range?.from}
+                      selected={range}
+                      onSelect={onRangeChange}
+                      numberOfMonths={1}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
             </div>
           </CardHeader>
           <CardContent className="p-0">
@@ -1049,35 +1077,41 @@ const OrdersTab = () => {
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-gradient-to-r from-gray-50 to-orange-50">
-                      <TableHead className="font-semibold text-gray-700">
+                      <TableHead className="font-semibold text-gray-700 text-xs sm:text-sm px-2 sm:px-4">
                         Date
                       </TableHead>
-                      <TableHead className="font-semibold text-gray-700">
+                      <TableHead className="font-semibold text-gray-700 text-xs sm:text-sm px-2 sm:px-4">
                         Item
                       </TableHead>
-                      <TableHead className="font-semibold text-gray-700 text-center">
-                        Quantity
+                      <TableHead className="font-semibold text-gray-700 text-center text-xs sm:text-sm px-1 sm:px-4">
+                        Qty
                       </TableHead>
-                      <TableHead className="font-semibold text-gray-700 text-right">
+                      <TableHead className="font-semibold text-gray-700 text-right text-xs sm:text-sm px-1 sm:px-4">
                         Rate
                       </TableHead>
-                      <TableHead className="font-semibold text-gray-700 text-right">
+                      <TableHead className="font-semibold text-gray-700 text-right text-xs sm:text-sm px-1 sm:px-4">
                         Total
                       </TableHead>
-                      <TableHead className="font-semibold text-gray-700">
+                      <TableHead className="font-semibold text-gray-700 text-xs sm:text-sm px-1 sm:px-4 hidden sm:table-cell">
                         Payment
                       </TableHead>
-                      <TableHead className="font-semibold text-gray-700">
+                      <TableHead className="font-semibold text-gray-700 text-xs sm:text-sm px-1 sm:px-4 hidden sm:table-cell">
                         Actions
                       </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     <TableRow>
-                      <TableCell colSpan={4} className="font-bold">
+                      <TableCell
+                        colSpan={4}
+                        className="font-bold text-xs sm:text-sm px-2 sm:px-4"
+                      >
                         Total
                       </TableCell>
-                      <TableCell colSpan={2} className="font-bold text-right">
+                      <TableCell
+                        colSpan={3}
+                        className="font-bold text-right text-xs sm:text-sm px-1 sm:px-4"
+                      >
                         NRs. {totalOrders.toFixed(2)}
                       </TableCell>
                     </TableRow>
@@ -1087,39 +1121,59 @@ const OrdersTab = () => {
                         className="hover:bg-gradient-to-r hover:from-orange-50 hover:to-pink-50 transition-all duration-200"
                         style={{ animationDelay: `${index * 50}ms` }}
                       >
-                        <TableCell className="font-medium">
-                          {format(new Date(order.order_date), "MMM dd, yyyy")}
+                        <TableCell className="font-medium text-xs sm:text-sm px-2 sm:px-4">
+                          <div className="sm:hidden">
+                            {format(new Date(order.order_date), "MMM dd")}
+                          </div>
+                          <div className="hidden sm:block">
+                            {format(new Date(order.order_date), "MMM dd, yyyy")}
+                          </div>
                         </TableCell>
-                        <TableCell className="font-medium">
-                          {order.item_name}
+                        <TableCell className="font-medium text-xs sm:text-sm px-2 sm:px-4">
+                          <div
+                            className="truncate max-w-24 sm:max-w-none"
+                            title={order.item_name}
+                          >
+                            {order.item_name}
+                          </div>
                         </TableCell>
-                        <TableCell className="text-center">
+                        <TableCell className="text-center px-1 sm:px-4">
                           <Badge
                             variant="outline"
-                            className="bg-blue-50 border-blue-200"
+                            className="bg-blue-50 border-blue-200 text-xs px-1 sm:px-2"
                           >
                             {order.quantity}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-right">
-                          NRs. {Number(order.rate).toFixed(2)}
+                        <TableCell className="text-right text-xs sm:text-sm px-1 sm:px-4">
+                          <div className="sm:hidden">
+                            ₹{Number(order.rate).toFixed(0)}
+                          </div>
+                          <div className="hidden sm:block">
+                            NRs. {Number(order.rate).toFixed(2)}
+                          </div>
                         </TableCell>
-                        <TableCell className="text-right">
-                          <span className="font-bold text-lg bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
-                            NRs. {Number(order.total).toFixed(2)}
+                        <TableCell className="text-right px-1 sm:px-4">
+                          <span className="font-bold text-sm sm:text-lg bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
+                            <div className="sm:hidden">
+                              ₹{Number(order.total).toFixed(0)}
+                            </div>
+                            <div className="hidden sm:block">
+                              NRs. {Number(order.total).toFixed(2)}
+                            </div>
                           </span>
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="hidden sm:table-cell px-1 sm:px-4">
                           <Badge
                             variant="outline"
-                            className="bg-green-50 border-green-200"
+                            className="bg-green-50 border-green-200 text-xs"
                           >
                             {order.payment_mode}
                           </Badge>
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="hidden sm:table-cell px-1 sm:px-4">
                           {canEditTransactions && (
-                            <div className="flex gap-2">
+                            <div className="flex gap-1 sm:gap-2">
                               <Button
                                 variant="outline"
                                 size="sm"
@@ -1127,6 +1181,7 @@ const OrdersTab = () => {
                                   setSelectedOrder(order);
                                   setIsEditDialogOpen(true);
                                 }}
+                                className="text-xs px-2"
                               >
                                 Edit
                               </Button>
@@ -1135,9 +1190,9 @@ const OrdersTab = () => {
                                   <Button
                                     variant="outline"
                                     size="sm"
-                                    className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                                    className="text-red-500 hover:text-red-700 hover:bg-red-50 px-2"
                                   >
-                                    <Trash2 className="h-4 w-4" />
+                                    <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
                                   </Button>
                                 </AlertDialogTrigger>
                                 <AlertDialogContent>

@@ -68,6 +68,7 @@ const MobileDashboard = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isDailyClosingOpen, setIsDailyClosingOpen] = useState(false);
   const [isBatchClosingOpen, setIsBatchClosingOpen] = useState(false);
+  const [showBatchClosing, setShowBatchClosing] = useState(true);
 
   // Update time every minute
   useEffect(() => {
@@ -79,6 +80,12 @@ const MobileDashboard = () => {
     const storedSettings = localStorage.getItem("tabSettings");
     if (storedSettings) {
       setTabSettings(JSON.parse(storedSettings));
+    }
+
+    // Load batch closing setting
+    const batchClosingSetting = localStorage.getItem("showBatchClosing");
+    if (batchClosingSetting !== null) {
+      setShowBatchClosing(JSON.parse(batchClosingSetting));
     }
   }, []);
 
@@ -295,26 +302,6 @@ const MobileDashboard = () => {
     }
   };
 
-  // Mobile status bar component
-  const MobileStatusBar = () => (
-    <div className="flex justify-between items-center px-4 py-1 bg-black text-white text-xs font-medium">
-      <div className="flex items-center gap-1">
-        <span>
-          {currentTime.toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          })}
-        </span>
-      </div>
-      <div className="flex items-center gap-1">
-        <Signal className="h-3 w-3" />
-        <Wifi className="h-3 w-3" />
-        <Battery className="h-3 w-3" />
-        <span>100%</span>
-      </div>
-    </div>
-  );
-
   // Mobile app header
   const MobileHeader = () => (
     <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-4">
@@ -371,14 +358,16 @@ const MobileDashboard = () => {
                       <Database className="h-5 w-5" />
                       Daily Closing
                     </Button>
-                    <Button
-                      variant="ghost"
-                      onClick={() => setIsBatchClosingOpen(true)}
-                      className="w-full justify-start gap-3 h-12"
-                    >
-                      <Calendar className="h-5 w-5" />
-                      Batch Closing
-                    </Button>
+                    {showBatchClosing && (
+                      <Button
+                        variant="ghost"
+                        onClick={() => setIsBatchClosingOpen(true)}
+                        className="w-full justify-start gap-3 h-12"
+                      >
+                        <Calendar className="h-5 w-5" />
+                        Batch Closing
+                      </Button>
+                    )}
                     <Button
                       variant="ghost"
                       onClick={() => navigate("/dashboard/settings")}
@@ -509,9 +498,6 @@ const MobileDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Mobile Status Bar */}
-      <MobileStatusBar />
-
       {/* Mobile Header */}
       <MobileHeader />
 
