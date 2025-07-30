@@ -4,8 +4,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider } from "./context/AuthContext";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { AuthProvider, useAuth } from "./context/AuthContext";
 import { setupGlobalErrorHandler } from "./utils/supabaseErrorHandler";
 import { setupGlobalAuthErrorHandler } from "./utils/globalErrorHandler";
 import Index from "./pages/Index";
@@ -19,7 +19,7 @@ import ChargingTab from "./components/tabs/ChargingTab";
 import ExpensesTab from "./components/tabs/ExpensesTab";
 import DepositsTab from "./components/tabs/DepositsTab";
 import WithdrawalsTab from "./components/tabs/WithdrawalsTab";
-import CooperativeSavingsTab from "./components/tabs/CooperativeSavingsTab";
+import SavingsWithdrawalsTab from "./components/tabs/SavingsWithdrawalsTab";
 import MenuManagementTab from "./components/tabs/MenuManagementTab"; // Consider admin roles for this route
 
 import DataInputTab from "./components/tabs/DataInputTab";
@@ -52,13 +52,31 @@ const queryClient = new QueryClient();
 // For simplicity, Dashboard.tsx will handle its own content (cards) + Outlet for now.
 // const DashboardHomePage = () => <div>Dashboard Home - Cards Here</div>;
 
-const App = () => {
+const ChatBotWrapper = () => {
+  const { user } = useAuth();
+  const location = useLocation();
   const [isChatBotOpen, setChatBotOpen] = useState(false);
 
   const handleToggleChatBot = () => {
     setChatBotOpen((prev) => !prev);
   };
 
+  // Only show chatbot if user is logged in and not on login page
+  const shouldShowChatBot = user && location.pathname !== "/";
+
+  if (!shouldShowChatBot) {
+    return null;
+  }
+
+  return (
+    <EnhancedChatBot
+      isOpen={isChatBotOpen}
+      onToggle={handleToggleChatBot}
+    />
+  );
+};
+
+const App = () => {
   // Set up global error handler for refresh token errors
   useEffect(() => {
     setupGlobalErrorHandler();
@@ -102,8 +120,7 @@ const App = () => {
                 <Route path="charging" element={<ChargingTab />} />
                 <Route path="expenses" element={<ExpensesTab />} />
                 <Route path="deposits" element={<DepositsTab />} />
-                <Route path="withdrawals" element={<WithdrawalsTab />} />
-                <Route path="cooperative" element={<CooperativeSavingsTab />} />
+                <Route path="withdrawals" element={<SavingsWithdrawalsTab />} />
                 <Route
                   path="share-investments"
                   element={<ShareInvestmentsTab />}
@@ -138,10 +155,7 @@ const App = () => {
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
-            <EnhancedChatBot
-              isOpen={isChatBotOpen}
-              onToggle={handleToggleChatBot}
-            />
+                        <ChatBotWrapper />
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>

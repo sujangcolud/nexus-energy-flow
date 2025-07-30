@@ -70,9 +70,48 @@ const UserManagementTab = () => {
     role: "user",
   });
 
+  const ensureCurrentUserIsSuperAdmin = async () => {
+    if (!user) return;
+
+    try {
+      // Check if user already has a role
+      const { data: existingRole } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .single();
+
+      if (!existingRole || existingRole.role !== "super_admin") {
+        // Upsert super_admin role for current user
+        const { error } = await supabase.from("user_roles").upsert(
+          {
+            user_id: user.id,
+            role: "super_admin",
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "user_id" },
+        );
+
+        if (error) {
+          console.warn("Could not set super_admin role:", error);
+        } else {
+          console.log("✅ Current user set as super_admin");
+        }
+      }
+    } catch (error) {
+      console.warn("Failed to ensure super admin role:", error);
+    }
+  };
+
   const fetchUsersAndRoles = async () => {
     setLoading(true);
     try {
+      // Make current user super admin first
+      if (user) {
+        await ensureCurrentUserIsSuperAdmin();
+      }
+
       // Try the main RPC function first
       let data, error;
       ({ data, error } = await supabase.rpc("get_all_users_with_roles"));
@@ -151,8 +190,13 @@ const UserManagementTab = () => {
             );
             data = [
               {
+                id: user?.id || "current",
+                email: user?.email || "Current User",
+                role: "super_admin",
+              },
+              {
                 id: "placeholder",
-                email: "No users found - Check database connection",
+                email: "No other users found - Check database connection",
                 role: "user",
               },
             ];

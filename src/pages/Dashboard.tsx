@@ -64,7 +64,7 @@ import ChargingTab from "@/components/tabs/ChargingTab";
 import ExpensesTab from "@/components/tabs/ExpensesTab";
 import DepositsTab from "@/components/tabs/DepositsTab";
 import WithdrawalsTab from "@/components/tabs/WithdrawalsTab";
-import CooperativeSavingsTab from "@/components/tabs/CooperativeSavingsTab";
+import SavingsWithdrawalsTab from "@/components/tabs/SavingsWithdrawalsTab";
 
 import MenuManagementTab from "@/components/tabs/MenuManagementTab";
 import DataInputTab from "@/components/tabs/DataInputTab";
@@ -88,6 +88,7 @@ const Dashboard = () => {
   const [tabToDelete, setTabToDelete] = useState<string | null>(null);
   const [isDailyClosingOpen, setIsDailyClosingOpen] = useState(false);
   const [isBatchClosingOpen, setIsBatchClosingOpen] = useState(false);
+  const [showBatchClosing, setShowBatchClosing] = useState(true);
 
   useEffect(() => {
     const storedSettings = localStorage.getItem("tabSettings");
@@ -98,6 +99,12 @@ const Dashboard = () => {
       localStorage.getItem("canDeleteTabs") || "false",
     );
     setCanDeleteTabs(canDelete);
+
+    // Load batch closing setting
+    const batchClosingSetting = localStorage.getItem("showBatchClosing");
+    if (batchClosingSetting !== null) {
+      setShowBatchClosing(JSON.parse(batchClosingSetting));
+    }
   }, []);
 
   const handleSignOut = async () => {
@@ -163,24 +170,13 @@ const Dashboard = () => {
       {
         id: "withdrawals",
         path: "withdrawals",
-        label: "Withdrawals",
+        label: "Savings & Withdrawals",
         icon: Banknote,
-        component: WithdrawalsTab,
+        component: SavingsWithdrawalsTab,
         roles: ["user", "data_entry", "reports_viewer", "super_admin"],
         color: "bg-blue-600",
         bgColor: "bg-blue-50",
-        description: "Process withdrawals",
-      },
-      {
-        id: "cooperative",
-        path: "cooperative",
-        label: "Savings",
-        icon: Users,
-        component: CooperativeSavingsTab,
-        roles: ["user", "data_entry", "reports_viewer", "super_admin"],
-        color: "bg-teal-600",
-        bgColor: "bg-teal-50",
-        description: "Cooperative savings management",
+        description: "Manage savings and withdrawals",
       },
       {
         id: "share_investments",
@@ -442,8 +438,8 @@ const Dashboard = () => {
               </NavLink>
             </div>
 
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2 text-sm text-slate-700">
+            <div className="flex items-center gap-2 sm:gap-4">
+              <div className="hidden sm:flex items-center gap-2 text-sm text-slate-700">
                 <div className="p-2 rounded-full bg-slate-100">
                   <User className="h-4 w-4 text-slate-600" />
                 </div>
@@ -467,28 +463,32 @@ const Dashboard = () => {
                 variant="outline"
                 size="sm"
                 onClick={handleDailyClosing}
-                className="flex items-center gap-2 hover:bg-blue-50 hover:border-blue-300 transition-colors"
+                className="flex items-center gap-1 sm:gap-2 hover:bg-blue-50 hover:border-blue-300 transition-colors text-xs sm:text-sm px-2 sm:px-3"
               >
                 <Database className="h-4 w-4" />
-                Daily Closing
+                <span className="hidden sm:inline">Daily Closing</span>
+                <span className="sm:hidden">Daily</span>
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsBatchClosingOpen(true)}
-                className="flex items-center gap-2 hover:bg-green-50 hover:border-green-300 transition-colors"
-              >
-                <Calendar className="h-4 w-4" />
-                Batch Closing
-              </Button>
+              {showBatchClosing && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsBatchClosingOpen(true)}
+                  className="flex items-center gap-1 sm:gap-2 hover:bg-green-50 hover:border-green-300 transition-colors text-xs sm:text-sm px-2 sm:px-3"
+                >
+                  <Calendar className="h-4 w-4" />
+                  <span className="hidden sm:inline">Batch Closing</span>
+                  <span className="sm:hidden">Batch</span>
+                </Button>
+              )}
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleSignOut}
-                className="flex items-center gap-2 hover:bg-red-50 hover:border-red-300 transition-colors"
+                className="flex items-center gap-1 sm:gap-2 hover:bg-red-50 hover:border-red-300 transition-colors text-xs sm:text-sm px-2 sm:px-3"
               >
                 <LogOut className="h-4 w-4" />
-                Sign Out
+                <span className="hidden sm:inline">Sign Out</span>
               </Button>
 
               <Link to="settings">
