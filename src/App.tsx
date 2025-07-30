@@ -7,6 +7,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { setupGlobalErrorHandler } from "./utils/supabaseErrorHandler";
+import { setupGlobalAuthErrorHandler } from "./utils/globalErrorHandler";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Dashboard from "./pages/Dashboard"; // Will serve as layout
