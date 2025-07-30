@@ -184,15 +184,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         console.log("Initial session check:", session, "Error:", error);
 
         if (error) {
-          console.error("Session check error:", error);
-          // If there's an error getting the session (like invalid refresh token), clear everything
-          if (
-            error.message?.includes("refresh_token_not_found") ||
-            error.message?.includes("Invalid Refresh Token")
-          ) {
-            console.log("Invalid refresh token detected, clearing session");
-            setUser(null);
-            setSession(null);
+          // Handle authentication errors using the centralized handler
+          if (handleAuthError(error, 'session check')) {
+            // Error was handled, don't set session
+          } else {
+            // Other errors, still try to set session if it exists
+            setSession(session);
           }
         } else {
           setSession(session);
@@ -201,10 +198,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         setLoading(false);
       })
       .catch((error) => {
-        console.error("Unexpected error during session check:", error);
-        // Clear session on any unexpected errors
-        setUser(null);
-        setSession(null);
+        handleAuthError(error, 'session check catch');
         setLoading(false);
       });
 
