@@ -62,6 +62,7 @@ const App = () => {
   // Set up global error handler for refresh token errors
   useEffect(() => {
     setupGlobalErrorHandler();
+    setupGlobalAuthErrorHandler();
   }, []);
 
   return (
