@@ -252,6 +252,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       }
 
       console.log("Login successful");
+      clearAuthErrorFlag(); // Clear any previous auth error flags
     } catch (error: any) {
       console.error("Login error:", error);
       throw error;
