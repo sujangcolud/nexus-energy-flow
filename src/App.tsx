@@ -7,6 +7,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { setupGlobalErrorHandler } from "./utils/supabaseErrorHandler";
+import { setupGlobalAuthErrorHandler } from "./utils/globalErrorHandler";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Dashboard from "./pages/Dashboard"; // Will serve as layout
@@ -79,6 +80,7 @@ const App = () => {
   // Set up global error handler for refresh token errors
   useEffect(() => {
     setupGlobalErrorHandler();
+    setupGlobalAuthErrorHandler();
   }, []);
 
   return (

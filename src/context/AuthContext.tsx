@@ -6,7 +6,9 @@ import React, {
   ReactNode,
 } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { User, Session } from "@supabase/supabase-js";
+import { User, Session, AuthError } from "@supabase/supabase-js";
+import { toast } from "sonner";
+import { clearAuthErrorFlag } from "@/utils/globalErrorHandler";
 
 export type UserRole = "user" | "data_entry" | "reports_viewer" | "super_admin";
 
@@ -44,6 +46,42 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   const [user, setUser] = useState<AppUser | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Helper function to handle auth errors
+  const handleAuthError = (error: AuthError | Error | any, context: string = 'auth') => {
+    console.error(`Auth error in ${context}:`, error);
+
+    const errorMessage = error?.message || error?.toString() || 'Unknown error';
+
+    // Check for refresh token errors
+    if (
+      errorMessage.includes('refresh_token_not_found') ||
+      errorMessage.includes('Invalid Refresh Token') ||
+      errorMessage.includes('Refresh Token Not Found') ||
+      error?.message?.includes('refresh_token_not_found') ||
+      error?.message?.includes('Invalid Refresh Token')
+    ) {
+      console.log('Detected invalid refresh token, clearing session');
+
+      // Clear local storage and session state
+      localStorage.removeItem('supabase.auth.token');
+      sessionStorage.removeItem('supabase.auth.token');
+
+      // Clear state
+      setUser(null);
+      setSession(null);
+
+      // Sign out silently to clean up server-side session
+      supabase.auth.signOut().catch(console.error);
+
+      // Show user-friendly message
+      toast.info('Your session has expired. Please sign in again.');
+
+      return true; // Indicates this was a handled auth error
+    }
+
+    return false; // Not a handled auth error
+  };
 
   const fetchUserProfile = async (userId: string) => {
     try {
@@ -105,17 +143,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     } catch (error: any) {
       console.error("Error fetching user profile:", error);
 
-      // Check for refresh token errors
-      if (
-        error?.message?.includes("refresh_token_not_found") ||
-        error?.message?.includes("Invalid Refresh Token") ||
-        error?.message?.includes("AuthApiError: Invalid Refresh Token")
-      ) {
-        console.log("Refresh token error in profile fetch, signing out");
-        // Clear everything and let the auth state listener handle it
-        setUser(null);
-        setSession(null);
-        supabase.auth.signOut().catch(console.error);
+      // Handle authentication errors using the centralized handler
+      if (handleAuthError(error, 'profile fetch')) {
         return;
       }
 
@@ -139,26 +168,31 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log("Auth state changed:", event, session);
 
-      // Handle token refresh errors
-      if (event === "TOKEN_REFRESHED" && !session) {
-        console.log("Token refresh failed, signing out user");
-        setUser(null);
-        setSession(null);
-        setLoading(false);
-        return;
-      }
+      try {
+        // Handle token refresh errors
+        if (event === "TOKEN_REFRESHED" && !session) {
+          console.log("Token refresh failed, signing out user");
+          handleAuthError(new Error('Token refresh failed'), 'token refresh');
+          setLoading(false);
+          return;
+        }
 
-      // Handle sign out events
-      if (event === "SIGNED_OUT") {
-        console.log("User signed out");
-        setUser(null);
-        setSession(null);
-        setLoading(false);
-        return;
-      }
+        // Handle sign out events
+        if (event === "SIGNED_OUT") {
+          console.log("User signed out");
+          setUser(null);
+          setSession(null);
+          setLoading(false);
+          return;
+        }
 
-      setSession(session);
-      setLoading(false);
+        setSession(session);
+        setLoading(false);
+      } catch (error) {
+        console.error('Error in auth state change handler:', error);
+        handleAuthError(error, 'auth state change');
+        setLoading(false);
+      }
     });
 
     // Check for existing session with error handling
@@ -168,15 +202,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         console.log("Initial session check:", session, "Error:", error);
 
         if (error) {
-          console.error("Session check error:", error);
-          // If there's an error getting the session (like invalid refresh token), clear everything
-          if (
-            error.message?.includes("refresh_token_not_found") ||
-            error.message?.includes("Invalid Refresh Token")
-          ) {
-            console.log("Invalid refresh token detected, clearing session");
-            setUser(null);
-            setSession(null);
+          // Handle authentication errors using the centralized handler
+          if (handleAuthError(error, 'session check')) {
+            // Error was handled, don't set session
+          } else {
+            // Other errors, still try to set session if it exists
+            setSession(session);
           }
         } else {
           setSession(session);
@@ -185,10 +216,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         setLoading(false);
       })
       .catch((error) => {
-        console.error("Unexpected error during session check:", error);
-        // Clear session on any unexpected errors
-        setUser(null);
-        setSession(null);
+        handleAuthError(error, 'session check catch');
         setLoading(false);
       });
 
@@ -236,6 +264,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       }
 
       console.log("Login successful");
+      clearAuthErrorFlag(); // Clear any previous auth error flags
     } catch (error: any) {
       console.error("Login error:", error);
       throw error;
