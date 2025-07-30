@@ -130,17 +130,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     } catch (error: any) {
       console.error("Error fetching user profile:", error);
 
-      // Check for refresh token errors
-      if (
-        error?.message?.includes("refresh_token_not_found") ||
-        error?.message?.includes("Invalid Refresh Token") ||
-        error?.message?.includes("AuthApiError: Invalid Refresh Token")
-      ) {
-        console.log("Refresh token error in profile fetch, signing out");
-        // Clear everything and let the auth state listener handle it
-        setUser(null);
-        setSession(null);
-        supabase.auth.signOut().catch(console.error);
+      // Handle authentication errors using the centralized handler
+      if (handleAuthError(error, 'profile fetch')) {
         return;
       }
 
