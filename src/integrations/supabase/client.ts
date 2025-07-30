@@ -13,10 +13,28 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     storage: localStorage,
     persistSession: true,
     autoRefreshToken: true,
+    detectSessionInUrl: true,
+    flowType: 'pkce',
   },
   global: {
     headers: {
+      'x-application-name': 'dashboard-app',
       Accept: "application/json",
     },
   },
+});
+
+// Set up auth state change listener for better error handling
+supabase.auth.onAuthStateChange((event, session) => {
+  if (event === 'TOKEN_REFRESHED' && !session) {
+    console.log('Token refresh failed, clearing storage');
+    localStorage.removeItem('supabase.auth.token');
+    localStorage.clear();
+    window.location.reload();
+  }
+
+  if (event === 'SIGNED_OUT') {
+    console.log('User signed out, clearing storage');
+    localStorage.removeItem('supabase.auth.token');
+  }
 });
