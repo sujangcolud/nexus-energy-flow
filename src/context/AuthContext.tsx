@@ -8,6 +8,7 @@ import React, {
 import { supabase } from "@/integrations/supabase/client";
 import { User, Session, AuthError } from "@supabase/supabase-js";
 import { toast } from "sonner";
+import { clearAuthErrorFlag } from "@/utils/globalErrorHandler";
 
 export type UserRole = "user" | "data_entry" | "reports_viewer" | "super_admin";
 
