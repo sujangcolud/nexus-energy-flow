@@ -46,6 +46,42 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Helper function to handle auth errors
+  const handleAuthError = (error: AuthError | Error | any, context: string = 'auth') => {
+    console.error(`Auth error in ${context}:`, error);
+
+    const errorMessage = error?.message || error?.toString() || 'Unknown error';
+
+    // Check for refresh token errors
+    if (
+      errorMessage.includes('refresh_token_not_found') ||
+      errorMessage.includes('Invalid Refresh Token') ||
+      errorMessage.includes('Refresh Token Not Found') ||
+      error?.message?.includes('refresh_token_not_found') ||
+      error?.message?.includes('Invalid Refresh Token')
+    ) {
+      console.log('Detected invalid refresh token, clearing session');
+
+      // Clear local storage and session state
+      localStorage.removeItem('supabase.auth.token');
+      sessionStorage.removeItem('supabase.auth.token');
+
+      // Clear state
+      setUser(null);
+      setSession(null);
+
+      // Sign out silently to clean up server-side session
+      supabase.auth.signOut().catch(console.error);
+
+      // Show user-friendly message
+      toast.info('Your session has expired. Please sign in again.');
+
+      return true; // Indicates this was a handled auth error
+    }
+
+    return false; // Not a handled auth error
+  };
+
   const fetchUserProfile = async (userId: string) => {
     try {
       console.log("Fetching profile for user:", userId);
