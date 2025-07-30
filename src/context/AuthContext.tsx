@@ -6,7 +6,8 @@ import React, {
   ReactNode,
 } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { User, Session } from "@supabase/supabase-js";
+import { User, Session, AuthError } from "@supabase/supabase-js";
+import { toast } from "sonner";
 
 export type UserRole = "user" | "data_entry" | "reports_viewer" | "super_admin";
 
