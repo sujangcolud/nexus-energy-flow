@@ -1,41 +1,41 @@
-import { OpenAI } from "openai";
+
+import OpenAI from 'openai';
 
 const openai = new OpenAI({
-  apiKey:
-    import.meta.env.VITE_OPENAI_API_KEY ||
-    "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",
-  dangerouslyAllowBrowser: true, // Only for safe/demo apps!
+  apiKey: process.env.OPENAI_API_KEY || '',
+  dangerouslyAllowBrowser: true
 });
 
-export async function fetchOpenAIAnswer(prompt: string, context?: string) {
-  try {
-    // Check if API key is available
-    if (!import.meta.env.VITE_OPENAI_API_KEY && !openai.apiKey) {
-      return "OpenAI API key not configured. Please add VITE_OPENAI_API_KEY to your environment variables.";
-    }
-
-    const systemPrompt =
-      "You are a helpful business assistant chatbot. Be detailed, accurate, and friendly. Use business context if provided.";
-    const messages = [
-      { role: "system", content: systemPrompt },
-      ...(context ? [{ role: "assistant", content: context }] : []),
-      { role: "user", content: prompt },
-    ];
-    const completion = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
-      messages,
-      temperature: 0.2,
-      max_tokens: 600,
-    });
-    return (
-      completion.choices[0]?.message?.content ||
-      "Sorry, I couldn't generate a response."
-    );
-  } catch (err: any) {
-    console.error("OpenAI API error:", err);
-    if (err?.status === 401) {
-      return "Invalid OpenAI API key. Please check your configuration.";
-    }
-    return "Sorry, there was a problem contacting OpenAI.";
+export async function generateWithAI(prompt: string): Promise<string> {
+  if (!process.env.OPENAI_API_KEY) {
+    throw new Error('OpenAI API key not configured');
   }
+
+  try {
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: [
+        { 
+          role: 'system' as const, 
+          content: 'You are a helpful assistant that generates content based on user prompts.' 
+        },
+        { 
+          role: 'user' as const, 
+          content: prompt 
+        }
+      ],
+      max_tokens: 500,
+      temperature: 0.7,
+    });
+
+    return response.choices[0]?.message?.content || 'No response generated';
+  } catch (error) {
+    console.error('Error calling OpenAI API:', error);
+    throw new Error('Failed to generate content with AI');
+  }
+}
+
+export async function analyzeFinancialData(data: any): Promise<string> {
+  const prompt = `Analyze this financial data and provide insights: ${JSON.stringify(data)}`;
+  return generateWithAI(prompt);
 }

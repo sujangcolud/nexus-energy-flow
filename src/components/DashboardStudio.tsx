@@ -205,6 +205,81 @@ const DashboardStudio = () => {
     return data;
   };
 
+  const renderChart = (chartType: string, chartData: any[], metrics: string[]) => {
+    const colors = ['#8884d8', '#82ca9d', '#ffc658', '#ff7300', '#0088fe'];
+    
+    switch (chartType) {
+      case "area":
+        return (
+          <AreaChart data={chartData}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="name" />
+            <YAxis />
+            <Tooltip />
+            {metrics.map((metric, index) => (
+              <Area
+                key={metric}
+                type="monotone"
+                dataKey={metric}
+                stroke={colors[index % colors.length]}
+                fill={colors[index % colors.length]}
+                fillOpacity={0.6}
+              />
+            ))}
+          </AreaChart>
+        );
+      case "line":
+        return (
+          <LineChart data={chartData}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="name" />
+            <YAxis />
+            <Tooltip />
+            {metrics.map((metric, index) => (
+              <Line
+                key={metric}
+                type="monotone"
+                dataKey={metric}
+                stroke={colors[index % colors.length]}
+              />
+            ))}
+          </LineChart>
+        );
+      case "pie":
+        return (
+          <PieChart>
+            <Pie
+              data={chartData}
+              cx="50%"
+              cy="50%"
+              labelLine={false}
+              outerRadius={80}
+              fill="#8884d8"
+              dataKey={metrics[0] || 'value'}
+              label={({ name, percent }: any) => `${name} ${(percent * 100).toFixed(0)}%`}
+            />
+            <Tooltip />
+          </PieChart>
+        );
+      default: // bar
+        return (
+          <BarChart data={chartData}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="name" />
+            <YAxis />
+            <Tooltip />
+            {metrics.map((metric, index) => (
+              <Bar
+                key={metric}
+                dataKey={metric}
+                fill={colors[index % colors.length]}
+              />
+            ))}
+          </BarChart>
+        );
+    }
+  };
+
   const renderWidgetContent = (widget: DashboardWidget) => {
     switch (widget.type) {
       case "chart":
@@ -213,48 +288,7 @@ const DashboardStudio = () => {
         
         return (
           <ResponsiveContainer width="100%" height={300}>
-            {chartType === "area" && (
-              <AreaChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Area type="monotone" dataKey="value" stroke="#8884d8" fill="#8884d8" />
-              </AreaChart>
-            )}
-            {chartType === "line" && (
-              <LineChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Line type="monotone" dataKey="value" stroke="#8884d8" />
-              </LineChart>
-            )}
-            {chartType === "bar" && (
-              <BarChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="value" fill="#8884d8" />
-              </BarChart>
-            )}
-            {chartType === "pie" && (
-              <PieChart>
-                <Pie
-                  data={chartData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                  label={({ name, percent }: any) => `${name} ${(percent * 100).toFixed(0)}%`}
-                />
-                <Tooltip />
-              </PieChart>
-            )}
+            {renderChart(chartType, chartData, widget.config.metrics || ["total_income"])}
           </ResponsiveContainer>
         );
       case "table":
@@ -306,17 +340,15 @@ const DashboardStudio = () => {
           <DialogHeader>
             <DialogTitle>Widget Configuration</DialogTitle>
           </DialogHeader>
-          <div>
-            {selectedWidget && (
-              <WidgetConfiguration
-                widget={selectedWidget}
-                availableMetrics={availableMetrics}
-                onConfigChange={handleConfigChange}
-                onSave={() => saveWidget(selectedWidget)}
-                onCancel={() => setIsConfiguring(false)}
-              />
-            )}
-          </div>
+          {selectedWidget && (
+            <WidgetConfiguration
+              widget={selectedWidget}
+              availableMetrics={availableMetrics}
+              onConfigChange={handleConfigChange}
+              onSave={() => saveWidget(selectedWidget)}
+              onCancel={() => setIsConfiguring(false)}
+            />
+          )}
         </DialogContent>
       </Dialog>
     </div>
@@ -340,7 +372,7 @@ const WidgetConfiguration: React.FC<WidgetConfigurationProps> = ({
 }) => {
   const [name, setName] = useState(widget.name);
   const [metrics, setMetrics] = useState<string[]>(widget.config.metrics || []);
-  const [chartType, setChartType] = useState(widget.config.chartType || "bar");
+  const [chartType, setChartType] = useState<"bar" | "line" | "area" | "pie">(widget.config.chartType || "bar");
 
   useEffect(() => {
     setName(widget.name);
@@ -356,7 +388,7 @@ const WidgetConfiguration: React.FC<WidgetConfigurationProps> = ({
     }
   };
 
-  const handleChartTypeChange = (type: string) => {
+  const handleChartTypeChange = (type: "bar" | "line" | "area" | "pie") => {
     setChartType(type);
   };
 
