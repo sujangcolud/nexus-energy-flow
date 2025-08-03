@@ -63,7 +63,7 @@ import SummaryReportTab from "@/components/tabs/SummaryReportTab";
 import UserManagementTab from "@/components/tabs/UserManagementTab";
 import InventoryTab from "@/components/tabs/InventoryTab";
 import MenuManagementTab from "@/components/tabs/MenuManagementTab";
-import { AllTimeSummaryModal } from "@/components/AllTimeSummaryModal";
+import AllTimeSummaryModal from "@/components/AllTimeSummaryModal";
 import { DailyClosingSystem } from "@/components/DailyClosingSystem";
 
 interface AnalyticsData {
@@ -576,6 +576,8 @@ const Dashboard = () => {
       <AllTimeSummaryModal
         isOpen={summaryModalOpen}
         onClose={() => setSummaryModalOpen(false)}
+        summaryData={null}
+        onDateRangeChange={() => {}}
       />
       <DailyClosingSystem
         isOpen={dailyClosingOpen}
