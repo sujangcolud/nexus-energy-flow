@@ -1,447 +1,420 @@
-
-import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import React, { useState, useEffect } from 'react';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { useAuth } from "@/context/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/context/AuthContext";
-import { 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
-  LineChart, Line, PieChart, Pie, Cell, AreaChart, Area
-} from 'recharts';
-import { 
-  Calculator, 
-  TrendingUp, 
-  DollarSign, 
-  PieChart as PieChartIcon,
-  BarChart3,
-  LineChart as LineChartIcon,
-  Save,
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
   Plus,
+  Edit,
   Trash2,
-  Edit
+  Settings,
+  Save,
+  BarChart as BarChartIcon,
+  LineChart as LineChartIcon,
+  AreaChart as AreaChartIcon,
+  PieChart as PieChartIcon,
 } from "lucide-react";
+import {
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  LineChart,
+  Line,
+  AreaChart,
+  Area,
+  PieChart,
+  Pie,
+} from 'recharts';
 
-interface CustomCalculation {
+interface DashboardWidget {
   id: string;
   name: string;
-  description: string;
-  formula: string;
-  chart_type: 'bar' | 'line' | 'pie' | 'area';
-  created_at: string;
-}
-
-interface CalculationResult {
-  name: string;
-  value: number;
-  data?: any[];
+  type: string;
+  config: any;
+  user_id: string;
 }
 
 const DashboardStudio = () => {
   const { user } = useAuth();
-  const [calculations, setCalculations] = useState<CustomCalculation[]>([]);
-  const [results, setResults] = useState<CalculationResult[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  
-  // Form state
-  const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    formula: '',
-    chart_type: 'bar' as const
-  });
-  
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [widgets, setWidgets] = useState<DashboardWidget[]>([]);
+  const [selectedWidget, setSelectedWidget] = useState<DashboardWidget | null>(null);
+  const [isConfiguring, setIsConfiguring] = useState(false);
+  const [availableMetrics, setAvailableMetrics] = useState<string[]>([]);
+  const [calculations, setCalculations] = useState<any[]>([]);
 
   useEffect(() => {
     if (user) {
-      fetchCalculations();
+      fetchWidgets();
+      fetchAvailableMetrics();
     }
   }, [user]);
 
-  const fetchCalculations = async () => {
-    if (!user) return;
-
-    setIsLoading(true);
+  const fetchWidgets = async () => {
     try {
-      // Since custom_calculations table doesn't exist, we'll use a mock implementation
-      // In a real scenario, you would fetch from the actual table
-      const mockCalculations: CustomCalculation[] = [
-        {
-          id: '1',
-          name: 'Monthly Revenue Trend',
-          description: 'Track revenue trends over the last 6 months',
-          formula: 'SUM(orders.total) GROUP BY MONTH',
-          chart_type: 'line',
-          created_at: new Date().toISOString()
-        },
-        {
-          id: '2',
-          name: 'Expense Categories',
-          description: 'Breakdown of expenses by category',
-          formula: 'SUM(expenses.amount) GROUP BY category',
-          chart_type: 'pie',
-          created_at: new Date().toISOString()
-        }
-      ];
-      
-      setCalculations(mockCalculations);
-      await executeCalculations(mockCalculations);
+      const { data, error } = await supabase
+        .from('reports')
+        .select('*')
+        .eq('user_id', user?.id);
+
+      if (error) throw error;
+      setWidgets(data || []);
     } catch (error) {
-      console.error("Error fetching calculations:", error);
-      toast.error("Failed to fetch calculations");
-    } finally {
-      setIsLoading(false);
+      console.error("Error fetching widgets:", error);
+      toast.error("Failed to load widgets");
     }
   };
 
-  const executeCalculations = async (calcs: CustomCalculation[]) => {
-    const calculationResults: CalculationResult[] = [];
-    
-    for (const calc of calcs) {
-      try {
-        let result: CalculationResult;
-        
-        if (calc.name === 'Monthly Revenue Trend') {
-          // Mock data for monthly revenue trend
-          const monthlyData = [
-            { month: 'Jan', revenue: 12500 },
-            { month: 'Feb', revenue: 15800 },
-            { month: 'Mar', revenue: 18200 },
-            { month: 'Apr', revenue: 16900 },
-            { month: 'May', revenue: 21300 },
-            { month: 'Jun', revenue: 24500 }
-          ];
-          
-          result = {
-            name: calc.name,
-            value: monthlyData.reduce((sum, item) => sum + item.revenue, 0),
-            data: monthlyData
-          };
-        } else if (calc.name === 'Expense Categories') {
-          // Fetch actual expense data
-          const { data: expenseData, error } = await supabase
-            .from('expenses')
-            .select('category, amount')
-            .gte('expense_date', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
-          
-          if (error) throw error;
-          
-          const categoryTotals: { [key: string]: number } = {};
-          expenseData?.forEach(expense => {
-            categoryTotals[expense.category] = (categoryTotals[expense.category] || 0) + expense.amount;
-          });
-          
-          const pieData = Object.entries(categoryTotals).map(([category, amount]) => ({
-            category,
-            amount,
-            name: category
-          }));
-          
-          result = {
-            name: calc.name,
-            value: Object.values(categoryTotals).reduce((sum, val) => sum + val, 0),
-            data: pieData
-          };
-        } else {
-          result = {
-            name: calc.name,
-            value: 0,
-            data: []
-          };
-        }
-        
-        calculationResults.push(result);
-      } catch (error) {
-        console.error(`Error executing calculation ${calc.name}:`, error);
-      }
-    }
-    
-    setResults(calculationResults);
-  };
-
-  const saveCalculation = async () => {
-    if (!user || !formData.name || !formData.formula) {
-      toast.error("Please fill in all required fields");
-      return;
-    }
-
+  const fetchAvailableMetrics = async () => {
     try {
-      // In a real implementation, this would save to the database
-      const newCalculation: CustomCalculation = {
-        id: editingId || Date.now().toString(),
-        name: formData.name,
-        description: formData.description,
-        formula: formData.formula,
-        chart_type: formData.chart_type,
-        created_at: new Date().toISOString()
-      };
+      // Fetch column names from a specific table (e.g., 'daily_summary')
+      const { data, error } = await supabase.rpc('get_all_table_columns');
 
-      if (editingId) {
-        setCalculations(prev => prev.map(calc => 
-          calc.id === editingId ? newCalculation : calc
-        ));
-        toast.success("Calculation updated successfully!");
-      } else {
-        setCalculations(prev => [...prev, newCalculation]);
-        toast.success("Calculation created successfully!");
-      }
+      if (error) throw error;
 
-      // Reset form
-      setFormData({
-        name: '',
-        description: '',
-        formula: '',
-        chart_type: 'bar'
+      // Extract column names from the result
+      const columnNames = data as string[];
+      setAvailableMetrics(columnNames || []);
+    } catch (error) {
+      console.error("Error fetching available metrics:", error);
+      toast.error("Failed to load available metrics");
+    }
+  };
+
+  const addWidget = () => {
+    const newWidget: DashboardWidget = {
+      id: Math.random().toString(36).substring(7),
+      name: "New Widget",
+      type: "chart",
+      config: {
+        metrics: [],
+        chartType: "bar",
+      },
+      user_id: user?.id || "",
+    };
+    setWidgets([...widgets, newWidget]);
+  };
+
+  const editWidget = (widget: DashboardWidget) => {
+    setSelectedWidget(widget);
+    setIsConfiguring(true);
+  };
+
+  const saveWidget = async (widget: DashboardWidget) => {
+    try {
+      const { error } = await supabase
+        .from('reports')
+        .upsert(widget, { onConflict: 'id' });
+
+      if (error) throw error;
+
+      toast.success("Widget saved successfully!");
+      setIsConfiguring(false);
+      fetchWidgets();
+    } catch (error) {
+      console.error("Error saving widget:", error);
+      toast.error("Failed to save widget");
+    }
+  };
+
+  const deleteWidget = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('reports')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast.success("Widget deleted successfully!");
+      fetchWidgets();
+    } catch (error) {
+      console.error("Error deleting widget:", error);
+      toast.error("Failed to delete widget");
+    }
+  };
+
+  const handleConfigChange = (config: any) => {
+    if (selectedWidget) {
+      setSelectedWidget({ ...selectedWidget, config: config });
+    }
+  };
+
+  const generateChartData = (metrics: string[]) => {
+    const data = [];
+    for (let i = 0; i < 10; i++) {
+      const entry: any = { name: `Day ${i + 1}` };
+      metrics.forEach(metric => {
+        entry[metric] = Math.random() * 100;
       });
-      setEditingId(null);
-      
-      // Re-execute calculations
-      await executeCalculations(calculations);
-    } catch (error) {
-      console.error("Error saving calculation:", error);
-      toast.error("Failed to save calculation");
+      data.push(entry);
     }
+    return data;
   };
 
-  const editCalculation = (calc: CustomCalculation) => {
-    setFormData({
-      name: calc.name,
-      description: calc.description,
-      formula: calc.formula,
-      chart_type: calc.chart_type
-    });
-    setEditingId(calc.id);
-  };
-
-  const deleteCalculation = (id: string) => {
-    setCalculations(prev => prev.filter(calc => calc.id !== id));
-    setResults(prev => prev.filter(result => 
-      calculations.find(calc => calc.id === id)?.name !== result.name
-    ));
-    toast.success("Calculation deleted successfully!");
-  };
-
-  const renderChart = (result: CalculationResult, chartType: string) => {
-    if (!result.data || result.data.length === 0) return null;
-
-    const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
-
-    switch (chartType) {
-      case 'line':
+  const renderWidgetContent = (widget: DashboardWidget) => {
+    switch (widget.type) {
+      case "chart":
+        const chartData = generateChartData(widget.config.metrics || ["total_income"]);
         return (
           <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={result.data}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" />
-              <YAxis />
-              <Tooltip formatter={(value) => [`NRs. ${value}`, 'Revenue']} />
-              <Legend />
-              <Line type="monotone" dataKey="revenue" stroke="#8884d8" />
-            </LineChart>
+            {widget.config.chartType === "area" && (
+              <AreaChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Area type="monotone" dataKey="value" stroke="#8884d8" fill="#8884d8" />
+              </AreaChart>
+            )}
+            {widget.config.chartType === "line" && (
+              <LineChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Line type="monotone" dataKey="value" stroke="#8884d8" />
+              </LineChart>
+            )}
+            {(widget.config.chartType === "bar" || !widget.config.chartType) && (
+              <BarChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey="value" fill="#8884d8" />
+              </BarChart>
+            )}
+            {widget.config.chartType === "pie" && (
+              <PieChart>
+                <Pie
+                  data={chartData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  outerRadius={80}
+                  fill="#8884d8"
+                  dataKey="value"
+                  label={({ name, percent }: any) => `${name} ${(percent * 100).toFixed(0)}%`}
+                />
+                <Tooltip />
+              </PieChart>
+            )}
           </ResponsiveContainer>
         );
-      
-      case 'pie':
-        return (
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie
-                data={result.data}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                outerRadius={80}
-                fill="#8884d8"
-                dataKey="amount"
-              >
-                {result.data.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip formatter={(value) => [`NRs. ${value}`, 'Amount']} />
-            </PieChart>
-          </ResponsiveContainer>
-        );
-      
-      case 'bar':
+      case "table":
+        return <div>Table Widget</div>;
+      case "metric":
+        return <div>Metric Widget</div>;
       default:
-        return (
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={result.data}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="category" />
-              <YAxis />
-              <Tooltip formatter={(value) => [`NRs. ${value}`, 'Amount']} />
-              <Legend />
-              <Bar dataKey="amount" fill="#8884d8" />
-            </BarChart>
-          </ResponsiveContainer>
-        );
+        return <div>Unknown widget type</div>;
     }
   };
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Dashboard Studio</h1>
-          <p className="text-gray-600">Create and manage custom calculations and visualizations</p>
-        </div>
-        <Badge variant="secondary" className="flex items-center gap-1">
-          <Calculator className="h-4 w-4" />
-          {calculations.length} Calculations
-        </Badge>
+    <div className="container mx-auto p-4">
+      <h1 className="text-2xl font-bold mb-4">Dashboard Studio</h1>
+
+      <div className="flex justify-end mb-4">
+        <Button onClick={addWidget}>Add Widget</Button>
       </div>
 
-      {/* Create/Edit Form */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Plus className="h-5 w-5" />
-            {editingId ? 'Edit Calculation' : 'Create New Calculation'}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="name">Name *</Label>
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                placeholder="Enter calculation name"
-              />
-            </div>
-            <div>
-              <Label htmlFor="chart_type">Chart Type</Label>
-              <Select
-                value={formData.chart_type}
-                onValueChange={(value: any) => setFormData(prev => ({ ...prev, chart_type: value }))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select chart type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="bar">Bar Chart</SelectItem>
-                  <SelectItem value="line">Line Chart</SelectItem>
-                  <SelectItem value="pie">Pie Chart</SelectItem>
-                  <SelectItem value="area">Area Chart</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          
-          <div>
-            <Label htmlFor="description">Description</Label>
-            <Input
-              id="description"
-              value={formData.description}
-              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-              placeholder="Enter description (optional)"
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {widgets.map((widget) => (
+          <Card key={widget.id}>
+            <CardHeader>
+              <CardTitle>{widget.name}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {renderWidgetContent(widget)}
+              <div className="flex justify-between mt-4">
+                <Button size="sm" onClick={() => editWidget(widget)}>
+                  <Settings className="h-4 w-4 mr-2" />
+                  Configure
+                </Button>
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  onClick={() => deleteWidget(widget.id)}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <Dialog open={isConfiguring} onOpenChange={setIsConfiguring}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Widget Configuration</DialogTitle>
+          </DialogHeader>
+          {selectedWidget && (
+            <WidgetConfiguration
+              widget={selectedWidget}
+              availableMetrics={availableMetrics}
+              onConfigChange={handleConfigChange}
+              onSave={() => saveWidget(selectedWidget)}
+              onCancel={() => setIsConfiguring(false)}
             />
-          </div>
-          
-          <div>
-            <Label htmlFor="formula">Formula *</Label>
-            <Textarea
-              id="formula"
-              value={formData.formula}
-              onChange={(e) => setFormData(prev => ({ ...prev, formula: e.target.value }))}
-              placeholder="Enter calculation formula (e.g., SUM(orders.total) GROUP BY category)"
-              rows={3}
-            />
-          </div>
-          
-          <div className="flex gap-2">
-            <Button onClick={saveCalculation} disabled={isLoading}>
-              <Save className="h-4 w-4 mr-2" />
-              {editingId ? 'Update' : 'Create'} Calculation
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+interface WidgetConfigurationProps {
+  widget: DashboardWidget;
+  availableMetrics: string[];
+  onConfigChange: (config: any) => void;
+  onSave: () => void;
+  onCancel: () => void;
+}
+
+const WidgetConfiguration: React.FC<WidgetConfigurationProps> = ({
+  widget,
+  availableMetrics,
+  onConfigChange,
+  onSave,
+  onCancel,
+}) => {
+  const [name, setName] = useState(widget.name);
+  const [metrics, setMetrics] = useState<string[]>(widget.config.metrics || []);
+  const [chartType, setChartType] = useState(widget.config.chartType || "bar");
+
+  useEffect(() => {
+    setName(widget.name);
+    setMetrics(widget.config.metrics || []);
+    setChartType(widget.config.chartType || "bar");
+  }, [widget]);
+
+  const handleMetricToggle = (metric: string) => {
+    if (metrics.includes(metric)) {
+      setMetrics(metrics.filter((m) => m !== metric));
+    } else {
+      setMetrics([...metrics, metric]);
+    }
+  };
+
+  const handleChartTypeChange = (type: string) => {
+    setChartType(type);
+  };
+
+  const handleSave = () => {
+    const newConfig = {
+      metrics: metrics,
+      chartType: chartType,
+    };
+    onConfigChange(newConfig);
+    onSave();
+  };
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <Label htmlFor="widgetName">Widget Name</Label>
+        <Input
+          id="widgetName"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
+      </div>
+
+      <div>
+        <Label>Metrics</Label>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+          {availableMetrics.map((metric) => (
+            <Button
+              key={metric}
+              variant={metrics.includes(metric) ? "default" : "outline"}
+              onClick={() => handleMetricToggle(metric)}
+              size="sm"
+            >
+              {metric}
             </Button>
-            {editingId && (
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setEditingId(null);
-                  setFormData({ name: '', description: '', formula: '', chart_type: 'bar' });
-                }}
-              >
-                Cancel
-              </Button>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Results Display */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {calculations.map((calc) => {
-          const result = results.find(r => r.name === calc.name);
-          return (
-            <Card key={calc.id}>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <div>
-                  <CardTitle className="text-lg">{calc.name}</CardTitle>
-                  {calc.description && (
-                    <p className="text-sm text-gray-600">{calc.description}</p>
-                  )}
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => editCalculation(calc)}
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => deleteCalculation(calc.id)}
-                    className="text-red-600 hover:text-red-700"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {result ? (
-                  <div className="space-y-4">
-                    <div className="text-2xl font-bold text-green-600">
-                      Total: NRs. {result.value.toFixed(2)}
-                    </div>
-                    {renderChart(result, calc.chart_type)}
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-gray-500">
-                    No data available
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          );
-        })}
+          ))}
+        </div>
       </div>
 
-      {calculations.length === 0 && !isLoading && (
-        <Card>
-          <CardContent className="text-center py-12">
-            <Calculator className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-            <h3 className="text-lg font-semibold text-gray-600 mb-2">
-              No calculations yet
-            </h3>
-            <p className="text-gray-500 mb-4">
-              Create your first custom calculation to get started with dashboard analytics.
-            </p>
-          </CardContent>
-        </Card>
-      )}
+      <div>
+        <Label>Chart Type</Label>
+        <div className="flex space-x-2">
+          <Button
+            variant={chartType === "bar" ? "default" : "outline"}
+            onClick={() => handleChartTypeChange("bar")}
+            size="sm"
+          >
+            <BarChartIcon className="h-4 w-4 mr-2" />
+            Bar
+          </Button>
+          <Button
+            variant={chartType === "line" ? "default" : "outline"}
+            onClick={() => handleChartTypeChange("line")}
+            size="sm"
+          >
+            <LineChartIcon className="h-4 w-4 mr-2" />
+            Line
+          </Button>
+          <Button
+            variant={chartType === "area" ? "default" : "outline"}
+            onClick={() => handleChartTypeChange("area")}
+            size="sm"
+          >
+            <AreaChartIcon className="h-4 w-4 mr-2" />
+            Area
+          </Button>
+          <Button
+            variant={chartType === "pie" ? "default" : "outline"}
+            onClick={() => handleChartTypeChange("pie")}
+            size="sm"
+          >
+            <PieChartIcon className="h-4 w-4 mr-2" />
+            Pie
+          </Button>
+        </div>
+      </div>
+
+      <DialogFooter>
+        <Button variant="ghost" onClick={onCancel}>
+          Cancel
+        </Button>
+        <Button onClick={handleSave}>Save</Button>
+      </DialogFooter>
     </div>
   );
 };

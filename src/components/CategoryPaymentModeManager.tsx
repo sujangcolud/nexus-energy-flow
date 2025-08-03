@@ -5,7 +5,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -72,19 +71,10 @@ const CategoryPaymentModeManager = ({
 
   // Dialog states
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
-  const [isPaymentModeDialogOpen, setIsPaymentModeDialogOpen] = useState(false);
 
   // Form states
   const [categoryForm, setCategoryForm] = useState({
     name: "",
-    description: "",
-    isEditing: false,
-    editId: "",
-  });
-
-  const [paymentModeForm, setPaymentModeForm] = useState({
-    name: "",
-    description: "",
     isEditing: false,
     editId: "",
   });
@@ -100,20 +90,52 @@ const CategoryPaymentModeManager = ({
     if (!user) return;
 
     try {
+      let data;
       // Use the appropriate category table based on tableType
-      let tableName = "categories";
-      if (tableType === "charging") tableName = "charging_categories";
-      if (tableType === "expenses") tableName = "expense_categories";
-      if (tableType === "deposits") tableName = "deposit_categories";
-      if (tableType === "withdrawals") tableName = "withdrawal_categories";
-      if (tableType === "savings") tableName = "savings_categories";
+      if (tableType === "charging") {
+        const { data: result, error } = await supabase
+          .from("charging_categories")
+          .select("id, name, created_at")
+          .order("name");
+        if (error) throw error;
+        data = result;
+      } else if (tableType === "expenses") {
+        const { data: result, error } = await supabase
+          .from("expense_categories")
+          .select("id, name, created_at")
+          .order("name");
+        if (error) throw error;
+        data = result;
+      } else if (tableType === "deposits") {
+        const { data: result, error } = await supabase
+          .from("deposit_categories")
+          .select("id, name, created_at")
+          .order("name");
+        if (error) throw error;
+        data = result;
+      } else if (tableType === "withdrawals") {
+        const { data: result, error } = await supabase
+          .from("withdrawal_categories")
+          .select("id, name, created_at")
+          .order("name");
+        if (error) throw error;
+        data = result;
+      } else if (tableType === "savings") {
+        const { data: result, error } = await supabase
+          .from("savings_categories")
+          .select("id, name, created_at")
+          .order("name");
+        if (error) throw error;
+        data = result;
+      } else {
+        const { data: result, error } = await supabase
+          .from("categories")
+          .select("id, name, created_at")
+          .order("name");
+        if (error) throw error;
+        data = result;
+      }
 
-      const { data, error } = await supabase
-        .from(tableName)
-        .select("id, name, created_at")
-        .order("name");
-
-      if (error) throw error;
       setCategories(data || []);
     } catch (error) {
       logError("fetching categories", error);
@@ -122,10 +144,8 @@ const CategoryPaymentModeManager = ({
   };
 
   const fetchPaymentModes = async () => {
-    if (!user) return;
-
     try {
-      // For payment modes, we'll use a predefined list since there's no payment_modes table
+      // Use predefined payment modes since there's no payment_modes table
       const defaultPaymentModes = [
         { id: "1", name: "Cash", created_at: new Date().toISOString() },
         { id: "2", name: "Esewa", created_at: new Date().toISOString() },
@@ -134,7 +154,7 @@ const CategoryPaymentModeManager = ({
       ];
       setPaymentModes(defaultPaymentModes);
     } catch (error) {
-      console.error("Error fetching payment modes:", error);
+      console.error("Error setting payment modes:", error);
     }
   };
 
@@ -145,38 +165,94 @@ const CategoryPaymentModeManager = ({
     }
 
     try {
-      let tableName = "categories";
-      if (tableType === "charging") tableName = "charging_categories";
-      if (tableType === "expenses") tableName = "expense_categories";
-      if (tableType === "deposits") tableName = "deposit_categories";
-      if (tableType === "withdrawals") tableName = "withdrawal_categories";
-      if (tableType === "savings") tableName = "savings_categories";
-
       const categoryData = {
         name: categoryForm.name,
       };
 
-      if (categoryForm.isEditing) {
-        const { error } = await supabase
-          .from(tableName)
-          .update(categoryData)
-          .eq("id", categoryForm.editId);
-
-        if (error) throw error;
-        toast.success("Category updated successfully!");
+      if (tableType === "charging") {
+        if (categoryForm.isEditing) {
+          const { error } = await supabase
+            .from("charging_categories")
+            .update(categoryData)
+            .eq("id", categoryForm.editId);
+          if (error) throw error;
+        } else {
+          const { error } = await supabase
+            .from("charging_categories")
+            .insert(categoryData);
+          if (error) throw error;
+        }
+      } else if (tableType === "expenses") {
+        if (categoryForm.isEditing) {
+          const { error } = await supabase
+            .from("expense_categories")
+            .update(categoryData)
+            .eq("id", categoryForm.editId);
+          if (error) throw error;
+        } else {
+          const { error } = await supabase
+            .from("expense_categories")
+            .insert(categoryData);
+          if (error) throw error;
+        }
+      } else if (tableType === "deposits") {
+        if (categoryForm.isEditing) {
+          const { error } = await supabase
+            .from("deposit_categories")
+            .update(categoryData)
+            .eq("id", categoryForm.editId);
+          if (error) throw error;
+        } else {
+          const { error } = await supabase
+            .from("deposit_categories")
+            .insert(categoryData);
+          if (error) throw error;
+        }
+      } else if (tableType === "withdrawals") {
+        if (categoryForm.isEditing) {
+          const { error } = await supabase
+            .from("withdrawal_categories")
+            .update(categoryData)
+            .eq("id", categoryForm.editId);
+          if (error) throw error;
+        } else {
+          const { error } = await supabase
+            .from("withdrawal_categories")
+            .insert(categoryData);
+          if (error) throw error;
+        }
+      } else if (tableType === "savings") {
+        if (categoryForm.isEditing) {
+          const { error } = await supabase
+            .from("savings_categories")
+            .update(categoryData)
+            .eq("id", categoryForm.editId);
+          if (error) throw error;
+        } else {
+          const { error } = await supabase
+            .from("savings_categories")
+            .insert(categoryData);
+          if (error) throw error;
+        }
       } else {
-        const { error } = await supabase
-          .from(tableName)
-          .insert(categoryData);
-
-        if (error) throw error;
-        toast.success("Category created successfully!");
+        if (categoryForm.isEditing) {
+          const { error } = await supabase
+            .from("categories")
+            .update(categoryData)
+            .eq("id", categoryForm.editId);
+          if (error) throw error;
+        } else {
+          const { error } = await supabase
+            .from("categories")
+            .insert(categoryData);
+          if (error) throw error;
+        }
       }
 
+      toast.success(categoryForm.isEditing ? "Category updated successfully!" : "Category created successfully!");
       setIsCategoryDialogOpen(false);
       setCategoryForm({
         name: "",
-        description: "",
         isEditing: false,
         editId: "",
       });
@@ -189,47 +265,55 @@ const CategoryPaymentModeManager = ({
     }
   };
 
-  const savePaymentMode = async () => {
-    // Payment modes are predefined, so we'll just show a message
-    toast.info("Payment modes are predefined and cannot be modified");
-    setIsPaymentModeDialogOpen(false);
-    setPaymentModeForm({
-      name: "",
-      description: "",
-      isEditing: false,
-      editId: "",
-    });
-  };
-
   const editCategory = (category: Category) => {
     setCategoryForm({
       name: category.name,
-      description: "",
       isEditing: true,
       editId: category.id,
     });
     setIsCategoryDialogOpen(true);
   };
 
-  const editPaymentMode = (paymentMode: PaymentMode) => {
-    toast.info("Payment modes are predefined and cannot be edited");
-  };
-
   const deleteCategory = async (id: string) => {
     try {
-      let tableName = "categories";
-      if (tableType === "charging") tableName = "charging_categories";
-      if (tableType === "expenses") tableName = "expense_categories";
-      if (tableType === "deposits") tableName = "deposit_categories";
-      if (tableType === "withdrawals") tableName = "withdrawal_categories";
-      if (tableType === "savings") tableName = "savings_categories";
+      if (tableType === "charging") {
+        const { error } = await supabase
+          .from("charging_categories")
+          .delete()
+          .eq("id", id);
+        if (error) throw error;
+      } else if (tableType === "expenses") {
+        const { error } = await supabase
+          .from("expense_categories")
+          .delete()
+          .eq("id", id);
+        if (error) throw error;
+      } else if (tableType === "deposits") {
+        const { error } = await supabase
+          .from("deposit_categories")
+          .delete()
+          .eq("id", id);
+        if (error) throw error;
+      } else if (tableType === "withdrawals") {
+        const { error } = await supabase
+          .from("withdrawal_categories")
+          .delete()
+          .eq("id", id);
+        if (error) throw error;
+      } else if (tableType === "savings") {
+        const { error } = await supabase
+          .from("savings_categories")
+          .delete()
+          .eq("id", id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("categories")
+          .delete()
+          .eq("id", id);
+        if (error) throw error;
+      }
 
-      const { error } = await supabase
-        .from(tableName)
-        .delete()
-        .eq("id", id);
-
-      if (error) throw error;
       toast.success("Category deleted successfully!");
       fetchCategories();
     } catch (error) {
@@ -238,10 +322,6 @@ const CategoryPaymentModeManager = ({
         error?.message || error?.details || "Failed to delete category";
       toast.error(`Error deleting category: ${errorMessage}`);
     }
-  };
-
-  const deletePaymentMode = (id: string) => {
-    toast.info("Payment modes are predefined and cannot be deleted");
   };
 
   return (
@@ -266,7 +346,6 @@ const CategoryPaymentModeManager = ({
                       onClick={() => {
                         setCategoryForm({
                           name: "",
-                          description: "",
                           isEditing: false,
                           editId: "",
                         });
@@ -405,28 +484,6 @@ const CategoryPaymentModeManager = ({
             <Button onClick={saveCategory}>
               <Save className="h-4 w-4 mr-2" />
               {categoryForm.isEditing ? "Update" : "Create"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Payment Mode Dialog */}
-      <Dialog
-        open={isPaymentModeDialogOpen}
-        onOpenChange={setIsPaymentModeDialogOpen}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Payment Modes (Predefined)</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <p className="text-sm text-gray-600">
-              Payment modes are predefined and cannot be modified.
-            </p>
-          </div>
-          <DialogFooter>
-            <Button onClick={() => setIsPaymentModeDialogOpen(false)}>
-              Close
             </Button>
           </DialogFooter>
         </DialogContent>

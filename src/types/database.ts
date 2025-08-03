@@ -41,6 +41,8 @@ export interface DailySummary {
   created_at: string;
   updated_at: string;
   total_income_fonepay: number;
+  total_income_cash: number;
+  total_income_esewa: number;
 }
 
 export interface Order {
