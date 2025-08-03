@@ -1,5 +1,7 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { logError } from "./errorHandling";
+import { logSecurityEvent } from "./securityLogger";
 
 export interface UserWithRole {
   id: string;
@@ -13,61 +15,95 @@ export interface RoleDistribution {
 }
 
 /**
- * Fallback function to get users when user_roles table/functions are not available
+ * Enhanced fallback function with proper security logging
  */
 export async function getUsersWithRolesFallback(): Promise<UserWithRole[]> {
   try {
-    // Try to get basic user data from profiles first
+    // First try the proper RPC function
+    const { data: rpcData, error: rpcError } = await supabase.rpc('get_all_users_with_roles');
+    
+    if (!rpcError && rpcData) {
+      return rpcData.map(user => ({
+        id: user.id,
+        email: user.email || "Unknown",
+        role: user.role as any || 'user'
+      }));
+    }
+
+    // Log the fallback usage
+    await logSecurityEvent(
+      null,
+      "USERS_FALLBACK_USED",
+      "user_management",
+      "system",
+      { error: rpcError?.message }
+    );
+
+    // Try to get basic user data from profiles
     const { data: profilesData, error: profilesError } = await supabase
       .from("profiles")
       .select("id, email, first_name, last_name")
       .limit(100);
 
     if (!profilesError && profilesData && profilesData.length > 0) {
-      // Use profiles data with default roles
+      // Get roles from user_roles table
+      const { data: rolesData, error: rolesError } = await supabase
+        .from("user_roles")
+        .select("user_id, role");
+
+      const rolesMap = new Map(
+        rolesData?.map(r => [r.user_id, r.role]) || []
+      );
+
       return profilesData.map((profile) => ({
         id: profile.id,
         email: profile.email || "Unknown",
-        role:
-          profile.email === "sujan1nepal@gmail.com"
-            ? ("super_admin" as const)
-            : ("user" as const),
+        role: rolesMap.get(profile.id) || 'user',
       }));
     }
 
-    // If profiles doesn't work, try to get minimal user data from any available source
-    console.warn("Profiles table not accessible, trying alternative approach");
+    // Final fallback - return empty array with security warning
+    await logSecurityEvent(
+      null,
+      "USERS_FALLBACK_FAILED",
+      "user_management", 
+      "system",
+      { profilesError: profilesError?.message }
+    );
 
-    // Return minimal fallback data
-    return [
-      {
-        id: "fallback-admin",
-        email: "sujan1nepal@gmail.com",
-        role: "super_admin",
-      },
-    ];
+    return [];
   } catch (error) {
     logError("users fallback", error);
     console.error("All fallback methods failed:", error);
 
-    // Return minimal admin user as final fallback
-    return [
-      {
-        id: "emergency-admin",
-        email: "sujan1nepal@gmail.com",
-        role: "super_admin",
-      },
-    ];
+    // Log the complete failure
+    await logSecurityEvent(
+      null,
+      "USERS_FALLBACK_CRITICAL_FAILURE",
+      "user_management",
+      "system",
+      { error: error instanceof Error ? error.message : 'Unknown error' }
+    );
+
+    return [];
   }
 }
 
 /**
- * Fallback function for role distribution when user_roles functions fail
+ * Fallback function for role distribution with security logging
  */
-export async function getRoleDistributionFallback(): Promise<
-  RoleDistribution[]
-> {
+export async function getRoleDistributionFallback(): Promise<RoleDistribution[]> {
   try {
+    // Try proper RPC function first
+    const { data: rpcData, error: rpcError } = await supabase.rpc('get_user_role_distribution');
+    
+    if (!rpcError && rpcData) {
+      return rpcData.map(item => ({
+        role: item.role,
+        count: Number(item.user_count)
+      }));
+    }
+
     const users = await getUsersWithRolesFallback();
 
     // Count roles manually
@@ -85,26 +121,44 @@ export async function getRoleDistributionFallback(): Promise<
 
     // Return minimal distribution
     return [
-      { role: "super_admin", count: 1 },
       { role: "user", count: 0 },
     ];
   }
 }
 
 /**
- * Check if user roles system is available
+ * Check if user roles system is available with security logging
  */
 export async function checkUserRolesAvailability(): Promise<boolean> {
   try {
     const { error } = await supabase.rpc("get_current_user_role");
-    return !error;
+    const isAvailable = !error;
+    
+    if (!isAvailable) {
+      await logSecurityEvent(
+        null,
+        "USER_ROLES_SYSTEM_UNAVAILABLE",
+        "system",
+        "check",
+        { error: error?.message }
+      );
+    }
+    
+    return isAvailable;
   } catch (error) {
+    await logSecurityEvent(
+      null,
+      "USER_ROLES_SYSTEM_CHECK_FAILED",
+      "system",
+      "check",
+      { error: error instanceof Error ? error.message : 'Unknown error' }
+    );
     return false;
   }
 }
 
 /**
- * Get current user role with fallback
+ * Get current user role with enhanced fallback and logging
  */
 export async function getCurrentUserRoleWithFallback(): Promise<string> {
   try {
@@ -112,20 +166,20 @@ export async function getCurrentUserRoleWithFallback(): Promise<string> {
     if (!error && data) {
       return data;
     }
+
+    // Log the fallback usage
+    const { data: { user } } = await supabase.auth.getUser();
+    await logSecurityEvent(
+      user?.id || null,
+      "ROLE_CHECK_FALLBACK",
+      "user_roles",
+      user?.id || "unknown",
+      { error: error?.message }
+    );
   } catch (error) {
     logError("getting current user role", error);
   }
 
-  // Fallback: check if user is the admin email
-  try {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (user?.email === "sujan1nepal@gmail.com") {
-      return "super_admin";
-    }
-    return "user";
-  } catch (error) {
-    return "user";
-  }
+  // Fallback: default to 'user'
+  return "user";
 }

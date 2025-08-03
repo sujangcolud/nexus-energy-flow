@@ -1,3 +1,4 @@
+
 import React, {
   createContext,
   useContext,
@@ -9,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { User, Session, AuthError } from "@supabase/supabase-js";
 import { toast } from "sonner";
 import { clearAuthErrorFlag } from "@/utils/globalErrorHandler";
+import { logSecurityEvent } from "@/utils/securityLogger";
 
 export type UserRole = "user" | "data_entry" | "reports_viewer" | "super_admin";
 
@@ -96,24 +98,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 
       console.log("Profile data:", profile, "Profile error:", profileError);
 
-      // Use the new security definer function to get user role safely
+      // Use the security definer function to get user role safely
       const { data: userRole, error: roleError } = await supabase.rpc(
         "get_current_user_role",
       );
 
       console.log("Role data:", userRole, "Role error:", roleError);
 
-      // Fallback: if database role lookup fails but user is the admin email
-      let finalRole = userRole;
-      if (roleError || !userRole) {
-        console.log("Database role lookup failed, checking fallback...");
-        if (session?.user?.email === "sujan1nepal@gmail.com") {
-          console.log("Using super_admin fallback for sujan1nepal@gmail.com");
-          finalRole = "super_admin";
-        } else {
-          finalRole = "user";
-        }
-      }
+      // If role lookup fails, default to 'user' - no more hardcoded admin fallback
+      let finalRole: UserRole = userRole || "user";
 
       // If we have a profile, create the app user
       if (profile) {
@@ -123,12 +116,21 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
           name:
             `${profile.first_name || ""} ${profile.last_name || ""}`.trim() ||
             "User",
-          role: (finalRole as UserRole) || "user",
+          role: finalRole,
           first_name: profile.first_name,
           last_name: profile.last_name,
         };
         console.log("Setting app user:", appUser);
         setUser(appUser);
+
+        // Log successful authentication
+        await logSecurityEvent(
+          userId,
+          "USER_AUTHENTICATED",
+          "auth",
+          userId,
+          { email: profile.email, role: finalRole }
+        );
       } else {
         // Profile doesn't exist yet, create a basic user object
         console.log("No profile found, creating basic user");
@@ -136,9 +138,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
           id: userId,
           email: session?.user?.email || "",
           name: "User",
-          role: (finalRole as UserRole) || "user",
+          role: finalRole,
         };
         setUser(basicUser);
+
+        // Log authentication with missing profile
+        await logSecurityEvent(
+          userId,
+          "USER_AUTHENTICATED_NO_PROFILE",
+          "auth",
+          userId,
+          { email: session?.user?.email, role: finalRole }
+        );
       }
     } catch (error: any) {
       console.error("Error fetching user profile:", error);
@@ -156,6 +167,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         role: "user",
       };
       setUser(fallbackUser);
+
+      // Log authentication error
+      await logSecurityEvent(
+        userId,
+        "AUTH_PROFILE_ERROR",
+        "auth",
+        userId,
+        { error: error.message }
+      );
     }
   };
 
@@ -264,6 +284,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       if (error) {
         console.error("Login error:", error);
 
+        // Log failed login attempt
+        await logSecurityEvent(
+          null,
+          "LOGIN_FAILED",
+          "auth",
+          email,
+          { error: error.message, email }
+        );
+
         // Provide more user-friendly error messages
         if (
           error.message?.includes("Failed to fetch") ||
@@ -317,6 +346,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       if (error) {
         console.error("Signup error:", error);
 
+        // Log failed signup attempt
+        await logSecurityEvent(
+          null,
+          "SIGNUP_FAILED",
+          "auth",
+          email,
+          { error: error.message, email }
+        );
+
         // Provide more user-friendly error messages
         if (
           error.message?.includes("Failed to fetch") ||
@@ -353,6 +391,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         if (balanceError) {
           console.error("Error creating initial balance:", balanceError);
         }
+
+        // Log successful signup
+        await logSecurityEvent(
+          data.user.id,
+          "USER_REGISTERED",
+          "auth",
+          data.user.id,
+          { email }
+        );
       }
     } catch (error: any) {
       console.error("Signup error:", error);
@@ -361,6 +408,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   };
 
   const logout = async () => {
+    const userId = user?.id;
+    
     try {
       // Always clear local state first
       setUser(null);
@@ -368,6 +417,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 
       // Clear all auth-related storage
       localStorage.removeItem('supabase.auth.token');
+
+      // Log logout attempt
+      if (userId) {
+        await logSecurityEvent(
+          userId,
+          "USER_LOGOUT",
+          "auth",
+          userId,
+          {}
+        );
+      }
 
       // Try to sign out from Supabase, but don't fail if there's no session
       const { error } = await supabase.auth.signOut();

@@ -1,17 +1,20 @@
+
 import { supabase } from "@/integrations/supabase/client";
+import { logSecurityEvent } from "./securityLogger";
 
 /**
- * Emergency function to fix admin role for sujan1nepal@gmail.com
- * This should only be used when the database role is not properly set
+ * Emergency function to fix admin role - DEPRECATED
+ * This function is kept for compatibility but should not be used
+ * All role management should go through proper channels
  */
 export async function fixAdminRole(): Promise<{
   success: boolean;
   message: string;
 }> {
   try {
-    console.log("Attempting to fix admin role for sujan1nepal@gmail.com");
+    console.log("Emergency admin fix requested - this function is deprecated");
 
-    // First, check current user
+    // Check current user
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     
     if (userError || !user) {
@@ -21,61 +24,28 @@ export async function fixAdminRole(): Promise<{
       };
     }
 
-    if (user.email !== "sujan1nepal@gmail.com") {
-      return {
-        success: false,
-        message: "This function can only be used by sujan1nepal@gmail.com"
-      };
-    }
-
-    // Update profile role
-    const { error: profileError } = await supabase
-      .from("profiles")
-      .upsert({
-        id: user.id,
+    // Log the emergency access attempt
+    await logSecurityEvent(
+      user.id,
+      "EMERGENCY_ADMIN_FIX_ATTEMPTED",
+      "user_roles",
+      user.id,
+      {
         email: user.email,
-        role: "super_admin",
-        first_name: "Sujan",
-        last_name: "Nepal",
-        updated_at: new Date().toISOString()
-      });
-
-    if (profileError) {
-      console.error("Profile update error:", profileError);
-      return {
-        success: false,
-        message: `Profile update failed: ${profileError.message}`
-      };
-    }
-
-    // Try to update user_roles table if it exists
-    try {
-      const { error: userRoleError } = await supabase
-        .from("user_roles")
-        .upsert({
-          user_id: user.id,
-          role: "super_admin"
-        });
-
-      if (userRoleError) {
-        console.warn("user_roles table update failed:", userRoleError.message);
+        timestamp: new Date().toISOString()
       }
-    } catch (err) {
-      console.warn("user_roles table might not exist:", err);
-    }
+    );
 
-    console.log("Admin role fix completed successfully");
-    
     return {
-      success: true,
-      message: "Admin role has been fixed. Please refresh the page to see changes."
+      success: false,
+      message: "Emergency admin fix is deprecated. Please contact system administrator for role changes."
     };
 
   } catch (error: any) {
     console.error("Emergency admin fix error:", error);
     return {
       success: false,
-      message: `Fix failed: ${error.message}`
+      message: `Access denied: ${error.message}`
     };
   }
 }
