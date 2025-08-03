@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import {
   Card,
@@ -73,7 +74,6 @@ const DashboardStudio = () => {
   const [selectedWidget, setSelectedWidget] = useState<DashboardWidget | null>(null);
   const [isConfiguring, setIsConfiguring] = useState(false);
   const [availableMetrics, setAvailableMetrics] = useState<string[]>([]);
-  const [calculations, setCalculations] = useState<any[]>([]);
 
   useEffect(() => {
     if (user) {
@@ -90,7 +90,17 @@ const DashboardStudio = () => {
         .eq('user_id', user?.id);
 
       if (error) throw error;
-      setWidgets(data || []);
+      
+      // Transform reports data to DashboardWidget format
+      const transformedWidgets: DashboardWidget[] = (data || []).map((report) => ({
+        id: report.id,
+        name: report.report_type || "Unnamed Widget",
+        type: "chart",
+        config: typeof report.report_data === 'object' ? report.report_data : { metrics: [], chartType: "bar" },
+        user_id: report.user_id,
+      }));
+      
+      setWidgets(transformedWidgets);
     } catch (error) {
       console.error("Error fetching widgets:", error);
       toast.error("Failed to load widgets");
@@ -98,19 +108,20 @@ const DashboardStudio = () => {
   };
 
   const fetchAvailableMetrics = async () => {
-    try {
-      // Fetch column names from a specific table (e.g., 'daily_summary')
-      const { data, error } = await supabase.rpc('get_all_table_columns');
-
-      if (error) throw error;
-
-      // Extract column names from the result
-      const columnNames = data as string[];
-      setAvailableMetrics(columnNames || []);
-    } catch (error) {
-      console.error("Error fetching available metrics:", error);
-      toast.error("Failed to load available metrics");
-    }
+    // Use predefined metrics from daily_summary table
+    const metrics = [
+      'total_income',
+      'total_expenses',
+      'total_deposits',
+      'total_withdrawals',
+      'total_savings',
+      'cash_balance',
+      'esewa_balance',
+      'fonepay_balance',
+      'cooperative_balance',
+      'total_balance'
+    ];
+    setAvailableMetrics(metrics);
   };
 
   const addWidget = () => {
@@ -134,9 +145,19 @@ const DashboardStudio = () => {
 
   const saveWidget = async (widget: DashboardWidget) => {
     try {
+      // Transform DashboardWidget to reports table format
+      const reportData = {
+        id: widget.id,
+        user_id: widget.user_id,
+        report_type: widget.name,
+        report_data: widget.config,
+        date_range_start: null,
+        date_range_end: null,
+      };
+
       const { error } = await supabase
         .from('reports')
-        .upsert(widget, { onConflict: 'id' });
+        .upsert(reportData, { onConflict: 'id' });
 
       if (error) throw error;
 
@@ -188,9 +209,11 @@ const DashboardStudio = () => {
     switch (widget.type) {
       case "chart":
         const chartData = generateChartData(widget.config.metrics || ["total_income"]);
+        const chartType = widget.config.chartType || "bar";
+        
         return (
           <ResponsiveContainer width="100%" height={300}>
-            {widget.config.chartType === "area" && (
+            {chartType === "area" && (
               <AreaChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="name" />
@@ -199,7 +222,7 @@ const DashboardStudio = () => {
                 <Area type="monotone" dataKey="value" stroke="#8884d8" fill="#8884d8" />
               </AreaChart>
             )}
-            {widget.config.chartType === "line" && (
+            {chartType === "line" && (
               <LineChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="name" />
@@ -208,7 +231,7 @@ const DashboardStudio = () => {
                 <Line type="monotone" dataKey="value" stroke="#8884d8" />
               </LineChart>
             )}
-            {(widget.config.chartType === "bar" || !widget.config.chartType) && (
+            {chartType === "bar" && (
               <BarChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="name" />
@@ -217,7 +240,7 @@ const DashboardStudio = () => {
                 <Bar dataKey="value" fill="#8884d8" />
               </BarChart>
             )}
-            {widget.config.chartType === "pie" && (
+            {chartType === "pie" && (
               <PieChart>
                 <Pie
                   data={chartData}
@@ -283,15 +306,17 @@ const DashboardStudio = () => {
           <DialogHeader>
             <DialogTitle>Widget Configuration</DialogTitle>
           </DialogHeader>
-          {selectedWidget && (
-            <WidgetConfiguration
-              widget={selectedWidget}
-              availableMetrics={availableMetrics}
-              onConfigChange={handleConfigChange}
-              onSave={() => saveWidget(selectedWidget)}
-              onCancel={() => setIsConfiguring(false)}
-            />
-          )}
+          <div>
+            {selectedWidget && (
+              <WidgetConfiguration
+                widget={selectedWidget}
+                availableMetrics={availableMetrics}
+                onConfigChange={handleConfigChange}
+                onSave={() => saveWidget(selectedWidget)}
+                onCancel={() => setIsConfiguring(false)}
+              />
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </div>
