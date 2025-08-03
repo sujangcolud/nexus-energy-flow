@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -24,7 +25,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { extractErrorMessage, logError } from "@/utils/errorHandling";
 import {
@@ -32,26 +32,19 @@ import {
   Edit,
   Trash2,
   Settings,
-  Tag,
-  CreditCard,
   Save,
-  X,
 } from "lucide-react";
 
 interface Category {
   id: string;
   name: string;
-  table_type: string;
-  description: string;
-  is_active: boolean;
+  created_at?: string;
 }
 
 interface PaymentMode {
   id: string;
   name: string;
-  table_type: string;
-  description: string;
-  is_active: boolean;
+  created_at?: string;
 }
 
 interface CategoryPaymentModeManagerProps {
@@ -107,12 +100,17 @@ const CategoryPaymentModeManager = ({
     if (!user) return;
 
     try {
+      // Use the appropriate category table based on tableType
+      let tableName = "categories";
+      if (tableType === "charging") tableName = "charging_categories";
+      if (tableType === "expenses") tableName = "expense_categories";
+      if (tableType === "deposits") tableName = "deposit_categories";
+      if (tableType === "withdrawals") tableName = "withdrawal_categories";
+      if (tableType === "savings") tableName = "savings_categories";
+
       const { data, error } = await supabase
-        .from("categories")
-        .select("*")
-        .eq("user_id", user.id)
-        .eq("is_active", true)
-        .in("table_type", [tableType, "all"])
+        .from(tableName)
+        .select("id, name, created_at")
         .order("name");
 
       if (error) throw error;
@@ -127,16 +125,14 @@ const CategoryPaymentModeManager = ({
     if (!user) return;
 
     try {
-      const { data, error } = await supabase
-        .from("payment_modes")
-        .select("*")
-        .eq("user_id", user.id)
-        .eq("is_active", true)
-        .in("table_type", [tableType, "all"])
-        .order("name");
-
-      if (error) throw error;
-      setPaymentModes(data || []);
+      // For payment modes, we'll use a predefined list since there's no payment_modes table
+      const defaultPaymentModes = [
+        { id: "1", name: "Cash", created_at: new Date().toISOString() },
+        { id: "2", name: "Esewa", created_at: new Date().toISOString() },
+        { id: "3", name: "Fonepay", created_at: new Date().toISOString() },
+        { id: "4", name: "Bank Transfer", created_at: new Date().toISOString() },
+      ];
+      setPaymentModes(defaultPaymentModes);
     } catch (error) {
       console.error("Error fetching payment modes:", error);
     }
@@ -149,17 +145,20 @@ const CategoryPaymentModeManager = ({
     }
 
     try {
+      let tableName = "categories";
+      if (tableType === "charging") tableName = "charging_categories";
+      if (tableType === "expenses") tableName = "expense_categories";
+      if (tableType === "deposits") tableName = "deposit_categories";
+      if (tableType === "withdrawals") tableName = "withdrawal_categories";
+      if (tableType === "savings") tableName = "savings_categories";
+
       const categoryData = {
-        user_id: user.id,
         name: categoryForm.name,
-        table_type: tableType,
-        description: categoryForm.description,
-        is_active: true,
       };
 
       if (categoryForm.isEditing) {
         const { error } = await supabase
-          .from("categories")
+          .from(tableName)
           .update(categoryData)
           .eq("id", categoryForm.editId);
 
@@ -167,7 +166,7 @@ const CategoryPaymentModeManager = ({
         toast.success("Category updated successfully!");
       } else {
         const { error } = await supabase
-          .from("categories")
+          .from(tableName)
           .insert(categoryData);
 
         if (error) throw error;
@@ -191,57 +190,21 @@ const CategoryPaymentModeManager = ({
   };
 
   const savePaymentMode = async () => {
-    if (!user || !paymentModeForm.name) {
-      toast.error("Payment mode name is required");
-      return;
-    }
-
-    try {
-      const paymentModeData = {
-        user_id: user.id,
-        name: paymentModeForm.name,
-        table_type: tableType,
-        description: paymentModeForm.description,
-        is_active: true,
-      };
-
-      if (paymentModeForm.isEditing) {
-        const { error } = await supabase
-          .from("payment_modes")
-          .update(paymentModeData)
-          .eq("id", paymentModeForm.editId);
-
-        if (error) throw error;
-        toast.success("Payment mode updated successfully!");
-      } else {
-        const { error } = await supabase
-          .from("payment_modes")
-          .insert(paymentModeData);
-
-        if (error) throw error;
-        toast.success("Payment mode created successfully!");
-      }
-
-      setIsPaymentModeDialogOpen(false);
-      setPaymentModeForm({
-        name: "",
-        description: "",
-        isEditing: false,
-        editId: "",
-      });
-      fetchPaymentModes();
-    } catch (error) {
-      console.error("Error saving payment mode:", error);
-      const errorMessage =
-        error?.message || error?.details || "Failed to save payment mode";
-      toast.error(`Error saving payment mode: ${errorMessage}`);
-    }
+    // Payment modes are predefined, so we'll just show a message
+    toast.info("Payment modes are predefined and cannot be modified");
+    setIsPaymentModeDialogOpen(false);
+    setPaymentModeForm({
+      name: "",
+      description: "",
+      isEditing: false,
+      editId: "",
+    });
   };
 
   const editCategory = (category: Category) => {
     setCategoryForm({
       name: category.name,
-      description: category.description,
+      description: "",
       isEditing: true,
       editId: category.id,
     });
@@ -249,20 +212,21 @@ const CategoryPaymentModeManager = ({
   };
 
   const editPaymentMode = (paymentMode: PaymentMode) => {
-    setPaymentModeForm({
-      name: paymentMode.name,
-      description: paymentMode.description,
-      isEditing: true,
-      editId: paymentMode.id,
-    });
-    setIsPaymentModeDialogOpen(true);
+    toast.info("Payment modes are predefined and cannot be edited");
   };
 
   const deleteCategory = async (id: string) => {
     try {
+      let tableName = "categories";
+      if (tableType === "charging") tableName = "charging_categories";
+      if (tableType === "expenses") tableName = "expense_categories";
+      if (tableType === "deposits") tableName = "deposit_categories";
+      if (tableType === "withdrawals") tableName = "withdrawal_categories";
+      if (tableType === "savings") tableName = "savings_categories";
+
       const { error } = await supabase
-        .from("categories")
-        .update({ is_active: false })
+        .from(tableName)
+        .delete()
         .eq("id", id);
 
       if (error) throw error;
@@ -276,22 +240,8 @@ const CategoryPaymentModeManager = ({
     }
   };
 
-  const deletePaymentMode = async (id: string) => {
-    try {
-      const { error } = await supabase
-        .from("payment_modes")
-        .update({ is_active: false })
-        .eq("id", id);
-
-      if (error) throw error;
-      toast.success("Payment mode deleted successfully!");
-      fetchPaymentModes();
-    } catch (error) {
-      console.error("Error deleting payment mode:", error);
-      const errorMessage =
-        error?.message || error?.details || "Failed to delete payment mode";
-      toast.error(`Error deleting payment mode: ${errorMessage}`);
-    }
+  const deletePaymentMode = (id: string) => {
+    toast.info("Payment modes are predefined and cannot be deleted");
   };
 
   return (
@@ -387,22 +337,7 @@ const CategoryPaymentModeManager = ({
               <PopoverContent className="w-80">
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <h4 className="font-medium">Manage Payment Modes</h4>
-                    <Button
-                      size="sm"
-                      onClick={() => {
-                        setPaymentModeForm({
-                          name: "",
-                          description: "",
-                          isEditing: false,
-                          editId: "",
-                        });
-                        setIsPaymentModeDialogOpen(true);
-                      }}
-                    >
-                      <Plus className="h-4 w-4 mr-1" />
-                      Add
-                    </Button>
+                    <h4 className="font-medium">Payment Modes (Predefined)</h4>
                   </div>
                   <div className="space-y-2 max-h-48 overflow-y-auto">
                     {paymentModes.map((paymentMode) => (
@@ -411,23 +346,6 @@ const CategoryPaymentModeManager = ({
                         className="flex items-center justify-between p-2 bg-gray-50 rounded"
                       >
                         <span className="text-sm">{paymentMode.name}</span>
-                        <div className="flex gap-1">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => editPaymentMode(paymentMode)}
-                          >
-                            <Edit className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => deletePaymentMode(paymentMode.id)}
-                            className="text-red-600 hover:text-red-700"
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
-                        </div>
                       </div>
                     ))}
                   </div>
@@ -476,21 +394,6 @@ const CategoryPaymentModeManager = ({
                 placeholder="Enter category name"
               />
             </div>
-            <div>
-              <Label htmlFor="categoryDescription">Description</Label>
-              <Textarea
-                id="categoryDescription"
-                value={categoryForm.description}
-                onChange={(e) =>
-                  setCategoryForm((prev) => ({
-                    ...prev,
-                    description: e.target.value,
-                  }))
-                }
-                placeholder="Enter category description"
-                rows={3}
-              />
-            </div>
           </div>
           <DialogFooter>
             <Button
@@ -514,53 +417,16 @@ const CategoryPaymentModeManager = ({
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>
-              {paymentModeForm.isEditing
-                ? "Edit Payment Mode"
-                : "Add New Payment Mode"}
-            </DialogTitle>
+            <DialogTitle>Payment Modes (Predefined)</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <div>
-              <Label htmlFor="paymentModeName">Payment Mode Name *</Label>
-              <Input
-                id="paymentModeName"
-                value={paymentModeForm.name}
-                onChange={(e) =>
-                  setPaymentModeForm((prev) => ({
-                    ...prev,
-                    name: e.target.value,
-                  }))
-                }
-                placeholder="Enter payment mode name"
-              />
-            </div>
-            <div>
-              <Label htmlFor="paymentModeDescription">Description</Label>
-              <Textarea
-                id="paymentModeDescription"
-                value={paymentModeForm.description}
-                onChange={(e) =>
-                  setPaymentModeForm((prev) => ({
-                    ...prev,
-                    description: e.target.value,
-                  }))
-                }
-                placeholder="Enter payment mode description"
-                rows={3}
-              />
-            </div>
+            <p className="text-sm text-gray-600">
+              Payment modes are predefined and cannot be modified.
+            </p>
           </div>
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsPaymentModeDialogOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button onClick={savePaymentMode}>
-              <Save className="h-4 w-4 mr-2" />
-              {paymentModeForm.isEditing ? "Update" : "Create"}
+            <Button onClick={() => setIsPaymentModeDialogOpen(false)}>
+              Close
             </Button>
           </DialogFooter>
         </DialogContent>
