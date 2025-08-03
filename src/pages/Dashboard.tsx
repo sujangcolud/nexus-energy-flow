@@ -64,7 +64,7 @@ import UserManagementTab from "@/components/tabs/UserManagementTab";
 import InventoryTab from "@/components/tabs/InventoryTab";
 import MenuManagementTab from "@/components/tabs/MenuManagementTab";
 import AllTimeSummaryModal from "@/components/AllTimeSummaryModal";
-import { DailyClosingSystem } from "@/components/DailyClosingSystem";
+import DailyClosingSystem from "@/components/DailyClosingSystem";
 
 interface AnalyticsData {
   totalRevenue: number;
@@ -204,7 +204,7 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50">
       {/* Sidebar */}
       <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0`}>
         <div className="flex items-center justify-between h-16 px-6 border-b">

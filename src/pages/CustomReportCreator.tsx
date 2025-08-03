@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,6 +20,13 @@ interface CustomCalculation {
   name: string;
   formula: string;
   columns: string[];
+}
+
+interface ReportConfig {
+  table: string;
+  columns: string[];
+  filters: Filter[];
+  calculations: CustomCalculation[];
 }
 
 const CustomReportCreator = () => {
@@ -106,44 +112,46 @@ const CustomReportCreator = () => {
 
     setLoading(true);
     try {
-      let query = supabase
+      // Use type assertion to handle dynamic table selection
+      const query = (supabase as any)
         .from(selectedTable)
         .select(selectedColumns.join(", "))
         .eq("user_id", user.id);
 
-      // Apply filters
+      // Apply filters safely
+      let finalQuery = query;
       filters.forEach(filter => {
         if (filter.column && filter.operator && filter.value) {
           switch (filter.operator) {
             case "=":
-              query = query.eq(filter.column, filter.value);
+              finalQuery = finalQuery.eq(filter.column, filter.value);
               break;
             case "!=":
-              query = query.neq(filter.column, filter.value);
+              finalQuery = finalQuery.neq(filter.column, filter.value);
               break;
             case ">":
-              query = query.gt(filter.column, filter.value);
+              finalQuery = finalQuery.gt(filter.column, filter.value);
               break;
             case "<":
-              query = query.lt(filter.column, filter.value);
+              finalQuery = finalQuery.lt(filter.column, filter.value);
               break;
             case ">=":
-              query = query.gte(filter.column, filter.value);
+              finalQuery = finalQuery.gte(filter.column, filter.value);
               break;
             case "<=":
-              query = query.lte(filter.column, filter.value);
+              finalQuery = finalQuery.lte(filter.column, filter.value);
               break;
             case "LIKE":
-              query = query.like(filter.column, `%${filter.value}%`);
+              finalQuery = finalQuery.like(filter.column, `%${filter.value}%`);
               break;
             case "NOT LIKE":
-              query = query.not(filter.column, "like", `%${filter.value}%`);
+              finalQuery = finalQuery.not(filter.column, "like", `%${filter.value}%`);
               break;
           }
         }
       });
 
-      const { data, error } = await query;
+      const { data, error } = await finalQuery;
 
       if (error) throw error;
 
@@ -164,12 +172,11 @@ const CustomReportCreator = () => {
     }
 
     try {
-      // Convert to plain objects for JSON serialization
-      const reportConfig = {
+      const reportConfig: ReportConfig = {
         table: selectedTable,
         columns: selectedColumns,
-        filters: filters.map(f => ({ ...f })),
-        calculations: calculations.map(c => ({ ...c }))
+        filters: filters,
+        calculations: calculations
       };
 
       const { error } = await supabase.from("reports").insert({

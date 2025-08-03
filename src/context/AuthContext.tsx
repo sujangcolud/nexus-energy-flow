@@ -12,6 +12,9 @@ export interface AuthContextType {
   loading: boolean;
   signOut: () => Promise<void>;
   refreshUserRole: () => Promise<void>;
+  hasRole: (role: UserRole) => boolean;
+  login: (email: string, password: string) => Promise<void>;
+  signup: (email: string, password: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -46,26 +49,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         return mappedRole;
       }
 
-      // If profiles doesn't have role, try user_roles table
-      const { data: roleData, error: roleError } = await supabase
-        .from('user_roles')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false })
-        .limit(1);
-
-      if (roleError) {
-        console.warn('Error fetching user role:', roleError);
-        return 'user';
-      }
-
-      // Since user_roles table doesn't have role column in current schema,
-      // we'll use a fallback approach
-      if (roleData && roleData.length > 0) {
-        // For now, return user as default since we can't access the role column
-        return 'user';
-      }
-
+      // Fallback to default role
       return 'user';
     } catch (error) {
       console.error('Error in getUserRole:', error);
@@ -76,7 +60,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const mapRole = (role: string): UserRole => {
     switch (role?.toLowerCase()) {
       case 'super_admin':
-      case 'super_user': // Handle legacy super_user mapping
         return 'super_admin';
       case 'data_entry':
         return 'data_entry';
@@ -92,6 +75,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       const role = await getUserRole(user.id);
       setUserRole(role);
     }
+  };
+
+  const hasRole = (role: UserRole): boolean => {
+    const roleHierarchy = {
+      'user': 1,
+      'data_entry': 2,
+      'reports_viewer': 3,
+      'super_admin': 4
+    };
+    return roleHierarchy[userRole] >= roleHierarchy[role];
+  };
+
+  const login = async (email: string, password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    if (error) throw error;
+    toast.success('Signed in successfully');
+  };
+
+  const signup = async (email: string, password: string) => {
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+    });
+    if (error) throw error;
+    toast.success('Account created successfully');
   };
 
   useEffect(() => {
@@ -145,6 +156,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     loading,
     signOut,
     refreshUserRole,
+    hasRole,
+    login,
+    signup,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

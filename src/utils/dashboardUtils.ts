@@ -6,23 +6,11 @@ export const checkCustomCalculationsAccess = async (): Promise<{
   error?: string;
 }> => {
   try {
-    // Try a simple query to check if table exists and is accessible
-    const { error } = await supabase
-      .from("custom_calculations")
-      .select("id", { count: "exact", head: true })
-      .limit(1);
-
-    if (!error) {
-      console.log("✅ custom_calculations table is accessible");
-      return { accessible: true };
-    }
-
-    const errorMessage = extractErrorMessage(error);
-    console.warn("⚠️ custom_calculations table not accessible:", errorMessage);
-
+    // Since custom_calculations table doesn't exist in schema, return false
+    console.warn("⚠️ custom_calculations table not found in schema");
     return {
       accessible: false,
-      error: errorMessage,
+      error: "Table not found in database schema",
     };
   } catch (error) {
     const errorMessage = extractErrorMessage(error);
@@ -35,8 +23,7 @@ export const checkCustomCalculationsAccess = async (): Promise<{
 };
 
 export const isDashboardStudioSupported = async (): Promise<boolean> => {
-  const { accessible } = await checkCustomCalculationsAccess();
-  return accessible;
+  return false; // Disabled until custom_calculations table is available
 };
 
 // Dashboard storage utilities for localStorage fallback
