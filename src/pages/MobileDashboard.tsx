@@ -1,642 +1,577 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/context/AuthContext";
+import { useUserPermissions } from "@/hooks/useUserPermissions";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { extractErrorMessage, logError } from "@/utils/errorHandling";
+import DailyClosingSystem from "@/components/DailyClosingSystem";
+import BatchDailyClosingSystem from "@/components/BatchDailyClosingSystem";
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableFooter,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Calendar } from "@/components/ui/calendar"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { CalendarIcon } from "lucide-react"
-import { cn } from "@/lib/utils"
-import { format } from "date-fns"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+  Outlet,
+  useLocation,
+  NavLink,
+  Link,
+  useNavigate,
+} from "react-router-dom";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form"
-import { Switch } from "@/components/ui/switch"
-import { useForm } from "react-hook-form"
-import * as z from "zod"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { DateRange } from "react-day-picker"
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-  CommandSeparator,
-  CommandShortcut,
-} from "@/components/ui/command"
-import { Checkbox } from "@/components/ui/checkbox"
-import { ListTree } from "@/components/ui/list-tree"
-import { Separator } from "@/components/ui/separator"
-import { Slider } from "@/components/ui/slider"
-import { Textarea } from "@/components/ui/textarea"
-import { Progress } from "@/components/ui/progress"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
-import { CardClose, CardDescription } from "@/components/ui/card"
-import {
-  Drawer,
-  DrawerClose,
-  DrawerContent,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerTrigger,
-} from "@/components/ui/drawer"
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuSeparator,
-  DropdownMenuShortcut,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { InputWithButton } from "@/components/ui/input-with-button"
-import { MediaPicker } from "@/components/ui/media-picker"
-import { MultiSelect } from "@/components/ui/multi-select"
-import { NavigationMenu, NavigationMenuItem, NavigationMenuList, NavigationMenuContent, NavigationMenuLink, NavigationMenuTrigger, navigationMenuTriggerStyle } from "@/components/ui/navigation-menu"
-import { Pagination } from "@/components/ui/pagination"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { RangeCalendar } from "@/components/ui/range-calendar"
-import { ResizablePanel, ResizablePanelGroup, ResizableHandle } from "@/components/ui/resizable"
-import { Skeleton } from "@/components/ui/skeleton"
-import { Sonner } from 'sonner';
-import { AspectRatio } from "@/components/ui/aspect-ratio"
-import { Icons } from "@/components/icons"
-import { Link } from "lucide-react"
-import { useToast } from "@/components/ui/use-toast"
-import { toast as useToastReport } from "sonner"
-import { useSearchParams, useRouter } from 'next/navigation';
-import { AppRole } from "@/utils/roleBasedAccess";
-
-interface Order {
-  id: string;
-  item_name: string;
-  quantity: number;
-  rate: number;
-  total: number;
-  payment_mode: string;
-  order_date: string;
-}
-
-interface Expense {
-  id: string;
-  description: string;
-  amount: number;
-  category: string;
-  payment_mode: string;
-  expense_date: string;
-}
-
-interface Deposit {
-  id: string;
-  amount: number;
-  mode: string;
-  deposited_by: string;
-  deposit_date: string;
-}
-
-interface Withdrawal {
-  id: string;
-  amount: number;
-  purpose: string;
-  payment_mode: string;
-  withdrawal_date: string;
-}
-
-interface Saving {
-  id: string;
-  contribution_amount: number;
-  contribution_date: string;
-  payment_mode: string;
-}
-
-interface ChargingSession {
-  id: string;
-  total_amount: number;
-  payment_mode: string;
-  session_date: string;
-}
+  LogOut,
+  User,
+  ShoppingCart,
+  Zap,
+  Receipt,
+  CreditCard,
+  Banknote,
+  Users,
+  BarChart3,
+  FileText,
+  UtensilsCrossed,
+  Database,
+  ArrowLeft,
+  UserCog,
+  Upload,
+  LayoutDashboard,
+  Settings as SettingsIcon,
+  Settings,
+  Bell,
+  Search,
+  TrendingUp,
+  Package,
+  Menu,
+  Home,
+  Calendar,
+  Activity,
+  ChevronRight,
+  Wifi,
+  Battery,
+  Signal,
+} from "lucide-react";
+import { toast } from "sonner";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const MobileDashboard = () => {
-  const { user, userRole } = useAuth();
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [deposits, setDeposits] = useState<Deposit[]>([]);
-  const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
-  const [savings, setSavings] = useState<Saving[]>([]);
-  const [chargingSessions, setChargingSessions] = useState<ChargingSession[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [date, setDate] = useState<Date | undefined>(new Date());
-  const [summaryModalOpen, setSummaryModalOpen] = useState(false);
-  const [dailyClosingOpen, setDailyClosingOpen] = useState(false);
-  const [searchParams, setSearchParams] = useSearchParams();
-  const router = useRouter();
+  const { user, signOut, userRole } = useAuth();
+  const { hasTabAccess } = useUserPermissions();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const isMobile = useIsMobile();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [tabSettings, setTabSettings] = useState<Record<string, boolean>>({});
+  const [currentTime, setCurrentTime] = useState(new Date());
+  const [isDailyClosingOpen, setIsDailyClosingOpen] = useState(false);
+  const [isBatchClosingOpen, setIsBatchClosingOpen] = useState(false);
+  const [showBatchClosing, setShowBatchClosing] = useState(true);
+
+  // Update time every minute
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 60000);
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
-    if (user) {
-      fetchData();
+    const storedSettings = localStorage.getItem("tabSettings");
+    if (storedSettings) {
+      setTabSettings(JSON.parse(storedSettings));
     }
-  }, [user, date]);
 
-  const formatDate = (date: Date | undefined): string => {
-    if (!date) return '';
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  };
+    // Load batch closing setting
+    const batchClosingSetting = localStorage.getItem("showBatchClosing");
+    if (batchClosingSetting !== null) {
+      setShowBatchClosing(JSON.parse(batchClosingSetting));
+    }
+  }, []);
 
-  const fetchData = async () => {
-    setLoading(true);
+  const handleSignOut = async () => {
     try {
-      const formattedDate = formatDate(date);
-
-      const { data: ordersData, error: ordersError } = await supabase
-        .from('orders')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('order_date', formattedDate);
-
-      if (ordersError) throw ordersError;
-      setOrders(ordersData || []);
-
-      const { data: expensesData, error: expensesError } = await supabase
-        .from('expenses')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('expense_date', formattedDate);
-
-      if (expensesError) throw expensesError;
-      setExpenses(expensesData || []);
-
-      const { data: depositsData, error: depositsError } = await supabase
-        .from('deposits')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('deposit_date', formattedDate);
-
-      if (depositsError) throw depositsError;
-      setDeposits(depositsData || []);
-
-      const { data: withdrawalsData, error: withdrawalsError } = await supabase
-        .from('withdrawals')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('withdrawal_date', formattedDate);
-
-      if (withdrawalsError) throw withdrawalsError;
-      setWithdrawals(withdrawalsData || []);
-
-      const { data: savingsData, error: savingsError } = await supabase
-        .from('cooperative_savings')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('contribution_date', formattedDate);
-
-      if (savingsError) throw savingsError;
-      setSavings(savingsData || []);
-
-      const { data: chargingSessionsData, error: chargingSessionsError } = await supabase
-        .from('charging_sessions')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('session_date', formattedDate);
-
-      if (chargingSessionsError) throw chargingSessionsError;
-      setChargingSessions(chargingSessionsData || []);
-
+      await signOut();
     } catch (error) {
-      console.error('Error fetching data:', error);
-      toast.error('Failed to load data');
-    } finally {
-      setLoading(false);
+      console.error("Error signing out:", error);
     }
   };
 
-  const calculateTotal = (items: any[], field: string): number => {
-    return items.reduce((acc, item) => acc + (item[field] || 0), 0);
+  const handleDailyClosing = () => {
+    setIsDailyClosingOpen(true);
   };
 
-  const totalOrders = calculateTotal(orders, 'total');
-  const totalExpenses = calculateTotal(expenses, 'amount');
-  const totalDeposits = calculateTotal(deposits, 'amount');
-  const totalWithdrawals = calculateTotal(withdrawals, 'amount');
-  const totalSavings = calculateTotal(savings, 'contribution_amount');
-  const totalCharging = calculateTotal(chargingSessions, 'total_amount');
+  // Mobile-optimized navigation items
+  const getNavItems = () => {
+    const allItems = [
+      {
+        id: "orders",
+        path: "orders",
+        label: "Orders",
+        icon: ShoppingCart,
+        roles: ["user", "data_entry", "reports_viewer", "super_admin"],
+        color: "from-orange-500 to-orange-600",
+        bgColor: "bg-orange-50",
+        description: "Manage food orders",
+        category: "transactions",
+      },
+      {
+        id: "charging",
+        path: "charging",
+        label: "Charging",
+        icon: Zap,
+        roles: ["user", "data_entry", "reports_viewer", "super_admin"],
+        color: "from-yellow-500 to-yellow-600",
+        bgColor: "bg-yellow-50",
+        description: "Track energy consumption",
+        category: "transactions",
+      },
+      {
+        id: "expenses",
+        path: "expenses",
+        label: "Expenses",
+        icon: Receipt,
+        roles: ["user", "data_entry", "reports_viewer", "super_admin"],
+        color: "from-red-500 to-red-600",
+        bgColor: "bg-red-50",
+        description: "Monitor business expenses",
+        category: "transactions",
+      },
+      {
+        id: "deposits",
+        path: "deposits",
+        label: "Deposits",
+        icon: CreditCard,
+        roles: ["user", "data_entry", "reports_viewer", "super_admin"],
+        color: "from-green-500 to-green-600",
+        bgColor: "bg-green-50",
+        description: "Handle financial deposits",
+        category: "financial",
+      },
+      {
+        id: "withdrawals",
+        path: "withdrawals",
+        label: "Withdrawals",
+        icon: Banknote,
+        roles: ["user", "data_entry", "reports_viewer", "super_admin"],
+        color: "from-blue-500 to-blue-600",
+        bgColor: "bg-blue-50",
+        description: "Process withdrawals",
+        category: "financial",
+      },
+      {
+        id: "cooperative",
+        path: "cooperative",
+        label: "Savings",
+        icon: Users,
+        roles: ["user", "data_entry", "reports_viewer", "super_admin"],
+        color: "from-teal-500 to-teal-600",
+        bgColor: "bg-teal-50",
+        description: "Cooperative savings",
+        category: "financial",
+      },
+      {
+        id: "share_investments",
+        path: "share-investments",
+        label: "Investments",
+        icon: TrendingUp,
+        roles: ["user", "data_entry", "reports_viewer", "super_admin"],
+        color: "from-emerald-500 to-emerald-600",
+        bgColor: "bg-emerald-50",
+        description: "Share investments",
+        category: "financial",
+      },
+      {
+        id: "inventory",
+        path: "inventory",
+        label: "Inventory",
+        icon: Package,
+        roles: ["user", "data_entry", "reports_viewer", "super_admin"],
+        color: "from-purple-500 to-purple-600",
+        bgColor: "bg-purple-50",
+        description: "Inventory management",
+        category: "management",
+      },
 
-  const totalIncome = totalOrders + totalCharging;
-  const netBalance = totalIncome + totalDeposits - totalExpenses - totalWithdrawals - totalSavings;
+      {
+        id: "bulk_import",
+        path: "bulk-import",
+        label: "Import",
+        icon: Upload,
+        roles: ["reports_viewer", "super_admin"],
+        color: "from-indigo-500 to-indigo-600",
+        bgColor: "bg-indigo-50",
+        description: "Data import",
+        category: "management",
+      },
+      {
+        id: "menu",
+        path: "menu",
+        label: "Menu",
+        icon: UtensilsCrossed,
+        roles: ["super_admin"],
+        color: "from-amber-500 to-amber-600",
+        bgColor: "bg-amber-50",
+        description: "Menu management",
+        category: "management",
+      },
+      {
+        id: "user_management",
+        path: "user-management",
+        label: "Users",
+        icon: UserCog,
+        roles: ["super_admin"],
+        color: "from-pink-500 to-pink-600",
+        bgColor: "bg-pink-50",
+        description: "User management",
+        category: "management",
+      },
+      {
+        id: "vat_entry",
+        path: "vat-entry",
+        label: "VAT",
+        icon: FileText,
+        roles: ["user", "data_entry", "reports_viewer", "super_admin"],
+        color: "from-lime-500 to-lime-600",
+        bgColor: "bg-lime-50",
+        description: "VAT entries",
+        category: "transactions",
+      },
+      {
+        id: "dashboard_studio",
+        path: "dashboard-studio",
+        label: "Dashboard Studio",
+        icon: BarChart3,
+        roles: ["user", "reports_viewer", "super_admin"],
+        color: "from-purple-500 to-purple-600",
+        bgColor: "bg-purple-50",
+        description: "Create custom dashboards",
+        category: "analytics",
+      },
+    ];
 
-  const handleDateSelect = (newDate: Date | undefined) => {
-    setDate(newDate);
+    if (!userRole) return [];
+
+    // Show all items to all users (role restrictions removed as requested)
+    return allItems.filter((item) => tabSettings[item.id] ?? true);
   };
 
-  const handleTabNavigation = (tab: string) => {
-    setSearchParams({ tab });
-    router.push(`/MobileDashboard?tab=${tab}`);
+  const navItems = getNavItems();
+  const isSubPageActive =
+    location.pathname !== "/dashboard" && location.pathname !== "/dashboard/";
+  const currentPage = navItems.find((item) =>
+    location.pathname.includes(`/dashboard/${item.path}`),
+  );
+
+  // Group items by category for mobile
+  const groupedItems = navItems.reduce(
+    (acc, item) => {
+      const category = item.category || "other";
+      if (!acc[category]) acc[category] = [];
+      acc[category].push(item);
+      return acc;
+    },
+    {} as Record<string, typeof navItems>,
+  );
+
+  const getCategoryTitle = (category: string) => {
+    switch (category) {
+      case "transactions":
+        return "Transactions";
+      case "financial":
+        return "Financial";
+
+      case "management":
+        return "Management";
+      default:
+        return "Other";
+    }
   };
 
-  const currentTab = searchParams.get('tab') || 'summary';
+  const getCategoryIcon = (category: string) => {
+    switch (category) {
+      case "transactions":
+        return ShoppingCart;
+      case "financial":
+        return CreditCard;
+
+      case "management":
+        return Settings;
+      default:
+        return LayoutDashboard;
+    }
+  };
+
+  // Mobile app header
+  const MobileHeader = () => (
+    <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-4">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          {isSubPageActive ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate("/dashboard")}
+              className="text-white hover:bg-white/20 h-8 w-8 p-0"
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          ) : (
+            <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
+              <SheetTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-white hover:bg-white/20 h-8 w-8 p-0"
+                >
+                  <Menu className="h-4 w-4" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-80 p-0">
+                <div className="bg-gradient-to-b from-blue-600 to-purple-600 text-white p-6">
+                  <SheetHeader>
+                    <SheetTitle className="text-white text-left">
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-full bg-white/20 flex items-center justify-center">
+                          <User className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <div className="font-semibold">
+                            {user?.name || user?.email}
+                          </div>
+                          <div className="text-sm opacity-90 capitalize">
+                            {userRole?.replace("_", " ")}
+                          </div>
+                        </div>
+                      </div>
+                    </SheetTitle>
+                  </SheetHeader>
+                </div>
+
+                <div className="p-4 space-y-4">
+                  <div className="space-y-2">
+                    <Button
+                      variant="ghost"
+                      onClick={handleDailyClosing}
+                      className="w-full justify-start gap-3 h-12"
+                    >
+                      <Database className="h-5 w-5" />
+                      Daily Closing
+                    </Button>
+                    {showBatchClosing && (
+                      <Button
+                        variant="ghost"
+                        onClick={() => setIsBatchClosingOpen(true)}
+                        className="w-full justify-start gap-3 h-12"
+                      >
+                        <Calendar className="h-5 w-5" />
+                        Batch Closing
+                      </Button>
+                    )}
+                    <Button
+                      variant="ghost"
+                      onClick={() => navigate("/dashboard/settings")}
+                      className="w-full justify-start gap-3 h-12"
+                    >
+                      <SettingsIcon className="h-5 w-5" />
+                      Settings
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      onClick={handleSignOut}
+                      className="w-full justify-start gap-3 h-12 text-red-600 hover:text-red-700 hover:bg-red-50"
+                    >
+                      <LogOut className="h-5 w-5" />
+                      Sign Out
+                    </Button>
+                  </div>
+                </div>
+              </SheetContent>
+            </Sheet>
+          )}
+          <div>
+            <h1 className="text-lg font-bold">
+              {isSubPageActive ? currentPage?.label : "EcoSoft Pro"}
+            </h1>
+            <p className="text-xs opacity-90">
+              {isSubPageActive
+                ? currentPage?.description
+                : "Business Management"}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-white hover:bg-white/20 h-8 w-8 p-0"
+          >
+            <Bell className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-white hover:bg-white/20 h-8 w-8 p-0"
+          >
+            <Search className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Mobile app grid
+  const MobileAppGrid = () => (
+    <div className="p-4 space-y-6">
+      {Object.entries(groupedItems).map(([category, items]) => {
+        const CategoryIcon = getCategoryIcon(category);
+        return (
+          <div key={category} className="space-y-3">
+            <div className="flex items-center gap-2 text-sm font-semibold text-gray-600 px-2">
+              <CategoryIcon className="h-4 w-4" />
+              {getCategoryTitle(category)}
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              {items.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <Card
+                    key={item.id}
+                    onClick={() => {
+                      navigate(item.path);
+                      setIsMenuOpen(false);
+                    }}
+                    className="cursor-pointer transition-all duration-200 hover:scale-105 active:scale-95 border-0 shadow-lg"
+                  >
+                    <CardContent className="p-4 flex flex-col items-center text-center space-y-3">
+                      <div
+                        className={`h-12 w-12 rounded-2xl bg-gradient-to-br ${item.color} flex items-center justify-center shadow-lg`}
+                      >
+                        <Icon className="h-6 w-6 text-white" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-sm text-gray-800">
+                          {item.label}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {item.description}
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+
+  // Quick action buttons for mobile
+  const QuickActions = () => (
+    <div className="px-4 pb-4">
+      <div className="bg-white rounded-2xl shadow-lg p-4">
+        <h3 className="font-semibold text-gray-800 mb-3">Quick Actions</h3>
+        <div className="grid grid-cols-2 gap-3">
+          <Button
+            variant="outline"
+            onClick={() => navigate("orders")}
+            className="h-12 flex flex-col gap-1 border-2"
+          >
+            <ShoppingCart className="h-4 w-4" />
+            <span className="text-xs">New Order</span>
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => navigate("expenses")}
+            className="h-12 flex flex-col gap-1 border-2"
+          >
+            <Receipt className="h-4 w-4" />
+            <span className="text-xs">Add Expense</span>
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-gray-100 py-6">
-      <Sonner />
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-6">
-          <h2 className="text-xl font-bold text-gray-800">
-            Welcome, {user?.email?.split('@')[0] || 'User'}
-          </h2>
-          <p className="text-gray-600">
-            Role: {userRole.charAt(0).toUpperCase() + userRole.slice(1).replace('_', ' ')}
-          </p>
-        </div>
+    <div className="min-h-screen bg-gray-50">
+      {/* Mobile Header */}
+      <MobileHeader />
 
-        <div className="mb-4">
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant={"outline"}
-                className={cn(
-                  "w-[240px] justify-start text-left font-normal",
-                  !date && "text-muted-foreground"
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {date ? format(date, "PPP") : <span>Pick a date</span>}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="center">
-              <Calendar
-                mode="single"
-                selected={date}
-                onSelect={handleDateSelect}
-                disabled={(date) =>
-                  date > new Date()
-                }
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
-        </div>
+      {/* Main Content */}
+      <main className="pb-safe">
+        {!isSubPageActive ? (
+          <div className="space-y-6">
+            {/* Welcome Section */}
+            <div className="px-4 pt-6">
+              <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl p-6 border border-blue-100">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-xl font-bold text-gray-800">
+                      Welcome back!
+                    </h2>
+                    <p className="text-sm text-gray-600 mt-1">
+                      {new Date().toLocaleDateString("en-US", {
+                        weekday: "long",
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      })}
+                    </p>
+                  </div>
+                  <div className="h-12 w-12 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center">
+                    <User className="h-6 w-6 text-white" />
+                  </div>
+                </div>
 
-        <div className="grid grid-cols-2 gap-4 mb-6">
-          <Card className="bg-white shadow rounded">
-            <CardHeader>
-              <CardTitle className="text-sm font-medium">Income</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-600">Rs. {totalIncome.toFixed(2)}</div>
-            </CardContent>
-          </Card>
-          <Card className="bg-white shadow rounded">
-            <CardHeader>
-              <CardTitle className="text-sm font-medium">Expenses</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-red-600">Rs. {totalExpenses.toFixed(2)}</div>
-            </CardContent>
-          </Card>
-          <Card className="bg-white shadow rounded">
-            <CardHeader>
-              <CardTitle className="text-sm font-medium">Deposits</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-blue-600">Rs. {totalDeposits.toFixed(2)}</div>
-            </CardContent>
-          </Card>
-          <Card className="bg-white shadow rounded">
-            <CardHeader>
-              <CardTitle className="text-sm font-medium">Net Balance</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-gray-800">Rs. {netBalance.toFixed(2)}</div>
-            </CardContent>
-          </Card>
-        </div>
+                {/* Quick Stats */}
+                <div className="grid grid-cols-3 gap-4 mt-6">
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-blue-600">
+                      {navItems.length}
+                    </p>
+                    <p className="text-xs text-gray-600">Modules</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-green-600">Online</p>
+                    <p className="text-xs text-gray-600">Status</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-purple-600 capitalize">
+                      {userRole?.split("_")[0]}
+                    </p>
+                    <p className="text-xs text-gray-600">Role</p>
+                  </div>
+                </div>
+              </div>
+            </div>
 
-        <div className="mb-4">
-          <nav className="flex space-x-4" aria-label="Tabs">
-            <Button
-              variant={currentTab === 'summary' ? 'default' : 'outline'}
-              onClick={() => handleTabNavigation('summary')}
-            >
-              Summary
-            </Button>
-            <Button
-              variant={currentTab === 'orders' ? 'default' : 'outline'}
-              onClick={() => handleTabNavigation('orders')}
-            >
-              Orders
-            </Button>
-            <Button
-              variant={currentTab === 'expenses' ? 'default' : 'outline'}
-              onClick={() => handleTabNavigation('expenses')}
-            >
-              Expenses
-            </Button>
-            <Button
-              variant={currentTab === 'deposits' ? 'default' : 'outline'}
-              onClick={() => handleTabNavigation('deposits')}
-            >
-              Deposits
-            </Button>
-            <Button
-              variant={currentTab === 'withdrawals' ? 'default' : 'outline'}
-              onClick={() => handleTabNavigation('withdrawals')}
-            >
-              Withdrawals
-            </Button>
-            <Button
-              variant={currentTab === 'savings' ? 'default' : 'outline'}
-              onClick={() => handleTabNavigation('savings')}
-            >
-              Savings
-            </Button>
-            <Button
-              variant={currentTab === 'charging' ? 'default' : 'outline'}
-              onClick={() => handleTabNavigation('charging')}
-            >
-              Charging
-            </Button>
-          </nav>
-        </div>
+            {/* Quick Actions */}
+            <QuickActions />
 
-        {loading ? (
-          <div className="text-center">Loading data...</div>
+            {/* App Grid */}
+            <MobileAppGrid />
+          </div>
         ) : (
-          <div>
-            {currentTab === 'summary' && (
-              <Card className="bg-white shadow rounded">
-                <CardHeader>
-                  <CardTitle className="text-lg font-medium">Daily Summary</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p>Total Orders: Rs. {totalOrders.toFixed(2)}</p>
-                  <p>Total Expenses: Rs. {totalExpenses.toFixed(2)}</p>
-                  <p>Total Deposits: Rs. {totalDeposits.toFixed(2)}</p>
-                  <p>Total Withdrawals: Rs. {totalWithdrawals.toFixed(2)}</p>
-                  <p>Total Savings: Rs. {totalSavings.toFixed(2)}</p>
-                  <p>Total Charging: Rs. {totalCharging.toFixed(2)}</p>
-                  <p className="font-bold">Net Balance: Rs. {netBalance.toFixed(2)}</p>
-                </CardContent>
-              </Card>
-            )}
-
-            {currentTab === 'orders' && (
-              <Card className="bg-white shadow rounded">
-                <CardHeader>
-                  <CardTitle className="text-lg font-medium">Orders</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {orders.length > 0 ? (
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Item</TableHead>
-                          <TableHead>Quantity</TableHead>
-                          <TableHead>Total</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {orders.map((order) => (
-                          <TableRow key={order.id}>
-                            <TableCell>{order.item_name}</TableCell>
-                            <TableCell>{order.quantity}</TableCell>
-                            <TableCell>Rs. {order.total.toFixed(2)}</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  ) : (
-                    <div>No orders for this date.</div>
-                  )}
-                </CardContent>
-              </Card>
-            )}
-
-            {currentTab === 'expenses' && (
-              <Card className="bg-white shadow rounded">
-                <CardHeader>
-                  <CardTitle className="text-lg font-medium">Expenses</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {expenses.length > 0 ? (
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Description</TableHead>
-                          <TableHead>Amount</TableHead>
-                          <TableHead>Category</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {expenses.map((expense) => (
-                          <TableRow key={expense.id}>
-                            <TableCell>{expense.description}</TableCell>
-                            <TableCell>Rs. {expense.amount.toFixed(2)}</TableCell>
-                            <TableCell>{expense.category}</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  ) : (
-                    <div>No expenses for this date.</div>
-                  )}
-                </CardContent>
-              </Card>
-            )}
-
-            {currentTab === 'deposits' && (
-              <Card className="bg-white shadow rounded">
-                <CardHeader>
-                  <CardTitle className="text-lg font-medium">Deposits</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {deposits.length > 0 ? (
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Deposited By</TableHead>
-                          <TableHead>Amount</TableHead>
-                          <TableHead>Mode</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {deposits.map((deposit) => (
-                          <TableRow key={deposit.id}>
-                            <TableCell>{deposit.deposited_by}</TableCell>
-                            <TableCell>Rs. {deposit.amount.toFixed(2)}</TableCell>
-                            <TableCell>{deposit.mode}</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  ) : (
-                    <div>No deposits for this date.</div>
-                  )}
-                </CardContent>
-              </Card>
-            )}
-
-            {currentTab === 'withdrawals' && (
-              <Card className="bg-white shadow rounded">
-                <CardHeader>
-                  <CardTitle className="text-lg font-medium">Withdrawals</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {withdrawals.length > 0 ? (
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Purpose</TableHead>
-                          <TableHead>Amount</TableHead>
-                          <TableHead>Payment Mode</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {withdrawals.map((withdrawal) => (
-                          <TableRow key={withdrawal.id}>
-                            <TableCell>{withdrawal.purpose}</TableCell>
-                            <TableCell>Rs. {withdrawal.amount.toFixed(2)}</TableCell>
-                            <TableCell>{withdrawal.payment_mode}</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  ) : (
-                    <div>No withdrawals for this date.</div>
-                  )}
-                </CardContent>
-              </Card>
-            )}
-
-            {currentTab === 'savings' && (
-              <Card className="bg-white shadow rounded">
-                <CardHeader>
-                  <CardTitle className="text-lg font-medium">Savings</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {savings.length > 0 ? (
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Amount</TableHead>
-                          <TableHead>Payment Mode</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {savings.map((saving) => (
-                          <TableRow key={saving.id}>
-                            <TableCell>Rs. {saving.contribution_amount.toFixed(2)}</TableCell>
-                            <TableCell>{saving.payment_mode}</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  ) : (
-                    <div>No savings for this date.</div>
-                  )}
-                </CardContent>
-              </Card>
-            )}
-
-            {currentTab === 'charging' && (
-              <Card className="bg-white shadow rounded">
-                <CardHeader>
-                  <CardTitle className="text-lg font-medium">Charging Sessions</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {chargingSessions.length > 0 ? (
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Amount</TableHead>
-                          <TableHead>Payment Mode</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {chargingSessions.map((session) => (
-                          <TableRow key={session.id}>
-                            <TableCell>Rs. {session.total_amount.toFixed(2)}</TableCell>
-                            <TableCell>{session.payment_mode}</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  ) : (
-                    <div>No charging sessions for this date.</div>
-                  )}
-                </CardContent>
-              </Card>
-            )}
+          <div className="bg-white min-h-screen">
+            <Outlet />
           </div>
         )}
-      </div>
+      </main>
 
-      <AllTimeSummaryModal
-        isOpen={summaryModalOpen}
-        onClose={() => setSummaryModalOpen(false)}
-        summaryData={null}
-        onDateRangeChange={() => {}}
-      />
+      {/* Daily Closing System */}
       <DailyClosingSystem
-        isOpen={dailyClosingOpen}
-        onClose={() => setDailyClosingOpen(false)}
+        isOpen={isDailyClosingOpen}
+        onClose={() => setIsDailyClosingOpen(false)}
+      />
+
+      {/* Batch Daily Closing System */}
+      <BatchDailyClosingSystem
+        isOpen={isBatchClosingOpen}
+        onClose={() => setIsBatchClosingOpen(false)}
       />
     </div>
   );

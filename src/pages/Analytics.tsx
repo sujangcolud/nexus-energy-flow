@@ -1,10 +1,14 @@
-
 import { useState, useEffect } from "react";
-import { useAuth } from "@/context/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  calculateDailySummary,
+  formatCurrency,
+  calculatePercentage,
+  getPaymentModeColor,
+  type DailySummaryData,
+} from "@/lib/calculations";
 import {
   BarChart,
   Bar,
@@ -19,438 +23,710 @@ import {
   Cell,
   LineChart,
   Line,
+  AreaChart,
+  Area,
 } from "recharts";
 import {
+  Banknote,
+  CreditCard,
+  PiggyBank,
   TrendingUp,
   TrendingDown,
   DollarSign,
-  Users,
-  ShoppingCart,
-  Activity,
   Calendar,
-  Filter,
-  Download,
+  BarChart3,
 } from "lucide-react";
-import { format, subDays, startOfMonth, endOfMonth } from "date-fns";
-import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
-interface AnalyticsData {
-  totalRevenue: number;
+interface FinancialData {
+  bankBalance: number;
+  cashInHand: number;
+  cooperativeBalance: number;
+  totalIncome: number;
   totalExpenses: number;
+  chargingIncome: number;
+  restaurantIncome: number;
   netProfit: number;
-  totalOrders: number;
-  totalCustomers: number;
-  avgOrderValue: number;
-  revenueGrowth: number;
-  profitMargin: number;
+  totalAssets: number;
 }
-
-interface ChartData {
-  name: string;
-  value: number;
-  revenue?: number;
-  expenses?: number;
-  profit?: number;
-}
-
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
 
 const Analytics = () => {
-  const { user } = useAuth();
-  const [loading, setLoading] = useState(true);
-  const [analyticsData, setAnalyticsData] = useState<AnalyticsData>({
-    totalRevenue: 0,
-    totalExpenses: 0,
-    netProfit: 0,
-    totalOrders: 0,
-    totalCustomers: 0,
-    avgOrderValue: 0,
-    revenueGrowth: 0,
-    profitMargin: 0,
-  });
-  const [chartData, setChartData] = useState<ChartData[]>([]);
-  const [revenueByCategory, setRevenueByCategory] = useState<ChartData[]>([]);
-  const [monthlyTrends, setMonthlyTrends] = useState<ChartData[]>([]);
-  const [dateRange, setDateRange] = useState({
-    from: startOfMonth(new Date()),
-    to: endOfMonth(new Date()),
+  const [timeRange, setTimeRange] = useState("30");
+  const [analyticsSettings, setAnalyticsSettings] = useState({
+    showKeyMetrics: true,
+    showCharts: true,
+    showCorrelation: true,
+    showBalanceDistribution: true,
+    showIncomeTrend: true,
+    showIncomeSources: true,
+    showSummaryStats: true,
+    autoRefresh: false,
   });
 
   useEffect(() => {
-    if (user) {
-      fetchAnalyticsData();
+    const storedSettings = localStorage.getItem("analyticsSettings");
+    if (storedSettings) {
+      setAnalyticsSettings(JSON.parse(storedSettings));
     }
-  }, [user, dateRange]);
+  }, []);
 
-  const fetchAnalyticsData = async () => {
-    if (!user) return;
-
-    try {
-      setLoading(true);
-
-      // Fetch orders data
-      const { data: ordersData, error: ordersError } = await supabase
-        .from("orders")
-        .select("*")
-        .eq("user_id", user.id)
-        .gte("order_date", format(dateRange.from, "yyyy-MM-dd"))
-        .lte("order_date", format(dateRange.to, "yyyy-MM-dd"));
-
-      if (ordersError) throw ordersError;
-
-      // Fetch charging data
-      const { data: chargingData, error: chargingError } = await supabase
-        .from("charging_sessions")
-        .select("*")
-        .eq("user_id", user.id)
-        .gte("session_date", format(dateRange.from, "yyyy-MM-dd"))
-        .lte("session_date", format(dateRange.to, "yyyy-MM-dd"));
-
-      if (chargingError) throw chargingError;
-
-      // Fetch expenses data
-      const { data: expensesData, error: expensesError } = await supabase
-        .from("expenses")
-        .select("*")
-        .eq("user_id", user.id)
-        .gte("expense_date", format(dateRange.from, "yyyy-MM-dd"))
-        .lte("expense_date", format(dateRange.to, "yyyy-MM-dd"));
-
-      if (expensesError) throw expensesError;
-
-      // Calculate analytics
-      const totalOrderRevenue = ordersData?.reduce((sum, order) => sum + order.total, 0) || 0;
-      const totalChargingRevenue = chargingData?.reduce((sum, session) => sum + session.total_amount, 0) || 0;
-      const totalRevenue = totalOrderRevenue + totalChargingRevenue;
-      const totalExpenses = expensesData?.reduce((sum, expense) => sum + expense.amount, 0) || 0;
-      const netProfit = totalRevenue - totalExpenses;
-      const totalOrders = (ordersData?.length || 0) + (chargingData?.length || 0);
-      const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
-      const profitMargin = totalRevenue > 0 ? (netProfit / totalRevenue) * 100 : 0;
-
-      // Calculate revenue by payment mode
-      const paymentModeRevenue: { [key: string]: number } = {};
-      
-      ordersData?.forEach(order => {
-        paymentModeRevenue[order.payment_mode] = (paymentModeRevenue[order.payment_mode] || 0) + order.total;
-      });
-      
-      chargingData?.forEach(session => {
-        paymentModeRevenue[session.payment_mode] = (paymentModeRevenue[session.payment_mode] || 0) + session.total_amount;
-      });
-
-      const revenueByPaymentMode = Object.entries(paymentModeRevenue).map(([mode, amount]) => ({
-        name: mode,
-        value: amount,
-      }));
-
-      // Calculate monthly trends
-      const monthlyData: { [key: string]: { revenue: number; expenses: number } } = {};
-      
-      ordersData?.forEach(order => {
-        const month = format(new Date(order.order_date || order.created_at), "MMM yyyy");
-        if (!monthlyData[month]) monthlyData[month] = { revenue: 0, expenses: 0 };
-        monthlyData[month].revenue += order.total;
-      });
-
-      chargingData?.forEach(session => {
-        const month = format(new Date(session.session_date || session.created_at), "MMM yyyy");
-        if (!monthlyData[month]) monthlyData[month] = { revenue: 0, expenses: 0 };
-        monthlyData[month].revenue += session.total_amount;
-      });
-
-      expensesData?.forEach(expense => {
-        const month = format(new Date(expense.expense_date || expense.created_at), "MMM yyyy");
-        if (!monthlyData[month]) monthlyData[month] = { revenue: 0, expenses: 0 };
-        monthlyData[month].expenses += expense.amount;
-      });
-
-      const monthlyTrendsData = Object.entries(monthlyData).map(([month, data]) => ({
-        name: month,
-        revenue: data.revenue,
-        expenses: data.expenses,
-        profit: data.revenue - data.expenses,
-        value: data.revenue, // Add value property for consistency
-      }));
-
-      // Get balances
-      const { data: balancesData } = await supabase
-        .from("balances")
-        .select("*")
-        .eq("user_id", user.id)
-        .single();
-
-      let balanceData: ChartData[] = [];
-      if (balancesData) {
-        balanceData = [
-          { name: "Cash", value: balancesData.cash_in_hand || 0 },
-          { name: "Bank", value: balancesData.bank_balance || 0 },
-          { name: "Esewa", value: balancesData.esewa_balance || 0 },
-          { name: "Fonepay", value: balancesData.fonepay_balance || 0 },
-          { name: "Cooperative", value: balancesData.cooperative_balance || 0 },
-        ];
-      }
-
-      setAnalyticsData({
-        totalRevenue,
-        totalExpenses,
-        netProfit,
-        totalOrders,
-        totalCustomers: 0, // This would need user counting logic
-        avgOrderValue,
-        revenueGrowth: 0, // This would need historical comparison
-        profitMargin,
-      });
-
-      setChartData(balanceData);
-      setRevenueByCategory(revenueByPaymentMode);
-      setMonthlyTrends(monthlyTrendsData);
-
-    } catch (error) {
-      console.error("Error fetching analytics data:", error);
-      toast.error("Error loading analytics data");
-    } finally {
-      setLoading(false);
-    }
+  const handleAnalyticsToggle = (setting: string) => {
+    const newSettings = {
+      ...analyticsSettings,
+      [setting]: !analyticsSettings[setting as keyof typeof analyticsSettings],
+    };
+    setAnalyticsSettings(newSettings);
+    localStorage.setItem("analyticsSettings", JSON.stringify(newSettings));
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500"></div>
-      </div>
+  // Fetch all financial data with corrected column names
+  const { data: ordersData = [] } = useQuery({
+    queryKey: ["orders", timeRange],
+    queryFn: async () => {
+      const date = new Date();
+      date.setDate(date.getDate() - parseInt(timeRange));
+
+      const { data, error } = await supabase
+        .from("orders")
+        .select("*")
+        .gte("created_at", date.toISOString());
+
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  const { data: chargingData = [] } = useQuery({
+    queryKey: ["charging", timeRange],
+    queryFn: async () => {
+      const date = new Date();
+      date.setDate(date.getDate() - parseInt(timeRange));
+
+      const { data, error } = await supabase
+        .from("charging_sessions")
+        .select("*")
+        .gte("created_at", date.toISOString());
+
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  const { data: expensesData = [] } = useQuery({
+    queryKey: ["expenses", timeRange],
+    queryFn: async () => {
+      const date = new Date();
+      date.setDate(date.getDate() - parseInt(timeRange));
+
+      const { data, error } = await supabase
+        .from("expenses")
+        .select("*")
+        .gte("created_at", date.toISOString());
+
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  const { data: depositsData = [] } = useQuery({
+    queryKey: ["deposits", timeRange],
+    queryFn: async () => {
+      const date = new Date();
+      date.setDate(date.getDate() - parseInt(timeRange));
+
+      const { data, error } = await supabase
+        .from("deposits")
+        .select("*")
+        .gte("created_at", date.toISOString());
+
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  const { data: withdrawalsData = [] } = useQuery({
+    queryKey: ["withdrawals", timeRange],
+    queryFn: async () => {
+      const date = new Date();
+      date.setDate(date.getDate() - parseInt(timeRange));
+
+      const { data, error } = await supabase
+        .from("withdrawals")
+        .select("*")
+        .gte("created_at", date.toISOString());
+
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  const { data: cooperativeData = [] } = useQuery({
+    queryKey: ["cooperative", timeRange],
+    queryFn: async () => {
+      const date = new Date();
+      date.setDate(date.getDate() - parseInt(timeRange));
+
+      const { data, error } = await supabase
+        .from("cooperative_savings")
+        .select("*")
+        .gte("created_at", date.toISOString());
+
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  // Fetch current balances
+  const { data: balancesData } = useQuery({
+    queryKey: ["balances"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("balances")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .single();
+
+      if (error && error.code !== "PGRST116") throw error;
+      return data;
+    },
+  });
+
+  // Calculate financial metrics using the new daily summary logic
+  const calculateFinancials = (): FinancialData => {
+    // Prepare data for daily summary calculation
+    const summaryData: DailySummaryData = {
+      orders: ordersData.map((order) => ({
+        total: parseFloat(order.total) || 0,
+        payment_mode: order.payment_mode,
+        order_date:
+          order.order_date ||
+          order.created_at?.split("T")[0] ||
+          new Date().toISOString().split("T")[0],
+      })),
+      charging: chargingData.map((session) => ({
+        total_amount: parseFloat(session.total_amount) || 0,
+        payment_mode: session.payment_mode,
+        session_date:
+          session.session_date ||
+          session.created_at?.split("T")[0] ||
+          new Date().toISOString().split("T")[0],
+      })),
+      expenses: expensesData.map((expense) => ({
+        amount: parseFloat(expense.amount) || 0,
+        payment_mode: expense.payment_mode,
+        expense_date:
+          expense.expense_date ||
+          expense.created_at?.split("T")[0] ||
+          new Date().toISOString().split("T")[0],
+      })),
+      deposits: depositsData.map((deposit) => ({
+        amount: parseFloat(deposit.amount) || 0,
+        mode: deposit.mode,
+        deposit_date:
+          deposit.deposit_date ||
+          deposit.created_at?.split("T")[0] ||
+          new Date().toISOString().split("T")[0],
+      })),
+      savings: cooperativeData.map((saving) => ({
+        contribution_amount: parseFloat(saving.contribution_amount) || 0,
+        contribution_date:
+          saving.contribution_date ||
+          saving.created_at?.split("T")[0] ||
+          new Date().toISOString().split("T")[0],
+      })),
+      withdrawals: withdrawalsData.map((withdrawal) => ({
+        amount: parseFloat(withdrawal.amount) || 0,
+        withdrawal_date:
+          withdrawal.withdrawal_date ||
+          withdrawal.created_at?.split("T")[0] ||
+          new Date().toISOString().split("T")[0],
+        purpose: withdrawal.purpose || "general",
+      })),
+    };
+
+    // Calculate aggregated summary for the entire time range
+    const today = new Date().toISOString().split("T")[0];
+    const aggregatedSummary = calculateDailySummary(
+      summaryData,
+      today,
+      balancesData?.deposits_to_esewa || 0,
+      balancesData?.deposits_to_fonepay || 0,
+      balancesData?.total_withdrawals_cash || 0,
     );
-  }
+
+    // Use actual balances from balances table if available, otherwise use calculated values
+    const actualBankBalance = balancesData?.bank_balance
+      ? parseFloat(balancesData.bank_balance)
+      : aggregatedSummary.fonepay_balance; // Bank balance maps to fonepay balance
+
+    const actualCashInHand = balancesData?.cash_in_hand
+      ? parseFloat(balancesData.cash_in_hand)
+      : aggregatedSummary.cash_balance;
+
+    const actualCooperativeBalance = balancesData?.cooperative_balance
+      ? parseFloat(balancesData.cooperative_balance)
+      : aggregatedSummary.cooperative_balance;
+
+    return {
+      bankBalance: actualBankBalance,
+      cashInHand: actualCashInHand,
+      cooperativeBalance: actualCooperativeBalance,
+      totalIncome: aggregatedSummary.total_income,
+      totalExpenses: aggregatedSummary.total_expenses,
+      chargingIncome: aggregatedSummary.total_income_from_charging,
+      restaurantIncome: aggregatedSummary.total_income_from_orders,
+      netProfit:
+        aggregatedSummary.total_income - aggregatedSummary.total_expenses,
+      totalAssets: aggregatedSummary.total_balance,
+    };
+  };
+
+  const financials = calculateFinancials();
+
+  // Chart data for charging vs restaurant correlation
+  const correlationData = Array.from({ length: 7 }, (_, i) => {
+    const date = new Date();
+    date.setDate(date.getDate() - (6 - i));
+
+    const dayCharging = chargingData
+      .filter(
+        (session) =>
+          new Date(session.created_at).toDateString() === date.toDateString(),
+      )
+      .reduce(
+        (sum, session) => sum + (parseFloat(session.total_amount) || 0),
+        0,
+      );
+
+    const dayRestaurant = ordersData
+      .filter(
+        (order) =>
+          new Date(order.created_at).toDateString() === date.toDateString(),
+      )
+      .reduce((sum, order) => sum + (parseFloat(order.total) || 0), 0);
+
+    return {
+      date: date.toLocaleDateString("en-US", { weekday: "short" }),
+      charging: dayCharging,
+      restaurant: dayRestaurant,
+      total: dayCharging + dayRestaurant,
+    };
+  });
+
+  const balanceData = [
+    { name: "Bank Balance", value: financials.bankBalance, color: "#22c55e" },
+    { name: "Cash in Hand", value: financials.cashInHand, color: "#3b82f6" },
+    {
+      name: "Cooperative",
+      value: financials.cooperativeBalance,
+      color: "#f59e0b",
+    },
+  ];
+
+  const incomeBreakdown = [
+    {
+      name: "Restaurant",
+      value: financials.restaurantIncome,
+      color: "#ef4444",
+    },
+    { name: "Charging", value: financials.chargingIncome, color: "#8b5cf6" },
+  ];
 
   return (
-    <div className="p-6 space-y-6 bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 sm:space-y-6 mobile-container py-4 sm:py-6 lg:py-8">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 sm:mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Analytics Dashboard</h1>
-          <p className="text-gray-600">Comprehensive business insights and metrics</p>
+          <h1 className="responsive-text-2xl font-bold text-slate-800 mb-2">
+            Financial Analytics
+          </h1>
+          <p className="responsive-text-sm text-slate-600">
+            Comprehensive view of your financial performance
+          </p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm">
-            <Filter className="h-4 w-4 mr-2" />
-            Filter
-          </Button>
-          <Button variant="outline" size="sm">
-            <Download className="h-4 w-4 mr-2" />
-            Export
-          </Button>
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          <Select value={timeRange} onValueChange={setTimeRange}>
+            <SelectTrigger className="w-full sm:w-[180px]">
+              <SelectValue placeholder="Select time range" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="7">Last 7 days</SelectItem>
+              <SelectItem value="30">Last 30 days</SelectItem>
+              <SelectItem value="90">Last 90 days</SelectItem>
+              <SelectItem value="365">Last year</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
-      {/* Key Metrics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-blue-100">Total Revenue</p>
-                <p className="text-2xl font-bold">NPR {analyticsData.totalRevenue.toFixed(2)}</p>
-                <div className="flex items-center mt-2">
-                  <TrendingUp className="h-4 w-4 mr-1" />
-                  <span className="text-sm">+{analyticsData.revenueGrowth.toFixed(1)}%</span>
-                </div>
-              </div>
-              <DollarSign className="h-8 w-8 text-blue-200" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-green-100">Net Profit</p>
-                <p className="text-2xl font-bold">NPR {analyticsData.netProfit.toFixed(2)}</p>
-                <div className="flex items-center mt-2">
-                  <TrendingUp className="h-4 w-4 mr-1" />
-                  <span className="text-sm">{analyticsData.profitMargin.toFixed(1)}% margin</span>
-                </div>
-              </div>
-              <Activity className="h-8 w-8 text-green-200" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-r from-purple-500 to-purple-600 text-white">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-purple-100">Total Orders</p>
-                <p className="text-2xl font-bold">{analyticsData.totalOrders.toString()}</p>
-                <div className="flex items-center mt-2">
-                  <ShoppingCart className="h-4 w-4 mr-1" />
-                  <span className="text-sm">NPR {analyticsData.avgOrderValue.toFixed(2)} avg</span>
-                </div>
-              </div>
-              <ShoppingCart className="h-8 w-8 text-purple-200" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-orange-100">Total Expenses</p>
-                <p className="text-2xl font-bold">NPR {analyticsData.totalExpenses.toFixed(2)}</p>
-                <div className="flex items-center mt-2">
-                  <TrendingDown className="h-4 w-4 mr-1" />
-                  <span className="text-sm">Monthly</span>
-                </div>
-              </div>
-              <Calendar className="h-8 w-8 text-orange-200" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Monthly Trends */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Monthly Revenue & Expenses</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={monthlyTrends}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip formatter={(value: number) => [`NPR ${value.toFixed(2)}`, '']} />
-                <Legend />
-                <Line type="monotone" dataKey="revenue" stroke="#8884d8" strokeWidth={2} />
-                <Line type="monotone" dataKey="expenses" stroke="#82ca9d" strokeWidth={2} />
-                <Line type="monotone" dataKey="profit" stroke="#ffc658" strokeWidth={2} />
-              </LineChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        {/* Revenue by Payment Mode */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Revenue by Payment Mode</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={revenueByCategory}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {revenueByCategory.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip formatter={(value: number) => [`NPR ${value.toFixed(2)}`, 'Revenue']} />
-              </PieChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Balance Distribution */}
-      <Card>
+      {/* Analytics Settings Panel */}
+      <Card className="mb-6 bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200">
         <CardHeader>
-          <CardTitle>Current Balance Distribution</CardTitle>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <BarChart3 className="h-5 w-5" />
+            Analytics Display Settings
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip formatter={(value: number) => [`NPR ${value.toFixed(2)}`, 'Balance']} />
-              <Bar dataKey="value" fill="#8884d8" />
-            </BarChart>
-          </ResponsiveContainer>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="showKeyMetrics"
+                checked={analyticsSettings.showKeyMetrics}
+                onCheckedChange={() => handleAnalyticsToggle("showKeyMetrics")}
+              />
+              <Label htmlFor="showKeyMetrics" className="text-sm">
+                Key Metrics
+              </Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="showCharts"
+                checked={analyticsSettings.showCharts}
+                onCheckedChange={() => handleAnalyticsToggle("showCharts")}
+              />
+              <Label htmlFor="showCharts" className="text-sm">
+                Charts
+              </Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="showCorrelation"
+                checked={analyticsSettings.showCorrelation}
+                onCheckedChange={() => handleAnalyticsToggle("showCorrelation")}
+              />
+              <Label htmlFor="showCorrelation" className="text-sm">
+                Correlation
+              </Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="showSummaryStats"
+                checked={analyticsSettings.showSummaryStats}
+                onCheckedChange={() =>
+                  handleAnalyticsToggle("showSummaryStats")
+                }
+              />
+              <Label htmlFor="showSummaryStats" className="text-sm">
+                Summary Stats
+              </Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="showBalanceDistribution"
+                checked={analyticsSettings.showBalanceDistribution}
+                onCheckedChange={() =>
+                  handleAnalyticsToggle("showBalanceDistribution")
+                }
+              />
+              <Label htmlFor="showBalanceDistribution" className="text-sm">
+                Balance Distribution
+              </Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="showIncomeTrend"
+                checked={analyticsSettings.showIncomeTrend}
+                onCheckedChange={() => handleAnalyticsToggle("showIncomeTrend")}
+              />
+              <Label htmlFor="showIncomeTrend" className="text-sm">
+                Income Trend
+              </Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="showIncomeSources"
+                checked={analyticsSettings.showIncomeSources}
+                onCheckedChange={() =>
+                  handleAnalyticsToggle("showIncomeSources")
+                }
+              />
+              <Label htmlFor="showIncomeSources" className="text-sm">
+                Income Sources
+              </Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="autoRefresh"
+                checked={analyticsSettings.autoRefresh}
+                onCheckedChange={() => handleAnalyticsToggle("autoRefresh")}
+              />
+              <Label htmlFor="autoRefresh" className="text-sm">
+                Auto Refresh
+              </Label>
+            </div>
+          </div>
         </CardContent>
       </Card>
 
-      {/* Recent Activity Summary */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Top Performance</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Best Revenue Day</span>
-                <Badge variant="secondary">Today</Badge>
+      {/* Key Metrics Cards */}
+      {analyticsSettings.showKeyMetrics && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
+          <Card className="bg-green-50 border-green-200">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-green-700">
+                Bank Balance
+              </CardTitle>
+              <Banknote className="h-4 w-4 text-green-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-green-800">
+                NRs. {financials.bankBalance.toLocaleString()}
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Top Payment Mode</span>
-                <Badge variant="outline">
-                  {revenueByCategory[0]?.name || 'N/A'}
-                </Badge>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Growth Rate</span>
-                <Badge variant="secondary" className="text-green-600">
-                  +{analyticsData.revenueGrowth.toFixed(1)}%
-                </Badge>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+              <p className="text-xs text-green-600 mt-1">
+                Deposits minus withdrawals and bank expenses
+              </p>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Financial Health</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Profit Margin</span>
-                <Badge variant={analyticsData.profitMargin > 20 ? "default" : "destructive"}>
-                  {analyticsData.profitMargin.toFixed(1)}%
-                </Badge>
+          <Card className="bg-blue-50 border-blue-200">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-blue-700">
+                Cash in Hand
+              </CardTitle>
+              <DollarSign className="h-4 w-4 text-blue-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-blue-800">
+                NRs. {financials.cashInHand.toLocaleString()}
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Cash Flow</span>
-                <Badge variant={analyticsData.netProfit > 0 ? "default" : "destructive"}>
-                  {analyticsData.netProfit > 0 ? "Positive" : "Negative"}
-                </Badge>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Avg Order Value</span>
-                <span className="text-sm font-medium">NPR {analyticsData.avgOrderValue.toFixed(2)}</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+              <p className="text-xs text-blue-600 mt-1">
+                Cash received minus expenses and deposits
+              </p>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <Button className="w-full" size="sm">
-                Generate Report
-              </Button>
-              <Button className="w-full" variant="outline" size="sm">
-                Export Data
-              </Button>
-              <Button className="w-full" variant="outline" size="sm">
-                Schedule Report
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+          <Card className="bg-amber-50 border-amber-200">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-amber-700">
+                Cooperative Balance
+              </CardTitle>
+              <PiggyBank className="h-4 w-4 text-amber-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-amber-800">
+                NRs. {financials.cooperativeBalance.toLocaleString()}
+              </div>
+              <p className="text-xs text-amber-600 mt-1">
+                Savings minus withdrawals
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Charts Grid */}
+      {analyticsSettings.showCharts && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+          {/* Charging vs Restaurant Correlation */}
+          {analyticsSettings.showCorrelation && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5" />
+                  Charging & Restaurant Income Correlation
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={250}>
+                  <BarChart data={correlationData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="date" />
+                    <YAxis />
+                    <Tooltip formatter={(value) => [`NRs. ${value}`, ""]} />
+                    <Legend />
+                    <Bar
+                      dataKey="charging"
+                      fill="#8b5cf6"
+                      name="Charging Income"
+                    />
+                    <Bar
+                      dataKey="restaurant"
+                      fill="#ef4444"
+                      name="Restaurant Income"
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Balance Distribution */}
+          {analyticsSettings.showBalanceDistribution && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Balance Distribution</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={250}>
+                  <PieChart>
+                    <Pie
+                      data={balanceData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ name, value }) =>
+                        `${name}: NRs. ${value.toLocaleString()}`
+                      }
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {balanceData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip formatter={(value) => [`NRs. ${value}`, ""]} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Income Trend */}
+          {analyticsSettings.showIncomeTrend && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Daily Income Trend</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={250}>
+                  <AreaChart data={correlationData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="date" />
+                    <YAxis />
+                    <Tooltip formatter={(value) => [`NRs. ${value}`, ""]} />
+                    <Area
+                      type="monotone"
+                      dataKey="total"
+                      stroke="#22c55e"
+                      fill="#22c55e"
+                      fillOpacity={0.3}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Income Sources */}
+          {analyticsSettings.showIncomeSources && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Income Sources</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={250}>
+                  <PieChart>
+                    <Pie
+                      data={incomeBreakdown}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ name, value, percent }) =>
+                        `${name}: ${(percent * 100).toFixed(0)}%`
+                      }
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {incomeBreakdown.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip formatter={(value) => [`NRs. ${value}`, ""]} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      )}
+
+      {/* Summary Statistics */}
+      {analyticsSettings.showSummaryStats && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-8">
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-slate-600">
+                    Total Income
+                  </p>
+                  <p className="text-2xl font-bold text-green-600">
+                    NRs. {financials.totalIncome.toLocaleString()}
+                  </p>
+                </div>
+                <TrendingUp className="h-8 w-8 text-green-600" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-slate-600">
+                    Total Expenses
+                  </p>
+                  <p className="text-2xl font-bold text-red-600">
+                    NRs. {financials.totalExpenses.toLocaleString()}
+                  </p>
+                </div>
+                <TrendingDown className="h-8 w-8 text-red-600" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-slate-600">
+                    Net Profit
+                  </p>
+                  <p
+                    className={`text-2xl font-bold ${
+                      financials.netProfit >= 0
+                        ? "text-green-600"
+                        : "text-red-600"
+                    }`}
+                  >
+                    NRs. {financials.netProfit.toLocaleString()}
+                  </p>
+                </div>
+                <BarChart3 className="h-8 w-8 text-slate-600" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-slate-600">
+                    Total Assets
+                  </p>
+                  <p className="text-2xl font-bold text-blue-600">
+                    NRs. {financials.totalAssets.toLocaleString()}
+                  </p>
+                </div>
+                <CreditCard className="h-8 w-8 text-blue-600" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 };
