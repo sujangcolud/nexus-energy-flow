@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -39,8 +40,10 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 
+// Update interface to match actual database schema
 interface VATEntry {
   id: string;
+  user_id: string;
   entry_type: string;
   entry_id: string;
   item_name: string;
@@ -48,11 +51,33 @@ interface VATEntry {
   vat_rate: number;
   vat_amount: number;
   total_with_vat: number;
-  bill_generated: boolean;
-  bill_number: string | null;
-  bill_date: string | null;
-  customer_pan: string | null;
-  customer_name: string | null;
+  invoice_number: string;
+  invoice_date: string;
+  buyer_name: string;
+  buyer_address: string;
+  buyer_pan: string;
+  buyer_email?: string;
+  buyer_contact_number?: string;
+  buyer_vat_registration_number: string;
+  seller_name: string;
+  seller_address: string;
+  seller_pan: string;
+  seller_email?: string;
+  seller_contact_number?: string;
+  seller_vat_registration_number: string;
+  sub_total: number;
+  total_discount?: number;
+  vat_total: number;
+  grand_total: number;
+  amount_paid: number;
+  amount_due: number;
+  payment_mode: string;
+  items: any;
+  qr_code_data?: string;
+  irn?: string;
+  prepared_by?: string;
+  approved_by?: string;
+  remarks?: string;
   created_at: string;
 }
 
@@ -231,15 +256,41 @@ const VATEntryTab = () => {
         nepalVATRate,
       );
 
-      // Only insert the base fields, let computed columns be calculated automatically
+      const currentDate = new Date().toISOString().split("T")[0];
+      const invoiceNumber = `VAT-${Date.now()}`;
+
+      // Create a complete VAT entry matching the database schema
       const { error } = await supabase.from("vat_entries").insert({
         user_id: user.id,
         entry_type: selectedEntry.type,
         entry_id: selectedEntry.id,
         item_name: selectedEntry.item_name,
-        amount: vatCalculation.baseAmount, // Store the base amount (excluding VAT)
+        amount: vatCalculation.baseAmount,
         vat_rate: nepalVATRate,
-        // Remove vat_amount and total_with_vat - these are computed columns
+        vat_amount: vatCalculation.vatAmount,
+        total_with_vat: vatCalculation.totalWithVAT,
+        invoice_number: invoiceNumber,
+        invoice_date: currentDate,
+        buyer_name: "Customer",
+        buyer_address: "N/A",
+        buyer_pan: "000000000",
+        buyer_vat_registration_number: "N/A",
+        seller_name: "Business",
+        seller_address: "Business Address",
+        seller_pan: "000000000",
+        seller_vat_registration_number: "000000000",
+        sub_total: vatCalculation.baseAmount,
+        vat_total: vatCalculation.vatAmount,
+        grand_total: vatCalculation.totalWithVAT,
+        amount_paid: vatCalculation.totalWithVAT,
+        amount_due: 0,
+        payment_mode: selectedEntry.payment_mode,
+        items: JSON.stringify([{
+          name: selectedEntry.item_name,
+          quantity: 1,
+          rate: vatCalculation.baseAmount,
+          amount: vatCalculation.baseAmount
+        }])
       });
 
       if (error) {
@@ -254,34 +305,7 @@ const VATEntryTab = () => {
     } catch (error) {
       logError("creating VAT entry", error);
       const errorMessage = extractErrorMessage(error);
-
-      // Handle specific PGRST204 errors with detailed feedback
-      if (error?.code === "PGRST204") {
-        if (errorMessage.includes("entry_id")) {
-          toast.error(
-            "VAT entry creation failed: entry_id column issue. The database schema may need updating. Please contact administrator.",
-            { duration: 6000 },
-          );
-        } else {
-          toast.error(
-            `VAT entry creation failed: Database schema error - ${errorMessage}. Please refresh the page and try again.`,
-            { duration: 6000 },
-          );
-        }
-
-        // Try to refresh the page after a delay to reload schema
-        setTimeout(() => {
-          toast.info("Refreshing page to reload database schema...");
-          window.location.reload();
-        }, 3000);
-      } else if (errorMessage.includes("schema cache")) {
-        toast.error(
-          "Database schema cache issue detected. Please refresh the page and try again.",
-          { duration: 5000 },
-        );
-      } else {
-        toast.error(`Error creating VAT entry: ${errorMessage}`);
-      }
+      toast.error(`Error creating VAT entry: ${errorMessage}`);
     }
   };
 
@@ -294,11 +318,9 @@ const VATEntryTab = () => {
       const { error } = await supabase
         .from("vat_entries")
         .update({
-          bill_generated: true,
-          bill_number: billNumber,
-          bill_date: new Date().toISOString().split("T")[0],
-          customer_name: billForm.customer_name,
-          customer_pan: billForm.customer_pan,
+          buyer_name: billForm.customer_name,
+          buyer_pan: billForm.customer_pan || "N/A",
+          invoice_number: billNumber,
         })
         .eq("id", selectedVATEntry.id);
 
@@ -344,15 +366,15 @@ Thank you for your business!
   };
 
   const totalVATAmount = vatEntries.reduce(
-    (sum, entry) => sum + entry.vat_amount,
+    (sum, entry) => sum + (entry.vat_amount || 0),
     0,
   );
   const totalIncomeWithVAT = vatEntries.reduce(
-    (sum, entry) => sum + entry.total_with_vat,
+    (sum, entry) => sum + (entry.total_with_vat || entry.grand_total || 0),
     0,
   );
   const totalBaseAmount = vatEntries.reduce(
-    (sum, entry) => sum + entry.amount,
+    (sum, entry) => sum + (entry.amount || entry.sub_total || 0),
     0,
   );
 
@@ -552,50 +574,33 @@ Thank you for your business!
                         >
                           {entry.entry_type}
                         </Badge>
-                        {entry.bill_generated ? (
-                          <Badge className="bg-green-100 text-green-800">
-                            <CheckCircle className="h-3 w-3 mr-1" />
-                            Billed
-                          </Badge>
-                        ) : (
-                          <Badge
-                            variant="outline"
-                            className="text-orange-600 border-orange-200"
-                          >
-                            <AlertCircle className="h-3 w-3 mr-1" />
-                            Pending
-                          </Badge>
-                        )}
+                        <Badge className="bg-green-100 text-green-800">
+                          <CheckCircle className="h-3 w-3 mr-1" />
+                          VAT Entry
+                        </Badge>
                       </div>
                       <h4 className="font-medium text-gray-800">
                         {entry.item_name}
                       </h4>
                       <p className="text-sm text-gray-600">
-                        Amount: NPR {entry.amount.toFixed(2)} • VAT: NPR{" "}
-                        {entry.vat_amount.toFixed(2)}
+                        Amount: NPR {(entry.amount || entry.sub_total || 0).toFixed(2)} • VAT: NPR{" "}
+                        {(entry.vat_amount || 0).toFixed(2)}
                       </p>
                       <p className="text-sm font-semibold text-purple-600">
-                        Total: NPR {entry.total_with_vat.toFixed(2)}
+                        Total: NPR {(entry.total_with_vat || entry.grand_total || 0).toFixed(2)}
                       </p>
                     </div>
                     <div className="flex gap-2">
-                      {!entry.bill_generated && (
-                        <Button
-                          onClick={() => {
-                            setSelectedVATEntry(entry);
-                            setBillDialogOpen(true);
-                          }}
-                          size="sm"
-                          className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
-                        >
-                          Generate Bill
-                        </Button>
-                      )}
-                      {entry.bill_generated && (
-                        <Badge className="bg-green-100 text-green-800">
-                          Bill: {entry.bill_number}
-                        </Badge>
-                      )}
+                      <Button
+                        onClick={() => {
+                          setSelectedVATEntry(entry);
+                          setBillDialogOpen(true);
+                        }}
+                        size="sm"
+                        className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+                      >
+                        Generate Bill
+                      </Button>
                     </div>
                   </div>
                 ))}

@@ -1,698 +1,586 @@
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { useUserPermissions } from "@/hooks/useUserPermissions";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+} from "recharts";
 import {
-  Outlet,
-  useLocation,
-  NavLink,
-  Link,
-  useNavigate,
-} from "react-router-dom";
-import {
-  LogOut,
-  User,
-  ShoppingCart,
-  Zap,
-  Receipt,
-  CreditCard,
-  Banknote,
-  Users,
-  BarChart3,
-  FileText,
-  UtensilsCrossed,
-  Database,
-  ArrowLeft,
-  UserCog,
-  Upload,
-  LayoutDashboard,
-  Settings as SettingsIcon,
-  Settings,
-  Bell,
-  Search,
+  DollarSign,
   TrendingUp,
-  Package,
-  Trash,
+  Users,
+  ShoppingCart,
+  Activity,
+  Bell,
+  Settings,
+  LogOut,
+  Menu,
+  X,
+  Home,
+  FileText,
+  BarChart3,
+  PlusCircle,
+  Wallet,
+  Calculator,
+  Receipt,
+  Building2,
+  Banknote,
+  CreditCard,
+  ArrowUpRight,
+  ArrowDownRight,
   Calendar,
+  Clock,
 } from "lucide-react";
+import { format } from "date-fns";
 import { toast } from "sonner";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { extractErrorMessage, logError } from "@/utils/errorHandling";
-import EnhancedChatBot from "@/components/EnhancedChatBot";
-import MobileDashboard from "./MobileDashboard";
-import FinancialSummaryWidget from "@/components/FinancialSummaryWidget";
-import AllTimeSummaryWidget from "@/components/AllTimeSummaryWidget";
-import DailyClosingSystem from "@/components/DailyClosingSystem";
-import BatchDailyClosingSystem from "@/components/BatchDailyClosingSystem";
+import { supabase } from "@/integrations/supabase/client";
 
-// Tab components are now rendered by routes, but their types/icons might be needed for nav items.
+// Import all tab components
+import DataInputTab from "@/components/tabs/DataInputTab";
 import OrdersTab from "@/components/tabs/OrdersTab";
 import ChargingTab from "@/components/tabs/ChargingTab";
 import ExpensesTab from "@/components/tabs/ExpensesTab";
 import DepositsTab from "@/components/tabs/DepositsTab";
 import WithdrawalsTab from "@/components/tabs/WithdrawalsTab";
+import CooperativeSavingsTab from "@/components/tabs/CooperativeSavingsTab";
 import SavingsWithdrawalsTab from "@/components/tabs/SavingsWithdrawalsTab";
-
-import MenuManagementTab from "@/components/tabs/MenuManagementTab";
-import DataInputTab from "@/components/tabs/DataInputTab";
-import UserManagementTab from "@/components/tabs/UserManagementTab";
 import ShareInvestmentsTab from "@/components/tabs/ShareInvestmentsTab";
-import ExpenseBookingsTab from "@/components/tabs/ExpenseBookingsTab";
 import VATEntryTab from "@/components/tabs/VATEntryTab";
+import SummaryReportTab from "@/components/tabs/SummaryReportTab";
+import UserManagementTab from "@/components/tabs/UserManagementTab";
 import InventoryTab from "@/components/tabs/InventoryTab";
-import FileUploadTab from "@/components/tabs/FileUploadTab";
+import MenuManagementTab from "@/components/tabs/MenuManagementTab";
+import { AllTimeSummaryModal } from "@/components/AllTimeSummaryModal";
+import { DailyClosingSystem } from "@/components/DailyClosingSystem";
+
+interface AnalyticsData {
+  totalRevenue: number;
+  totalExpenses: number;
+  netProfit: number;
+  totalOrders: number;
+  totalCustomers: number;
+  avgOrderValue: number;
+  revenueGrowth: number;
+  profitMargin: number;
+}
+
+interface ChartData {
+  name: string;
+  value: number;
+}
+
+const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8"];
 
 const Dashboard = () => {
-  const { user, signOut, userRole } = useAuth();
-  const { hasTabAccess } = useUserPermissions();
-  const location = useLocation();
-  const navigate = useNavigate();
-  const isMobile = useIsMobile();
-  const [isChatBotOpen, setIsChatBotOpen] = useState(false);
-  const [canDeleteTabs, setCanDeleteTabs] = useState(false);
-  const [tabSettings, setTabSettings] = useState<Record<string, boolean>>({});
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [tabToDelete, setTabToDelete] = useState<string | null>(null);
-  const [isDailyClosingOpen, setIsDailyClosingOpen] = useState(false);
-  const [isBatchClosingOpen, setIsBatchClosingOpen] = useState(false);
-  const [showBatchClosing, setShowBatchClosing] = useState(true);
+  const { user, userRole, signOut } = useAuth();
+  const [activeTab, setActiveTab] = useState("dashboard");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [summaryModalOpen, setSummaryModalOpen] = useState(false);
+  const [dailyClosingOpen, setDailyClosingOpen] = useState(false);
+
+  const [analyticsData, setAnalyticsData] = useState<AnalyticsData>({
+    totalRevenue: 0,
+    totalExpenses: 0,
+    netProfit: 0,
+    totalOrders: 0,
+    totalCustomers: 0,
+    avgOrderValue: 0,
+    revenueGrowth: 0,
+    profitMargin: 0,
+  });
+  const [chartData, setChartData] = useState<ChartData[]>([]);
 
   useEffect(() => {
-    const storedSettings = localStorage.getItem("tabSettings");
-    if (storedSettings) {
-      setTabSettings(JSON.parse(storedSettings));
+    if (user) {
+      fetchAnalyticsData();
     }
-    const canDelete = JSON.parse(
-      localStorage.getItem("canDeleteTabs") || "false",
-    );
-    setCanDeleteTabs(canDelete);
+  }, [user]);
 
-    // Load batch closing setting
-    const batchClosingSetting = localStorage.getItem("showBatchClosing");
-    if (batchClosingSetting !== null) {
-      setShowBatchClosing(JSON.parse(batchClosingSetting));
-    }
-  }, []);
+  const fetchAnalyticsData = async () => {
+    if (!user) return;
 
-  const handleSignOut = async () => {
     try {
-      await signOut();
+      // Fetch orders data
+      const { data: ordersData, error: ordersError } = await supabase
+        .from("orders")
+        .select("*")
+        .eq("user_id", user.id);
+
+      if (ordersError) throw ordersError;
+
+      // Fetch charging data
+      const { data: chargingData, error: chargingError } = await supabase
+        .from("charging_sessions")
+        .select("*")
+        .eq("user_id", user.id);
+
+      if (chargingError) throw chargingError;
+
+      // Fetch expenses data
+      const { data: expensesData, error: expensesError } = await supabase
+        .from("expenses")
+        .select("*")
+        .eq("user_id", user.id);
+
+      if (expensesError) throw expensesError;
+
+      // Calculate analytics
+      const totalOrderRevenue =
+        ordersData?.reduce((sum, order) => sum + order.total, 0) || 0;
+      const totalChargingRevenue =
+        chargingData?.reduce((sum, session) => sum + session.total_amount, 0) ||
+        0;
+      const totalRevenue = totalOrderRevenue + totalChargingRevenue;
+      const totalExpenses =
+        expensesData?.reduce((sum, expense) => sum + expense.amount, 0) || 0;
+      const netProfit = totalRevenue - totalExpenses;
+      const totalOrders = (ordersData?.length || 0) + (chargingData?.length || 0);
+      const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+      const profitMargin = totalRevenue > 0 ? (netProfit / totalRevenue) * 100 : 0;
+
+      // Get balances
+      const { data: balancesData } = await supabase
+        .from("balances")
+        .select("*")
+        .eq("user_id", user.id)
+        .single();
+
+      let balanceData: ChartData[] = [];
+      if (balancesData) {
+        balanceData = [
+          { name: "Cash", value: balancesData.cash_in_hand || 0 },
+          { name: "Bank", value: balancesData.bank_balance || 0 },
+          { name: "Esewa", value: balancesData.esewa_balance || 0 },
+          { name: "Fonepay", value: balancesData.fonepay_balance || 0 },
+          { name: "Cooperative", value: balancesData.cooperative_balance || 0 },
+        ];
+      }
+
+      setAnalyticsData({
+        totalRevenue,
+        totalExpenses,
+        netProfit,
+        totalOrders,
+        totalCustomers: 0, // This would need user counting logic
+        avgOrderValue,
+        revenueGrowth: 0, // This would need historical comparison
+        profitMargin,
+      });
+
+      setChartData(balanceData);
     } catch (error) {
-      console.error("Error signing out:", error);
+      console.error("Error fetching analytics data:", error);
+      toast.error("Error loading analytics data");
     }
   };
 
-  const handleDailyClosing = () => {
-    setIsDailyClosingOpen(true);
+  const getUserDisplayName = () => {
+    if (!user) return "Guest";
+    
+    // Try to get name from user metadata first
+    if (user.user_metadata?.full_name) {
+      return user.user_metadata.full_name;
+    }
+    
+    if (user.user_metadata?.first_name || user.user_metadata?.last_name) {
+      return `${user.user_metadata.first_name || ''} ${user.user_metadata.last_name || ''}`.trim();
+    }
+    
+    // Fallback to email username
+    return user.email?.split('@')[0] || 'User';
   };
 
-  // Define role-based navigation items with clean color schemes
-  const getNavItems = () => {
-    const allItems = [
-      // Data Entry - accessible to all users for broader access
-      {
-        id: "orders",
-        path: "orders",
-        label: "Orders",
-        icon: ShoppingCart,
-        component: OrdersTab,
-        roles: ["user", "data_entry", "reports_viewer", "super_admin"],
-        color: "bg-orange-600",
-        bgColor: "bg-orange-50",
-        description: "Manage food orders",
-      },
-      {
-        id: "charging",
-        path: "charging",
-        label: "Charging",
-        icon: Zap,
-        component: ChargingTab,
-        roles: ["user", "data_entry", "reports_viewer", "super_admin"],
-        color: "bg-yellow-600",
-        bgColor: "bg-yellow-50",
-        description: "Track energy consumption",
-      },
-      {
-        id: "expenses",
-        path: "expenses",
-        label: "Expenses",
-        icon: Receipt,
-        component: ExpensesTab,
-        roles: ["user", "data_entry", "reports_viewer", "super_admin"],
-        color: "bg-red-600",
-        bgColor: "bg-red-50",
-        description: "Monitor business expenses",
-      },
-      {
-        id: "deposits",
-        path: "deposits",
-        label: "Deposits",
-        icon: CreditCard,
-        component: DepositsTab,
-        roles: ["user", "data_entry", "reports_viewer", "super_admin"],
-        color: "bg-green-600",
-        bgColor: "bg-green-50",
-        description: "Handle financial deposits",
-      },
-      {
-        id: "withdrawals",
-        path: "withdrawals",
-        label: "Savings & Withdrawals",
-        icon: Banknote,
-        component: SavingsWithdrawalsTab,
-        roles: ["user", "data_entry", "reports_viewer", "super_admin"],
-        color: "bg-blue-600",
-        bgColor: "bg-blue-50",
-        description: "Manage savings and withdrawals",
-      },
-      {
-        id: "share_investments",
-        path: "share-investments",
-        label: "Share Investments",
-        icon: TrendingUp,
-        component: ShareInvestmentsTab,
-        roles: ["user", "data_entry", "reports_viewer", "super_admin"],
-        color: "bg-emerald-600",
-        bgColor: "bg-emerald-50",
-        description: "Manage share investments",
-      },
-
-      {
-        id: "inventory",
-        path: "inventory",
-        label: "Inventory",
-        icon: Package,
-        component: InventoryTab,
-        roles: ["user", "data_entry", "reports_viewer", "super_admin"],
-        color: "bg-teal-600",
-        bgColor: "bg-teal-50",
-        description: "Inventory tracking and management",
-      },
-      // Unified tabs - accessible to appropriate users
-
-      {
-        id: "bulk_import",
-        path: "bulk-import",
-        label: "Bulk Import",
-        icon: Upload,
-        roles: ["reports_viewer", "super_admin"],
-        color: "bg-green-600",
-        bgColor: "bg-green-50",
-        description: "Data import & file upload",
-      },
-      {
-        id: "menu",
-        path: "menu",
-        label: "Menu Setup",
-        icon: UtensilsCrossed,
-        component: MenuManagementTab,
-        roles: ["super_admin"],
-        color: "bg-amber-600",
-        bgColor: "bg-amber-50",
-        description: "Manage menu items",
-      },
-      {
-        id: "user_management",
-        path: "user-management",
-        label: "User Control",
-        icon: UserCog,
-        component: UserManagementTab,
-        roles: ["super_admin"],
-        color: "bg-slate-600",
-        bgColor: "bg-slate-50",
-        description: "Manage users & permissions",
-      },
-      {
-        id: "expense_bookings",
-        path: "expense-bookings",
-        label: "Expense Bookings",
-        icon: FileText,
-        component: ExpenseBookingsTab,
-        roles: ["user", "data_entry", "reports_viewer", "super_admin"],
-        color: "bg-cyan-600",
-        bgColor: "bg-cyan-50",
-        description: "Manage expense bookings",
-      },
-      {
-        id: "vat_entry",
-        path: "vat-entry",
-        label: "VAT Entry",
-        icon: FileText,
-        component: VATEntryTab,
-        roles: ["user", "data_entry", "reports_viewer", "super_admin"],
-        color: "bg-lime-600",
-        bgColor: "bg-lime-50",
-        description: "Manage VAT entries",
-      },
-      {
-        id: "dashboard_studio",
-        path: "dashboard-studio",
-        label: "Dashboard Studio",
-        icon: BarChart3,
-        roles: ["user", "reports_viewer", "super_admin"],
-        color: "bg-indigo-600",
-        bgColor: "bg-indigo-50",
-        description: "Create custom dashboards with drag-and-drop",
-      },
-    ];
-
-    if (!userRole) return [];
-
-    const storedSettings = localStorage.getItem("tabSettings");
-    const tabSettings = storedSettings ? JSON.parse(storedSettings) : {};
-
-    const showOrders = JSON.parse(localStorage.getItem("showOrders") || "true");
-
-    const showDataInput = JSON.parse(
-      localStorage.getItem("showDataInput") || "true",
-    );
-    const showUserManagement = JSON.parse(
-      localStorage.getItem("showUserManagement") || "true",
-    );
-    const showAdminPanel = JSON.parse(
-      localStorage.getItem("showAdminPanel") || "true",
-    );
-    const showShareInvestments = JSON.parse(
-      localStorage.getItem("showShareInvestments") || "true",
-    );
-    const showVatEntry = JSON.parse(
-      localStorage.getItem("showVatEntry") || "true",
-    );
-
-    const tabVisibility: Record<string, boolean> = {
-      orders: showOrders,
-      "data-input": showDataInput,
-      "user-management": showUserManagement,
-      "admin-panel": showAdminPanel,
-      "share-investments": showShareInvestments,
-      "vat-entry": showVatEntry,
-    };
-
-    // Show all items to all users (role restrictions removed as requested)
-    return allItems.filter((item) => tabSettings[item.id] ?? true);
-  };
-
-  const navItems = getNavItems();
-
-  // Use mobile dashboard on mobile devices (after all hooks)
-  if (isMobile) {
-    return <MobileDashboard />;
-  }
-
-  const isSubPageActive =
-    location.pathname !== "/dashboard" && location.pathname !== "/dashboard/";
-  const currentPage = navItems.find((item) =>
-    location.pathname.includes(`/dashboard/${item.path}`),
-  );
-  const currentPageTitle = currentPage?.label || "Dashboard";
-
-  // Show access denied message if user has no accessible items
-  if (userRole && navItems.length === 0) {
-    return (
-      <div className="min-h-screen bg-slate-50">
-        <header className="bg-white shadow-sm border-b border-slate-200 sticky top-0 z-50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center py-4">
-              <div className="flex items-center gap-3">
-                <div className="p-3 rounded-lg shadow-sm bg-slate-600 text-white">
-                  <BarChart3 className="h-6 w-6" />
-                </div>
-                <div>
-                  <h1 className="text-xl font-bold text-slate-800">
-                    EcoSoft Pro
-                  </h1>
-                  <p className="text-sm text-slate-600">
-                    Business Management System
-                  </p>
-                </div>
+  return (
+    <div className="flex h-screen bg-gray-50">
+      {/* Sidebar */}
+      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0`}>
+        <div className="flex items-center justify-between h-16 px-6 border-b">
+          <h1 className="text-xl font-bold text-gray-800">Dashboard</h1>
+          <button
+            onClick={() => setSidebarOpen(false)}
+            className="lg:hidden p-2 rounded-md hover:bg-gray-100"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+        
+        <nav className="mt-8">
+          <div className="px-6 mb-4">
+            <div className="flex items-center space-x-3 p-3 rounded-lg bg-blue-50">
+              <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-medium">
+                {getUserDisplayName().charAt(0).toUpperCase()}
               </div>
-
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2 text-sm text-slate-700">
-                  <User className="h-4 w-4" />
-                  <span>{user?.email}</span>
-                  {userRole && (
-                    <span className="bg-slate-100 text-slate-700 px-3 py-1 rounded-full text-xs font-medium">
-                      {userRole.replace("_", " ")}
-                    </span>
-                  )}
-                </div>
-
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleSignOut}
-                  className="flex items-center gap-2 hover:bg-red-50 hover:border-red-300"
-                >
-                  <LogOut className="h-4 w-4" />
-                  Sign Out
-                </Button>
-                <Link to="settings">
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="hover:bg-slate-100 hover:border-slate-300"
-                  >
-                    <SettingsIcon className="h-4 w-4" />
-                  </Button>
-                </Link>
+              <div>
+                <p className="text-sm font-medium text-gray-900">
+                  {getUserDisplayName()}
+                </p>
+                <p className="text-xs text-gray-500">{userRole}</p>
               </div>
+            </div>
+          </div>
+
+          <TabsList className="flex flex-col space-y-2 px-6">
+            <TabsTrigger
+              value="dashboard"
+              className="data-[state=active]:bg-gray-100 data-[state=active]:text-blue-600 flex items-center space-x-3 py-2 rounded-md hover:bg-gray-100 transition-colors duration-200"
+              onClick={() => setActiveTab("dashboard")}
+            >
+              <Home className="h-4 w-4" />
+              <span>Overview</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="dataInput"
+              className="data-[state=active]:bg-gray-100 data-[state=active]:text-blue-600 flex items-center space-x-3 py-2 rounded-md hover:bg-gray-100 transition-colors duration-200"
+              onClick={() => setActiveTab("dataInput")}
+            >
+              <PlusCircle className="h-4 w-4" />
+              <span>Data Input</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="orders"
+              className="data-[state=active]:bg-gray-100 data-[state=active]:text-blue-600 flex items-center space-x-3 py-2 rounded-md hover:bg-gray-100 transition-colors duration-200"
+              onClick={() => setActiveTab("orders")}
+            >
+              <ShoppingCart className="h-4 w-4" />
+              <span>Orders</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="charging"
+              className="data-[state=active]:bg-gray-100 data-[state=active]:text-blue-600 flex items-center space-x-3 py-2 rounded-md hover:bg-gray-100 transition-colors duration-200"
+              onClick={() => setActiveTab("charging")}
+            >
+              <CreditCard className="h-4 w-4" />
+              <span>Charging</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="expenses"
+              className="data-[state=active]:bg-gray-100 data-[state=active]:text-blue-600 flex items-center space-x-3 py-2 rounded-md hover:bg-gray-100 transition-colors duration-200"
+              onClick={() => setActiveTab("expenses")}
+            >
+              <ArrowUpRight className="h-4 w-4" />
+              <span>Expenses</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="deposits"
+              className="data-[state=active]:bg-gray-100 data-[state=active]:text-blue-600 flex items-center space-x-3 py-2 rounded-md hover:bg-gray-100 transition-colors duration-200"
+              onClick={() => setActiveTab("deposits")}
+            >
+              <ArrowDownRight className="h-4 w-4" />
+              <span>Deposits</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="withdrawals"
+              className="data-[state=active]:bg-gray-100 data-[state=active]:text-blue-600 flex items-center space-x-3 py-2 rounded-md hover:bg-gray-100 transition-colors duration-200"
+              onClick={() => setActiveTab("withdrawals")}
+            >
+              <LogOut className="h-4 w-4" />
+              <span>Withdrawals</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="cooperativeSavings"
+              className="data-[state=active]:bg-gray-100 data-[state=active]:text-blue-600 flex items-center space-x-3 py-2 rounded-md hover:bg-gray-100 transition-colors duration-200"
+              onClick={() => setActiveTab("cooperativeSavings")}
+            >
+              <Building2 className="h-4 w-4" />
+              <span>Cooperative Savings</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="savingsWithdrawals"
+              className="data-[state=active]:bg-gray-100 data-[state=active]:text-blue-600 flex items-center space-x-3 py-2 rounded-md hover:bg-gray-100 transition-colors duration-200"
+              onClick={() => setActiveTab("savingsWithdrawals")}
+            >
+              <Wallet className="h-4 w-4" />
+              <span>Savings Withdrawals</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="shareInvestments"
+              className="data-[state=active]:bg-gray-100 data-[state=active]:text-blue-600 flex items-center space-x-3 py-2 rounded-md hover:bg-gray-100 transition-colors duration-200"
+              onClick={() => setActiveTab("shareInvestments")}
+            >
+              <Banknote className="h-4 w-4" />
+              <span>Share Investments</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="vatEntries"
+              className="data-[state=active]:bg-gray-100 data-[state=active]:text-blue-600 flex items-center space-x-3 py-2 rounded-md hover:bg-gray-100 transition-colors duration-200"
+              onClick={() => setActiveTab("vatEntries")}
+            >
+              <Receipt className="h-4 w-4" />
+              <span>VAT Entries</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="summaryReport"
+              className="data-[state=active]:bg-gray-100 data-[state=active]:text-blue-600 flex items-center space-x-3 py-2 rounded-md hover:bg-gray-100 transition-colors duration-200"
+              onClick={() => setActiveTab("summaryReport")}
+            >
+              <FileText className="h-4 w-4" />
+              <span>Summary Report</span>
+            </TabsTrigger>
+             {userRole === "super_admin" && (
+              <TabsTrigger
+                value="userManagement"
+                className="data-[state=active]:bg-gray-100 data-[state=active]:text-blue-600 flex items-center space-x-3 py-2 rounded-md hover:bg-gray-100 transition-colors duration-200"
+                onClick={() => setActiveTab("userManagement")}
+              >
+                <Users className="h-4 w-4" />
+                <span>User Management</span>
+              </TabsTrigger>
+            )}
+            <TabsTrigger
+              value="inventory"
+              className="data-[state=active]:bg-gray-100 data-[state=active]:text-blue-600 flex items-center space-x-3 py-2 rounded-md hover:bg-gray-100 transition-colors duration-200"
+              onClick={() => setActiveTab("inventory")}
+            >
+              <BarChart3 className="h-4 w-4" />
+              <span>Inventory</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="menuManagement"
+              className="data-[state=active]:bg-gray-100 data-[state=active]:text-blue-600 flex items-center space-x-3 py-2 rounded-md hover:bg-gray-100 transition-colors duration-200"
+              onClick={() => setActiveTab("menuManagement")}
+            >
+              <Menu className="h-4 w-4" />
+              <span>Menu Management</span>
+            </TabsTrigger>
+          </TabsList>
+        </nav>
+      </div>
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Header */}
+        <header className="bg-white shadow-sm border-b">
+          <div className="flex items-center justify-between px-6 py-4">
+            <div className="flex items-center">
+              <button
+                onClick={() => setSidebarOpen(true)}
+                className="lg:hidden p-2 rounded-md hover:bg-gray-100"
+              >
+                <Menu className="h-5 w-5" />
+              </button>
+              <h2 className="ml-4 text-lg font-semibold text-gray-800 capitalize">
+                {activeTab === 'dashboard' ? 'Overview' : activeTab.replace(/([A-Z])/g, ' $1')}
+              </h2>
+            </div>
+
+            <div className="flex items-center space-x-4">
+              <Button variant="outline" size="sm">
+                <Bell className="h-4 w-4" />
+              </Button>
+              <Button variant="outline" size="sm">
+                <Settings className="h-4 w-4" />
+              </Button>
+              <Button onClick={signOut} variant="outline" size="sm">
+                <LogOut className="h-4 w-4" />
+              </Button>
             </div>
           </div>
         </header>
 
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <Card className="max-w-md mx-auto shadow-lg border border-slate-200 bg-white">
-            <CardContent className="flex flex-col items-center justify-center p-8 space-y-4">
-              <div className="p-4 rounded-full bg-slate-600 text-white">
-                <User className="h-8 w-8" />
+        {/* Main Content Area */}
+        <main className="flex-1 overflow-x-hidden overflow-y-auto p-6">
+          <Tabs value={activeTab} className="h-full">
+            <TabsContent value="dashboard" className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <Card className="bg-blue-50 text-blue-800 shadow-sm">
+                  <CardContent className="flex items-center justify-between space-x-4 p-4">
+                    <div>
+                      <CardTitle className="text-lg font-semibold">
+                        Total Revenue
+                      </CardTitle>
+                      <p className="text-3xl font-bold">
+                        NPR {analyticsData.totalRevenue.toFixed(2)}
+                      </p>
+                    </div>
+                    <DollarSign className="h-8 w-8 text-blue-400" />
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-green-50 text-green-800 shadow-sm">
+                  <CardContent className="flex items-center justify-between space-x-4 p-4">
+                    <div>
+                      <CardTitle className="text-lg font-semibold">
+                        Net Profit
+                      </CardTitle>
+                      <p className="text-3xl font-bold">
+                        NPR {analyticsData.netProfit.toFixed(2)}
+                      </p>
+                    </div>
+                    <TrendingUp className="h-8 w-8 text-green-400" />
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-orange-50 text-orange-800 shadow-sm">
+                  <CardContent className="flex items-center justify-between space-x-4 p-4">
+                    <div>
+                      <CardTitle className="text-lg font-semibold">
+                        Total Orders
+                      </CardTitle>
+                      <p className="text-3xl font-bold">
+                        {analyticsData.totalOrders}
+                      </p>
+                    </div>
+                    <ShoppingCart className="h-8 w-8 text-orange-400" />
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-purple-50 text-purple-800 shadow-sm">
+                  <CardContent className="flex items-center justify-between space-x-4 p-4">
+                    <div>
+                      <CardTitle className="text-lg font-semibold">
+                        Profit Margin
+                      </CardTitle>
+                      <p className="text-3xl font-bold">
+                        {analyticsData.profitMargin.toFixed(1)}%
+                      </p>
+                    </div>
+                    <Activity className="h-8 w-8 text-purple-400" />
+                  </CardContent>
+                </Card>
               </div>
-              <h2 className="text-xl font-semibold text-slate-900">
-                Access Pending
-              </h2>
-              <p className="text-center text-slate-600">
-                Your account role ({userRole.replace("_", " ")}) is being
-                configured. Please contact your administrator for access.
-              </p>
-            </CardContent>
-          </Card>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <Card className="shadow-sm">
+                  <CardHeader>
+                    <CardTitle>Balance Distribution</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <PieChart>
+                        <Pie
+                          data={chartData}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          label={({ name, percent }) =>
+                            `${name} ${(percent * 100).toFixed(0)}%`
+                          }
+                          outerRadius={80}
+                          fill="#8884d8"
+                          dataKey="value"
+                        >
+                          {chartData.map((entry, index) => (
+                            <Cell
+                              key={`cell-${index}`}
+                              fill={COLORS[index % COLORS.length]}
+                            />
+                          ))}
+                        </Pie>
+                        <Tooltip formatter={(value: number) => [`NPR ${value.toFixed(2)}`, 'Balance']} />
+                        <Legend />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+
+                <Card className="shadow-sm">
+                  <CardHeader>
+                    <CardTitle>Recent Activity</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-600">
+                          Last Order
+                        </span>
+                        <Badge variant="secondary">Today</Badge>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-600">
+                          New Expense
+                        </span>
+                        <Badge variant="outline">Utilities</Badge>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-600">
+                          Deposit Received
+                        </span>
+                        <span className="text-sm font-medium">NPR 5,000</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div className="flex justify-end">
+                <Button onClick={() => setSummaryModalOpen(true)}>
+                  View All-Time Summary
+                </Button>
+                <Button onClick={() => setDailyClosingOpen(true)}>
+                  Daily Closing
+                </Button>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="dataInput">
+              <DataInputTab />
+            </TabsContent>
+            <TabsContent value="orders">
+              <OrdersTab />
+            </TabsContent>
+            <TabsContent value="charging">
+              <ChargingTab />
+            </TabsContent>
+            <TabsContent value="expenses">
+              <ExpensesTab />
+            </TabsContent>
+            <TabsContent value="deposits">
+              <DepositsTab />
+            </TabsContent>
+            <TabsContent value="withdrawals">
+              <WithdrawalsTab />
+            </TabsContent>
+            <TabsContent value="cooperativeSavings">
+              <CooperativeSavingsTab />
+            </TabsContent>
+            <TabsContent value="savingsWithdrawals">
+              <SavingsWithdrawalsTab />
+            </TabsContent>
+            <TabsContent value="shareInvestments">
+              <ShareInvestmentsTab />
+            </TabsContent>
+            <TabsContent value="vatEntries">
+              <VATEntryTab />
+            </TabsContent>
+            <TabsContent value="summaryReport">
+              <SummaryReportTab />
+            </TabsContent>
+             {userRole === "super_admin" && (
+              <TabsContent value="userManagement">
+                <UserManagementTab />
+              </TabsContent>
+            )}
+            <TabsContent value="inventory">
+              <InventoryTab />
+            </TabsContent>
+            <TabsContent value="menuManagement">
+              <MenuManagementTab />
+            </TabsContent>
+          </Tabs>
         </main>
       </div>
-    );
-  }
 
-  return (
-    <div className="min-h-screen bg-slate-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b border-slate-200 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center gap-4">
-              {isSubPageActive && (
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => navigate(-1)}
-                  className="hover:bg-slate-100 hover:border-slate-300 transition-colors"
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                </Button>
-              )}
-              <NavLink
-                to="/dashboard"
-                end
-                className={({ isActive }) =>
-                  `flex items-center gap-3 group ${isActive ? "cursor-default" : ""}`
-                }
-              >
-                {({ isActive }) => (
-                  <>
-                    <div className="p-3 rounded-lg shadow-sm transition-all group-hover:shadow-md bg-slate-600 text-white">
-                      <BarChart3 className="h-6 w-6" />
-                    </div>
-                    <div>
-                      <h1
-                        className={`text-xl font-bold transition-colors ${isActive ? "text-slate-800" : "text-slate-700 group-hover:text-slate-800"}`}
-                      >
-                        EcoSoft Pro
-                      </h1>
-                      <p className="text-sm text-slate-600">
-                        Business Management System
-                      </p>
-                    </div>
-                  </>
-                )}
-              </NavLink>
-            </div>
-
-            <div className="flex items-center gap-2 sm:gap-4">
-              <div className="hidden sm:flex items-center gap-2 text-sm text-slate-700">
-                <div className="p-2 rounded-full bg-slate-100">
-                  <User className="h-4 w-4 text-slate-600" />
-                </div>
-                <span className="font-medium">{user?.email}</span>
-                {userRole && (
-                  <span className="bg-slate-100 text-slate-700 px-3 py-1 rounded-full text-xs font-medium border border-slate-200">
-                    {userRole.replace("_", " ")}
-                  </span>
-                )}
-              </div>
-
-              <Button
-                variant="outline"
-                size="icon"
-                className="hover:bg-slate-100 hover:border-slate-300 transition-colors"
-              >
-                <Bell className="h-4 w-4" />
-              </Button>
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleDailyClosing}
-                className="flex items-center gap-1 sm:gap-2 hover:bg-blue-50 hover:border-blue-300 transition-colors text-xs sm:text-sm px-2 sm:px-3"
-              >
-                <Database className="h-4 w-4" />
-                <span className="hidden sm:inline">Daily Closing</span>
-                <span className="sm:hidden">Daily</span>
-              </Button>
-              {showBatchClosing && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsBatchClosingOpen(true)}
-                  className="flex items-center gap-1 sm:gap-2 hover:bg-green-50 hover:border-green-300 transition-colors text-xs sm:text-sm px-2 sm:px-3"
-                >
-                  <Calendar className="h-4 w-4" />
-                  <span className="hidden sm:inline">Batch Closing</span>
-                  <span className="sm:hidden">Batch</span>
-                </Button>
-              )}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleSignOut}
-                className="flex items-center gap-1 sm:gap-2 hover:bg-red-50 hover:border-red-300 transition-colors text-xs sm:text-sm px-2 sm:px-3"
-              >
-                <LogOut className="h-4 w-4" />
-                <span className="hidden sm:inline">Sign Out</span>
-              </Button>
-
-              <Link to="settings">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="hover:bg-slate-100 hover:border-slate-300 transition-colors"
-                >
-                  <SettingsIcon className="h-4 w-4" />
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Mobile-only active page title */}
-        {isSubPageActive && (
-          <div className="sm:hidden mb-6 text-center">
-            <h2 className="text-2xl font-bold text-slate-800">
-              {currentPageTitle}
-            </h2>
-          </div>
-        )}
-
-        {/* Show navigation cards only on the main /dashboard path */}
-        {!isSubPageActive ? (
-          <div className="space-y-8">
-            {/* Welcome Section */}
-            <div className="text-center mb-12">
-              <h1 className="text-4xl font-bold text-slate-800 mb-4">
-                Welcome back, {user?.name || "User"}!
-              </h1>
-              <p className="text-xl text-slate-600 max-w-2xl mx-auto">
-                Choose a module below to manage your business operations
-                efficiently
-              </p>
-            </div>
-
-            {/* Navigation Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-8">
-              {navItems.map((item, index) => {
-                const Icon = item.icon;
-                return (
-                  <Card
-                    key={item.id}
-                    onClick={() => navigate(item.path)}
-                    className={`relative cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-105 ${item.bgColor} border border-slate-200 h-full group`}
-                  >
-                    {canDeleteTabs && (
-                      <Button
-                        variant="destructive"
-                        size="icon"
-                        className="absolute top-2 right-2 h-6 w-6"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setTabToDelete(item.id);
-                          setShowDeleteDialog(true);
-                        }}
-                      >
-                        <Trash className="h-4 w-4" />
-                      </Button>
-                    )}
-                    <CardContent className="flex flex-col items-center justify-center p-6 space-y-4 h-full">
-                      <div
-                        className={`p-4 rounded-lg transition-all duration-300 ${item.color} text-white shadow-sm group-hover:shadow-md`}
-                      >
-                        <Icon className="h-8 w-8" />
-                      </div>
-                      <div className="text-center space-y-2">
-                        <p className="font-semibold text-lg text-slate-800">
-                          {item.label}
-                        </p>
-                        <p className="text-sm text-slate-600">
-                          {item.description}
-                        </p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-
-            {/* Financial Summary Widget */}
-            <FinancialSummaryWidget className="mb-8" />
-
-            {/* Quick Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
-              <Card className="bg-blue-50 border border-blue-200 shadow-sm hover:shadow-md transition-shadow">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-blue-600 font-medium">
-                        Total Modules
-                      </p>
-                      <p className="text-2xl font-bold text-blue-800">
-                        {navItems.length}
-                      </p>
-                    </div>
-                    <div className="p-3 bg-blue-600 rounded-lg text-white">
-                      <LayoutDashboard className="h-6 w-6" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-green-50 border border-green-200 shadow-sm hover:shadow-md transition-shadow">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-green-600 font-medium">
-                        Your Role
-                      </p>
-                      <p className="text-2xl font-bold text-green-800 capitalize">
-                        {userRole?.replace("_", " ")}
-                      </p>
-                    </div>
-                    <div className="p-3 bg-green-600 rounded-lg text-white">
-                      <User className="h-6 w-6" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-slate-50 border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-slate-600 font-medium">
-                        System Status
-                      </p>
-                      <p className="text-2xl font-bold text-slate-800">
-                        Online
-                      </p>
-                    </div>
-                    <div className="p-3 bg-slate-600 rounded-lg text-white">
-                      <BarChart3 className="h-6 w-6" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* All-Time Summary Widget */}
-            <AllTimeSummaryWidget className="my-8" />
-          </div>
-        ) : (
-          <Outlet />
-        )}
-      </main>
-
-      {/* Enhanced ChatBot Component */}
-      <EnhancedChatBot
-        isOpen={isChatBotOpen}
-        onToggle={() => setIsChatBotOpen(!isChatBotOpen)}
+      <AllTimeSummaryModal
+        isOpen={summaryModalOpen}
+        onClose={() => setSummaryModalOpen(false)}
       />
-
-      {/* Daily Closing System */}
       <DailyClosingSystem
-        isOpen={isDailyClosingOpen}
-        onClose={() => setIsDailyClosingOpen(false)}
+        isOpen={dailyClosingOpen}
+        onClose={() => setDailyClosingOpen(false)}
       />
-
-      {/* Batch Daily Closing System */}
-      <BatchDailyClosingSystem
-        isOpen={isBatchClosingOpen}
-        onClose={() => setIsBatchClosingOpen(false)}
-      />
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              Are you sure you want to delete this tab?
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the tab
-              from your dashboard.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                if (tabToDelete) {
-                  const newSettings = {
-                    ...tabSettings,
-                    [tabToDelete]: false,
-                  };
-                  localStorage.setItem(
-                    "tabSettings",
-                    JSON.stringify(newSettings),
-                  );
-                  window.location.reload();
-                }
-              }}
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 };
