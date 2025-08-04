@@ -103,12 +103,12 @@ const CategoryPaymentModeManager: React.FC<CategoryPaymentModeManagerProps> = ({
             .order("name");
           
           if (!error && data) {
-            const categoriesWithType = data.map(item => ({
+            const categoriesWithType = data.map((item: any) => ({
               id: item.id,
               name: item.name,
               table_type: table,
-              description: item.description,
-              is_active: item.is_active,
+              description: item.description || undefined,
+              is_active: item.is_active ?? true,
               created_at: item.created_at
             }));
             allCategories.push(...categoriesWithType);

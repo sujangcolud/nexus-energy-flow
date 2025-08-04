@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
@@ -43,6 +44,14 @@ interface DailySummary {
   updated_at: string;
 }
 
+interface MonthSummary {
+  total_income: number;
+  total_expenses: number;
+  total_deposits: number;
+  total_withdrawals: number;
+  net_profit: number;
+}
+
 interface FinancialSummaryWidgetProps {
   className?: string;
 }
@@ -53,13 +62,7 @@ const FinancialSummaryWidget: React.FC<FinancialSummaryWidgetProps> = ({
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [todaySummary, setTodaySummary] = useState<DailySummary | null>(null);
-  const [monthSummary, setMonthSummary] = useState<{
-    total_income: number;
-    total_expenses: number;
-    total_deposits: number;
-    total_withdrawals: number;
-    net_profit: number;
-  } | null>(null);
+  const [monthSummary, setMonthSummary] = useState<MonthSummary | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchTodaySummary = async () => {
@@ -129,13 +132,13 @@ const FinancialSummaryWidget: React.FC<FinancialSummaryWidgetProps> = ({
           .lt("expense_date", tomorrowStr),
         supabase
           .from("deposits")
-          .select("amount, mode")
+          .select("amount, payment_mode")
           .eq("user_id", user.id)
           .gte("deposit_date", today)
           .lt("deposit_date", tomorrowStr),
         supabase
           .from("withdrawals")
-          .select("amount, mode")
+          .select("amount, payment_mode")
           .eq("user_id", user.id)
           .gte("withdrawal_date", today)
           .lt("withdrawal_date", tomorrowStr),
@@ -241,22 +244,22 @@ const FinancialSummaryWidget: React.FC<FinancialSummaryWidgetProps> = ({
       // cash_balance: total_cash_income - total_expenses_cash - total_savings_cash + total_withdrawals_cash - deposits_to_esewa - deposits_to_fonepay
       // Since we're calculating from individual transactions, we need to approximate:
       const depositsToEsewa = deposits
-        .filter((d) => d.mode?.toLowerCase() === "esewa")
+        .filter((d) => d.payment_mode?.toLowerCase() === "esewa")
         .reduce((sum, d) => sum + (d.amount || 0), 0);
       const depositsToFonepay = deposits
-        .filter((d) => d.mode?.toLowerCase() === "fonepay")
+        .filter((d) => d.payment_mode?.toLowerCase() === "fonepay")
         .reduce((sum, d) => sum + (d.amount || 0), 0);
       const expensesCash = expenses
         .filter((e) => e.payment_mode?.toLowerCase() === "cash")
         .reduce((sum, e) => sum + (e.amount || 0), 0);
       const savingsCash = totalSavings; // Assuming all savings are cash-based for now
       const withdrawalsCash = withdrawals
-        .filter((w) => w.mode?.toLowerCase() === "cash")
+        .filter((w) => w.payment_mode?.toLowerCase() === "cash")
         .reduce((sum, w) => sum + (w.amount || 0), 0);
 
       // Cash Balance: Total Cash income - total expense from cash - total savings in cash - total deposits cash deposits to bank + total withdrawals in cash - deposits made to Esewa - deposits made to fonepay
       const depositsCash = deposits
-        .filter((d) => d.mode?.toLowerCase() === "cash")
+        .filter((d) => d.payment_mode?.toLowerCase() === "cash")
         .reduce((sum, d) => sum + (d.amount || 0), 0);
 
       const cashBalance =
@@ -285,8 +288,8 @@ const FinancialSummaryWidget: React.FC<FinancialSummaryWidgetProps> = ({
       const withdrawalsBank = withdrawals
         .filter(
           (w) =>
-            w.mode?.toLowerCase() === "bank" ||
-            w.mode?.toLowerCase() === "fonepay",
+            w.payment_mode?.toLowerCase() === "bank" ||
+            w.payment_mode?.toLowerCase() === "fonepay",
         )
         .reduce((sum, w) => sum + (w.amount || 0), 0);
       const fonepayBalance =
@@ -393,8 +396,8 @@ const FinancialSummaryWidget: React.FC<FinancialSummaryWidgetProps> = ({
     try {
       // Trigger daily summary update for today
       const today = new Date().toISOString().split("T")[0];
-      const { error } = await supabase.rpc("update_daily_summary", {
-        p_summary_date: today,
+      const { error } = await supabase.rpc("update_enhanced_daily_summary", {
+        target_date: today,
       });
 
       if (error) {
