@@ -118,7 +118,7 @@ export const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
       // Fetch deposits data - use deposit_date column
       const { data: depositsData, error: depositsError } = await supabase
         .from('deposits')
-        .select('amount, mode, deposit_date')
+        .select('amount, mode, deposited_to, deposit_date')
         .eq('user_id', userId)
         .gte('deposit_date', startDateStr)
         .lte('deposit_date', endDateStr);
