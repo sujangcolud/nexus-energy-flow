@@ -286,8 +286,8 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
         const currentBalances = {
           cash: cashBalance,
           esewa: esewaBalance,
-          fonepay: fonepayBalance,
-          bank: bankBalance,
+          fonepay: 0, // Always 0 since combined with bank
+          bank: bankBalance, // Contains combined Bank + Fonepay
           cooperative: cooperativeBalance,
           total: totalBalance,
         };
