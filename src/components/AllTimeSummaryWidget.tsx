@@ -234,94 +234,21 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
         const totalIncome = aggregatedSummary.totalIncomeFromOrders + aggregatedSummary.totalIncomeFromCharging;
         const netProfit = totalIncome - aggregatedSummary.totalExpenses;
 
-        // Calculate current balances - fetch real-time balances from transaction tables
-        console.log("📊 Calculating real-time balances from transaction tables...");
+        // Calculate current balances from daily_summary table only
+        console.log("📊 Calculating balances from daily_summary table...");
 
-        // Fetch live transaction data to calculate accurate balances
-        const [ordersResult, chargingResult, expensesResult, depositsResult, withdrawalsResult, savingsResult] = await Promise.all([
-          supabase.from('orders').select('total, payment_mode').eq('user_id', user.id),
-          supabase.from('charging_sessions').select('total_amount, payment_mode').eq('user_id', user.id),
-          supabase.from('expenses').select('amount, payment_mode').eq('user_id', user.id),
-          supabase.from('deposits').select('amount, mode, deposited_to').eq('user_id', user.id),
-          supabase.from('withdrawals').select('amount, payment_mode, withdrawal_from').eq('user_id', user.id),
-          supabase.from('cooperative_savings').select('contribution_amount, payment_mode').eq('user_id', user.id)
-        ]);
+        const latestSummary = dailySummaries[dailySummaries.length - 1];
 
-        // Helper function to calculate payment mode breakdown
-        const calculatePaymentModeBreakdown = (data: any[], amountField: string, paymentField: string) => {
-          if (!data || data.length === 0) return { cash: 0, esewa: 0, fonepay: 0 };
-
-          return data.reduce((acc, item) => {
-            const amount = Number(item[amountField]) || 0;
-            const mode = (item[paymentField] || '').toLowerCase();
-
-            if (mode.includes('cash')) acc.cash += amount;
-            else if (mode.includes('esewa')) acc.esewa += amount;
-            else if (mode.includes('fonepay')) acc.fonepay += amount;
-            else acc.cash += amount; // Default to cash
-
-            return acc;
-          }, { cash: 0, esewa: 0, fonepay: 0 });
-        };
-
-        // Calculate income breakdowns
-        const ordersBreakdown = calculatePaymentModeBreakdown(ordersResult.data || [], 'total', 'payment_mode');
-        const chargingBreakdown = calculatePaymentModeBreakdown(chargingResult.data || [], 'total_amount', 'payment_mode');
-        const expensesBreakdown = calculatePaymentModeBreakdown(expensesResult.data || [], 'amount', 'payment_mode');
-
-        // Calculate totals by payment mode
-        const totalCashIncome = ordersBreakdown.cash + chargingBreakdown.cash;
-        const totalEsewaIncome = ordersBreakdown.esewa + chargingBreakdown.esewa;
-        const totalFonepayIncome = ordersBreakdown.fonepay + chargingBreakdown.fonepay;
-
-        // Calculate deposits by type and destination
-        const deposits = depositsResult.data || [];
-        const totalSavings = (savingsResult.data || []).reduce((sum, s) => sum + Number(s.contribution_amount), 0);
-
-        const cooperativeWithdrawals = (withdrawalsResult.data || [])
-          .filter(w => w.withdrawal_from === 'Cooperative')
-          .reduce((sum, w) => sum + Number(w.amount), 0);
-
-        const bankWithdrawals = (withdrawalsResult.data || [])
-          .filter(w => w.withdrawal_from === 'Bank')
-          .reduce((sum, w) => sum + Number(w.amount), 0);
-
-        // Calculate deposit flows: from -> to
-        const depositFlows = deposits.reduce((acc, deposit) => {
-          const amount = Number(deposit.amount) || 0;
-          const fromMode = (deposit.mode || '').toLowerCase();
-          const toMode = (deposit.deposited_to || deposit.mode || '').toLowerCase();
-
-          // Track where money is coming from and going to
-          if (fromMode.includes('esewa')) {
-            acc.fromEsewa += amount;
-          } else if (fromMode.includes('fonepay')) {
-            acc.fromFonepay += amount;
-          } else {
-            acc.fromCash += amount; // Default to cash
-          }
-
-          if (toMode.includes('bank') || toMode.includes('fonepay')) {
-            acc.toBank += amount;
-          } else if (toMode.includes('esewa')) {
-            acc.toEsewa += amount;
-          } else {
-            acc.toCash += amount;
-          }
-
-          return acc;
-        }, { fromCash: 0, fromEsewa: 0, fromFonepay: 0, toCash: 0, toEsewa: 0, toBank: 0 });
-
-        // Calculate actual current balances with proper deposit flow logic
-        const cashBalance = totalCashIncome - expensesBreakdown.cash - depositFlows.fromCash + depositFlows.toCash;
-        const esewaBalance = totalEsewaIncome - expensesBreakdown.esewa - depositFlows.fromEsewa + depositFlows.toEsewa;
-        const fonepayBalance = totalFonepayIncome - expensesBreakdown.fonepay - depositFlows.fromFonepay;
-        const bankBalance = depositFlows.toBank; // Bank/Fonepay balance represents deposited amounts
-        const cooperativeBalance = totalSavings - cooperativeWithdrawals;
+        // Get the most recent balance values from daily_summary table
+        const cashBalance = Number(latestSummary?.cash_balance) || 0;
+        const esewaBalance = Number(latestSummary?.esewa_balance) || 0;
+        const fonepayBalance = Number(latestSummary?.fonepay_balance) || 0;
+        const bankBalance = Number(latestSummary?.bank_balance) || 0;
+        const cooperativeBalance = Number(latestSummary?.cooperative_balance) || 0;
 
         const totalBalance = cashBalance + esewaBalance + fonepayBalance + bankBalance + cooperativeBalance;
 
-        console.log("💰 Calculated balances:", {
+        console.log("💰 Balances from daily_summary:", {
           cash: cashBalance,
           esewa: esewaBalance,
           fonepay: fonepayBalance,
