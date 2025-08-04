@@ -71,6 +71,7 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import useTableControls from "@/hooks/useTableControls";
 import BalanceDisplay from "@/components/ui/balance-display";
+import AllTimeTotalDisplay from "@/components/AllTimeTotalDisplay";
 
 interface Order {
   id: string;
