@@ -107,27 +107,43 @@ export const AllTimeSummaryModal: React.FC<AllTimeSummaryModalProps> = ({
         return;
       }
 
-      // Helper function for safe field access
-      const safeGet = (obj: any, field: string): number => {
-        const value = Number(obj?.[field]);
-        return isNaN(value) ? 0 : value;
+      // Helper function for safe field access with fallback support (same as AllTimeSummaryWidget)
+      const safeGet = (obj: any, primaryField: string, fallbackField?: string): number => {
+        const primaryValue = Number(obj?.[primaryField]);
+        if (!isNaN(primaryValue) && primaryValue !== 0) {
+          return primaryValue;
+        }
+        if (fallbackField) {
+          const fallbackValue = Number(obj?.[fallbackField]);
+          return isNaN(fallbackValue) ? 0 : fallbackValue;
+        }
+        return 0;
       };
 
-      // Aggregate all daily summaries into all-time totals
+      // Aggregate all daily summaries into all-time totals (same logic as AllTimeSummaryWidget)
       const aggregatedData = dailySummaries.reduce((acc, daily) => {
         return {
-          totalIncomeFromOrders: acc.totalIncomeFromOrders + safeGet(daily, 'total_income_from_orders'),
+          // Income totals with safe access and enhanced columns
+          totalIncomeFromOrders: acc.totalIncomeFromOrders + safeGet(daily, 'total_income_from_orders', 'total_income'),
           totalIncomeFromCharging: acc.totalIncomeFromCharging + safeGet(daily, 'total_income_from_charging'),
-          totalIncomeCash: acc.totalIncomeCash + safeGet(daily, 'total_income_cash'),
-          totalIncomeEsewa: acc.totalIncomeEsewa + safeGet(daily, 'total_income_esewa'),
-          totalIncomeFonepay: acc.totalIncomeFonepay + safeGet(daily, 'total_income_fonepay'),
+          totalIncomeCash: acc.totalIncomeCash + safeGet(daily, 'total_cash_income', 'total_income_cash'),
+          totalIncomeEsewa: acc.totalIncomeEsewa + safeGet(daily, 'total_esewa_income', 'total_income_esewa'),
+          totalIncomeFonepay: acc.totalIncomeFonepay + safeGet(daily, 'total_fonepay_income', 'total_income_fonepay'),
+
+          // Expense totals with safe access
           totalExpenses: acc.totalExpenses + safeGet(daily, 'total_expenses'),
           totalExpensesCash: acc.totalExpensesCash + safeGet(daily, 'total_expenses_cash'),
           totalExpensesEsewa: acc.totalExpensesEsewa + safeGet(daily, 'total_expenses_esewa'),
           totalExpensesFonepay: acc.totalExpensesFonepay + safeGet(daily, 'total_expenses_fonepay'),
+
+          // Deposit totals with safe access
           totalDeposits: acc.totalDeposits + safeGet(daily, 'total_deposits'),
-          totalWithdrawals: acc.totalWithdrawals + safeGet(daily, 'total_withdrawals'),
+
+          // Savings totals with safe access
           totalSavings: acc.totalSavings + safeGet(daily, 'total_savings'),
+
+          // Withdrawal totals with safe access
+          totalWithdrawals: acc.totalWithdrawals + safeGet(daily, 'total_withdrawals'),
           cooperativeWithdrawals: acc.cooperativeWithdrawals + safeGet(daily, 'total_withdrawals_cooperative'),
           bankWithdrawals: acc.bankWithdrawals + safeGet(daily, 'total_withdrawals_bank'),
         };
