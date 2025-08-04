@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
@@ -51,13 +50,11 @@ interface DailySummaryData {
   total_deposits: number;
   total_deposits_cash?: number;
   total_deposits_esewa?: number;
-  total_deposits_fonepay?: number;
   total_savings: number;
   total_savings_cash?: number;
   total_savings_esewa?: number;
   total_savings_fonepay?: number;
   total_withdrawals: number;
-  total_withdrawals_cash?: number;
   total_withdrawals_cooperative?: number;
   total_withdrawals_bank?: number;
   total_income_cash: number;
@@ -129,11 +126,9 @@ const EnhancedInsightsTab: React.FC = () => {
         total_expenses_fonepay: item.total_expenses_fonepay || 0,
         total_deposits_cash: item.total_deposits_cash || 0,
         total_deposits_esewa: item.total_deposits_esewa || 0,
-        total_deposits_fonepay: item.total_deposits_fonepay || 0,
         total_savings_cash: item.total_savings_cash || 0,
         total_savings_esewa: item.total_savings_esewa || 0,
         total_savings_fonepay: item.total_savings_fonepay || 0,
-        total_withdrawals_cash: item.total_withdrawals_cash || 0,
         total_withdrawals_cooperative: item.total_withdrawals_cooperative || 0,
         total_withdrawals_bank: item.total_withdrawals_bank || 0,
       })) as DailySummaryData[];
@@ -276,9 +271,8 @@ const EnhancedInsightsTab: React.FC = () => {
   const getDepositsBreakdown = (): PaymentModeData[] => {
     const totalCash = dailyData.reduce((sum, day) => sum + (day.total_deposits_cash || 0), 0);
     const totalEsewa = dailyData.reduce((sum, day) => sum + (day.total_deposits_esewa || 0), 0);
-    const totalFonepay = dailyData.reduce((sum, day) => sum + (day.total_deposits_fonepay || 0), 0);
     
-    const grandTotal = totalCash + totalEsewa + totalFonepay;
+    const grandTotal = totalCash + totalEsewa;
     
     if (grandTotal === 0) return [];
 
@@ -294,43 +288,30 @@ const EnhancedInsightsTab: React.FC = () => {
         amount: totalEsewa,
         percentage: (totalEsewa / grandTotal) * 100,
         color: COLORS[1]
-      },
-      {
-        mode: "Fonepay Deposits",
-        amount: totalFonepay,
-        percentage: (totalFonepay / grandTotal) * 100,
-        color: COLORS[2]
       }
     ].filter(item => item.amount > 0);
   };
 
   const getWithdrawalsBreakdown = (): PaymentModeData[] => {
-    const totalCash = dailyData.reduce((sum, day) => sum + (day.total_withdrawals_cash || 0), 0);
     const totalCooperative = dailyData.reduce((sum, day) => sum + (day.total_withdrawals_cooperative || 0), 0);
     const totalBank = dailyData.reduce((sum, day) => sum + (day.total_withdrawals_bank || 0), 0);
     
-    const grandTotal = totalCash + totalCooperative + totalBank;
+    const grandTotal = totalCooperative + totalBank;
     
     if (grandTotal === 0) return [];
 
     return [
       {
-        mode: "Cash Withdrawals",
-        amount: totalCash,
-        percentage: (totalCash / grandTotal) * 100,
-        color: COLORS[0]
-      },
-      {
         mode: "Cooperative Withdrawals",
         amount: totalCooperative, 
         percentage: (totalCooperative / grandTotal) * 100,
-        color: COLORS[1]
+        color: COLORS[0]
       },
       {
         mode: "Bank Withdrawals",
         amount: totalBank,
         percentage: (totalBank / grandTotal) * 100,
-        color: COLORS[2]
+        color: COLORS[1]
       }
     ].filter(item => item.amount > 0);
   };

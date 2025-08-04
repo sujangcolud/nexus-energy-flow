@@ -1,4 +1,6 @@
+
 import { OpenAI } from "openai";
+import type { ChatCompletionMessageParam } from "openai/resources/chat/completions";
 
 const openai = new OpenAI({
   apiKey:
@@ -16,11 +18,13 @@ export async function fetchOpenAIAnswer(prompt: string, context?: string) {
 
     const systemPrompt =
       "You are a helpful business assistant chatbot. Be detailed, accurate, and friendly. Use business context if provided.";
-    const messages = [
+    
+    const messages: ChatCompletionMessageParam[] = [
       { role: "system", content: systemPrompt },
-      ...(context ? [{ role: "assistant", content: context }] : []),
+      ...(context ? [{ role: "assistant", content: context } as ChatCompletionMessageParam] : []),
       { role: "user", content: prompt },
     ];
+    
     const completion = await openai.chat.completions.create({
       model: "gpt-3.5-turbo",
       messages,

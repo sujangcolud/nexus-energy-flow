@@ -1,4 +1,3 @@
-
 import React, {
   createContext,
   useContext,
@@ -106,7 +105,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       console.log("Role data:", userRole, "Role error:", roleError);
 
       // If role lookup fails, default to 'user' - no more hardcoded admin fallback
-      let finalRole: UserRole = userRole || "user";
+      let finalRole: UserRole = (userRole as UserRole) || "user";
+      
+      // Ensure the role is valid
+      if (!["user", "data_entry", "reports_viewer", "super_admin"].includes(finalRole)) {
+        finalRole = "user";
+      }
 
       // If we have a profile, create the app user
       if (profile) {
