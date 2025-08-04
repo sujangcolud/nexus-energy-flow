@@ -1,153 +1,241 @@
-import React, { useState, useEffect } from 'react';
-import { supabase } from '../../integrations/supabase/client';
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
-import { DateRangePicker } from '../ui/date-range-picker';
 
-const SummaryReportTab: React.FC = () => {
-  const [data, setData] = useState<any[]>([]);
-  const [dateRange, setDateRange] = useState<{ from: Date; to: Date } | undefined>(undefined);
+import { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/context/AuthContext";
+import { toast } from "sonner";
+import { FileDown, Calendar, TrendingUp } from "lucide-react";
+import { DatePickerWithRange } from "@/components/ui/date-range-picker";
+import { addDays, format } from "date-fns";
+import { DateRange } from "react-day-picker";
+
+interface SummaryData {
+  total_income: number;
+  total_expenses: number;
+  total_deposits: number;
+  total_withdrawals: number;
+  net_profit: number;
+  date_range: string;
+}
+
+const SummaryReportTab = () => {
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [summaryData, setSummaryData] = useState<SummaryData | null>(null);
+  const [reportType, setReportType] = useState("daily");
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({
+    from: new Date(),
+    to: addDays(new Date(), 7)
+  });
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        let query = supabase
-          .from('daily_summary')
-          .select('*')
-          .order('summary_date', { ascending: false });
+  const generateSummaryReport = async () => {
+    if (!user || !dateRange?.from || !dateRange?.to) {
+      toast.error("Please select a valid date range");
+      return;
+    }
 
-        // Apply date filters only if date range is selected
-        if (dateRange) {
-          query = query
-            .gte('summary_date', dateRange.from.toISOString())
-            .lte('summary_date', dateRange.to.toISOString());
-        }
+    setLoading(true);
+    try {
+      const fromDate = format(dateRange.from, "yyyy-MM-dd");
+      const toDate = format(dateRange.to, "yyyy-MM-dd");
 
-        const { data, error } = await query;
+      // Get orders data
+      const { data: ordersData, error: ordersError } = await supabase
+        .from("orders")
+        .select("total")
+        .eq("user_id", user.id)
+        .gte("order_date", fromDate)
+        .lte("order_date", toDate);
 
-        if (error) {
-          console.error('Error fetching summary data:', error);
-        } else {
-          setData(data || []);
-        }
-      } catch (error) {
-        console.error('Error fetching summary data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+      if (ordersError) throw ordersError;
 
-    fetchData();
-  }, [dateRange]);
+      // Get expenses data
+      const { data: expensesData, error: expensesError } = await supabase
+        .from("expenses")
+        .select("amount")
+        .eq("user_id", user.id)
+        .gte("expense_date", fromDate)
+        .lte("expense_date", toDate);
 
-  // Load all data on component mount
-  useEffect(() => {
-    const fetchAllData = async () => {
-      setLoading(true);
-      try {
-        const { data, error } = await supabase
-          .from('daily_summary')
-          .select('*')
-          .order('summary_date', { ascending: false });
+      if (expensesError) throw expensesError;
 
-        if (error) {
-          console.error('Error fetching all summary data:', error);
-        } else {
-          setData(data || []);
-        }
-      } catch (error) {
-        console.error('Error fetching all summary data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+      // Get deposits data
+      const { data: depositsData, error: depositsError } = await supabase
+        .from("deposits")
+        .select("amount")
+        .eq("user_id", user.id)
+        .gte("deposit_date", fromDate)
+        .lte("deposit_date", toDate);
 
-    fetchAllData();
-  }, []);
+      if (depositsError) throw depositsError;
 
-  const summary = data.reduce((acc, row) => {
-    Object.keys(row).forEach(key => {
-      if (typeof row[key] === 'number') {
-        acc[key] = (acc[key] || 0) + row[key];
-      }
-    });
-    return acc;
-  }, {});
+      // Get withdrawals data
+      const { data: withdrawalsData, error: withdrawalsError } = await supabase
+        .from("withdrawals")
+        .select("amount")
+        .eq("user_id", user.id)
+        .gte("withdrawal_date", fromDate)
+        .lte("withdrawal_date", toDate);
+
+      if (withdrawalsError) throw withdrawalsError;
+
+      const totalIncome = ordersData?.reduce((sum, order) => sum + (order.total || 0), 0) || 0;
+      const totalExpenses = expensesData?.reduce((sum, expense) => sum + (expense.amount || 0), 0) || 0;
+      const totalDeposits = depositsData?.reduce((sum, deposit) => sum + (deposit.amount || 0), 0) || 0;
+      const totalWithdrawals = withdrawalsData?.reduce((sum, withdrawal) => sum + (withdrawal.amount || 0), 0) || 0;
+      const netProfit = totalIncome - totalExpenses;
+
+      setSummaryData({
+        total_income: totalIncome,
+        total_expenses: totalExpenses,
+        total_deposits: totalDeposits,
+        total_withdrawals: totalWithdrawals,
+        net_profit: netProfit,
+        date_range: `${fromDate} to ${toDate}`
+      });
+
+      toast.success("Summary report generated successfully");
+    } catch (error: any) {
+      console.error("Error generating summary report:", error);
+      toast.error("Failed to generate summary report");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const downloadReport = () => {
+    if (!summaryData) {
+      toast.error("No data to download");
+      return;
+    }
+
+    const csvContent = [
+      "Metric,Amount",
+      `Total Income,${summaryData.total_income}`,
+      `Total Expenses,${summaryData.total_expenses}`,
+      `Total Deposits,${summaryData.total_deposits}`,
+      `Total Withdrawals,${summaryData.total_withdrawals}`,
+      `Net Profit,${summaryData.net_profit}`,
+      `Date Range,${summaryData.date_range}`
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `summary-report-${format(new Date(), "yyyy-MM-dd")}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+    
+    toast.success("Report downloaded successfully");
+  };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Daily Summary Report - All History</CardTitle>
-        <div className="space-y-2">
-          <p className="text-sm text-gray-600">
-            Showing all daily summary records. Use date filter to narrow down results.
-          </p>
-          <DateRangePicker onUpdate={setDateRange} />
-        </div>
-      </CardHeader>
-      <CardContent>
-        {loading ? (
-          <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-            <span className="ml-2">Loading daily summary data...</span>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {data.length > 0 && (
-              <div className="text-sm text-gray-600">
-                Showing {data.length} daily summary records
-              </div>
-            )}
-            <div className="max-h-96 overflow-auto border rounded-lg">
-              <Table>
-                <TableHeader className="sticky top-0 bg-white">
-                  <TableRow>
-                    <TableHead className="font-semibold">Date</TableHead>
-                    {Object.keys(summary).filter(key => key !== 'id' && key !== 'created_at' && key !== 'updated_at').map(key => (
-                      <TableHead key={key} className="font-semibold text-xs">
-                        {key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                      </TableHead>
-                    ))}
-                  </TableRow>
-                  {data.length > 0 && (
-                    <TableRow className="bg-blue-50">
-                      <TableCell className="font-bold">TOTAL</TableCell>
-                      {Object.entries(summary).filter(([key]) => key !== 'id' && key !== 'created_at' && key !== 'updated_at').map(([key, value], index) => (
-                        <TableCell key={index} className="font-bold text-blue-700">
-                          {typeof value === 'number' ? value.toFixed(2) : value}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  )}
-                </TableHeader>
-                <TableBody>
-                  {data.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={20} className="text-center py-8 text-gray-500">
-                        No daily summary data found. Perform daily closing to generate data.
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    data.map(row => (
-                      <TableRow key={row.id} className="hover:bg-gray-50">
-                        <TableCell className="font-medium">{row.summary_date}</TableCell>
-                        {Object.entries(summary).filter(([key]) => key !== 'id' && key !== 'created_at' && key !== 'updated_at').map(([key], index) => (
-                          <TableCell key={index} className="text-sm">
-                            {typeof row[key] === 'number' ? row[key].toFixed(2) : (row[key] || '-')}
-                          </TableCell>
-                        ))}
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
+    <div className="space-y-6">
+      <div className="flex items-center gap-2">
+        <TrendingUp className="h-6 w-6 text-blue-600" />
+        <h2 className="text-2xl font-bold text-gray-800">Summary Report</h2>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Generate Summary Report</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="reportType">Report Type</Label>
+              <Select value={reportType} onValueChange={setReportType}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="daily">Daily</SelectItem>
+                  <SelectItem value="weekly">Weekly</SelectItem>
+                  <SelectItem value="monthly">Monthly</SelectItem>
+                  <SelectItem value="custom">Custom Range</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Date Range</Label>
+              <DatePickerWithRange
+                date={dateRange}
+                onDateChange={setDateRange}
+              />
             </div>
           </div>
-        )}
-      </CardContent>
-    </Card>
+          <Button onClick={generateSummaryReport} disabled={loading} className="w-full">
+            <Calendar className="h-4 w-4 mr-2" />
+            {loading ? "Generating..." : "Generate Report"}
+          </Button>
+        </CardContent>
+      </Card>
+
+      {summaryData && (
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle>Summary Results</CardTitle>
+            <Button onClick={downloadReport} variant="outline" size="sm">
+              <FileDown className="h-4 w-4 mr-2" />
+              Download CSV
+            </Button>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="p-4 bg-green-50 rounded-lg">
+                <h3 className="text-sm font-medium text-green-600">Total Income</h3>
+                <p className="text-2xl font-bold text-green-700">
+                  Rs. {summaryData.total_income.toLocaleString()}
+                </p>
+              </div>
+              <div className="p-4 bg-red-50 rounded-lg">
+                <h3 className="text-sm font-medium text-red-600">Total Expenses</h3>
+                <p className="text-2xl font-bold text-red-700">
+                  Rs. {summaryData.total_expenses.toLocaleString()}
+                </p>
+              </div>
+              <div className="p-4 bg-blue-50 rounded-lg">
+                <h3 className="text-sm font-medium text-blue-600">Total Deposits</h3>
+                <p className="text-2xl font-bold text-blue-700">
+                  Rs. {summaryData.total_deposits.toLocaleString()}
+                </p>
+              </div>
+              <div className="p-4 bg-orange-50 rounded-lg">
+                <h3 className="text-sm font-medium text-orange-600">Total Withdrawals</h3>
+                <p className="text-2xl font-bold text-orange-700">
+                  Rs. {summaryData.total_withdrawals.toLocaleString()}
+                </p>
+              </div>
+              <div className={`p-4 rounded-lg ${summaryData.net_profit >= 0 ? 'bg-green-50' : 'bg-red-50'}`}>
+                <h3 className={`text-sm font-medium ${summaryData.net_profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  Net Profit
+                </h3>
+                <p className={`text-2xl font-bold ${summaryData.net_profit >= 0 ? 'text-green-700' : 'text-red-700'}`}>
+                  Rs. {summaryData.net_profit.toLocaleString()}
+                </p>
+              </div>
+              <div className="p-4 bg-gray-50 rounded-lg">
+                <h3 className="text-sm font-medium text-gray-600">Date Range</h3>
+                <p className="text-sm font-bold text-gray-700">
+                  {summaryData.date_range}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
   );
 };
 

@@ -1,6 +1,8 @@
+
 import { useState, useEffect } from "react";
-import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/context/AuthContext";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,7 +13,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -20,533 +21,102 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { extractErrorMessage, logError } from "@/utils/errorHandling";
-import {
-  handleSupabaseError,
-  withSupabaseErrorHandling,
-} from "@/utils/supabaseErrorHandler";
-import {
-  Users,
-  UserPlus,
-  Shield,
-  Database,
-  BarChart3,
-  UserCheck,
-  Eye,
-  EyeOff,
-  FileText,
-} from "lucide-react";
-
-type AppRole = "user" | "data_entry" | "reports_viewer" | "super_admin";
-
-interface UserWithRole {
-  id: string;
-  email: string | undefined;
-  role: AppRole;
-}
-
-interface NewUserData {
-  email: string;
-  password: string;
-  firstName: string;
-  lastName: string;
-  role: AppRole;
-}
+import { Users, Shield, UserPlus } from "lucide-react";
+import { getUsersWithRolesFallback, type UserWithRole } from "@/utils/userRolesFallback";
 
 const UserManagementTab = () => {
-  const { user } = useAuth();
+  const { user: currentUser } = useAuth();
   const [users, setUsers] = useState<UserWithRole[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isCreating, setIsCreating] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [logs, setLogs] = useState<any[]>([]);
+  const [selectedUserId, setSelectedUserId] = useState<string>("");
+  const [newRole, setNewRole] = useState<string>("user");
 
-  const [newUser, setNewUser] = useState<NewUserData>({
-    email: "",
-    password: "",
-    firstName: "",
-    lastName: "",
-    role: "user",
-  });
-
-  const ensureCurrentUserIsSuperAdmin = async () => {
-    if (!user) return;
-
+  const fetchUsers = async () => {
     try {
-      // Check if user already has a role
-      const { data: existingRole } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", user.id)
-        .single();
-
-      if (!existingRole || existingRole.role !== "super_admin") {
-        // Upsert super_admin role for current user
-        const { error } = await supabase.from("user_roles").upsert(
-          {
-            user_id: user.id,
-            role: "super_admin",
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          },
-          { onConflict: "user_id" },
-        );
-
-        if (error) {
-          console.warn("Could not set super_admin role:", error);
-        } else {
-          console.log("✅ Current user set as super_admin");
-        }
-      }
+      const userData = await getUsersWithRolesFallback();
+      setUsers(userData);
     } catch (error) {
-      console.warn("Failed to ensure super admin role:", error);
-    }
-  };
-
-  const fetchUsersAndRoles = async () => {
-    setLoading(true);
-    try {
-      // Make current user super admin first
-      if (user) {
-        await ensureCurrentUserIsSuperAdmin();
-      }
-
-      // Try the main RPC function first
-      let data, error;
-      ({ data, error } = await supabase.rpc("get_all_users_with_roles"));
-
-      // If that fails, try the fallback function
-      if (error) {
-        console.warn("Primary function failed, trying fallback:", error);
-        ({ data, error } = await supabase.rpc("get_users_from_auth"));
-      }
-
-      // If both fail, try direct queries with manual joining
-      if (error) {
-        console.warn("Fallback function failed, trying direct queries:", error);
-
-        // Get profiles first
-        const { data: profilesData, error: profilesError } = await supabase
-          .from("profiles")
-          .select("id, email");
-
-        if (profilesError) {
-          console.error("Profiles query failed:", profilesError);
-          error = profilesError;
-        } else {
-          // Get user roles separately
-          const { data: rolesData, error: rolesError } = await supabase
-            .from("user_roles")
-            .select("user_id, role");
-
-          if (rolesError) {
-            console.warn(
-              "User roles query failed, using default roles:",
-              rolesError,
-            );
-          }
-
-          // Manually join the data
-          data = (profilesData || []).map((profile: any) => {
-            const userRole = rolesData?.find(
-              (role: any) => role.user_id === profile.id,
-            );
-            return {
-              id: profile.id,
-              email: profile.email,
-              role: userRole?.role || "user",
-            };
-          });
-
-          error = null; // Clear error since we got profiles data
-        }
-      }
-
-      // Final fallback: if we still have an error or no data, try auth.users directly
-      if (error || !data || data.length === 0) {
-        console.warn(
-          "All queries failed or returned no data, trying auth.users directly",
-        );
-
-        try {
-          // Try to get users from auth.users table using SQL
-          const { data: authUsersData, error: authError } = await supabase
-            .from("auth.users")
-            .select("id, email, raw_user_meta_data")
-            .limit(10); // Limit to prevent too much data
-
-          if (!authError && authUsersData) {
-            data = authUsersData.map((user: any) => ({
-              id: user.id,
-              email: user.email || "Unknown",
-              role: user.raw_user_meta_data?.role || "user",
-            }));
-            error = null;
-          } else {
-            // Absolute final fallback - create minimal user list
-            console.warn(
-              "Auth users query also failed, using minimal fallback",
-            );
-            data = [
-              {
-                id: user?.id || "current",
-                email: user?.email || "Current User",
-                role: "super_admin",
-              },
-              {
-                id: "placeholder",
-                email: "No other users found - Check database connection",
-                role: "user",
-              },
-            ];
-            error = null;
-          }
-        } catch (fallbackError) {
-          console.error("Final fallback failed:", fallbackError);
-          data = [
-            {
-              id: "error",
-              email: "Error loading users - Check console",
-              role: "user",
-            },
-          ];
-          error = null;
-        }
-      }
-
-      if (error) throw error;
-
-      // Filter out 'super_user' and map to valid AppRole types
-      const filteredUsers = (data || [])
-        .map((user) => ({
-          ...user,
-          role:
-            user.role === "super_user"
-              ? ("super_admin" as AppRole)
-              : (user.role as AppRole),
-        }))
-        .filter((user) =>
-          ["user", "data_entry", "reports_viewer", "super_admin"].includes(
-            user.role,
-          ),
-        );
-
-      setUsers(filteredUsers);
-    } catch (error) {
-      logError("fetching users and roles", error);
-
-      // Handle auth-specific errors first
-      handleSupabaseError(error);
-
-      // If it's not an auth error, show the regular error message
-      if (
-        !error?.message?.includes("refresh_token_not_found") &&
-        !error?.message?.includes("Invalid Refresh Token")
-      ) {
-        const errorMessage = extractErrorMessage(error);
-
-        // Show specific message for relationship errors
-        if (
-          error?.code === "PGRST200" ||
-          errorMessage.includes("relationship")
-        ) {
-          toast.error(
-            "Database schema issue detected. Using fallback user data.",
-          );
-        } else {
-          toast.error(`Failed to load users: ${errorMessage}`);
-        }
-      }
+      console.error("Error fetching users:", error);
+      toast.error("Failed to load users");
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchUsersAndRoles();
-    fetchLogs();
+    fetchUsers();
   }, []);
 
-  const fetchLogs = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("logs")
-        .select("*")
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      setLogs(data || []);
-    } catch (error) {
-      console.error("Error fetching logs:", error);
-
-      let errorMessage = "Failed to load logs";
-      if (error && typeof error === "object") {
-        const msg = error.message || error["message"] || null;
-        const details = error.details || error["details"] || null;
-        const hint = error.hint || error["hint"] || null;
-        const code = error.code || error["code"] || null;
-
-        if (msg && typeof msg === "string" && msg.trim() !== "") {
-          errorMessage = msg;
-        } else if (
-          details &&
-          typeof details === "string" &&
-          details.trim() !== ""
-        ) {
-          errorMessage = details;
-        } else if (hint && typeof hint === "string" && hint.trim() !== "") {
-          errorMessage = hint;
-        } else if (code && typeof code === "string" && code.trim() !== "") {
-          if (code === "42P01") {
-            errorMessage =
-              "Logs table does not exist. Please run the database migration.";
-          } else if (code === "42501") {
-            errorMessage =
-              "Permission denied. Please check your database permissions.";
-          } else if (code === "PGRST204") {
-            errorMessage =
-              "Database schema error. Please refresh the page or run migrations.";
-          } else {
-            errorMessage = `Database error (${code})`;
-          }
-        } else {
-          try {
-            errorMessage = JSON.stringify(error, null, 2);
-          } catch (e) {
-            errorMessage = `Error object could not be serialized: ${String(error)}`;
-          }
-        }
-      } else if (typeof error === "string") {
-        errorMessage = error;
-      }
-
-      toast.error(`Error fetching logs: ${errorMessage}`);
-    }
-  };
-
-  const handleCreateUser = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (
-      !newUser.email ||
-      !newUser.password ||
-      !newUser.firstName ||
-      !newUser.lastName
-    ) {
-      toast.error("Please fill in all required fields.");
+  const handleRoleChange = async () => {
+    if (!selectedUserId || !newRole) {
+      toast.error("Please select a user and role");
       return;
     }
 
-    setIsCreating(true);
-
     try {
-      // Call the edge function to create user with admin privileges
-      const { data, error } = await supabase.functions.invoke("create-user", {
-        body: {
-          email: newUser.email,
-          password: newUser.password,
-          firstName: newUser.firstName,
-          lastName: newUser.lastName,
-          role: newUser.role,
-        },
-      });
-
-      if (error) {
-        console.error("Error creating user:", error);
-        toast.error(error.message || "Failed to create user.");
-        return;
-      }
-
-      toast.success(
-        `User ${newUser.email} created successfully with role: ${newUser.role}`,
-      );
-
-      // Reset form
-      setNewUser({
-        email: "",
-        password: "",
-        firstName: "",
-        lastName: "",
-        role: "user",
-      });
-
-      // Refresh users list
-      fetchUsersAndRoles();
-    } catch (error: any) {
-      console.error("Error creating user:", error);
-      toast.error(error.message || "Failed to create user.");
-    } finally {
-      setIsCreating(false);
+      // Since the RPC function doesn't exist, we'll show a message
+      toast.info("Role change functionality is currently unavailable. Please contact the system administrator.");
+    } catch (error) {
+      console.error("Error changing user role:", error);
+      toast.error("Failed to change user role");
     }
   };
 
-  const handleRoleChange = async (userId: string, newRole: AppRole) => {
-    try {
-      const { error } = await supabase.rpc("update_user_role", {
-        user_id_to_update: userId,
-        new_role: newRole,
-      });
-      if (error) throw error;
-      toast.success("User role updated successfully.");
-      fetchUsersAndRoles();
-    } catch (error: any) {
-      console.error("Error updating role:", error);
-      toast.error(error.message || "Failed to update role.");
-    }
-  };
-
-  const generatePassword = () => {
-    const chars =
-      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
-    let password = "";
-    for (let i = 0; i < 12; i++) {
-      password += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    setNewUser((prev) => ({ ...prev, password }));
-  };
-
-  const getRoleIcon = (role: AppRole) => {
+  const getRoleBadgeVariant = (role: string) => {
     switch (role) {
-      case "super_admin":
-        return <Shield className="h-4 w-4 text-purple-600" />;
-      case "data_entry":
-        return <Database className="h-4 w-4 text-blue-600" />;
-      case "reports_viewer":
-        return <BarChart3 className="h-4 w-4 text-green-600" />;
+      case 'super_admin':
+        return 'destructive';
+      case 'reports_viewer':
+        return 'default';
+      case 'data_entry':
+        return 'secondary';
       default:
-        return <UserCheck className="h-4 w-4 text-gray-600" />;
+        return 'outline';
     }
   };
 
-  const getRoleDescription = (role: AppRole) => {
-    switch (role) {
-      case "super_admin":
-        return "Full access to all features and user management";
-      case "data_entry":
-        return "Can manage orders, charging, expenses, deposits, withdrawals, and savings";
-      case "reports_viewer":
-        return "Can view reports, analytics, and import bulk data";
-      case "user":
-        return "Basic user access";
-      default:
-        return "";
-    }
-  };
+  if (loading) {
+    return (
+      <div className="space-y-6 animate-pulse">
+        <div className="h-8 bg-gray-200 rounded w-1/4"></div>
+        <div className="h-64 bg-gray-200 rounded"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2">
         <Users className="h-6 w-6 text-blue-600" />
-        <h2 className="text-2xl font-bold text-gray-900">User Management</h2>
+        <h2 className="text-2xl font-bold text-gray-800">User Management</h2>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <UserPlus className="h-5 w-5" />
-            Create New User
-          </CardTitle>
+          <CardTitle>Change User Role</CardTitle>
         </CardHeader>
-        <CardContent>
-          <form onSubmit={handleCreateUser} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="firstName">First Name</Label>
-                <Input
-                  id="firstName"
-                  type="text"
-                  placeholder="John"
-                  value={newUser.firstName}
-                  onChange={(e) =>
-                    setNewUser((prev) => ({
-                      ...prev,
-                      firstName: e.target.value,
-                    }))
-                  }
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="lastName">Last Name</Label>
-                <Input
-                  id="lastName"
-                  type="text"
-                  placeholder="Doe"
-                  value={newUser.lastName}
-                  onChange={(e) =>
-                    setNewUser((prev) => ({
-                      ...prev,
-                      lastName: e.target.value,
-                    }))
-                  }
-                  required
-                />
-              </div>
-            </div>
-
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email Address</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="user@example.com"
-                value={newUser.email}
-                onChange={(e) =>
-                  setNewUser((prev) => ({ ...prev, email: e.target.value }))
-                }
-                required
-              />
+              <Label htmlFor="user-select">Select User</Label>
+              <Select value={selectedUserId} onValueChange={setSelectedUserId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Choose a user" />
+                </SelectTrigger>
+                <SelectContent>
+                  {users.map((user) => (
+                    <SelectItem key={user.id} value={user.id}>
+                      {user.first_name} {user.last_name} ({user.email})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <div className="flex gap-2">
-                <div className="relative flex-grow">
-                  <Input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Enter password"
-                    value={newUser.password}
-                    onChange={(e) =>
-                      setNewUser((prev) => ({
-                        ...prev,
-                        password: e.target.value,
-                      }))
-                    }
-                    required
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7 p-0"
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
-                    {showPassword ? (
-                      <EyeOff className="h-4 w-4" />
-                    ) : (
-                      <Eye className="h-4 w-4" />
-                    )}
-                  </Button>
-                </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={generatePassword}
-                >
-                  Generate
-                </Button>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="role">Role</Label>
-              <Select
-                value={newUser.role}
-                onValueChange={(value: AppRole) =>
-                  setNewUser((prev) => ({ ...prev, role: value }))
-                }
-              >
+              <Label htmlFor="role-select">New Role</Label>
+              <Select value={newRole} onValueChange={setNewRole}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -558,145 +128,46 @@ const UserManagementTab = () => {
                 </SelectContent>
               </Select>
             </div>
-
-            <Button type="submit" disabled={isCreating} className="w-full">
-              <UserPlus className="h-4 w-4 mr-2" />
-              {isCreating ? "Creating User..." : "Create User"}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>User Roles & Permissions</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            <div className="p-4 border rounded-lg">
-              <div className="flex items-center gap-2 mb-2">
-                <Shield className="h-4 w-4 text-purple-600" />
-                <span className="font-semibold">Super Admin</span>
-              </div>
-              <p className="text-sm text-gray-600">
-                Full access to all features and user management
-              </p>
-            </div>
-            <div className="p-4 border rounded-lg">
-              <div className="flex items-center gap-2 mb-2">
-                <Database className="h-4 w-4 text-blue-600" />
-                <span className="font-semibold">Data Entry</span>
-              </div>
-              <p className="text-sm text-gray-600">
-                Can manage orders, charging, expenses, deposits, withdrawals,
-                and savings
-              </p>
-            </div>
-            <div className="p-4 border rounded-lg col-span-1 md:col-span-2">
-              <div className="flex items-center gap-2 mb-2">
-                <BarChart3 className="h-4 w-4 text-green-600" />
-                <span className="font-semibold">Reports Viewer</span>
-              </div>
-              <p className="text-sm text-gray-600">
-                Can view reports, analytics, and import bulk data
-              </p>
-            </div>
           </div>
+          <Button onClick={handleRoleChange} className="w-full">
+            <Shield className="h-4 w-4 mr-2" />
+            Update Role
+          </Button>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle>Existing Users</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Email</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Permissions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loading ? (
-                <TableRow>
-                  <TableCell colSpan={3} className="text-center">
-                    Loading users...
-                  </TableCell>
-                </TableRow>
-              ) : (
-                users.map((u) => (
-                  <TableRow key={u.id}>
-                    <TableCell className="font-medium">{u.email}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        {getRoleIcon(u.role)}
-                        <Select
-                          value={u.role}
-                          onValueChange={(newRole: AppRole) =>
-                            handleRoleChange(u.id, newRole)
-                          }
-                          disabled={u.id === user?.id}
-                        >
-                          <SelectTrigger className="w-[180px]">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="user">User</SelectItem>
-                            <SelectItem value="data_entry">
-                              Data Entry
-                            </SelectItem>
-                            <SelectItem value="reports_viewer">
-                              Reports Viewer
-                            </SelectItem>
-                            <SelectItem value="super_admin">
-                              Super Admin
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <span className="text-sm text-gray-600">
-                        {getRoleDescription(u.role)}
-                      </span>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FileText className="h-5 w-5" />
-            Activity Logs
-          </CardTitle>
+          <CardTitle>All Users</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>User</TableHead>
-                <TableHead>Action</TableHead>
-                <TableHead>Table</TableHead>
-                <TableHead>Record ID</TableHead>
-                <TableHead>Timestamp</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Role</TableHead>
+                <TableHead>Created</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {logs.map((log) => (
-                <TableRow key={log.id}>
-                  <TableCell>{log.user_id}</TableCell>
-                  <TableCell>{log.action}</TableCell>
-                  <TableCell>{log.table_name}</TableCell>
-                  <TableCell>{log.record_id}</TableCell>
+              {users.map((user) => (
+                <TableRow key={user.id}>
                   <TableCell>
-                    {new Date(log.created_at).toLocaleString()}
+                    <div>
+                      <div className="font-medium">
+                        {user.first_name} {user.last_name}
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell>{user.email}</TableCell>
+                  <TableCell>
+                    <Badge variant={getRoleBadgeVariant(user.role)}>
+                      {user.role.replace('_', ' ').toUpperCase()}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    {new Date(user.created_at).toLocaleDateString()}
                   </TableCell>
                 </TableRow>
               ))}

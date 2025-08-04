@@ -6,7 +6,10 @@ import { logSecurityEvent } from "./securityLogger";
 export interface UserWithRole {
   id: string;
   email: string;
+  first_name: string;
+  last_name: string;
   role: "user" | "data_entry" | "reports_viewer" | "super_admin";
+  created_at: string;
 }
 
 export interface RoleDistribution {
@@ -26,7 +29,10 @@ export async function getUsersWithRolesFallback(): Promise<UserWithRole[]> {
       return rpcData.map(user => ({
         id: user.id,
         email: user.email || "Unknown",
-        role: user.role as any || 'user'
+        first_name: user.first_name || "",
+        last_name: user.last_name || "",
+        role: user.role as any || 'user',
+        created_at: user.created_at || new Date().toISOString()
       }));
     }
 
@@ -42,7 +48,7 @@ export async function getUsersWithRolesFallback(): Promise<UserWithRole[]> {
     // Try to get basic user data from profiles
     const { data: profilesData, error: profilesError } = await supabase
       .from("profiles")
-      .select("id, email, first_name, last_name")
+      .select("id, email, first_name, last_name, created_at")
       .limit(100);
 
     if (!profilesError && profilesData && profilesData.length > 0) {
@@ -58,7 +64,10 @@ export async function getUsersWithRolesFallback(): Promise<UserWithRole[]> {
       return profilesData.map((profile) => ({
         id: profile.id,
         email: profile.email || "Unknown",
+        first_name: profile.first_name || "",
+        last_name: profile.last_name || "",
         role: rolesMap.get(profile.id) || 'user',
+        created_at: profile.created_at || new Date().toISOString()
       }));
     }
 
