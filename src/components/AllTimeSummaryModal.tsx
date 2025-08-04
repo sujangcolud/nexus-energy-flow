@@ -40,6 +40,7 @@ interface AllTimeSummaryData {
   cashBalance: number;
   esewaBalance: number;
   fonepayBalance: number;
+  bankBalance: number;
   cooperativeBalance: number;
   totalBalance: number;
 
