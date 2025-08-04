@@ -93,7 +93,7 @@ export const AllTimeSummaryModal: React.FC<AllTimeSummaryModalProps> = ({
       // Fetch all deposits data
       const { data: depositsData, error: depositsError } = await supabase
         .from('deposits')
-        .select('amount, mode')
+        .select('amount, mode, deposited_to')
         .eq('user_id', user.id);
 
       if (depositsError) console.error('Deposits fetch error:', depositsError);
