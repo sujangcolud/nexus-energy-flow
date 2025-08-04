@@ -19,6 +19,7 @@ import { toast } from "sonner";
 import TransactionDatePicker from "@/components/ui/transaction-date-picker";
 import { format } from "date-fns";
 import { logError, extractErrorMessage } from "@/utils/errorHandling";
+import AllTimeTotalDisplay from "@/components/AllTimeTotalDisplay";
 import {
   Select,
   SelectContent,
