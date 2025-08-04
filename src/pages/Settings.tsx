@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
@@ -5,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -22,7 +24,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Users, Shield, UserPlus } from "lucide-react";
+import { Users, Shield, UserPlus, Settings as SettingsIcon, Eye, EyeOff } from "lucide-react";
 import { getUsersWithRolesFallback, type UserWithRole } from "@/utils/userRolesFallback";
 
 const Settings = () => {
@@ -31,6 +33,48 @@ const Settings = () => {
   const [loading, setLoading] = useState(true);
   const [selectedUser, setSelectedUser] = useState<string>("");
   const [newRole, setNewRole] = useState<string>("user");
+
+  // Tab visibility settings
+  const [tabSettings, setTabSettings] = useState({
+    orders: true,
+    expenses: true,
+    deposits: true,
+    withdrawals: true,
+    charging: true,
+    cooperative: true,
+    inventory: true,
+    menu: true,
+    vat: true,
+    fileUpload: true,
+    insights: true,
+    userManagement: true,
+    shareInvestments: true,
+    expenseBookings: true
+  });
+
+  // Transaction editing settings
+  const [editSettings, setEditSettings] = useState({
+    allowEditOrders: true,
+    allowEditExpenses: true,
+    allowEditDeposits: true,
+    allowEditWithdrawals: true,
+    allowEditCharging: true,
+    allowEditSavings: true,
+    allowDeleteTransactions: false,
+    requireApprovalForEdits: false,
+    logAllChanges: true
+  });
+
+  // General application settings
+  const [appSettings, setAppSettings] = useState({
+    defaultCurrency: "NPR",
+    defaultPaymentMode: "cash",
+    enableNotifications: true,
+    autoBackup: false,
+    darkMode: false,
+    compactView: false,
+    showAdvancedFeatures: true
+  });
 
   const fetchUsers = async () => {
     try {
@@ -44,8 +88,34 @@ const Settings = () => {
     }
   };
 
+  const loadSettings = () => {
+    // Load settings from localStorage
+    const savedTabSettings = localStorage.getItem('tabSettings');
+    const savedEditSettings = localStorage.getItem('editSettings');
+    const savedAppSettings = localStorage.getItem('appSettings');
+
+    if (savedTabSettings) {
+      setTabSettings(JSON.parse(savedTabSettings));
+    }
+    if (savedEditSettings) {
+      setEditSettings(JSON.parse(savedEditSettings));
+    }
+    if (savedAppSettings) {
+      setAppSettings(JSON.parse(savedAppSettings));
+    }
+  };
+
+  const saveSettings = () => {
+    // Save settings to localStorage
+    localStorage.setItem('tabSettings', JSON.stringify(tabSettings));
+    localStorage.setItem('editSettings', JSON.stringify(editSettings));
+    localStorage.setItem('appSettings', JSON.stringify(appSettings));
+    toast.success("Settings saved successfully!");
+  };
+
   useEffect(() => {
     fetchUsers();
+    loadSettings();
   }, []);
 
   const updateUserRole = async () => {
@@ -88,6 +158,139 @@ const Settings = () => {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2">
+        <SettingsIcon className="h-6 w-6 text-blue-600" />
+        <h2 className="text-2xl font-bold text-gray-800">Application Settings</h2>
+      </div>
+
+      {/* Tab Visibility Settings */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Tab Visibility Settings</CardTitle>
+          <p className="text-sm text-gray-600">Control which tabs are visible in the application</p>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {Object.entries(tabSettings).map(([key, value]) => (
+              <div key={key} className="flex items-center justify-between space-x-2">
+                <Label htmlFor={key} className="text-sm font-medium capitalize">
+                  {key.replace(/([A-Z])/g, ' $1').trim()}
+                </Label>
+                <Switch
+                  id={key}
+                  checked={value}
+                  onCheckedChange={(checked) => 
+                    setTabSettings(prev => ({ ...prev, [key]: checked }))
+                  }
+                />
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Transaction Editing Settings */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Transaction Editing Settings</CardTitle>
+          <p className="text-sm text-gray-600">Configure transaction editing permissions and behavior</p>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {Object.entries(editSettings).map(([key, value]) => (
+              <div key={key} className="flex items-center justify-between space-x-2">
+                <Label htmlFor={key} className="text-sm font-medium">
+                  {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                </Label>
+                <Switch
+                  id={key}
+                  checked={value}
+                  onCheckedChange={(checked) => 
+                    setEditSettings(prev => ({ ...prev, [key]: checked }))
+                  }
+                />
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* General Application Settings */}
+      <Card>
+        <CardHeader>
+          <CardTitle>General Settings</CardTitle>
+          <p className="text-sm text-gray-600">Configure general application behavior</p>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="defaultCurrency">Default Currency</Label>
+                <Select 
+                  value={appSettings.defaultCurrency} 
+                  onValueChange={(value) => setAppSettings(prev => ({ ...prev, defaultCurrency: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="NPR">Nepali Rupees (NPR)</SelectItem>
+                    <SelectItem value="USD">US Dollar (USD)</SelectItem>
+                    <SelectItem value="EUR">Euro (EUR)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="defaultPaymentMode">Default Payment Mode</Label>
+                <Select 
+                  value={appSettings.defaultPaymentMode} 
+                  onValueChange={(value) => setAppSettings(prev => ({ ...prev, defaultPaymentMode: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="cash">Cash</SelectItem>
+                    <SelectItem value="esewa">eSewa</SelectItem>
+                    <SelectItem value="fonepay">Fonepay</SelectItem>
+                    <SelectItem value="bank">Bank Transfer</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              {Object.entries(appSettings).filter(([key]) => 
+                !['defaultCurrency', 'defaultPaymentMode'].includes(key)
+              ).map(([key, value]) => (
+                <div key={key} className="flex items-center justify-between space-x-2">
+                  <Label htmlFor={key} className="text-sm font-medium">
+                    {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                  </Label>
+                  <Switch
+                    id={key}
+                    checked={value as boolean}
+                    onCheckedChange={(checked) => 
+                      setAppSettings(prev => ({ ...prev, [key]: checked }))
+                    }
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Save Settings Button */}
+      <div className="flex justify-end">
+        <Button onClick={saveSettings} className="bg-blue-600 hover:bg-blue-700">
+          <SettingsIcon className="h-4 w-4 mr-2" />
+          Save All Settings
+        </Button>
+      </div>
+
+      {/* User Management Section */}
+      <div className="flex items-center gap-2 mt-8">
         <Users className="h-6 w-6 text-blue-600" />
         <h2 className="text-2xl font-bold text-gray-800">User Management</h2>
       </div>

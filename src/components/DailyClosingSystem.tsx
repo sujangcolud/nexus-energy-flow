@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -64,58 +65,95 @@ export const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
 
   const fetchDailyClosingData = async (date: Date, start?: Date, end?: Date) => {
     setLoading(true);
+    console.log('Fetching daily closing data for:', { date, start, end, userId });
+    
     try {
       const targetDate = start && end ? null : date;
       const startFilter = start || date;
       const endFilter = end || date;
 
-      // Fetch orders data
-      const { data: ordersData } = await supabase
+      const startDateStr = startFilter.toISOString().split('T')[0];
+      const endDateStr = endFilter.toISOString().split('T')[0];
+      
+      console.log('Date filters:', { startDateStr, endDateStr });
+
+      // Fetch orders data - use order_date column
+      const { data: ordersData, error: ordersError } = await supabase
         .from('orders')
-        .select('total, payment_mode')
+        .select('total, payment_mode, order_date')
         .eq('user_id', userId)
-        .gte('created_at', startFilter.toISOString().split('T')[0])
-        .lte('created_at', endFilter.toISOString().split('T')[0] + 'T23:59:59.999Z');
+        .gte('order_date', startDateStr)
+        .lte('order_date', endDateStr);
 
-      // Fetch charging data
-      const { data: chargingData } = await supabase
+      if (ordersError) {
+        console.error('Orders fetch error:', ordersError);
+      }
+      console.log('Orders data:', ordersData);
+
+      // Fetch charging data - use session_date column
+      const { data: chargingData, error: chargingError } = await supabase
         .from('charging_sessions')
-        .select('total_amount, payment_mode')
+        .select('total_amount, payment_mode, session_date')
         .eq('user_id', userId)
-        .gte('created_at', startFilter.toISOString().split('T')[0])
-        .lte('created_at', endFilter.toISOString().split('T')[0] + 'T23:59:59.999Z');
+        .gte('session_date', startDateStr)
+        .lte('session_date', endDateStr);
 
-      // Fetch expenses data
-      const { data: expensesData } = await supabase
+      if (chargingError) {
+        console.error('Charging fetch error:', chargingError);
+      }
+      console.log('Charging data:', chargingData);
+
+      // Fetch expenses data - use expense_date column
+      const { data: expensesData, error: expensesError } = await supabase
         .from('expenses')
-        .select('amount, payment_mode')
+        .select('amount, payment_mode, expense_date')
         .eq('user_id', userId)
-        .gte('created_at', startFilter.toISOString().split('T')[0])
-        .lte('created_at', endFilter.toISOString().split('T')[0] + 'T23:59:59.999Z');
+        .gte('expense_date', startDateStr)
+        .lte('expense_date', endDateStr);
 
-      // Fetch deposits data
-      const { data: depositsData } = await supabase
+      if (expensesError) {
+        console.error('Expenses fetch error:', expensesError);
+      }
+      console.log('Expenses data:', expensesData);
+
+      // Fetch deposits data - use deposit_date column
+      const { data: depositsData, error: depositsError } = await supabase
         .from('deposits')
-        .select('amount, mode')
+        .select('amount, mode, deposit_date')
         .eq('user_id', userId)
-        .gte('created_at', startFilter.toISOString().split('T')[0])
-        .lte('created_at', endFilter.toISOString().split('T')[0] + 'T23:59:59.999Z');
+        .gte('deposit_date', startDateStr)
+        .lte('deposit_date', endDateStr);
 
-      // Fetch withdrawals data
-      const { data: withdrawalsData } = await supabase
+      if (depositsError) {
+        console.error('Deposits fetch error:', depositsError);
+      }
+      console.log('Deposits data:', depositsData);
+
+      // Fetch withdrawals data - use withdrawal_date column
+      const { data: withdrawalsData, error: withdrawalsError } = await supabase
         .from('withdrawals')
-        .select('amount, payment_mode, withdrawal_from')
+        .select('amount, payment_mode, withdrawal_from, withdrawal_date')
         .eq('user_id', userId)
-        .gte('created_at', startFilter.toISOString().split('T')[0])
-        .lte('created_at', endFilter.toISOString().split('T')[0] + 'T23:59:59.999Z');
+        .gte('withdrawal_date', startDateStr)
+        .lte('withdrawal_date', endDateStr);
 
-      // Fetch cooperative savings data
-      const { data: savingsData } = await supabase
+      if (withdrawalsError) {
+        console.error('Withdrawals fetch error:', withdrawalsError);
+      }
+      console.log('Withdrawals data:', withdrawalsData);
+
+      // Fetch cooperative savings data - use contribution_date column
+      const { data: savingsData, error: savingsError } = await supabase
         .from('cooperative_savings')
-        .select('contribution_amount, payment_mode')
+        .select('contribution_amount, payment_mode, contribution_date')
         .eq('user_id', userId)
-        .gte('created_at', startFilter.toISOString().split('T')[0])
-        .lte('created_at', endFilter.toISOString().split('T')[0] + 'T23:59:59.999Z');
+        .gte('contribution_date', startDateStr)
+        .lte('contribution_date', endDateStr);
+
+      if (savingsError) {
+        console.error('Savings fetch error:', savingsError);
+      }
+      console.log('Savings data:', savingsData);
 
       // Calculate totals
       const totalIncomeFromOrders = ordersData?.reduce((sum, order) => sum + Number(order.total), 0) || 0;
@@ -126,6 +164,16 @@ export const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
       const totalDeposits = depositsData?.reduce((sum, deposit) => sum + Number(deposit.amount), 0) || 0;
       const totalWithdrawals = withdrawalsData?.reduce((sum, withdrawal) => sum + Number(withdrawal.amount), 0) || 0;
       const totalSavings = savingsData?.reduce((sum, saving) => sum + Number(saving.contribution_amount), 0) || 0;
+
+      console.log('Calculated totals:', {
+        totalIncomeFromOrders,
+        totalIncomeFromCharging,
+        totalIncome,
+        totalExpenses,
+        totalDeposits,
+        totalWithdrawals,
+        totalSavings
+      });
 
       // Calculate payment mode breakdowns
       const calculatePaymentModeBreakdown = (data: any[], amountField: string, paymentField: string) => {
@@ -165,7 +213,7 @@ export const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
 
       const netProfit = totalIncome - totalExpenses;
 
-      setClosingData({
+      const calculatedData = {
         selectedDate: targetDate || startFilter,
         totalIncome,
         totalIncomeFromOrders,
@@ -188,7 +236,10 @@ export const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
         netProfit,
         cooperativeWithdrawals,
         bankWithdrawals
-      });
+      };
+
+      console.log('Final calculated data:', calculatedData);
+      setClosingData(calculatedData);
     } catch (error) {
       console.error('Error fetching daily closing data:', error);
     } finally {
@@ -197,7 +248,7 @@ export const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
   };
 
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && userId) {
       fetchDailyClosingData(selectedDate, startDate, endDate);
     }
   }, [isOpen, userId, selectedDate, startDate, endDate]);
