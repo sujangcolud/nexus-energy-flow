@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { extractErrorMessage, logError } from "@/utils/errorHandling";
-import AllTimeSummaryModal from "./AllTimeSummaryModal";
+import { AllTimeSummaryModal } from "./AllTimeSummaryModal";
 import { DateRange } from "react-day-picker";
 import { formatCurrency as formatCurrencyUtil } from "@/lib/calculations";
 
@@ -96,8 +96,6 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
     dateRange: { from: "", to: "" },
   });
   const [isModalOpen, setIsModalOpen] = useState(false);
-
-
 
   const fetchAllTimeSummary = useCallback(
     async (dateRange?: DateRange) => {

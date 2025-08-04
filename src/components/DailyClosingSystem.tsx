@@ -529,7 +529,8 @@ export const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
       <AllTimeSummaryModal
         isOpen={isAllTimeSummaryOpen}
         onClose={() => setIsAllTimeSummaryOpen(false)}
-        userId={userId}
+        summaryData={null}
+        onDateRangeChange={() => {}}
       />
     </>
   );
