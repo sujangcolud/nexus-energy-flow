@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
@@ -99,6 +100,7 @@ const AllTimeSummaryModal: React.FC<AllTimeSummaryModalProps> = ({
   onDateRangeChange,
 }) => {
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
+  const [selectedTab, setSelectedTab] = useState("summary");
 
   useEffect(() => {
     if (dateRange?.from && dateRange?.to) {
@@ -108,24 +110,24 @@ const AllTimeSummaryModal: React.FC<AllTimeSummaryModalProps> = ({
 
   const handleShowAllTime = () => {
     setDateRange(undefined);
-    onDateRangeChange({} as DateRange); // Trigger fetch with no date filter
+    onDateRangeChange({} as DateRange);
   };
 
-  const formatCurrency = (amount: number) => `NRs. ${amount.toFixed(2)}`;
+  const formatCurrency = (amount: number) => `NRs. ${Math.abs(amount).toFixed(2)}`;
 
   if (!summaryData) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-auto">
+        <DialogContent className="max-w-6xl max-h-[95vh] overflow-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Database className="h-5 w-5" />
-              All-Time Summary
+              <Database className="h-6 w-6 text-purple-600" />
+              All-Time Financial Summary
             </DialogTitle>
           </DialogHeader>
           <div className="flex items-center justify-center p-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-            <span className="ml-2">Loading summary data...</span>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
+            <span className="ml-2">Loading all-time summary data...</span>
           </div>
         </DialogContent>
       </Dialog>
@@ -147,17 +149,22 @@ const AllTimeSummaryModal: React.FC<AllTimeSummaryModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-6xl max-h-[90vh] overflow-auto">
+      <DialogContent className="max-w-6xl max-h-[95vh] overflow-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Database className="h-5 w-5" />
-            All-Time Summary
+            <Database className="h-6 w-6 text-purple-600" />
+            All-Time Financial Summary
+            <Badge className="bg-purple-100 text-purple-800">
+              <CheckCircle className="h-3 w-3 mr-1" />
+              Complete
+            </Badge>
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6">
-          <div className="flex items-center gap-4 flex-wrap">
-            <Calendar className="h-5 w-5 text-blue-600" />
+          {/* Date Range Selector */}
+          <div className="flex items-center gap-4 flex-wrap p-4 bg-purple-50 rounded-lg">
+            <Calendar className="h-5 w-5 text-purple-600" />
             <DateRangePicker
               onUpdate={(range) => {
                 if (range?.from && range?.to) {
@@ -165,12 +172,13 @@ const AllTimeSummaryModal: React.FC<AllTimeSummaryModalProps> = ({
                 }
               }}
             />
-            <button
+            <Button
               onClick={handleShowAllTime}
-              className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+              variant="outline"
+              className="border-purple-300 text-purple-600 hover:bg-purple-50"
             >
               Show All Time
-            </button>
+            </Button>
             <Badge
               variant="outline"
               className="text-purple-600 border-purple-300"
@@ -179,176 +187,370 @@ const AllTimeSummaryModal: React.FC<AllTimeSummaryModalProps> = ({
             </Badge>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-            <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-green-600 flex items-center gap-2">
-                  <TrendingUp className="h-4 w-4" />
-                  Total Income
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-green-800">
-                  {formatCurrency(totalIncome)}
-                </div>
-                <div className="mt-2 space-y-1">
-                  <div className="text-xs text-green-600">
-                    Orders: {formatCurrency(incomeBreakdown.fromOrders)}
-                  </div>
-                  <div className="text-xs text-green-600">
-                    Charging: {formatCurrency(incomeBreakdown.fromCharging)}
+          {/* Summary Cards - Same format as Daily Closing */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5 text-green-600" />
+                  <div>
+                    <p className="text-sm text-gray-600">Total Income</p>
+                    <p className="text-lg font-bold text-green-600">
+                      {formatCurrency(totalIncome)}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      All time revenue
+                    </p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="bg-gradient-to-br from-red-50 to-rose-50 border-red-200">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-red-600 flex items-center gap-2">
-                  <TrendingDown className="h-4 w-4" />
-                  Total Expenses
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-red-800">
-                  {formatCurrency(totalExpenses)}
-                </div>
-                <div className="mt-2">
-                  <Badge
-                    variant={netProfit >= 0 ? "default" : "destructive"}
-                    className="text-xs"
-                  >
-                    Net Profit: {formatCurrency(netProfit)}
-                  </Badge>
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2">
+                  <TrendingDown className="h-5 w-5 text-red-600" />
+                  <div>
+                    <p className="text-sm text-gray-600">Total Expenses</p>
+                    <p className="text-lg font-bold text-red-600">
+                      {formatCurrency(totalExpenses)}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      All time expenses
+                    </p>
+                  </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="bg-gradient-to-br from-purple-50 to-violet-50 border-purple-200">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-purple-600 flex items-center gap-2">
-                  <PiggyBank className="h-4 w-4" />
-                  Cooperative Savings
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-purple-800">
-                  {formatCurrency(cooperativeSavings)}
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5 text-blue-600" />
+                  <div>
+                    <p className="text-sm text-gray-600">Net Profit</p>
+                    <p className={`text-lg font-bold ${netProfit >= 0 ? "text-green-600" : "text-red-600"}`}>
+                      {formatCurrency(netProfit)}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      Total profit/loss
+                    </p>
+                  </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-blue-600 flex items-center gap-2">
-                  <CreditCard className="h-4 w-4" />
-                  Total Deposits
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-blue-800">
-                  {formatCurrency(totalDeposits)}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-gradient-to-br from-orange-50 to-amber-50 border-orange-200">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-orange-600 flex items-center gap-2">
-                  <Banknote className="h-4 w-4" />
-                  Total Withdrawals
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-orange-800">
-                  {formatCurrency(totalWithdrawals)}
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2">
+                  <DollarSign className="h-5 w-5 text-purple-600" />
+                  <div>
+                    <p className="text-sm text-gray-600">Total Balance</p>
+                    <p className="text-lg font-bold text-purple-600">
+                      {formatCurrency(currentBalances.total)}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      Current balances
+                    </p>
+                  </div>
                 </div>
               </CardContent>
             </Card>
           </div>
 
-          <Card className="bg-gradient-to-br from-gray-50 to-slate-50">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-gray-700">
-                <DollarSign className="h-5 w-5" />
-                Current Balances
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="text-center">
-                  <div className="text-sm text-gray-600">Cash</div>
-                  <div className="text-lg font-semibold text-green-600">
-                    {formatCurrency(currentBalances.cash)}
-                  </div>
-                </div>
-                <div className="text-center">
-                  <div className="text-sm text-gray-600">eSewa</div>
-                  <div className="text-lg font-semibold text-blue-600">
-                    {formatCurrency(currentBalances.esewa)}
-                  </div>
-                </div>
-                <div className="text-center">
-                  <div className="text-sm text-gray-600">Fonepay</div>
-                  <div className="text-lg font-semibold text-purple-600">
-                    {formatCurrency(currentBalances.fonepay)}
-                  </div>
-                </div>
-                <div className="text-center">
-                  <div className="text-sm text-gray-600">Total Balance</div>
-                  <div className="text-lg font-semibold text-gray-800">
-                    {formatCurrency(currentBalances.total)}
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          {/* Detailed Tabs - Same format as Daily Closing */}
+          <Tabs value={selectedTab} onValueChange={setSelectedTab}>
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="summary">Summary</TabsTrigger>
+              <TabsTrigger value="income">Income</TabsTrigger>
+              <TabsTrigger value="expenses">Expenses</TabsTrigger>
+              <TabsTrigger value="balances">Balances</TabsTrigger>
+            </TabsList>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-gray-700">
-                <BarChart3 className="h-5 w-5" />
-                Payment Method Breakdown
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <Banknote className="h-4 w-4 text-green-600" />
-                    <span className="text-sm font-medium text-gray-700">
-                      Cash
-                    </span>
+            <TabsContent value="summary" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Eye className="h-5 w-5" />
+                    All-Time Summary Overview
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Category</TableHead>
+                          <TableHead className="text-right">Amount</TableHead>
+                          <TableHead className="text-right">Percentage</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        <TableRow>
+                          <TableCell className="flex items-center gap-2">
+                            <ShoppingCart className="h-4 w-4 text-blue-600" />
+                            Orders Income
+                          </TableCell>
+                          <TableCell className="text-right font-medium text-green-600">
+                            {formatCurrency(incomeBreakdown.fromOrders)}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {totalIncome > 0 ? ((incomeBreakdown.fromOrders / totalIncome) * 100).toFixed(1) : 0}%
+                          </TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell className="flex items-center gap-2">
+                            <Zap className="h-4 w-4 text-yellow-600" />
+                            Charging Income
+                          </TableCell>
+                          <TableCell className="text-right font-medium text-green-600">
+                            {formatCurrency(incomeBreakdown.fromCharging)}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {totalIncome > 0 ? ((incomeBreakdown.fromCharging / totalIncome) * 100).toFixed(1) : 0}%
+                          </TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell className="flex items-center gap-2">
+                            <Receipt className="h-4 w-4 text-red-600" />
+                            Total Expenses
+                          </TableCell>
+                          <TableCell className="text-right font-medium text-red-600">
+                            -{formatCurrency(totalExpenses)}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {totalIncome > 0 ? ((totalExpenses / totalIncome) * 100).toFixed(1) : 0}%
+                          </TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell className="flex items-center gap-2">
+                            <ArrowUpDown className="h-4 w-4 text-blue-600" />
+                            Total Deposits
+                          </TableCell>
+                          <TableCell className="text-right font-medium text-blue-600">
+                            {formatCurrency(totalDeposits)}
+                          </TableCell>
+                          <TableCell className="text-right">-</TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell className="flex items-center gap-2">
+                            <ArrowUpDown className="h-4 w-4 text-orange-600" />
+                            Total Withdrawals
+                          </TableCell>
+                          <TableCell className="text-right font-medium text-orange-600">
+                            -{formatCurrency(totalWithdrawals)}
+                          </TableCell>
+                          <TableCell className="text-right">-</TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell className="flex items-center gap-2">
+                            <PiggyBank className="h-4 w-4 text-purple-600" />
+                            Cooperative Savings
+                          </TableCell>
+                          <TableCell className="text-right font-medium text-purple-600">
+                            {formatCurrency(cooperativeSavings)}
+                          </TableCell>
+                          <TableCell className="text-right">-</TableCell>
+                        </TableRow>
+                      </TableBody>
+                    </Table>
                   </div>
-                  <div className="text-lg font-semibold text-green-600">
-                    {formatCurrency(paymentMethodBreakdown.cash)}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="income" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <TrendingUp className="h-5 w-5" />
+                    Income Breakdown
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <h4 className="text-lg font-semibold mb-4">By Source</h4>
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-center p-3 bg-blue-50 rounded">
+                          <span className="flex items-center gap-2">
+                            <ShoppingCart className="h-4 w-4" />
+                            Orders
+                          </span>
+                          <span className="font-semibold text-green-600">
+                            {formatCurrency(incomeBreakdown.fromOrders)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center p-3 bg-yellow-50 rounded">
+                          <span className="flex items-center gap-2">
+                            <Zap className="h-4 w-4" />
+                            Charging
+                          </span>
+                          <span className="font-semibold text-green-600">
+                            {formatCurrency(incomeBreakdown.fromCharging)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h4 className="text-lg font-semibold mb-4">By Payment Mode</h4>
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-center p-3 bg-green-50 rounded">
+                          <span className="flex items-center gap-2">
+                            <Banknote className="h-4 w-4" />
+                            Cash
+                          </span>
+                          <span className="font-semibold text-green-600">
+                            {formatCurrency(paymentMethodBreakdown.cash)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center p-3 bg-blue-50 rounded">
+                          <span className="flex items-center gap-2">
+                            <CreditCard className="h-4 w-4" />
+                            eSewa
+                          </span>
+                          <span className="font-semibold text-blue-600">
+                            {formatCurrency(paymentMethodBreakdown.esewa)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center p-3 bg-purple-50 rounded">
+                          <span className="flex items-center gap-2">
+                            <CreditCard className="h-4 w-4" />
+                            Fonepay
+                          </span>
+                          <span className="font-semibold text-purple-600">
+                            {formatCurrency(paymentMethodBreakdown.fonepay)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <CreditCard className="h-4 w-4 text-blue-600" />
-                    <span className="text-sm font-medium text-gray-700">
-                      eSewa
-                    </span>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="expenses" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <TrendingDown className="h-5 w-5" />
+                    Expenses & Outflows
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <h4 className="text-lg font-semibold mb-4">Total Expenses</h4>
+                      <div className="flex justify-between items-center p-4 bg-red-50 rounded">
+                        <span className="flex items-center gap-2">
+                          <Receipt className="h-5 w-5" />
+                          All Expenses
+                        </span>
+                        <span className="font-bold text-red-600 text-lg">
+                          {formatCurrency(totalExpenses)}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-600 mt-2">
+                        Total business expenses
+                      </p>
+                    </div>
+                    
+                    <div>
+                      <h4 className="text-lg font-semibold mb-4">Other Outflows</h4>
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-center p-3 bg-orange-50 rounded">
+                          <span className="flex items-center gap-2">
+                            <ArrowUpDown className="h-4 w-4" />
+                            Withdrawals
+                          </span>
+                          <span className="font-semibold text-orange-600">
+                            {formatCurrency(totalWithdrawals)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center p-3 bg-purple-50 rounded">
+                          <span className="flex items-center gap-2">
+                            <PiggyBank className="h-4 w-4" />
+                            Savings
+                          </span>
+                          <span className="font-semibold text-purple-600">
+                            {formatCurrency(cooperativeSavings)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <div className="text-lg font-semibold text-blue-600">
-                    {formatCurrency(paymentMethodBreakdown.esewa)}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="balances" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <DollarSign className="h-5 w-5" />
+                    Current Account Balances
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center p-4 bg-green-50 rounded">
+                        <span className="flex items-center gap-2">
+                          <Banknote className="h-5 w-5" />
+                          Cash Balance
+                        </span>
+                        <span className="font-bold text-green-600 text-lg">
+                          {formatCurrency(currentBalances.cash)}
+                        </span>
+                      </div>
+                      
+                      <div className="flex justify-between items-center p-4 bg-blue-50 rounded">
+                        <span className="flex items-center gap-2">
+                          <CreditCard className="h-5 w-5" />
+                          eSewa Balance
+                        </span>
+                        <span className="font-bold text-blue-600 text-lg">
+                          {formatCurrency(currentBalances.esewa)}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center p-4 bg-purple-50 rounded">
+                        <span className="flex items-center gap-2">
+                          <CreditCard className="h-5 w-5" />
+                          Fonepay Balance
+                        </span>
+                        <span className="font-bold text-purple-600 text-lg">
+                          {formatCurrency(currentBalances.fonepay)}
+                        </span>
+                      </div>
+                      
+                      <div className="flex justify-between items-center p-4 bg-orange-50 rounded">
+                        <span className="flex items-center gap-2">
+                          <PiggyBank className="h-5 w-5" />
+                          Cooperative Savings
+                        </span>
+                        <span className="font-bold text-orange-600 text-lg">
+                          {formatCurrency(cooperativeSavings)}
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <DollarSign className="h-4 w-4 text-purple-600" />
-                    <span className="text-sm font-medium text-gray-700">
-                      Fonepay
-                    </span>
+                  
+                  <div className="mt-6 p-4 bg-gray-100 rounded">
+                    <div className="flex justify-between items-center">
+                      <span className="text-lg font-semibold">Total Balance</span>
+                      <span className="text-2xl font-bold text-gray-800">
+                        {formatCurrency(currentBalances.total)}
+                      </span>
+                    </div>
                   </div>
-                  <div className="text-lg font-semibold text-purple-600">
-                    {formatCurrency(paymentMethodBreakdown.fonepay)}
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
         </div>
 
         <DialogFooter>
