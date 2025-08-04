@@ -400,6 +400,9 @@ const WithdrawalsTab = () => {
           </p>
         </div>
 
+        {/* All-Time Total Display */}
+        <AllTimeTotalDisplay type="withdrawals" className="mb-8" />
+
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
