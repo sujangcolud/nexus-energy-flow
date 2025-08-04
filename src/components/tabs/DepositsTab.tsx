@@ -634,6 +634,9 @@ const DepositsTab = () => {
           </p>
         </div>
 
+        {/* All-Time Total Display */}
+        <AllTimeTotalDisplay type="deposits" className="mb-8" />
+
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
