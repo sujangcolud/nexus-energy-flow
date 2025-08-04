@@ -509,6 +509,9 @@ const ChargingTab = () => {
           </p>
         </div>
 
+        {/* All-Time Total Display */}
+        <AllTimeTotalDisplay type="charging" className="mb-6 sm:mb-8" />
+
         {/* Quick Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
           <Card className="bg-gradient-to-br from-yellow-50 to-orange-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
