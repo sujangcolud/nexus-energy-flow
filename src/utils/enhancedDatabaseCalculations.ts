@@ -379,37 +379,41 @@ export function calculateEnhancedBalances(
   withdrawals: ReturnType<typeof calculateEnhancedWithdrawalData>,
   savings: ReturnType<typeof calculateEnhancedSavingsData>
 ) {
-  // Cash Balance = Cash Income + Cash Withdrawals - Cash Expenses - Cash Savings - Cash Deposits
-  const cashBalance = 
-    income.incomeByPaymentMode.cash +
-    withdrawals.withdrawalsByPaymentMode.cash -
+  // Balances based on user-provided logic
+  // cash_balance = total_cash_income - total_expenses_cash - total_savings_cash + total_withdrawals_cash - deposits_to_esewa - deposits_to_fonepay
+  const cashBalance =
+    income.incomeByPaymentMode.cash -
     expenses.expensesByPaymentMode.cash -
-    savings.savingsByPaymentMode.cash -
-    deposits.depositsByDestination.cash;
-
-  // eSewa Balance = eSewa Income + Deposits to eSewa - eSewa Expenses - eSewa Savings - Withdrawals from eSewa
-  const esewaBalance = 
-    income.incomeByPaymentMode.esewa +
+    savings.savingsByPaymentMode.cash +
+    withdrawals.withdrawalsByPaymentMode.cash -
     deposits.depositsByDestination.esewa -
+    deposits.depositsByDestination.fonepay;
+
+  // esewa_balance = total_income_esewa - total_expenses_esewa - total_savings_esewa + deposits_to_esewa - total_deposits_from_esewa
+  const esewaBalance =
+    income.incomeByPaymentMode.esewa -
     expenses.expensesByPaymentMode.esewa -
-    savings.savingsByPaymentMode.esewa -
+    savings.savingsByPaymentMode.esewa +
+    deposits.depositsByDestination.esewa -
     withdrawals.withdrawalsBySource.fromEsewa;
 
-  // Fonepay Balance = Fonepay Income - Fonepay Expenses - Fonepay Savings - Bank Withdrawals
-  const fonepayBalance = 
+  // fonepay_balance = total_income_fonepay - total_expenses_fonepay - total_savings_fonepay + deposits_to_fonepay - total_withdrawal_bank
+  const fonepayBalance =
     income.incomeByPaymentMode.fonepay -
     expenses.expensesByPaymentMode.fonepay -
-    savings.savingsByPaymentMode.fonepay -
+    savings.savingsByPaymentMode.fonepay +
+    deposits.depositsByDestination.fonepay -
     withdrawals.withdrawalsBySource.fromBank;
 
-  // Cooperative Balance = Savings to Cooperative - Withdrawals from Cooperative
-  const cooperativeBalance = 
-    savings.savingsByDestination.toCooperative -
+  // cooperative_balance = total_savings - total_withdrawals_cooperative
+  const cooperativeBalance =
+    savings.totalSavings -
     withdrawals.withdrawalsBySource.fromCooperative;
 
-  const totalBalance = cashBalance + esewaBalance + fonepayBalance + cooperativeBalance;
+  // total_balance = cash_balance + fonepay_balance + cooperative_balance + esewa_balance
+  const totalBalance = cashBalance + fonepayBalance + cooperativeBalance + esewaBalance;
 
-  console.log(`📊 Enhanced balance calculation:`, {
+  console.log(`📊 Enhanced balance calculation (user logic):`, {
     cash: cashBalance,
     esewa: esewaBalance,
     fonepay: fonepayBalance,
@@ -419,8 +423,8 @@ export function calculateEnhancedBalances(
       income: income.incomeByPaymentMode,
       expenses: expenses.expensesByPaymentMode,
       deposits: deposits.depositsByDestination,
-      withdrawals: withdrawals.withdrawalsBySource,
-      savings: savings.savingsByDestination
+      withdrawals: withdrawals,
+      savings: savings,
     }
   });
 
