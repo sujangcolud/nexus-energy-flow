@@ -242,7 +242,7 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
           supabase.from('orders').select('total, payment_mode').eq('user_id', user.id),
           supabase.from('charging_sessions').select('total_amount, payment_mode').eq('user_id', user.id),
           supabase.from('expenses').select('amount, payment_mode').eq('user_id', user.id),
-          supabase.from('deposits').select('amount, mode').eq('user_id', user.id),
+          supabase.from('deposits').select('amount, mode, deposited_to').eq('user_id', user.id),
           supabase.from('withdrawals').select('amount, payment_mode, withdrawal_from').eq('user_id', user.id),
           supabase.from('cooperative_savings').select('contribution_amount, payment_mode').eq('user_id', user.id)
         ]);
