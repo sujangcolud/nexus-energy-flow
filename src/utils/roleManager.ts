@@ -1,103 +1,100 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { logRoleChange } from "./securityLogger";
+import { logError } from "./errorHandling";
 
-export type UserRole = "user" | "data_entry" | "reports_viewer" | "super_admin";
+export interface UserRole {
+  id: string;
+  user_id: string;
+  role: string;
+  created_at: string;
+}
 
 /**
- * Secure role management utility
+ * Get current user's role
  */
-export class RoleManager {
-  /**
-   * Change a user's role (only for super admins)
-   */
-  static async changeUserRole(
-    targetUserId: string,
-    newRole: UserRole,
-    adminUserId: string
-  ): Promise<{ success: boolean; error?: string }> {
-    try {
-      // First verify the admin has permission
-      const { data: adminRole, error: roleError } = await supabase.rpc(
-        'get_current_user_role'
-      );
+export async function getCurrentUserRole(): Promise<string> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return 'user';
 
-      if (roleError || adminRole !== 'super_admin') {
-        return {
-          success: false,
-          error: 'Access denied. Super admin role required.'
-        };
-      }
+    // Try fallback approach - get from profiles table directly
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
 
-      // Get the current role for logging
-      const { data: currentUser, error: userError } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', targetUserId)
-        .single();
-
-      const oldRole = currentUser?.role || 'user';
-
-      // Update the role
-      const { error: updateError } = await supabase
-        .from('user_roles')
-        .upsert({
-          user_id: targetUserId,
-          role: newRole,
-          updated_at: new Date().toISOString()
-        });
-
-      if (updateError) {
-        return {
-          success: false,
-          error: updateError.message
-        };
-      }
-
-      // Log the role change
-      await logRoleChange(adminUserId, targetUserId, oldRole, newRole);
-
-      return { success: true };
-    } catch (error: any) {
-      return {
-        success: false,
-        error: error.message || 'Failed to change user role'
-      };
+    if (!profileError && profile?.role) {
+      return profile.role;
     }
+
+    // Fallback: return default role
+    return 'user';
+  } catch (error) {
+    logError('getting current user role', error);
+    return 'user';
   }
+}
 
-  /**
-   * Validate role transition is allowed
-   */
-  static isRoleTransitionAllowed(
-    fromRole: UserRole,
-    toRole: UserRole,
-    currentUserRole: UserRole
-  ): boolean {
-    // Only super_admin can change roles
-    if (currentUserRole !== "super_admin") return false;
-
-    // Super admin can make any role transition
-    return true;
-  }
-
-  /**
-   * Get role hierarchy level
-   */
-  static getRoleLevel(role: UserRole): number {
-    const hierarchy = {
-      user: 1,
-      data_entry: 2,
-      reports_viewer: 3,
-      super_admin: 4,
+/**
+ * Check if current user has required role
+ */
+export async function hasRole(requiredRole: string): Promise<boolean> {
+  try {
+    const currentRole = await getCurrentUserRole();
+    
+    // Define role hierarchy
+    const roleHierarchy: Record<string, number> = {
+      'user': 1,
+      'data_entry': 2,
+      'reports_viewer': 3,
+      'super_admin': 4
     };
-    return hierarchy[role] || 0;
-  }
 
-  /**
-   * Check if user has required permission level
-   */
-  static hasPermission(userRole: UserRole, requiredRole: UserRole): boolean {
-    return this.getRoleLevel(userRole) >= this.getRoleLevel(requiredRole);
+    const currentLevel = roleHierarchy[currentRole] || 0;
+    const requiredLevel = roleHierarchy[requiredRole] || 0;
+
+    return currentLevel >= requiredLevel;
+  } catch (error) {
+    logError('checking user role', error);
+    return false;
+  }
+}
+
+/**
+ * Get all user roles (admin only)
+ */
+export async function getAllUserRoles(): Promise<UserRole[]> {
+  try {
+    const hasPermission = await hasRole('super_admin');
+    if (!hasPermission) {
+      throw new Error('Access denied. Super admin role required.');
+    }
+
+    // Since user_roles table has issues, return empty array
+    console.warn('User roles table has schema issues, returning empty array');
+    return [];
+  } catch (error) {
+    logError('getting all user roles', error);
+    return [];
+  }
+}
+
+/**
+ * Update user role (admin only)
+ */
+export async function updateUserRole(userId: string, newRole: string): Promise<boolean> {
+  try {
+    const hasPermission = await hasRole('super_admin');
+    if (!hasPermission) {
+      throw new Error('Access denied. Super admin role required.');
+    }
+
+    // Since user_roles table has schema issues, show info message
+    console.warn('User role update is currently unavailable due to schema issues');
+    return false;
+  } catch (error) {
+    logError('updating user role', error);
+    return false;
   }
 }

@@ -48,25 +48,16 @@ export async function getUsersWithRolesFallback(): Promise<UserWithRole[]> {
     // Try to get basic user data from profiles
     const { data: profilesData, error: profilesError } = await supabase
       .from("profiles")
-      .select("id, email, first_name, last_name, created_at")
+      .select("id, email, first_name, last_name, created_at, role")
       .limit(100);
 
     if (!profilesError && profilesData && profilesData.length > 0) {
-      // Get roles from user_roles table
-      const { data: rolesData, error: rolesError } = await supabase
-        .from("user_roles")
-        .select("user_id, role");
-
-      const rolesMap = new Map(
-        rolesData?.map(r => [r.user_id, r.role]) || []
-      );
-
       return profilesData.map((profile) => ({
         id: profile.id,
         email: profile.email || "Unknown",
         first_name: profile.first_name || "",
         last_name: profile.last_name || "",
-        role: rolesMap.get(profile.id) || 'user',
+        role: profile.role || 'user',
         created_at: profile.created_at || new Date().toISOString()
       }));
     }

@@ -1,3 +1,4 @@
+
 // Historical Data Fix Utility
 // This fixes the payment mode breakdown issues for dates before July 19, 2025
 
@@ -60,8 +61,8 @@ export async function fixHistoricalDailySummaries(
           { data: charging, error: chargingError },
           { data: expenses, error: expensesError },
           { data: deposits, error: depositsError },
-          { data: withdrawals, error: withdrawalsError },
-          { data: savings, error: savingsError }
+          { data: withdrawalsRaw, error: withdrawalsError },
+          { data: savingsRaw, error: savingsError }
         ] = await Promise.all([
           supabase
             .from('orders')
@@ -107,14 +108,37 @@ export async function fixHistoricalDailySummaries(
           continue;
         }
 
+        // Map data to expected types with proper validation
+        const withdrawals = (withdrawalsRaw || []).map(w => ({
+          id: w.id,
+          amount: w.amount,
+          payment_mode: w.payment_mode,
+          withdrawal_from: (w.withdrawal_from === 'Esewa' || w.withdrawal_from === 'Bank' || w.withdrawal_from === 'Cooperative') 
+            ? w.withdrawal_from as "Esewa" | "Bank" | "Cooperative"
+            : 'Cooperative' as const,
+          withdrawal_date: w.withdrawal_date,
+          user_id: w.user_id
+        }));
+
+        const savings = (savingsRaw || []).map(s => ({
+          id: s.id,
+          contribution_amount: s.contribution_amount,
+          payment_mode: s.payment_mode,
+          savings_to: (s.savings_to === 'Bank' || s.savings_to === 'Cooperative') 
+            ? s.savings_to as "Bank" | "Cooperative"
+            : 'Cooperative' as const,
+          contribution_date: s.contribution_date,
+          user_id: s.user_id
+        }));
+
         // Prepare enhanced data
         const enhancedData: EnhancedDatabaseTransactionData = {
           orders: orders || [],
           charging_sessions: charging || [],
           expenses: expenses || [],
           deposits: deposits || [],
-          withdrawals: withdrawals || [],
-          cooperative_savings: savings || []
+          withdrawals: withdrawals,
+          cooperative_savings: savings
         };
 
         // Calculate corrected summary
@@ -289,14 +313,14 @@ export async function previewHistoricalFix(
       throw currentError;
     }
 
-    // Fetch raw transaction data
+    // Fetch raw transaction data with proper type handling
     const [
       { data: orders },
       { data: charging },
       { data: expenses },
       { data: deposits },
-      { data: withdrawals },
-      { data: savings }
+      { data: withdrawalsRaw },
+      { data: savingsRaw }
     ] = await Promise.all([
       supabase.from('orders').select('*').eq('user_id', userId).eq('order_date', targetDate),
       supabase.from('charging_sessions').select('*').eq('user_id', userId).eq('session_date', targetDate),
@@ -306,14 +330,37 @@ export async function previewHistoricalFix(
       supabase.from('cooperative_savings').select('*').eq('user_id', userId).eq('contribution_date', targetDate)
     ]);
 
+    // Map data with proper type validation
+    const withdrawals = (withdrawalsRaw || []).map(w => ({
+      id: w.id,
+      amount: w.amount,
+      payment_mode: w.payment_mode,
+      withdrawal_from: (w.withdrawal_from === 'Esewa' || w.withdrawal_from === 'Bank' || w.withdrawal_from === 'Cooperative') 
+        ? w.withdrawal_from as "Esewa" | "Bank" | "Cooperative"
+        : 'Cooperative' as const,
+      withdrawal_date: w.withdrawal_date,
+      user_id: w.user_id
+    }));
+
+    const savings = (savingsRaw || []).map(s => ({
+      id: s.id,
+      contribution_amount: s.contribution_amount,
+      payment_mode: s.payment_mode,
+      savings_to: (s.savings_to === 'Bank' || s.savings_to === 'Cooperative') 
+        ? s.savings_to as "Bank" | "Cooperative"
+        : 'Cooperative' as const,
+      contribution_date: s.contribution_date,
+      user_id: s.user_id
+    }));
+
     // Calculate proposed values
     const enhancedData: EnhancedDatabaseTransactionData = {
       orders: orders || [],
       charging_sessions: charging || [],
       expenses: expenses || [],
       deposits: deposits || [],
-      withdrawals: withdrawals || [],
-      cooperative_savings: savings || []
+      withdrawals: withdrawals,
+      cooperative_savings: savings
     };
 
     const proposedSummary = calculateEnhancedFinancialSummary(enhancedData, targetDate);

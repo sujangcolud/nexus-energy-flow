@@ -15,9 +15,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
 import { FileDown, Calendar, TrendingUp } from "lucide-react";
-import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { addDays, format } from "date-fns";
 import { DateRange } from "react-day-picker";
+import { DateRangePicker } from "@/components/ui/date-range-picker";
 
 interface SummaryData {
   total_income: number;
@@ -33,7 +33,7 @@ const SummaryReportTab = () => {
   const [loading, setLoading] = useState(false);
   const [summaryData, setSummaryData] = useState<SummaryData | null>(null);
   const [reportType, setReportType] = useState("daily");
-  const [dateRange, setDateRange] = useState<DateRange | undefined>({
+  const [dateRange, setDateRange] = useState<{ from: Date; to: Date } | undefined>({
     from: new Date(),
     to: addDays(new Date(), 7)
   });
@@ -170,8 +170,7 @@ const SummaryReportTab = () => {
             <div className="space-y-2">
               <Label>Date Range</Label>
               <DateRangePicker
-                date={dateRange}
-                onDateChange={setDateRange}
+                onUpdate={setDateRange}
               />
             </div>
           </div>

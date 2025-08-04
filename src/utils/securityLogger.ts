@@ -1,104 +1,72 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { logError } from "./errorHandling";
 
 /**
- * Security event logging utility
- * Logs security-sensitive events for audit trails
+ * Log security events
  */
-export const logSecurityEvent = async (
+export async function logSecurityEvent(
   userId: string | null,
-  action: string,
-  tableName: string,
-  recordId: string,
-  details: Record<string, any> = {}
-) => {
+  event: string,
+  category: string,
+  actor: string,
+  details?: Record<string, any>
+): Promise<void> {
   try {
-    // Only log if we have a valid user or it's a system event
-    if (!userId && !["LOGIN_FAILED", "SIGNUP_FAILED"].includes(action)) {
-      return;
-    }
-
-    const { error } = await supabase.rpc('log_security_event', {
-      p_user_id: userId,
-      p_action: action,
-      p_table_name: tableName,
-      p_record_id: recordId,
-      p_details: details
-    });
+    // Since log_security_event RPC function doesn't exist, 
+    // we'll log to the regular logs table instead
+    const { error } = await supabase
+      .from('logs')
+      .insert({
+        user_id: userId,
+        action: event,
+        table_name: category,
+        record_id: actor,
+        details: details ? JSON.stringify(details) : null
+      });
 
     if (error) {
-      console.error('Failed to log security event:', error);
+      console.warn('Failed to log security event:', error.message);
+      // Don't throw error to avoid breaking the main functionality
     }
   } catch (error) {
-    console.error('Error logging security event:', error);
+    logError('logging security event', error);
+    // Don't throw error to avoid breaking the main functionality
   }
-};
+}
 
 /**
- * Log role changes for audit trail
+ * Log authentication events
  */
-export const logRoleChange = async (
-  adminUserId: string,
-  targetUserId: string,
-  oldRole: string,
-  newRole: string
-) => {
-  await logSecurityEvent(
-    adminUserId,
-    "ROLE_CHANGED",
-    "user_roles",
-    targetUserId,
-    {
-      target_user_id: targetUserId,
-      old_role: oldRole,
-      new_role: newRole,
-      changed_by: adminUserId
-    }
-  );
-};
+export async function logAuthEvent(
+  userId: string | null,
+  event: 'LOGIN' | 'LOGOUT' | 'FAILED_LOGIN' | 'PASSWORD_CHANGE',
+  details?: Record<string, any>
+): Promise<void> {
+  await logSecurityEvent(userId, event, 'authentication', userId || 'anonymous', details);
+}
 
 /**
- * Log access attempts to restricted resources
+ * Log access control events
  */
-export const logAccessAttempt = async (
-  userId: string,
+export async function logAccessEvent(
+  userId: string | null,
+  event: 'ACCESS_GRANTED' | 'ACCESS_DENIED' | 'ROLE_CHANGE',
   resource: string,
-  granted: boolean,
-  reason?: string
-) => {
-  await logSecurityEvent(
-    userId,
-    granted ? "ACCESS_GRANTED" : "ACCESS_DENIED",
-    "access_control",
-    resource,
-    {
-      resource,
-      granted,
-      reason
-    }
-  );
-};
+  details?: Record<string, any>
+): Promise<void> {
+  await logSecurityEvent(userId, event, 'access_control', resource, details);
+}
 
 /**
  * Log data modification events
  */
-export const logDataModification = async (
-  userId: string,
-  action: "CREATE" | "UPDATE" | "DELETE",
-  tableName: string,
+export async function logDataEvent(
+  userId: string | null,
+  event: 'CREATE' | 'UPDATE' | 'DELETE' | 'BULK_IMPORT',
+  table: string,
   recordId: string,
-  oldData?: any,
-  newData?: any
-) => {
-  await logSecurityEvent(
-    userId,
-    `DATA_${action}`,
-    tableName,
-    recordId,
-    {
-      action,
-      old_data: oldData,
-      new_data: newData
-    }
-  );
-};
+  details?: Record<string, any>
+): Promise<void> {
+  await logSecurityEvent(userId, event, table, recordId, details);
+}
