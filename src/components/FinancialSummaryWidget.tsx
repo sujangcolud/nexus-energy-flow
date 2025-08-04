@@ -77,7 +77,6 @@ const FinancialSummaryWidget: React.FC<FinancialSummaryWidgetProps> = ({
         .single();
 
       if (error && error.code !== "PGRST116") {
-        // If no daily summary exists, calculate real-time
         if (error.code === "PGRST116") {
           await calculateRealTimeTodaySummary();
           return;
@@ -89,7 +88,6 @@ const FinancialSummaryWidget: React.FC<FinancialSummaryWidgetProps> = ({
       setTodaySummary(data);
     } catch (error) {
       logError("fetching today's summary", error);
-      // Fallback to real-time calculation
       await calculateRealTimeTodaySummary();
     }
   };
@@ -103,7 +101,6 @@ const FinancialSummaryWidget: React.FC<FinancialSummaryWidgetProps> = ({
       tomorrow.setDate(tomorrow.getDate() + 1);
       const tomorrowStr = tomorrow.toISOString().split("T")[0];
 
-      // Fetch all data for today
       const [
         ordersRes,
         chargingRes,
@@ -157,7 +154,6 @@ const FinancialSummaryWidget: React.FC<FinancialSummaryWidgetProps> = ({
       const withdrawals = withdrawalsRes.data || [];
       const cooperative = cooperativeRes.data || [];
 
-      // Calculate totals
       const totalIncomeFromOrders = orders.reduce(
         (sum, order) => sum + (order.total || 0),
         0,
@@ -184,7 +180,6 @@ const FinancialSummaryWidget: React.FC<FinancialSummaryWidgetProps> = ({
         0,
       );
 
-      // Calculate payment mode breakdowns
       const calculatePaymentModeTotal = (
         transactions: any[],
         amountField: string,
@@ -240,9 +235,6 @@ const FinancialSummaryWidget: React.FC<FinancialSummaryWidgetProps> = ({
       const totalIncomeEsewa = esewaFromOrders + esewaFromCharging;
       const totalIncomeFonepay = fonepayFromOrders + fonepayFromCharging;
 
-      // Use correct balance calculation formulas:
-      // cash_balance: total_cash_income - total_expenses_cash - total_savings_cash + total_withdrawals_cash - deposits_to_esewa - deposits_to_fonepay
-      // Since we're calculating from individual transactions, we need to approximate:
       const depositsToEsewa = deposits
         .filter((d) => d.payment_mode?.toLowerCase() === "esewa")
         .reduce((sum, d) => sum + (d.amount || 0), 0);
@@ -252,12 +244,11 @@ const FinancialSummaryWidget: React.FC<FinancialSummaryWidgetProps> = ({
       const expensesCash = expenses
         .filter((e) => e.payment_mode?.toLowerCase() === "cash")
         .reduce((sum, e) => sum + (e.amount || 0), 0);
-      const savingsCash = totalSavings; // Assuming all savings are cash-based for now
+      const savingsCash = totalSavings;
       const withdrawalsCash = withdrawals
         .filter((w) => w.payment_mode?.toLowerCase() === "cash")
         .reduce((sum, w) => sum + (w.amount || 0), 0);
 
-      // Cash Balance: Total Cash income - total expense from cash - total savings in cash - total deposits cash deposits to bank + total withdrawals in cash - deposits made to Esewa - deposits made to fonepay
       const depositsCash = deposits
         .filter((d) => d.payment_mode?.toLowerCase() === "cash")
         .reduce((sum, d) => sum + (d.amount || 0), 0);
@@ -271,13 +262,11 @@ const FinancialSummaryWidget: React.FC<FinancialSummaryWidgetProps> = ({
         depositsToEsewa -
         depositsToFonepay;
 
-      // esewa_balance: total_income_esewa - total_expenses_esewa - total_savings_esewa + deposits_to_esewa
       const expensesEsewa = expenses
         .filter((e) => e.payment_mode?.toLowerCase() === "esewa")
         .reduce((sum, e) => sum + (e.amount || 0), 0);
       const esewaBalance = totalIncomeEsewa - expensesEsewa + depositsToEsewa;
 
-      // Fonepay Balance: Total Income in Fonepay - Withdrawals from fonepay - withdrawals from bank
       const expensesFonepay = expenses
         .filter(
           (e) =>
@@ -295,15 +284,12 @@ const FinancialSummaryWidget: React.FC<FinancialSummaryWidgetProps> = ({
       const fonepayBalance =
         totalIncomeFonepay - expensesFonepay - withdrawalsBank;
 
-      // cooperative_balance: total_savings - total_withdrawals_cooperative
-      const cooperativeWithdrawals = 0; // Assuming no cooperative withdrawals for today's calculation
+      const cooperativeWithdrawals = 0;
       const cooperativeBalance = totalSavings - cooperativeWithdrawals;
 
-      // total_balance: cash_balance + fonepay_balance + cooperative_balance + esewa_balance
       const totalBalance =
         cashBalance + fonepayBalance + cooperativeBalance + esewaBalance;
 
-      // Create summary object
       const calculatedSummary: DailySummary = {
         id: 0,
         summary_date: today,
@@ -356,9 +342,8 @@ const FinancialSummaryWidget: React.FC<FinancialSummaryWidgetProps> = ({
             total_income: acc.total_income + (day.total_income || 0),
             total_expenses: acc.total_expenses + (day.total_expenses || 0),
             total_deposits: acc.total_deposits + (day.total_deposits || 0),
-            total_withdrawals:
-              acc.total_withdrawals + (day.total_withdrawals || 0),
-            net_profit: 0, // Will calculate below
+            total_withdrawals: acc.total_withdrawals + (day.total_withdrawals || 0),
+            net_profit: 0,
           }),
           {
             total_income: 0,
@@ -394,7 +379,6 @@ const FinancialSummaryWidget: React.FC<FinancialSummaryWidgetProps> = ({
   const refreshSummary = async () => {
     setRefreshing(true);
     try {
-      // Trigger daily summary update for today
       const today = new Date().toISOString().split("T")[0];
       const { error } = await supabase.rpc("update_enhanced_daily_summary", {
         target_date: today,
@@ -405,7 +389,6 @@ const FinancialSummaryWidget: React.FC<FinancialSummaryWidgetProps> = ({
         throw error;
       }
 
-      // Refresh data
       await Promise.all([fetchTodaySummary(), fetchMonthSummary()]);
       toast.success("Financial summary refreshed successfully!");
     } catch (error) {

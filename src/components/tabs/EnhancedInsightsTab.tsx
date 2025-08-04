@@ -1,42 +1,41 @@
+
 import { useState, useEffect } from "react";
-import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/context/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import FinancialInsightsWidget from "@/components/FinancialInsightsWidget";
 import { Button } from "@/components/ui/button";
+import { DatePickerWithRange } from "@/components/ui/date-range-picker";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   BarChart3,
   TrendingUp,
   TrendingDown,
   DollarSign,
-  Users,
-  Activity,
-  Zap,
-  ShoppingBag,
-  CreditCard,
-  PiggyBank,
-  UtensilsCrossed,
-  Receipt,
-  Wallet,
-  Target,
-  Sparkles,
-  Crown,
-  Star,
-  ArrowUp,
-  ArrowDown,
-  Percent,
-  Calculator,
-  Eye,
-  RefreshCw,
-  Database,
   Calendar,
-  TrendingDown as Esewa,
+  RefreshCw,
+  PieChart,
+  Target,
+  Activity,
 } from "lucide-react";
-import { format, startOfMonth, endOfMonth, subDays, parseISO } from "date-fns";
+import { DateRange } from "react-day-picker";
+import { addDays, format } from "date-fns";
 import { toast } from "sonner";
-import { extractErrorMessage, logError } from "@/utils/errorHandling";
+import { logError } from "@/utils/errorHandling";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  PieChart as RechartsPieChart,
+  Cell,
+  LineChart,
+  Line,
+} from "recharts";
 
 interface DailySummaryData {
   id: number;
@@ -44,772 +43,604 @@ interface DailySummaryData {
   total_income: number;
   total_income_from_orders: number;
   total_income_from_charging: number;
+  total_expenses: number;
+  total_expenses_cash?: number;
+  total_expenses_esewa?: number;
+  total_expenses_fonepay?: number;
+  total_deposits: number;
+  total_deposits_cash?: number;
+  total_deposits_esewa?: number;
+  total_deposits_fonepay?: number;
+  total_savings: number;
+  total_savings_cash?: number;
+  total_savings_esewa?: number;
+  total_savings_fonepay?: number;
+  total_withdrawals: number;
+  total_withdrawals_cash?: number;
+  total_withdrawals_cooperative?: number;
+  total_withdrawals_bank?: number;
   total_income_cash: number;
   total_income_esewa: number;
   total_income_fonepay: number;
-  total_expenses: number;
-  total_deposits: number;
-  total_withdrawals: number;
-  total_savings: number;
   cash_balance: number;
   esewa_balance: number;
   fonepay_balance: number;
+  cooperative_balance: number;
   total_balance: number;
   created_at: string;
   updated_at: string;
 }
 
-interface AnalyticsData {
-  totalRevenue: number;
-  totalExpenses: number;
-  netProfit: number;
-  totalDeposits: number;
-  totalWithdrawals: number;
-  cooperativeSavings: number;
-  breakEvenPoint: number;
-  profitMargin: number;
-  cashBalance: number;
-  esewaBalance: number;
-  fonepayBalance: number;
-  cooperativeBalance: number;
-  totalBalance: number;
-
-  // Enhanced metrics from daily summary
-  totalIncomeFromOrders: number;
-  totalIncomeFromCharging: number;
-  averageDailyRevenue: number;
-  averageDailyExpenses: number;
-  averageDailyProfit: number;
-
-  // Trends and comparisons
-  weeklyTrend: {
-    date: string;
-    income: number;
-    expenses: number;
-    profit: number;
-  }[];
-  monthlyComparison: {
-    thisMonth: number;
-    lastMonth: number;
-    growth: number;
-  };
-
-  // Payment method analysis from daily summaries
-  paymentMethodBreakdown: {
-    cash: number;
-    esewa: number;
-    fonepay: number;
-  };
+interface InsightMetric {
+  label: string;
+  value: number;
+  change?: number;
+  trend?: "up" | "down" | "stable";
+  format?: "currency" | "percentage" | "number";
 }
 
-const EnhancedInsightsTab = () => {
+interface PaymentModeData {
+  mode: string;
+  amount: number;
+  percentage: number;
+  color: string;
+}
+
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
+
+const EnhancedInsightsTab: React.FC = () => {
   const { user } = useAuth();
-  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
-  const [dailySummaries, setDailySummaries] = useState<DailySummaryData[]>([]);
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({
+    from: addDays(new Date(), -30),
+    to: new Date(),
+  });
+  const [dailyData, setDailyData] = useState<DailySummaryData[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [selectedMetrics, setSelectedMetrics] = useState<InsightMetric[]>([]);
 
-  useEffect(() => {
-    if (user) {
-      fetchAnalyticsFromDailySummary();
-    }
-  }, [user]);
+  const fetchDailyData = async () => {
+    if (!user || !dateRange?.from || !dateRange?.to) return;
 
-  const fetchAnalyticsFromDailySummary = async () => {
-    setLoading(true);
     try {
-      console.log("📊 Fetching analytics from daily_summary table...");
+      const fromDate = format(dateRange.from, 'yyyy-MM-dd');
+      const toDate = format(dateRange.to, 'yyyy-MM-dd');
 
-      // Fetch daily summaries for analysis (last 90 days)
-      const { data: summariesData, error } = await supabase
+      const { data, error } = await supabase
         .from("daily_summary")
-        .select("*")
-        .order("summary_date", { ascending: false })
-        .limit(90);
+        .select(`
+          *
+        `)
+        .gte("summary_date", fromDate)
+        .lte("summary_date", toDate)
+        .order("summary_date", { ascending: true });
 
       if (error) {
-        logError("fetching daily summaries for insights", error);
+        logError("fetching daily data for insights", error);
         throw error;
       }
 
-      const summaries = summariesData || [];
-      setDailySummaries(summaries);
+      const typedData = (data || []).map(item => ({
+        ...item,
+        // Provide default values for optional payment mode breakdowns
+        total_expenses_cash: item.total_expenses_cash || 0,
+        total_expenses_esewa: item.total_expenses_esewa || 0,
+        total_expenses_fonepay: item.total_expenses_fonepay || 0,
+        total_deposits_cash: item.total_deposits_cash || 0,
+        total_deposits_esewa: item.total_deposits_esewa || 0,
+        total_deposits_fonepay: item.total_deposits_fonepay || 0,
+        total_savings_cash: item.total_savings_cash || 0,
+        total_savings_esewa: item.total_savings_esewa || 0,
+        total_savings_fonepay: item.total_savings_fonepay || 0,
+        total_withdrawals_cash: item.total_withdrawals_cash || 0,
+        total_withdrawals_cooperative: item.total_withdrawals_cooperative || 0,
+        total_withdrawals_bank: item.total_withdrawals_bank || 0,
+      })) as DailySummaryData[];
 
-      if (summaries.length === 0) {
-        // If no daily summaries exist, show empty state
-        setAnalytics({
-          totalRevenue: 0,
-          totalExpenses: 0,
-          netProfit: 0,
-          totalDeposits: 0,
-          totalWithdrawals: 0,
-          cooperativeSavings: 0,
-          breakEvenPoint: 0,
-          profitMargin: 0,
-          cashBalance: 0,
-          esewaBalance: 0,
-          fonepayBalance: 0,
-          cooperativeBalance: 0,
-          totalBalance: 0,
-          totalIncomeFromOrders: 0,
-          totalIncomeFromCharging: 0,
-          averageDailyRevenue: 0,
-          averageDailyExpenses: 0,
-          averageDailyProfit: 0,
-          weeklyTrend: [],
-          monthlyComparison: { thisMonth: 0, lastMonth: 0, growth: 0 },
-          paymentMethodBreakdown: { cash: 0, esewa: 0, fonepay: 0 },
-        });
-        return;
-      }
-
-      // Calculate comprehensive analytics from daily summaries
-      const analyticsData = calculateAnalyticsFromSummaries(summaries);
-      setAnalytics(analyticsData);
-
-      console.log("✅ Analytics calculated from daily_summary:", analyticsData);
+      setDailyData(typedData);
+      calculateMetrics(typedData);
     } catch (error) {
-      logError("calculating analytics from daily summary", error);
-      toast.error(`Error loading analytics: ${extractErrorMessage(error)}`);
-    } finally {
-      setLoading(false);
+      logError("fetching insights data", error);
+      toast.error("Failed to load insights data");
     }
   };
 
-  const calculateAnalyticsFromSummaries = (
-    summaries: DailySummaryData[],
-  ): AnalyticsData => {
-    // Calculate totals using exact formulas:
+  const calculateMetrics = (data: DailySummaryData[]) => {
+    if (data.length === 0) return;
 
-    // total_income_from_orders: SUM(total) from orders table
-    const totalIncomeFromOrders = summaries.reduce(
-      (sum, s) => sum + (s.total_income_from_orders || 0),
-      0,
-    );
-
-    // total_income_from_charging: SUM(amount) from charging_sessions table
-    const totalIncomeFromCharging = summaries.reduce(
-      (sum, s) => sum + (s.total_income_from_charging || 0),
-      0,
-    );
-
-    // total_income: total_income_from_orders + total_income_from_charging
-    const totalRevenue = totalIncomeFromOrders + totalIncomeFromCharging;
-
-    // total_expenses: SUM(amount) from expenses table
-    const totalExpenses = summaries.reduce(
-      (sum, s) => sum + (s.total_expenses || 0),
-      0,
-    );
-
-    // total_deposits: SUM(amount) from deposits table
-    const totalDeposits = summaries.reduce(
-      (sum, s) => sum + (s.total_deposits || 0),
-      0,
-    );
-
-    // total_withdrawals: SUM(amount) from withdrawals table
-    const totalWithdrawals = summaries.reduce(
-      (sum, s) => sum + (s.total_withdrawals || 0),
-      0,
-    );
-
-    // total_savings: SUM(contribution_amount) from cooperative_savings table
-    const cooperativeSavings = summaries.reduce(
-      (sum, s) => sum + (s.total_savings || 0),
-      0,
-    );
-
-    const netProfit = totalRevenue - totalExpenses;
-    const profitMargin =
-      totalRevenue > 0 ? (netProfit / totalRevenue) * 100 : 0;
-
-    // Calculate current balances using the new formulas provided:
-    const latestSummary = summaries[0] || {};
-
-    // Calculate payment method totals
-    const totalCashIncome = summaries.reduce(
-      (sum, s) => sum + (s.total_income_cash || 0),
-      0,
-    );
-    const totalEsewaIncome = summaries.reduce(
-      (sum, s) => sum + (s.total_income_esewa || 0),
-      0,
-    );
-    const totalFonepayIncome = summaries.reduce(
-      (sum, s) => sum + (s.total_income_fonepay || 0),
-      0,
-    );
-
-    // Calculate expense totals by payment method
-    const totalExpensesCash = summaries.reduce(
-      (sum, s) => sum + (s.total_expenses_cash || 0),
-      0,
-    );
-    const totalExpensesEsewa = summaries.reduce(
-      (sum, s) => sum + (s.total_expenses_esewa || 0),
-      0,
-    );
-    const totalExpensesFonepay = summaries.reduce(
-      (sum, s) => sum + (s.total_expenses_fonepay || 0),
-      0,
-    );
-
-    // Calculate savings totals by payment method
-    const totalSavingsCash = summaries.reduce(
-      (sum, s) => sum + (s.total_savings_cash || 0),
-      0,
-    );
-    const totalSavingsEsewa = summaries.reduce(
-      (sum, s) => sum + (s.total_savings_esewa || 0),
-      0,
-    );
-    const totalSavingsFonepay = summaries.reduce(
-      (sum, s) => sum + (s.total_savings_fonepay || 0),
-      0,
-    );
-
-    // Calculate deposits
-    const totalDepositsCash = summaries.reduce(
-      (sum, s) => sum + (s.total_deposits_cash || 0),
-      0,
-    );
-    const depositsToEsewa = summaries.reduce(
-      (sum, s) => sum + (s.total_deposits_esewa || 0),
-      0,
-    );
-    const depositsToFonepay = summaries.reduce(
-      (sum, s) => sum + (s.total_deposits_fonepay || 0),
-      0,
-    );
-
-    // Calculate withdrawals
-    const totalWithdrawalsCash = summaries.reduce(
-      (sum, s) => sum + (s.total_withdrawals_cash || 0),
-      0,
-    );
-    const totalWithdrawalsCooperative = summaries.reduce(
-      (sum, s) => sum + (s.total_withdrawals_cooperative || 0),
-      0,
-    );
-    const totalWithdrawalsBank = summaries.reduce(
-      (sum, s) => sum + (s.total_withdrawals_bank || 0),
-      0,
-    );
-
-    // Calculate balances using the specified formulas:
-    // Cash Balance: Total Cash income - total expense from cash - total savings in cash - total deposits cash deposits to bank + total withdrawals in cash - deposits made to Esewa - deposits made to fonepay
-    const cashBalance =
-      totalCashIncome -
-      totalExpensesCash -
-      totalSavingsCash -
-      totalDepositsCash +
-      totalWithdrawalsCash -
-      depositsToEsewa -
-      depositsToFonepay;
-
-    // Esewa Balance: Total income in Esewa - Total expense from Esewa - total withdrawal from Esewa + Deposits made to Esewa
-    const esewaBalance =
-      totalEsewaIncome -
-      totalExpensesEsewa -
-      totalSavingsEsewa +
-      depositsToEsewa;
-
-    // Fonepay Balance: Total Income in Fonepay - Withdrawals from fonepay - withdrawals from bank
-    const fonepayBalance =
-      totalFonepayIncome -
-      totalExpensesFonepay -
-      totalSavingsFonepay -
-      totalWithdrawalsBank;
-
-    // Cooperative Balance: Total cooperative savings - withdrawals from cooperative
-    const cooperativeBalance = cooperativeSavings - totalWithdrawalsCooperative;
-
-    // Averages
-    const daysCount = summaries.length || 1;
-    const averageDailyRevenue = totalRevenue / daysCount;
-    const averageDailyExpenses = totalExpenses / daysCount;
-    const averageDailyProfit = netProfit / daysCount;
-
-    // Weekly trend (last 7 days)
-    const weeklyTrend = summaries
-      .slice(0, 7)
-      .reverse()
-      .map((summary) => ({
-        date: summary.summary_date,
-        income: summary.total_income || 0,
-        expenses: summary.total_expenses || 0,
-        profit: (summary.total_income || 0) - (summary.total_expenses || 0),
-      }));
-
-    // Monthly comparison
-    const now = new Date();
-    const thisMonthStart = startOfMonth(now);
-    const lastMonthStart = startOfMonth(subDays(thisMonthStart, 1));
-    const lastMonthEnd = endOfMonth(subDays(thisMonthStart, 1));
-
-    const thisMonthSummaries = summaries.filter((s) => {
-      const date = parseISO(s.summary_date);
-      return date >= thisMonthStart;
-    });
-
-    const lastMonthSummaries = summaries.filter((s) => {
-      const date = parseISO(s.summary_date);
-      return date >= lastMonthStart && date <= lastMonthEnd;
-    });
-
-    const thisMonthRevenue = thisMonthSummaries.reduce(
-      (sum, s) => sum + (s.total_income || 0),
-      0,
-    );
-    const lastMonthRevenue = lastMonthSummaries.reduce(
-      (sum, s) => sum + (s.total_income || 0),
-      0,
-    );
-    const monthlyGrowth =
-      lastMonthRevenue > 0
-        ? ((thisMonthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100
-        : 0;
-
-    // Payment method breakdown
-    const paymentMethodBreakdown = {
-      cash: summaries.reduce((sum, s) => sum + (s.total_income_cash || 0), 0),
-      esewa: summaries.reduce((sum, s) => sum + (s.total_income_esewa || 0), 0),
-      fonepay: totalFonepayIncome, // Use the calculated value from above
-    };
-
-    // Break-even calculation (revenue needed to cover expenses)
-    // If we're already profitable, break-even is current expense level
-    // If we're losing money, break-even is total expenses needed to be covered
-    const breakEvenPoint = totalExpenses > 0 ? totalExpenses : 0;
-
-    // Total Balance of all: Cash Balance + Bank Balance (fonepay) + Cooperative Balance + Esewa Balance
-    const totalBalance =
-      cashBalance + fonepayBalance + cooperativeBalance + esewaBalance;
-
-    return {
-      totalRevenue,
-      totalExpenses,
-      netProfit,
-      totalDeposits,
-      totalWithdrawals,
-      cooperativeSavings,
-      breakEvenPoint,
-      profitMargin,
-      cashBalance,
-      esewaBalance,
-      fonepayBalance,
-      cooperativeBalance,
-      totalBalance,
-      totalIncomeFromOrders,
-      totalIncomeFromCharging,
-      averageDailyRevenue,
-      averageDailyExpenses,
-      averageDailyProfit,
-      weeklyTrend,
-      monthlyComparison: {
-        thisMonth: thisMonthRevenue,
-        lastMonth: lastMonthRevenue,
-        growth: monthlyGrowth,
+    const totalIncome = data.reduce((sum, day) => sum + day.total_income, 0);
+    const totalExpenses = data.reduce((sum, day) => sum + day.total_expenses, 0);
+    const totalDeposits = data.reduce((sum, day) => sum + day.total_deposits, 0);
+    const totalSavings = data.reduce((sum, day) => sum + day.total_savings, 0);
+    
+    const avgDailyIncome = totalIncome / data.length;
+    const avgDailyExpenses = totalExpenses / data.length;
+    const netProfit = totalIncome - totalExpenses;
+    const profitMargin = totalIncome > 0 ? (netProfit / totalIncome) * 100 : 0;
+    
+    const latestBalance = data[data.length - 1]?.total_balance || 0;
+    
+    const metrics: InsightMetric[] = [
+      {
+        label: "Total Income",
+        value: totalIncome,
+        format: "currency",
+        trend: totalIncome > 0 ? "up" : "stable"
       },
-      paymentMethodBreakdown,
-    };
+      {
+        label: "Total Expenses", 
+        value: totalExpenses,
+        format: "currency",
+        trend: totalExpenses > avgDailyExpenses * data.length ? "up" : "down"
+      },
+      {
+        label: "Net Profit",
+        value: netProfit,
+        format: "currency", 
+        trend: netProfit > 0 ? "up" : "down"
+      },
+      {
+        label: "Profit Margin",
+        value: profitMargin,
+        format: "percentage",
+        trend: profitMargin > 10 ? "up" : profitMargin > 5 ? "stable" : "down"
+      },
+      {
+        label: "Average Daily Income",
+        value: avgDailyIncome,
+        format: "currency"
+      },
+      {
+        label: "Current Balance",
+        value: latestBalance,
+        format: "currency"
+      },
+      {
+        label: "Total Savings",
+        value: totalSavings,
+        format: "currency"
+      },
+      {
+        label: "Total Deposits", 
+        value: totalDeposits,
+        format: "currency"
+      }
+    ];
+
+    setSelectedMetrics(metrics);
   };
 
-  const refreshAnalytics = async () => {
+  const getPaymentModeBreakdown = (): PaymentModeData[] => {
+    const totalCash = dailyData.reduce((sum, day) => sum + (day.total_expenses_cash || 0), 0);
+    const totalEsewa = dailyData.reduce((sum, day) => sum + (day.total_expenses_esewa || 0), 0);
+    const totalFonepay = dailyData.reduce((sum, day) => sum + (day.total_expenses_fonepay || 0), 0);
+    
+    const grandTotal = totalCash + totalEsewa + totalFonepay;
+    
+    if (grandTotal === 0) return [];
+
+    return [
+      {
+        mode: "Cash",
+        amount: totalCash,
+        percentage: (totalCash / grandTotal) * 100,
+        color: COLORS[0]
+      },
+      {
+        mode: "eSewa", 
+        amount: totalEsewa,
+        percentage: (totalEsewa / grandTotal) * 100,
+        color: COLORS[1]
+      },
+      {
+        mode: "Fonepay",
+        amount: totalFonepay,
+        percentage: (totalFonepay / grandTotal) * 100,
+        color: COLORS[2]
+      }
+    ].filter(item => item.amount > 0);
+  };
+
+  const getSavingsBreakdown = (): PaymentModeData[] => {
+    const totalCash = dailyData.reduce((sum, day) => sum + (day.total_savings_cash || 0), 0);
+    const totalEsewa = dailyData.reduce((sum, day) => sum + (day.total_savings_esewa || 0), 0);
+    const totalFonepay = dailyData.reduce((sum, day) => sum + (day.total_savings_fonepay || 0), 0);
+    
+    const grandTotal = totalCash + totalEsewa + totalFonepay;
+    
+    if (grandTotal === 0) return [];
+
+    return [
+      {
+        mode: "Cash Savings",
+        amount: totalCash,
+        percentage: (totalCash / grandTotal) * 100,
+        color: COLORS[0]
+      },
+      {
+        mode: "eSewa Savings",
+        amount: totalEsewa,
+        percentage: (totalEsewa / grandTotal) * 100,
+        color: COLORS[1]
+      },
+      {
+        mode: "Fonepay Savings",
+        amount: totalFonepay,
+        percentage: (totalFonepay / grandTotal) * 100,
+        color: COLORS[2]
+      }
+    ].filter(item => item.amount > 0);
+  };
+
+  const getDepositsBreakdown = (): PaymentModeData[] => {
+    const totalCash = dailyData.reduce((sum, day) => sum + (day.total_deposits_cash || 0), 0);
+    const totalEsewa = dailyData.reduce((sum, day) => sum + (day.total_deposits_esewa || 0), 0);
+    const totalFonepay = dailyData.reduce((sum, day) => sum + (day.total_deposits_fonepay || 0), 0);
+    
+    const grandTotal = totalCash + totalEsewa + totalFonepay;
+    
+    if (grandTotal === 0) return [];
+
+    return [
+      {
+        mode: "Cash Deposits",
+        amount: totalCash,
+        percentage: (totalCash / grandTotal) * 100,
+        color: COLORS[0]
+      },
+      {
+        mode: "eSewa Deposits", 
+        amount: totalEsewa,
+        percentage: (totalEsewa / grandTotal) * 100,
+        color: COLORS[1]
+      },
+      {
+        mode: "Fonepay Deposits",
+        amount: totalFonepay,
+        percentage: (totalFonepay / grandTotal) * 100,
+        color: COLORS[2]
+      }
+    ].filter(item => item.amount > 0);
+  };
+
+  const getWithdrawalsBreakdown = (): PaymentModeData[] => {
+    const totalCash = dailyData.reduce((sum, day) => sum + (day.total_withdrawals_cash || 0), 0);
+    const totalCooperative = dailyData.reduce((sum, day) => sum + (day.total_withdrawals_cooperative || 0), 0);
+    const totalBank = dailyData.reduce((sum, day) => sum + (day.total_withdrawals_bank || 0), 0);
+    
+    const grandTotal = totalCash + totalCooperative + totalBank;
+    
+    if (grandTotal === 0) return [];
+
+    return [
+      {
+        mode: "Cash Withdrawals",
+        amount: totalCash,
+        percentage: (totalCash / grandTotal) * 100,
+        color: COLORS[0]
+      },
+      {
+        mode: "Cooperative Withdrawals",
+        amount: totalCooperative, 
+        percentage: (totalCooperative / grandTotal) * 100,
+        color: COLORS[1]
+      },
+      {
+        mode: "Bank Withdrawals",
+        amount: totalBank,
+        percentage: (totalBank / grandTotal) * 100,
+        color: COLORS[2]
+      }
+    ].filter(item => item.amount > 0);
+  };
+
+  const refreshData = async () => {
     setRefreshing(true);
     try {
-      await fetchAnalyticsFromDailySummary();
-      toast.success("Analytics refreshed from daily summaries!");
+      await fetchDailyData();
+      toast.success("Insights data refreshed successfully!");
     } catch (error) {
-      toast.error("Failed to refresh analytics");
+      toast.error("Failed to refresh insights data");
     } finally {
       setRefreshing(false);
     }
   };
 
-  const formatCurrency = (amount: number) => `NRs. ${amount.toFixed(2)}`;
-  const formatPercentage = (value: number) => `${value.toFixed(1)}%`;
+  const formatValue = (value: number, format?: string) => {
+    switch (format) {
+      case "currency":
+        return `NRs. ${value.toLocaleString()}`;
+      case "percentage":
+        return `${value.toFixed(1)}%`;
+      default:
+        return value.toLocaleString();
+    }
+  };
+
+  const getTrendIcon = (trend?: string) => {
+    switch (trend) {
+      case "up":
+        return <TrendingUp className="h-4 w-4 text-green-600" />;
+      case "down":
+        return <TrendingDown className="h-4 w-4 text-red-600" />;
+      default:
+        return <Activity className="h-4 w-4 text-gray-600" />;
+    }
+  };
+
+  useEffect(() => {
+    const loadData = async () => {
+      setLoading(true);
+      try {
+        await fetchDailyData();
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, [dateRange, user]);
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">
-            Loading analytics from daily summaries...
-          </p>
+      <div className="space-y-6 animate-pulse">
+        <div className="h-8 bg-gray-200 rounded w-1/4"></div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="h-24 bg-gray-200 rounded"></div>
+          ))}
         </div>
-      </div>
-    );
-  }
-
-  if (!analytics) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 flex items-center justify-center">
-        <Card className="p-8 max-w-md">
-          <CardContent className="text-center">
-            <Database className="h-16 w-16 mx-auto text-gray-400 mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No Analytics Data</h3>
-            <p className="text-gray-600 mb-4">
-              No daily summaries found. Analytics will be available after daily
-              closing is performed.
-            </p>
-            <Button onClick={refreshAnalytics} disabled={refreshing}>
-              <RefreshCw
-                className={`h-4 w-4 mr-2 ${refreshing ? "animate-spin" : ""}`}
-              />
-              Refresh
-            </Button>
-          </CardContent>
-        </Card>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 relative overflow-hidden">
-      {/* Animated Background Elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-20 w-64 h-64 bg-gradient-to-r from-blue-400/20 to-purple-500/20 rounded-full blur-3xl animate-pulse"></div>
-        <div
-          className="absolute top-1/3 right-20 w-80 h-80 bg-gradient-to-r from-purple-400/20 to-pink-500/20 rounded-full blur-3xl animate-pulse"
-          style={{ animationDelay: "1s" }}
-        ></div>
-        <div
-          className="absolute bottom-20 left-1/4 w-72 h-72 bg-gradient-to-r from-pink-400/20 to-blue-500/20 rounded-full blur-3xl animate-pulse"
-          style={{ animationDelay: "2s" }}
-        ></div>
+    <div className="space-y-6">
+      {/* Header Controls */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-2">
+          <BarChart3 className="h-6 w-6 text-blue-600" />
+          <h2 className="text-2xl font-bold text-gray-800">Enhanced Business Insights</h2>
+        </div>
+        <div className="flex items-center gap-4">
+          <DatePickerWithRange date={dateRange} setDate={setDateRange} />
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={refreshData}
+            disabled={refreshing}
+            className="flex items-center gap-2"
+          >
+            <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
+            Refresh
+          </Button>
+        </div>
       </div>
 
-      <div className="relative z-10 space-y-8 p-6">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="p-4 rounded-2xl bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-xl">
-              <BarChart3 className="h-8 w-8" />
-            </div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
-              Business Analytics
-            </h1>
-            <Sparkles className="h-8 w-8 text-purple-500 animate-bounce" />
+      {/* Key Metrics Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {selectedMetrics.map((metric, index) => (
+          <Card key={index} className="hover:shadow-md transition-shadow">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-gray-600 flex items-center gap-2">
+                {getTrendIcon(metric.trend)}
+                {metric.label}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-gray-900">
+                {formatValue(metric.value, metric.format)}
+              </div>
+              {metric.change && (
+                <div className={`text-sm mt-1 ${metric.trend === 'up' ? 'text-green-600' : metric.trend === 'down' ? 'text-red-600' : 'text-gray-600'}`}>
+                  {metric.change > 0 ? '+' : ''}{metric.change.toFixed(1)}% from previous period
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Charts and Detailed Analysis */}
+      <Tabs defaultValue="overview" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="expenses">Expenses</TabsTrigger>
+          <TabsTrigger value="savings">Savings</TabsTrigger>
+          <TabsTrigger value="flows">Cash Flows</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview" className="space-y-6">
+          {/* Daily Trend Chart */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUp className="h-5 w-5" />
+                Daily Financial Trends
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={dailyData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="summary_date" />
+                  <YAxis />
+                  <Tooltip formatter={(value, name) => [formatValue(Number(value), "currency"), name]} />
+                  <Legend />
+                  <Line type="monotone" dataKey="total_income" stroke="#22c55e" name="Income" />
+                  <Line type="monotone" dataKey="total_expenses" stroke="#ef4444" name="Expenses" />
+                  <Line type="monotone" dataKey="total_balance" stroke="#3b82f6" name="Balance" />
+                </LineChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+
+          {/* Income vs Expenses Comparison */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5" />
+                Income vs Expenses Analysis
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={dailyData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="summary_date" />
+                  <YAxis />
+                  <Tooltip formatter={(value, name) => [formatValue(Number(value), "currency"), name]} />
+                  <Legend />
+                  <Bar dataKey="total_income_from_orders" fill="#22c55e" name="Orders Income" />
+                  <Bar dataKey="total_income_from_charging" fill="#10b981" name="Charging Income" />
+                  <Bar dataKey="total_expenses" fill="#ef4444" name="Expenses" />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="expenses" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <PieChart className="h-5 w-5" />
+                Expenses by Payment Mode
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <RechartsPieChart>
+                  <Pie
+                    data={getPaymentModeBreakdown()}
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={100}
+                    dataKey="amount"
+                    nameKey="mode"
+                  >
+                    {getPaymentModeBreakdown().map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(value) => [formatValue(Number(value), "currency")]} />
+                  <Legend />
+                </RechartsPieChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="savings" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Target className="h-5 w-5" />
+                Savings Distribution
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <RechartsPieChart>
+                  <Pie
+                    data={getSavingsBreakdown()}
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={100}
+                    dataKey="amount"
+                    nameKey="mode"
+                  >
+                    {getSavingsBreakdown().map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(value) => [formatValue(Number(value), "currency")]} />
+                  <Legend />
+                </RechartsPieChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="flows" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <DollarSign className="h-5 w-5" />
+                  Deposits Breakdown
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={250}>
+                  <RechartsPieChart>
+                    <Pie
+                      data={getDepositsBreakdown()}
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={80}
+                      dataKey="amount"
+                      nameKey="mode"
+                    >
+                      {getDepositsBreakdown().map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip formatter={(value) => [formatValue(Number(value), "currency")]} />
+                    <Legend />
+                  </RechartsPieChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingDown className="h-5 w-5" />
+                  Withdrawals Breakdown
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={250}>
+                  <RechartsPieChart>
+                    <Pie
+                      data={getWithdrawalsBreakdown()}
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={80}
+                      dataKey="amount"
+                      nameKey="mode"
+                    >
+                      {getWithdrawalsBreakdown().map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip formatter={(value) => [formatValue(Number(value), "currency")]} />
+                    <Legend />
+                  </RechartsPieChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
           </div>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Comprehensive insights powered by daily summary data
-          </p>
-          <div className="flex items-center justify-center gap-2 mt-4">
-            <Badge variant="secondary" className="bg-green-100 text-green-800">
-              <Database className="h-3 w-3 mr-1" />
-              Daily Summary Data
+        </TabsContent>
+      </Tabs>
+
+      {/* Data Source Info */}
+      <Card className="bg-blue-50 border-blue-200">
+        <CardContent className="p-4">
+          <div className="flex items-center gap-2 text-sm">
+            <Calendar className="h-4 w-4 text-blue-600" />
+            <span className="text-blue-700 font-medium">
+              Data Source: daily_summary table
+            </span>
+            <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+              Period: {dateRange?.from && dateRange?.to && 
+                `${format(dateRange.from, 'MMM dd')} - ${format(dateRange.to, 'MMM dd, yyyy')}`
+              }
             </Badge>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={refreshAnalytics}
-              disabled={refreshing}
-              className="ml-2"
-            >
-              <RefreshCw
-                className={`h-4 w-4 mr-2 ${refreshing ? "animate-spin" : ""}`}
-              />
-              Refresh
-            </Button>
           </div>
-        </div>
-
-        {/* Key Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-          {/* Total Revenue */}
-          <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200 hover:shadow-xl transition-all duration-300">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-green-600 font-medium">
-                    Total Revenue
-                  </p>
-                  <p className="text-2xl font-bold text-green-800">
-                    {formatCurrency(analytics.totalRevenue)}
-                  </p>
-                  <div className="flex items-center gap-1 mt-1">
-                    <div className="text-xs text-green-600">
-                      Orders: {formatCurrency(analytics.totalIncomeFromOrders)}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <div className="text-xs text-green-600">
-                      Charging:{" "}
-                      {formatCurrency(analytics.totalIncomeFromCharging)}
-                    </div>
-                  </div>
-                </div>
-                <div className="p-3 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl text-white">
-                  <TrendingUp className="h-6 w-6" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Total Expenses */}
-          <Card className="bg-gradient-to-br from-red-50 to-rose-50 border-red-200 hover:shadow-xl transition-all duration-300">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-red-600 font-medium">
-                    Total Expenses
-                  </p>
-                  <p className="text-2xl font-bold text-red-800">
-                    {formatCurrency(analytics.totalExpenses)}
-                  </p>
-                  <div className="text-xs text-red-600 mt-1">
-                    Avg Daily: {formatCurrency(analytics.averageDailyExpenses)}
-                  </div>
-                </div>
-                <div className="p-3 bg-gradient-to-r from-red-500 to-rose-500 rounded-xl text-white">
-                  <TrendingDown className="h-6 w-6" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Net Profit */}
-          <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200 hover:shadow-xl transition-all duration-300">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-blue-600 font-medium">
-                    Net Profit
-                  </p>
-                  <p
-                    className={`text-2xl font-bold ${analytics.netProfit >= 0 ? "text-blue-800" : "text-red-800"}`}
-                  >
-                    {formatCurrency(analytics.netProfit)}
-                  </p>
-                  <div className="text-xs text-blue-600 mt-1">
-                    Margin: {formatPercentage(analytics.profitMargin)}
-                  </div>
-                </div>
-                <div
-                  className={`p-3 rounded-xl text-white ${analytics.netProfit >= 0 ? "bg-gradient-to-r from-blue-500 to-indigo-500" : "bg-gradient-to-r from-red-500 to-rose-500"}`}
-                >
-                  <Calculator className="h-6 w-6" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Monthly Growth */}
-          <Card className="bg-gradient-to-br from-purple-50 to-violet-50 border-purple-200 hover:shadow-xl transition-all duration-300">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-purple-600 font-medium">
-                    Monthly Growth
-                  </p>
-                  <p
-                    className={`text-2xl font-bold ${analytics.monthlyComparison.growth >= 0 ? "text-green-800" : "text-red-800"}`}
-                  >
-                    {formatPercentage(analytics.monthlyComparison.growth)}
-                  </p>
-                  <div className="text-xs text-purple-600 mt-1">
-                    This Month:{" "}
-                    {formatCurrency(analytics.monthlyComparison.thisMonth)}
-                  </div>
-                </div>
-                <div className="p-3 bg-gradient-to-r from-purple-500 to-violet-500 rounded-xl text-white">
-                  {analytics.monthlyComparison.growth >= 0 ? (
-                    <ArrowUp className="h-6 w-6" />
-                  ) : (
-                    <ArrowDown className="h-6 w-6" />
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Total Withdrawals */}
-          <Card className="bg-gradient-to-br from-orange-50 to-amber-50 border-orange-200 hover:shadow-xl transition-all duration-300">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-orange-600 font-medium">
-                    Total Withdrawals
-                  </p>
-                  <p className="text-2xl font-bold text-orange-800">
-                    {formatCurrency(analytics.totalWithdrawals)}
-                  </p>
-                  <div className="text-xs text-orange-600 mt-1">
-                    Cash outflow tracking
-                  </div>
-                </div>
-                <div className="p-3 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl text-white">
-                  <TrendingDown className="h-6 w-6" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Balance Information */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-green-600 font-medium">
-                    Cash Balance
-                  </p>
-                  <p className="text-xl font-bold text-green-800">
-                    {formatCurrency(analytics.cashBalance)}
-                  </p>
-                </div>
-                <Wallet className="h-5 w-5 text-green-600" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-blue-600 font-medium">
-                    eSewa Balance
-                  </p>
-                  <p className="text-xl font-bold text-blue-800">
-                    {formatCurrency(analytics.esewaBalance)}
-                  </p>
-                </div>
-                <CreditCard className="h-5 w-5 text-blue-600" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-purple-50 to-violet-50 border-purple-200">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-purple-600 font-medium">
-                    Fonepay Balance
-                  </p>
-                  <p className="text-xl font-bold text-purple-800">
-                    {formatCurrency(analytics.fonepayBalance)}
-                  </p>
-                </div>
-                <CreditCard className="h-5 w-5 text-purple-600" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-amber-50 to-orange-50 border-amber-200">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-amber-600 font-medium">
-                    Cooperative Savings
-                  </p>
-                  <p className="text-xl font-bold text-amber-800">
-                    {formatCurrency(analytics.cooperativeSavings)}
-                  </p>
-                </div>
-                <PiggyBank className="h-5 w-5 text-amber-600" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Payment Method Breakdown */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <CreditCard className="h-5 w-5" />
-              Payment Method Distribution
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Cash</span>
-                  <span className="text-sm font-bold text-green-600">
-                    {formatCurrency(analytics.paymentMethodBreakdown.cash)}
-                  </span>
-                </div>
-                <Progress
-                  value={
-                    (analytics.paymentMethodBreakdown.cash /
-                      analytics.totalRevenue) *
-                    100
-                  }
-                  className="h-2"
-                />
-              </div>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">eSewa</span>
-                  <span className="text-sm font-bold text-blue-600">
-                    {formatCurrency(analytics.paymentMethodBreakdown.esewa)}
-                  </span>
-                </div>
-                <Progress
-                  value={
-                    (analytics.paymentMethodBreakdown.esewa /
-                      analytics.totalRevenue) *
-                    100
-                  }
-                  className="h-2"
-                />
-              </div>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Fonepay</span>
-                  <span className="text-sm font-bold text-purple-600">
-                    {formatCurrency(analytics.paymentMethodBreakdown.fonepay)}
-                  </span>
-                </div>
-                <Progress
-                  value={
-                    (analytics.paymentMethodBreakdown.fonepay /
-                      analytics.totalRevenue) *
-                    100
-                  }
-                  className="h-2"
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Financial Insights Widget */}
-        <FinancialInsightsWidget className="mb-8" />
-
-        {/* Data Source Information */}
-        <Card className="bg-blue-50 border-blue-200">
-          <CardContent className="p-6">
-            <div className="flex items-start gap-3">
-              <Database className="h-6 w-6 text-blue-600 mt-1" />
-              <div>
-                <h3 className="font-semibold text-blue-800 mb-2">
-                  Data Source: Daily Summary Table
-                </h3>
-                <p className="text-blue-700 text-sm mb-2">
-                  All analytics and insights are calculated from the
-                  daily_summary table, ensuring consistency and accuracy across
-                  all reports.
-                </p>
-                <div className="text-xs text-blue-600">
-                  Last updated:{" "}
-                  {dailySummaries.length > 0
-                    ? format(
-                        parseISO(dailySummaries[0].summary_date),
-                        "MMM dd, yyyy",
-                      )
-                    : "No data"}
-                  • {dailySummaries.length} days of data available
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
