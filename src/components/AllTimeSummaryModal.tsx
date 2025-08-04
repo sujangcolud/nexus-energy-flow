@@ -170,14 +170,44 @@ export const AllTimeSummaryModal: React.FC<AllTimeSummaryModalProps> = ({
       const totalIncome = aggregatedData.totalIncomeFromOrders + aggregatedData.totalIncomeFromCharging;
       const netProfit = totalIncome - aggregatedData.totalExpenses;
 
-      // Get current balances from the latest summary (same logic as AllTimeSummaryWidget)
+      // Get current balances - check daily_summary first, fallback to transaction calculation
       const latestSummary = dailySummaries[dailySummaries.length - 1];
-      const cashBalance = Number(latestSummary?.cash_balance) || 0;
-      const esewaBalance = Number(latestSummary?.esewa_balance) || 0;
-      const fonepayBalance = Number(latestSummary?.fonepay_balance) || 0;
-      const bankBalance = Number(latestSummary?.bank_balance) || 0;
-      const cooperativeBalance = Number(latestSummary?.cooperative_balance) || 0;
-      const totalBalance = cashBalance + esewaBalance + fonepayBalance + bankBalance + cooperativeBalance;
+
+      // Get balance values from daily_summary table
+      let cashBalance = Number(latestSummary?.cash_balance) || 0;
+      let esewaBalance = Number(latestSummary?.esewa_balance) || 0;
+      let fonepayBalance = Number(latestSummary?.fonepay_balance) || 0;
+      let bankBalance = Number(latestSummary?.bank_balance) || 0;
+      let cooperativeBalance = Number(latestSummary?.cooperative_balance) || 0;
+
+      // If all balances are zero, calculate from aggregated totals
+      if (cashBalance === 0 && esewaBalance === 0 && fonepayBalance === 0 && bankBalance === 0 && cooperativeBalance === 0) {
+        console.log("📊 Daily summary balances are zero, calculating from transaction totals...");
+
+        // Calculate actual balances from transaction totals
+        // Cash = Cash Income - Cash Expenses - Deposits from Cash + Deposits to Cash
+        cashBalance = aggregatedData.totalIncomeCash - aggregatedData.totalExpensesCash;
+
+        // eSewa = eSewa Income - eSewa Expenses + Deposits to eSewa - Deposits from eSewa
+        esewaBalance = aggregatedData.totalIncomeEsewa - aggregatedData.totalExpensesEsewa;
+
+        // Bank/Fonepay = Fonepay Income - Fonepay Expenses + Deposits to Bank/Fonepay (combined as user mentioned)
+        const combinedBankFonepayBalance = aggregatedData.totalIncomeFonepay - aggregatedData.totalExpensesFonepay + aggregatedData.totalDeposits;
+
+        // Cooperative = Total Savings - Cooperative Withdrawals
+        cooperativeBalance = aggregatedData.totalSavings - aggregatedData.cooperativeWithdrawals;
+
+        // Bank and Fonepay are same per user instruction
+        bankBalance = combinedBankFonepayBalance;
+        fonepayBalance = 0; // Set to 0 since it's included in bank
+      } else {
+        // Use daily_summary balances but combine Bank and Fonepay as user requested
+        const combinedBankFonepayBalance = bankBalance + fonepayBalance;
+        bankBalance = combinedBankFonepayBalance;
+        fonepayBalance = 0; // Set to 0 since it's included in bank
+      }
+
+      const totalBalance = cashBalance + esewaBalance + bankBalance + cooperativeBalance;
 
       const calculatedData: AllTimeSummaryData = {
         totalIncome,
