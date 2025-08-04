@@ -334,6 +334,10 @@ export const AllTimeSummaryModal: React.FC<AllTimeSummaryModalProps> = ({
                     <span className={allTimeData.fonepayBalance < 0 ? 'text-red-600' : ''}>{formatCurrency(allTimeData.fonepayBalance)}</span>
                   </div>
                   <div className="flex justify-between">
+                    <span className="text-orange-600">Bank:</span>
+                    <span className={allTimeData.bankBalance < 0 ? 'text-red-600' : ''}>{formatCurrency(allTimeData.bankBalance)}</span>
+                  </div>
+                  <div className="flex justify-between">
                     <span className="text-purple-600">Cooperative:</span>
                     <span className={allTimeData.cooperativeBalance < 0 ? 'text-red-600' : ''}>{formatCurrency(allTimeData.cooperativeBalance)}</span>
                   </div>
