@@ -24,6 +24,7 @@ import { toast } from "sonner";
 import { extractErrorMessage, logError } from "@/utils/errorHandling";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Label } from "@/components/ui/label";
+import AllTimeTotalDisplay from "@/components/AllTimeTotalDisplay";
 import {
   Zap,
   Plus,
