@@ -37,7 +37,7 @@ import { extractErrorMessage, logError } from "@/utils/errorHandling";
 interface Category {
   id: string;
   name: string;
-  table_type?: string;
+  table_type: string;
   description?: string;
   is_active?: boolean;
   created_at: string;
@@ -73,7 +73,7 @@ const CategoryPaymentModeManager: React.FC<CategoryPaymentModeManagerProps> = ({
   const [newCategoryName, setNewCategoryName] = useState("");
   const [selectedTab, setSelectedTab] = useState("categories");
 
-  // Category table types
+  // Only use existing category tables from the schema
   const categoryTables = [
     "categories",
     "expense_categories", 
@@ -94,18 +94,22 @@ const CategoryPaymentModeManager: React.FC<CategoryPaymentModeManagerProps> = ({
     try {
       const allCategories: Category[] = [];
       
-      // Fetch from all category tables
+      // Fetch from existing category tables only
       for (const table of categoryTables) {
         try {
           const { data, error } = await supabase
-            .from(table)
+            .from(table as any)
             .select("*")
             .order("name");
           
           if (!error && data) {
             const categoriesWithType = data.map(item => ({
-              ...item,
-              table_type: table
+              id: item.id,
+              name: item.name,
+              table_type: table,
+              description: item.description,
+              is_active: item.is_active,
+              created_at: item.created_at
             }));
             allCategories.push(...categoriesWithType);
           }
@@ -129,9 +133,14 @@ const CategoryPaymentModeManager: React.FC<CategoryPaymentModeManagerProps> = ({
       return;
     }
 
+    if (!categoryTables.includes(tableName)) {
+      toast.error("Invalid table selected");
+      return;
+    }
+
     try {
       const { error } = await supabase
-        .from(tableName)
+        .from(tableName as any)
         .insert([{ name: newCategoryName.trim() }]);
 
       if (error) throw error;
@@ -146,14 +155,14 @@ const CategoryPaymentModeManager: React.FC<CategoryPaymentModeManagerProps> = ({
   };
 
   const updateCategory = async (category: Category) => {
-    if (!category.table_type) {
-      toast.error("Cannot update category without table type");
+    if (!category.table_type || !categoryTables.includes(category.table_type)) {
+      toast.error("Cannot update category - invalid table type");
       return;
     }
 
     try {
       const { error } = await supabase
-        .from(category.table_type)
+        .from(category.table_type as any)
         .update({ name: category.name })
         .eq("id", category.id);
 
@@ -169,8 +178,8 @@ const CategoryPaymentModeManager: React.FC<CategoryPaymentModeManagerProps> = ({
   };
 
   const deleteCategory = async (category: Category) => {
-    if (!category.table_type) {
-      toast.error("Cannot delete category without table type");
+    if (!category.table_type || !categoryTables.includes(category.table_type)) {
+      toast.error("Cannot delete category - invalid table type");
       return;
     }
 
@@ -180,7 +189,7 @@ const CategoryPaymentModeManager: React.FC<CategoryPaymentModeManagerProps> = ({
 
     try {
       const { error } = await supabase
-        .from(category.table_type)
+        .from(category.table_type as any)
         .delete()
         .eq("id", category.id);
 
