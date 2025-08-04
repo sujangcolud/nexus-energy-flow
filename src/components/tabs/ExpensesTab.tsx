@@ -25,6 +25,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { extractErrorMessage, logError } from "@/utils/errorHandling";
 import TransactionDatePicker from "@/components/ui/transaction-date-picker";
+import AllTimeTotalDisplay from "@/components/AllTimeTotalDisplay";
 import {
   Receipt,
   Calendar as CalendarIcon,
