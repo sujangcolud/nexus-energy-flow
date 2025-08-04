@@ -63,156 +63,128 @@ export const AllTimeSummaryModal: React.FC<AllTimeSummaryModalProps> = ({
     if (!user?.id) return;
 
     setLoading(true);
-    console.log('Fetching all-time summary data for user:', user.id);
+    console.log('Fetching all-time summary data from daily_summary table');
 
     try {
-      // Fetch all orders data
-      const { data: ordersData, error: ordersError } = await supabase
-        .from('orders')
-        .select('total, payment_mode')
-        .eq('user_id', user.id);
+      // Fetch all data from daily_summary table
+      const { data: dailySummaries, error: summaryError } = await supabase
+        .from("daily_summary")
+        .select("*")
+        .order("summary_date", { ascending: true });
 
-      if (ordersError) console.error('Orders fetch error:', ordersError);
+      if (summaryError) {
+        console.error('Daily summaries fetch error:', summaryError);
+        throw summaryError;
+      }
 
-      // Fetch all charging data
-      const { data: chargingData, error: chargingError } = await supabase
-        .from('charging_sessions')
-        .select('total_amount, payment_mode')
-        .eq('user_id', user.id);
+      console.log('Daily summaries data:', dailySummaries);
 
-      if (chargingError) console.error('Charging fetch error:', chargingError);
+      if (!dailySummaries || dailySummaries.length === 0) {
+        console.warn('No daily summary data found');
+        setAllTimeData({
+          totalIncome: 0,
+          totalIncomeFromOrders: 0,
+          totalIncomeFromCharging: 0,
+          totalExpenses: 0,
+          totalDeposits: 0,
+          totalWithdrawals: 0,
+          totalSavings: 0,
+          cashIncome: 0,
+          esewaIncome: 0,
+          fonepayIncome: 0,
+          cashExpenses: 0,
+          esewaExpenses: 0,
+          fonepayExpenses: 0,
+          cashBalance: 0,
+          esewaBalance: 0,
+          fonepayBalance: 0,
+          cooperativeBalance: 0,
+          totalBalance: 0,
+          netProfit: 0,
+          cooperativeWithdrawals: 0,
+          bankWithdrawals: 0
+        });
+        return;
+      }
 
-      // Fetch all expenses data
-      const { data: expensesData, error: expensesError } = await supabase
-        .from('expenses')
-        .select('amount, payment_mode')
-        .eq('user_id', user.id);
-
-      if (expensesError) console.error('Expenses fetch error:', expensesError);
-
-      // Fetch all deposits data
-      const { data: depositsData, error: depositsError } = await supabase
-        .from('deposits')
-        .select('amount, mode, deposited_to')
-        .eq('user_id', user.id);
-
-      if (depositsError) console.error('Deposits fetch error:', depositsError);
-
-      // Fetch all withdrawals data
-      const { data: withdrawalsData, error: withdrawalsError } = await supabase
-        .from('withdrawals')
-        .select('amount, payment_mode, withdrawal_from')
-        .eq('user_id', user.id);
-
-      if (withdrawalsError) console.error('Withdrawals fetch error:', withdrawalsError);
-
-      // Fetch all cooperative savings data
-      const { data: savingsData, error: savingsError } = await supabase
-        .from('cooperative_savings')
-        .select('contribution_amount, payment_mode')
-        .eq('user_id', user.id);
-
-      if (savingsError) console.error('Savings fetch error:', savingsError);
-
-      // Calculate totals
-      const totalIncomeFromOrders = ordersData?.reduce((sum, order) => sum + Number(order.total), 0) || 0;
-      const totalIncomeFromCharging = chargingData?.reduce((sum, charge) => sum + Number(charge.total_amount), 0) || 0;
-      const totalIncome = totalIncomeFromOrders + totalIncomeFromCharging;
-
-      const totalExpenses = expensesData?.reduce((sum, expense) => sum + Number(expense.amount), 0) || 0;
-      const totalDeposits = depositsData?.reduce((sum, deposit) => sum + Number(deposit.amount), 0) || 0;
-      const totalWithdrawals = withdrawalsData?.reduce((sum, withdrawal) => sum + Number(withdrawal.amount), 0) || 0;
-      const totalSavings = savingsData?.reduce((sum, saving) => sum + Number(saving.contribution_amount), 0) || 0;
-
-      // Calculate payment mode breakdowns
-      const calculatePaymentModeBreakdown = (data: any[], amountField: string, paymentField: string) => {
-        return data?.reduce((acc, item) => {
-          const amount = Number(item[amountField]) || 0;
-          const mode = (item[paymentField] || '').toLowerCase();
-
-          if (mode.includes('cash')) acc.cash += amount;
-          else if (mode.includes('esewa')) acc.esewa += amount;
-          else if (mode.includes('fonepay')) acc.fonepay += amount;
-          else acc.cash += amount; // Default to cash
-
-          return acc;
-        }, { cash: 0, esewa: 0, fonepay: 0 });
+      // Helper function for safe field access
+      const safeGet = (obj: any, field: string): number => {
+        const value = Number(obj?.[field]);
+        return isNaN(value) ? 0 : value;
       };
 
-      const ordersBreakdown = calculatePaymentModeBreakdown(ordersData || [], 'total', 'payment_mode');
-      const chargingBreakdown = calculatePaymentModeBreakdown(chargingData || [], 'total_amount', 'payment_mode');
-      const expensesBreakdown = calculatePaymentModeBreakdown(expensesData || [], 'amount', 'payment_mode');
+      // Aggregate all daily summaries into all-time totals
+      const aggregatedData = dailySummaries.reduce((acc, daily) => {
+        return {
+          totalIncomeFromOrders: acc.totalIncomeFromOrders + safeGet(daily, 'total_income_from_orders'),
+          totalIncomeFromCharging: acc.totalIncomeFromCharging + safeGet(daily, 'total_income_from_charging'),
+          totalIncomeCash: acc.totalIncomeCash + safeGet(daily, 'total_income_cash'),
+          totalIncomeEsewa: acc.totalIncomeEsewa + safeGet(daily, 'total_income_esewa'),
+          totalIncomeFonepay: acc.totalIncomeFonepay + safeGet(daily, 'total_income_fonepay'),
+          totalExpenses: acc.totalExpenses + safeGet(daily, 'total_expenses'),
+          totalExpensesCash: acc.totalExpensesCash + safeGet(daily, 'total_expenses_cash'),
+          totalExpensesEsewa: acc.totalExpensesEsewa + safeGet(daily, 'total_expenses_esewa'),
+          totalExpensesFonepay: acc.totalExpensesFonepay + safeGet(daily, 'total_expenses_fonepay'),
+          totalDeposits: acc.totalDeposits + safeGet(daily, 'total_deposits'),
+          totalWithdrawals: acc.totalWithdrawals + safeGet(daily, 'total_withdrawals'),
+          totalSavings: acc.totalSavings + safeGet(daily, 'total_savings'),
+          cooperativeWithdrawals: acc.cooperativeWithdrawals + safeGet(daily, 'total_withdrawals_cooperative'),
+          bankWithdrawals: acc.bankWithdrawals + safeGet(daily, 'total_withdrawals_bank'),
+        };
+      }, {
+        totalIncomeFromOrders: 0,
+        totalIncomeFromCharging: 0,
+        totalIncomeCash: 0,
+        totalIncomeEsewa: 0,
+        totalIncomeFonepay: 0,
+        totalExpenses: 0,
+        totalExpensesCash: 0,
+        totalExpensesEsewa: 0,
+        totalExpensesFonepay: 0,
+        totalDeposits: 0,
+        totalWithdrawals: 0,
+        totalSavings: 0,
+        cooperativeWithdrawals: 0,
+        bankWithdrawals: 0,
+      });
 
-      const cashIncome = ordersBreakdown.cash + chargingBreakdown.cash;
-      const esewaIncome = ordersBreakdown.esewa + chargingBreakdown.esewa;
-      const fonepayIncome = ordersBreakdown.fonepay + chargingBreakdown.fonepay;
+      // Calculate derived totals
+      const totalIncome = aggregatedData.totalIncomeFromOrders + aggregatedData.totalIncomeFromCharging;
+      const netProfit = totalIncome - aggregatedData.totalExpenses;
 
-      // Calculate withdrawal breakdowns
-      const cooperativeWithdrawals = withdrawalsData?.filter(w => w.withdrawal_from === 'Cooperative')
-        .reduce((sum, w) => sum + Number(w.amount), 0) || 0;
-      const bankWithdrawals = withdrawalsData?.filter(w => w.withdrawal_from === 'Bank')
-        .reduce((sum, w) => sum + Number(w.amount), 0) || 0;
-
-      // Calculate deposit flows: from -> to
-      const depositFlows = depositsData?.reduce((acc, deposit) => {
-        const amount = Number(deposit.amount) || 0;
-        const fromMode = (deposit.mode || '').toLowerCase();
-        const toMode = (deposit.deposited_to || deposit.mode || '').toLowerCase();
-
-        // Track where money is coming from and going to
-        if (fromMode.includes('esewa')) {
-          acc.fromEsewa += amount;
-        } else if (fromMode.includes('fonepay')) {
-          acc.fromFonepay += amount;
-        } else {
-          acc.fromCash += amount; // Default to cash
-        }
-
-        if (toMode.includes('bank') || toMode.includes('fonepay')) {
-          acc.toBank += amount;
-        } else if (toMode.includes('esewa')) {
-          acc.toEsewa += amount;
-        } else {
-          acc.toCash += amount;
-        }
-
-        return acc;
-      }, { fromCash: 0, fromEsewa: 0, fromFonepay: 0, toCash: 0, toEsewa: 0, toBank: 0 }) || { fromCash: 0, fromEsewa: 0, fromFonepay: 0, toCash: 0, toEsewa: 0, toBank: 0 };
-
-      // Calculate current balances with proper deposit flow logic
-      const cashBalance = cashIncome - expensesBreakdown.cash - depositFlows.fromCash + depositFlows.toCash;
-      const esewaBalance = esewaIncome - expensesBreakdown.esewa - depositFlows.fromEsewa + depositFlows.toEsewa;
-      const fonepayBalance = fonepayIncome - expensesBreakdown.fonepay - depositFlows.fromFonepay + depositFlows.toBank;
-      const cooperativeBalance = totalSavings - cooperativeWithdrawals;
+      // Get current balances from the latest summary
+      const latestSummary = dailySummaries[dailySummaries.length - 1];
+      const cashBalance = safeGet(latestSummary, 'cash_balance');
+      const esewaBalance = safeGet(latestSummary, 'esewa_balance');
+      const fonepayBalance = safeGet(latestSummary, 'fonepay_balance');
+      const cooperativeBalance = safeGet(latestSummary, 'cooperative_balance');
       const totalBalance = cashBalance + esewaBalance + fonepayBalance + cooperativeBalance;
-
-      const netProfit = totalIncome - totalExpenses;
 
       const calculatedData: AllTimeSummaryData = {
         totalIncome,
-        totalIncomeFromOrders,
-        totalIncomeFromCharging,
-        totalExpenses,
-        totalDeposits,
-        totalWithdrawals,
-        totalSavings,
-        cashIncome,
-        esewaIncome,
-        fonepayIncome,
-        cashExpenses: expensesBreakdown.cash,
-        esewaExpenses: expensesBreakdown.esewa,
-        fonepayExpenses: expensesBreakdown.fonepay,
+        totalIncomeFromOrders: aggregatedData.totalIncomeFromOrders,
+        totalIncomeFromCharging: aggregatedData.totalIncomeFromCharging,
+        totalExpenses: aggregatedData.totalExpenses,
+        totalDeposits: aggregatedData.totalDeposits,
+        totalWithdrawals: aggregatedData.totalWithdrawals,
+        totalSavings: aggregatedData.totalSavings,
+        cashIncome: aggregatedData.totalIncomeCash,
+        esewaIncome: aggregatedData.totalIncomeEsewa,
+        fonepayIncome: aggregatedData.totalIncomeFonepay,
+        cashExpenses: aggregatedData.totalExpensesCash,
+        esewaExpenses: aggregatedData.totalExpensesEsewa,
+        fonepayExpenses: aggregatedData.totalExpensesFonepay,
         cashBalance,
         esewaBalance,
         fonepayBalance,
         cooperativeBalance,
         totalBalance,
         netProfit,
-        cooperativeWithdrawals,
-        bankWithdrawals
+        cooperativeWithdrawals: aggregatedData.cooperativeWithdrawals,
+        bankWithdrawals: aggregatedData.bankWithdrawals
       };
 
-      console.log('All-time calculated data:', calculatedData);
+      console.log('All-time calculated data from daily_summary:', calculatedData);
       setAllTimeData(calculatedData);
     } catch (error) {
       console.error('Error fetching all-time data:', error);
