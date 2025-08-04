@@ -25,6 +25,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { extractErrorMessage, logError } from "@/utils/errorHandling";
 import TransactionDatePicker from "@/components/ui/transaction-date-picker";
+import AllTimeTotalDisplay from "@/components/AllTimeTotalDisplay";
 import {
   Receipt,
   Calendar as CalendarIcon,
@@ -455,6 +456,9 @@ const ExpensesTab = () => {
             Track and manage your business expenses with detailed categorization
           </p>
         </div>
+
+        {/* All-Time Total Display */}
+        <AllTimeTotalDisplay type="expenses" className="mb-8" />
 
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">

@@ -26,6 +26,7 @@ import { toast } from "sonner";
 import { extractErrorMessage, logError } from "@/utils/errorHandling";
 import TransactionDatePicker from "@/components/ui/transaction-date-picker";
 import { format } from "date-fns";
+import AllTimeTotalDisplay from "@/components/AllTimeTotalDisplay";
 import {
   PiggyBank,
   Calendar as CalendarIcon,
@@ -436,6 +437,9 @@ const CooperativeSavingsTab = () => {
             tracking
           </p>
         </div>
+
+        {/* All-Time Total Display */}
+        <AllTimeTotalDisplay type="savings" className="mb-8" />
 
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">

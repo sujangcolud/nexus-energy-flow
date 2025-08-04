@@ -19,6 +19,7 @@ import { toast } from "sonner";
 import TransactionDatePicker from "@/components/ui/transaction-date-picker";
 import { format } from "date-fns";
 import { logError, extractErrorMessage } from "@/utils/errorHandling";
+import AllTimeTotalDisplay from "@/components/AllTimeTotalDisplay";
 import {
   Select,
   SelectContent,
@@ -398,6 +399,9 @@ const WithdrawalsTab = () => {
             analytics
           </p>
         </div>
+
+        {/* All-Time Total Display */}
+        <AllTimeTotalDisplay type="withdrawals" className="mb-8" />
 
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">

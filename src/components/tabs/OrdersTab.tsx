@@ -71,6 +71,7 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import useTableControls from "@/hooks/useTableControls";
 import BalanceDisplay from "@/components/ui/balance-display";
+import AllTimeTotalDisplay from "@/components/AllTimeTotalDisplay";
 
 interface Order {
   id: string;
@@ -617,6 +618,9 @@ const OrdersTab = () => {
             Browse our delicious menu and place your orders with ease
           </p>
         </div>
+
+        {/* All-Time Total Display */}
+        <AllTimeTotalDisplay type="orders" className="mb-8" />
 
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
