@@ -140,8 +140,8 @@ const CustomReportCreator = () => {
         name: reportName,
         tables: selectedTables,
         columns: availableColumns,
-        calculations: customCalculations as any, // Type assertion for Json compatibility
-        filters: filters as any, // Type assertion for Json compatibility
+        calculations: customCalculations,
+        filters: filters,
         created_at: new Date().toISOString()
       };
 
@@ -150,7 +150,7 @@ const CustomReportCreator = () => {
         .insert({
           user_id: user?.id,
           report_type: "custom",
-          report_data: reportData as any, // Type assertion for Json compatibility
+          report_data: reportData as any,
           date_range_start: new Date().toISOString().split('T')[0],
           date_range_end: new Date().toISOString().split('T')[0]
         });
@@ -324,10 +324,10 @@ const CustomReportCreator = () => {
                       <SelectContent>
                         <SelectItem value="=">=</SelectItem>
                         <SelectItem value="!=">!=</SelectItem>
-                        <SelectItem value=">">></SelectItem>
-                        <SelectItem value="<"><</SelectItem>
-                        <SelectItem value=">=">>=</SelectItem>
-                        <SelectItem value="<="><=</SelectItem>
+                        <SelectItem value=">">{'>'}</SelectItem>
+                        <SelectItem value="<">{'<'}</SelectItem>
+                        <SelectItem value=">=">{'>='}</SelectItem>
+                        <SelectItem value="<=">{' <='}</SelectItem>
                         <SelectItem value="LIKE">LIKE</SelectItem>
                       </SelectContent>
                     </Select>
