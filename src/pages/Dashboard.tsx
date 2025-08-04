@@ -55,7 +55,7 @@ import EnhancedChatBot from "@/components/EnhancedChatBot";
 import MobileDashboard from "./MobileDashboard";
 import FinancialSummaryWidget from "@/components/FinancialSummaryWidget";
 import AllTimeSummaryWidget from "@/components/AllTimeSummaryWidget";
-import DailyClosingSystem from "@/components/DailyClosingSystem";
+import { DailyClosingSystem } from "@/components/DailyClosingSystem";
 import BatchDailyClosingSystem from "@/components/BatchDailyClosingSystem";
 
 // Tab components are now rendered by routes, but their types/icons might be needed for nav items.

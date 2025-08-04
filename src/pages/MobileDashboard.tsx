@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { extractErrorMessage, logError } from "@/utils/errorHandling";
-import DailyClosingSystem from "@/components/DailyClosingSystem";
+import { DailyClosingSystem } from "@/components/DailyClosingSystem";
 import BatchDailyClosingSystem from "@/components/BatchDailyClosingSystem";
 import {
   Sheet,
