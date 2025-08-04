@@ -203,10 +203,36 @@ export const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
       const bankWithdrawals = withdrawalsData?.filter(w => w.withdrawal_from === 'Bank')
         .reduce((sum, w) => sum + Number(w.amount), 0) || 0;
 
-      // Calculate current balances (FIXED: Cooperative balance should deduct withdrawals from savings)
-      const cashBalance = cashIncome - expensesBreakdown.cash - totalDeposits;
-      const esewaBalance = esewaIncome - expensesBreakdown.esewa + totalDeposits;
-      const fonepayBalance = fonepayIncome - expensesBreakdown.fonepay;
+      // Calculate deposit flows: from -> to
+      const depositFlows = depositsData?.reduce((acc, deposit) => {
+        const amount = Number(deposit.amount) || 0;
+        const fromMode = (deposit.mode || '').toLowerCase();
+        const toMode = (deposit.deposited_to || deposit.mode || '').toLowerCase();
+
+        // Track where money is coming from and going to
+        if (fromMode.includes('esewa')) {
+          acc.fromEsewa += amount;
+        } else if (fromMode.includes('fonepay')) {
+          acc.fromFonepay += amount;
+        } else {
+          acc.fromCash += amount; // Default to cash
+        }
+
+        if (toMode.includes('bank') || toMode.includes('fonepay')) {
+          acc.toBank += amount;
+        } else if (toMode.includes('esewa')) {
+          acc.toEsewa += amount;
+        } else {
+          acc.toCash += amount;
+        }
+
+        return acc;
+      }, { fromCash: 0, fromEsewa: 0, fromFonepay: 0, toCash: 0, toEsewa: 0, toBank: 0 }) || { fromCash: 0, fromEsewa: 0, fromFonepay: 0, toCash: 0, toEsewa: 0, toBank: 0 };
+
+      // Calculate current balances with proper deposit flow logic
+      const cashBalance = cashIncome - expensesBreakdown.cash - depositFlows.fromCash + depositFlows.toCash;
+      const esewaBalance = esewaIncome - expensesBreakdown.esewa - depositFlows.fromEsewa + depositFlows.toEsewa;
+      const fonepayBalance = fonepayIncome - expensesBreakdown.fonepay - depositFlows.fromFonepay + depositFlows.toBank;
       const cooperativeBalance = totalSavings - cooperativeWithdrawals;
       const totalBalance = cashBalance + esewaBalance + fonepayBalance + cooperativeBalance;
 
