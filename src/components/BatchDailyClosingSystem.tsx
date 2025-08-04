@@ -289,7 +289,7 @@ const BatchDailyClosingSystem: React.FC<BatchDailyClosingSystemProps> = ({
         .lt("deposit_date", nextDay),
       supabase
         .from("withdrawals")
-        .select("amount, mode")
+        .select("amount, payment_mode")
         .eq("user_id", user.id)
         .gte("withdrawal_date", date)
         .lt("withdrawal_date", nextDay),
