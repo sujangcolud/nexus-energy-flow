@@ -20,6 +20,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { DateRangePicker } from "@/components/ui/date-range-picker";
 import {
   DollarSign,
   TrendingUp,
@@ -38,8 +39,9 @@ import {
   Eye,
   BarChart3,
   Database,
+  CalendarRange,
 } from "lucide-react";
-import { format } from "date-fns";
+import { format, startOfMonth, endOfMonth, startOfYear, endOfYear } from "date-fns";
 import { toast } from "sonner";
 import { extractErrorMessage, logError } from "@/utils/errorHandling";
 import AllTimeSummaryModal from "@/components/AllTimeSummaryModal";
@@ -98,6 +100,9 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
   );
   const [closingData, setClosingData] = useState<DailyClosingData | null>(null);
   const [selectedTab, setSelectedTab] = useState("summary");
+  const [viewMode, setViewMode] = useState<"single" | "range">("single");
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+  const [rangeData, setRangeData] = useState<DailyClosingData | null>(null);
   
   // All Time Summary Modal state
   const [showAllTimeSummary, setShowAllTimeSummary] = useState(false);
@@ -106,9 +111,13 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
 
   useEffect(() => {
     if (isOpen && user) {
-      fetchClosingData();
+      if (viewMode === "single") {
+        fetchClosingData();
+      } else if (viewMode === "range" && dateRange?.from && dateRange?.to) {
+        fetchRangeData();
+      }
     }
-  }, [isOpen, selectedDate, user]);
+  }, [isOpen, selectedDate, dateRange, viewMode, user]);
 
   const fetchClosingData = async () => {
     if (!user) return;
@@ -204,8 +213,142 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
     }
   };
 
+  const fetchRangeData = async () => {
+    if (!user || !dateRange?.from || !dateRange?.to) return;
+
+    setLoading(true);
+    try {
+      const fromDate = format(dateRange.from, 'yyyy-MM-dd');
+      const toDate = format(dateRange.to, 'yyyy-MM-dd');
+
+      // Get all transactions within date range
+      const [
+        ordersRes,
+        chargingRes,
+        expensesRes,
+        depositsRes,
+        withdrawalsRes,
+        savingsRes,
+      ] = await Promise.all([
+        supabase
+          .from("orders")
+          .select("*")
+          .eq("user_id", user.id)
+          .gte("order_date", fromDate)
+          .lte("order_date", toDate),
+        supabase
+          .from("charging_sessions")
+          .select("*")
+          .eq("user_id", user.id)
+          .gte("session_date", fromDate)
+          .lte("session_date", toDate),
+        supabase
+          .from("expenses")
+          .select("*")
+          .eq("user_id", user.id)
+          .gte("expense_date", fromDate)
+          .lte("expense_date", toDate),
+        supabase
+          .from("deposits")
+          .select("*")
+          .eq("user_id", user.id)
+          .gte("deposit_date", fromDate)
+          .lte("deposit_date", toDate),
+        supabase
+          .from("withdrawals")
+          .select("*")
+          .eq("user_id", user.id)
+          .gte("withdrawal_date", fromDate)
+          .lte("withdrawal_date", toDate),
+        supabase
+          .from("cooperative_savings")
+          .select("*")
+          .eq("user_id", user.id)
+          .gte("contribution_date", fromDate)
+          .lte("contribution_date", toDate),
+      ]);
+
+      // Calculate totals from fetched data
+      const orders = ordersRes.data || [];
+      const charging = chargingRes.data || [];
+      const expenses = expensesRes.data || [];
+      const deposits = depositsRes.data || [];
+      const withdrawals = withdrawalsRes.data || [];
+      const savings = savingsRes.data || [];
+
+      // Calculate payment mode breakdowns
+      const calculatePaymentBreakdown = (items: any[], amountField: string) => {
+        const cash = items.filter(item => item.payment_mode?.toLowerCase() === 'cash')
+          .reduce((sum, item) => sum + (item[amountField] || 0), 0);
+        const esewa = items.filter(item => item.payment_mode?.toLowerCase() === 'esewa')
+          .reduce((sum, item) => sum + (item[amountField] || 0), 0);
+        const fonepay = items.filter(item => item.payment_mode?.toLowerCase() === 'fonepay')
+          .reduce((sum, item) => sum + (item[amountField] || 0), 0);
+        return { cash, esewa, fonepay };
+      };
+
+      const orderPayments = calculatePaymentBreakdown(orders, 'total');
+      const chargingPayments = calculatePaymentBreakdown(charging, 'total_amount');
+      const expensePayments = calculatePaymentBreakdown(expenses, 'amount');
+      const savingsPayments = calculatePaymentBreakdown(savings, 'contribution_amount');
+      const depositPayments = calculatePaymentBreakdown(deposits, 'amount');
+
+      const total_income_from_orders = orders.reduce((sum, order) => sum + (order.total || 0), 0);
+      const total_income_from_charging = charging.reduce((sum, session) => sum + (session.total_amount || 0), 0);
+      const total_income = total_income_from_orders + total_income_from_charging;
+      const total_expenses = expenses.reduce((sum, expense) => sum + (expense.amount || 0), 0);
+      const total_deposits = deposits.reduce((sum, deposit) => sum + (deposit.amount || 0), 0);
+      const total_withdrawals = withdrawals.reduce((sum, withdrawal) => sum + (withdrawal.amount || 0), 0);
+      const total_savings = savings.reduce((sum, saving) => sum + (saving.contribution_amount || 0), 0);
+
+      // Calculate balances (simplified for range view)
+      const cash_balance = orderPayments.cash + chargingPayments.cash - expensePayments.cash - savingsPayments.cash + depositPayments.cash;
+      const esewa_balance = orderPayments.esewa + chargingPayments.esewa - expensePayments.esewa - savingsPayments.esewa + depositPayments.esewa;
+      const fonepay_balance = orderPayments.fonepay + chargingPayments.fonepay - expensePayments.fonepay - savingsPayments.fonepay + depositPayments.fonepay;
+      const cooperative_balance = total_savings - total_withdrawals;
+      const total_balance = cash_balance + esewa_balance + fonepay_balance + cooperative_balance;
+
+      const data: DailyClosingData = {
+        date: `${fromDate} to ${toDate}`,
+        total_income,
+        total_income_from_orders,
+        total_income_from_charging,
+        total_expenses,
+        total_deposits,
+        total_withdrawals,
+        total_savings,
+        
+        total_income_cash: orderPayments.cash + chargingPayments.cash,
+        total_income_esewa: orderPayments.esewa + chargingPayments.esewa,
+        total_income_fonepay: orderPayments.fonepay + chargingPayments.fonepay,
+        
+        cash_balance,
+        esewa_balance,
+        fonepay_balance,
+        cooperative_balance,
+        total_balance,
+        
+        orders_count: orders.length,
+        charging_count: charging.length,
+        expenses_count: expenses.length,
+        deposits_count: deposits.length,
+        withdrawals_count: withdrawals.length,
+        savings_count: savings.length,
+        
+        status: "completed",
+      };
+
+      setRangeData(data);
+    } catch (error) {
+      logError("fetching range data", error);
+      toast.error(`Error fetching range data: ${extractErrorMessage(error)}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const performDailyClosing = async () => {
-    if (!user || !closingData) return;
+    if (!user || !closingData || viewMode === "range") return;
 
     setProcessing(true);
     try {
@@ -416,7 +559,25 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
     }
   };
 
-  if (!isOpen) return null;
+  const handleQuickRanges = (type: 'month' | 'year') => {
+    const today = new Date();
+    if (type === 'month') {
+      setDateRange({
+        from: startOfMonth(today),
+        to: endOfMonth(today)
+      });
+    } else {
+      setDateRange({
+        from: startOfYear(today),
+        to: endOfYear(today)
+      });
+    }
+    setViewMode('range');
+  };
+
+  const currentData = viewMode === "range" ? rangeData : closingData;
+
+  if (!isOpen || !currentData) return null;
 
   return (
     <>
@@ -425,29 +586,80 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Calendar className="h-6 w-6 text-blue-600" />
-              Daily Closing System - {format(new Date(selectedDate), "MMMM dd, yyyy")}
-              {closingData && getStatusBadge(closingData.status)}
+              Daily Closing System - {viewMode === "single" ? format(new Date(selectedDate), "MMMM dd, yyyy") : currentData.date}
+              {getStatusBadge(currentData.status)}
             </DialogTitle>
           </DialogHeader>
 
           <div className="space-y-6">
-            {/* Date Selector with All Time Button */}
+            {/* View Mode Toggle and Date Controls */}
             <div className="flex items-center gap-4 p-4 bg-blue-50 rounded-lg">
-              <label className="text-sm font-medium">Closing Date:</label>
-              <input
-                type="date"
-                value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
-                disabled={processing}
-                className="border rounded px-3 py-2"
-              />
-              <Button
-                onClick={fetchClosingData}
-                disabled={loading}
-                variant="outline"
-              >
-                {loading ? "Loading..." : "Load Data"}
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant={viewMode === "single" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setViewMode("single")}
+                >
+                  <Calendar className="h-4 w-4 mr-2" />
+                  Single Date
+                </Button>
+                <Button
+                  variant={viewMode === "range" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setViewMode("range")}
+                >
+                  <CalendarRange className="h-4 w-4 mr-2" />
+                  Date Range
+                </Button>
+              </div>
+
+              {viewMode === "single" ? (
+                <>
+                  <label className="text-sm font-medium">Closing Date:</label>
+                  <input
+                    type="date"
+                    value={selectedDate}
+                    onChange={(e) => setSelectedDate(e.target.value)}
+                    disabled={processing}
+                    className="border rounded px-3 py-2"
+                  />
+                  <Button
+                    onClick={fetchClosingData}
+                    disabled={loading}
+                    variant="outline"
+                  >
+                    {loading ? "Loading..." : "Load Data"}
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <label className="text-sm font-medium">Date Range:</label>
+                  <DateRangePicker 
+                    onUpdate={(range) => {
+                      if (range) {
+                        setDateRange({ from: range.from, to: range.to });
+                      } else {
+                        setDateRange(undefined);
+                      }
+                    }} 
+                  />
+                  <Button
+                    onClick={() => handleQuickRanges('month')}
+                    variant="outline"
+                    size="sm"
+                  >
+                    This Month
+                  </Button>
+                  <Button
+                    onClick={() => handleQuickRanges('year')}
+                    variant="outline"
+                    size="sm"
+                  >
+                    This Year
+                  </Button>
+                </>
+              )}
+
               <div className="flex-1" />
               <Button
                 onClick={handleShowAllTime}
@@ -468,10 +680,10 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
                     <div>
                       <p className="text-sm text-gray-600">Total Income</p>
                       <p className="text-lg font-bold text-green-600">
-                        {formatCurrency(closingData.total_income)}
+                        {formatCurrency(currentData.total_income)}
                       </p>
                       <p className="text-xs text-gray-500">
-                        {closingData.orders_count + closingData.charging_count} transactions
+                        {currentData.orders_count + currentData.charging_count} transactions
                       </p>
                     </div>
                   </div>
@@ -485,10 +697,10 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
                     <div>
                       <p className="text-sm text-gray-600">Total Expenses</p>
                       <p className="text-lg font-bold text-red-600">
-                        {formatCurrency(closingData.total_expenses)}
+                        {formatCurrency(currentData.total_expenses)}
                       </p>
                       <p className="text-xs text-gray-500">
-                        {closingData.expenses_count} transactions
+                        {currentData.expenses_count} transactions
                       </p>
                     </div>
                   </div>
@@ -501,8 +713,8 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
                     <BarChart3 className="h-5 w-5 text-blue-600" />
                     <div>
                       <p className="text-sm text-gray-600">Net Result</p>
-                      <p className={`text-lg font-bold ${closingData.total_income - closingData.total_expenses >= 0 ? "text-green-600" : "text-red-600"}`}>
-                        {formatCurrency(closingData.total_income - closingData.total_expenses)}
+                      <p className={`text-lg font-bold ${currentData.total_income - currentData.total_expenses >= 0 ? "text-green-600" : "text-red-600"}`}>
+                        {formatCurrency(currentData.total_income - currentData.total_expenses)}
                       </p>
                       <p className="text-xs text-gray-500">
                         Profit/Loss
@@ -519,7 +731,7 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
                     <div>
                       <p className="text-sm text-gray-600">Total Balance</p>
                       <p className="text-lg font-bold text-purple-600">
-                        {formatCurrency(closingData.total_balance)}
+                        {formatCurrency(currentData.total_balance)}
                       </p>
                       <p className="text-xs text-gray-500">
                         All accounts
@@ -544,7 +756,7 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Eye className="h-5 w-5" />
-                      Daily Summary Overview
+                      {viewMode === "range" ? "Range Summary Overview" : "Daily Summary Overview"}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -564,10 +776,10 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
                               Orders
                             </TableCell>
                             <TableCell className="text-right font-medium text-green-600">
-                              {formatCurrency(closingData.total_income_from_orders)}
+                              {formatCurrency(currentData.total_income_from_orders)}
                             </TableCell>
                             <TableCell className="text-right">
-                              {closingData.orders_count}
+                              {currentData.orders_count}
                             </TableCell>
                           </TableRow>
                           <TableRow>
@@ -576,10 +788,10 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
                               Charging Sessions
                             </TableCell>
                             <TableCell className="text-right font-medium text-green-600">
-                              {formatCurrency(closingData.total_income_from_charging)}
+                              {formatCurrency(currentData.total_income_from_charging)}
                             </TableCell>
                             <TableCell className="text-right">
-                              {closingData.charging_count}
+                              {currentData.charging_count}
                             </TableCell>
                           </TableRow>
                           <TableRow>
@@ -588,10 +800,10 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
                               Expenses
                             </TableCell>
                             <TableCell className="text-right font-medium text-red-600">
-                              -{formatCurrency(closingData.total_expenses)}
+                              -{formatCurrency(currentData.total_expenses)}
                             </TableCell>
                             <TableCell className="text-right">
-                              {closingData.expenses_count}
+                              {currentData.expenses_count}
                             </TableCell>
                           </TableRow>
                           <TableRow>
@@ -600,10 +812,10 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
                               Deposits
                             </TableCell>
                             <TableCell className="text-right font-medium text-blue-600">
-                              {formatCurrency(closingData.total_deposits)}
+                              {formatCurrency(currentData.total_deposits)}
                             </TableCell>
                             <TableCell className="text-right">
-                              {closingData.deposits_count}
+                              {currentData.deposits_count}
                             </TableCell>
                           </TableRow>
                           <TableRow>
@@ -612,10 +824,10 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
                               Withdrawals
                             </TableCell>
                             <TableCell className="text-right font-medium text-orange-600">
-                              -{formatCurrency(closingData.total_withdrawals)}
+                              -{formatCurrency(currentData.total_withdrawals)}
                             </TableCell>
                             <TableCell className="text-right">
-                              {closingData.withdrawals_count}
+                              {currentData.withdrawals_count}
                             </TableCell>
                           </TableRow>
                           <TableRow>
@@ -624,10 +836,10 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
                               Savings
                             </TableCell>
                             <TableCell className="text-right font-medium text-purple-600">
-                              {formatCurrency(closingData.total_savings)}
+                              {formatCurrency(currentData.total_savings)}
                             </TableCell>
                             <TableCell className="text-right">
-                              {closingData.savings_count}
+                              {currentData.savings_count}
                             </TableCell>
                           </TableRow>
                         </TableBody>
@@ -656,7 +868,7 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
                               Orders
                             </span>
                             <span className="font-semibold text-green-600">
-                              {formatCurrency(closingData.total_income_from_orders)}
+                              {formatCurrency(currentData.total_income_from_orders)}
                             </span>
                           </div>
                           <div className="flex justify-between items-center p-3 bg-yellow-50 rounded">
@@ -665,7 +877,7 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
                               Charging
                             </span>
                             <span className="font-semibold text-green-600">
-                              {formatCurrency(closingData.total_income_from_charging)}
+                              {formatCurrency(currentData.total_income_from_charging)}
                             </span>
                           </div>
                         </div>
@@ -680,7 +892,7 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
                               Cash
                             </span>
                             <span className="font-semibold text-green-600">
-                              {formatCurrency(closingData.total_income_cash)}
+                              {formatCurrency(currentData.total_income_cash)}
                             </span>
                           </div>
                           <div className="flex justify-between items-center p-3 bg-blue-50 rounded">
@@ -689,7 +901,7 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
                               eSewa
                             </span>
                             <span className="font-semibold text-blue-600">
-                              {formatCurrency(closingData.total_income_esewa)}
+                              {formatCurrency(currentData.total_income_esewa)}
                             </span>
                           </div>
                           <div className="flex justify-between items-center p-3 bg-purple-50 rounded">
@@ -698,7 +910,7 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
                               Fonepay
                             </span>
                             <span className="font-semibold text-purple-600">
-                              {formatCurrency(closingData.total_income_fonepay)}
+                              {formatCurrency(currentData.total_income_fonepay)}
                             </span>
                           </div>
                         </div>
@@ -726,11 +938,11 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
                             Total Expenses
                           </span>
                           <span className="font-bold text-red-600 text-lg">
-                            {formatCurrency(closingData.total_expenses)}
+                            {formatCurrency(currentData.total_expenses)}
                           </span>
                         </div>
                         <p className="text-sm text-gray-600 mt-2">
-                          {closingData.expenses_count} expense transactions
+                          {currentData.expenses_count} expense transactions
                         </p>
                       </div>
                       
@@ -743,7 +955,7 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
                               Withdrawals
                             </span>
                             <span className="font-semibold text-orange-600">
-                              {formatCurrency(closingData.total_withdrawals)}
+                              {formatCurrency(currentData.total_withdrawals)}
                             </span>
                           </div>
                           <div className="flex justify-between items-center p-3 bg-purple-50 rounded">
@@ -752,7 +964,7 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
                               Savings
                             </span>
                             <span className="font-semibold text-purple-600">
-                              {formatCurrency(closingData.total_savings)}
+                              {formatCurrency(currentData.total_savings)}
                             </span>
                           </div>
                         </div>
@@ -779,7 +991,7 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
                             Cash Balance
                           </span>
                           <span className="font-bold text-green-600 text-lg">
-                            {formatCurrency(closingData.cash_balance)}
+                            {formatCurrency(currentData.cash_balance)}
                           </span>
                         </div>
                         
@@ -789,7 +1001,7 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
                             eSewa Balance
                           </span>
                           <span className="font-bold text-blue-600 text-lg">
-                            {formatCurrency(closingData.esewa_balance)}
+                            {formatCurrency(currentData.esewa_balance)}
                           </span>
                         </div>
                       </div>
@@ -801,7 +1013,7 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
                             Fonepay Balance
                           </span>
                           <span className="font-bold text-purple-600 text-lg">
-                            {formatCurrency(closingData.fonepay_balance)}
+                            {formatCurrency(currentData.fonepay_balance)}
                           </span>
                         </div>
                         
@@ -811,7 +1023,7 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
                             Cooperative Balance
                           </span>
                           <span className="font-bold text-orange-600 text-lg">
-                            {formatCurrency(closingData.cooperative_balance)}
+                            {formatCurrency(currentData.cooperative_balance)}
                           </span>
                         </div>
                       </div>
@@ -821,7 +1033,7 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
                       <div className="flex justify-between items-center">
                         <span className="text-lg font-semibold">Total Balance</span>
                         <span className="text-2xl font-bold text-gray-800">
-                          {formatCurrency(closingData.total_balance)}
+                          {formatCurrency(currentData.total_balance)}
                         </span>
                       </div>
                     </div>
@@ -829,52 +1041,52 @@ const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
                 </Card>
               </TabsContent>
             </Tabs>
+
+            {currentData?.error_message && (
+              <Card className="bg-red-50 border-red-200">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 text-red-800">
+                    <AlertTriangle className="h-5 w-5" />
+                    <span className="font-medium">Error:</span>
+                    {currentData.error_message}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
 
-          {closingData?.error_message && (
-            <Card className="bg-red-50 border-red-200">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-2 text-red-800">
-                  <AlertTriangle className="h-5 w-5" />
-                  <span className="font-medium">Error:</span>
-                  {closingData.error_message}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose} disabled={processing}>
-            Close
-          </Button>
-          {closingData && closingData.status !== "completed" && (
-            <Button
-              onClick={performDailyClosing}
-              disabled={processing || loading}
-              className="flex items-center gap-2"
-            >
-              {processing ? (
-                <>Processing...</>
-              ) : (
-                <>
-                  <Save className="h-4 w-4" />
-                  Perform Daily Closing
-                </>
-              )}
+          <DialogFooter>
+            <Button variant="outline" onClick={onClose} disabled={processing}>
+              Close
             </Button>
-          )}
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+            {viewMode === "single" && currentData && currentData.status !== "completed" && (
+              <Button
+                onClick={performDailyClosing}
+                disabled={processing || loading}
+                className="flex items-center gap-2"
+              >
+                {processing ? (
+                  <>Processing...</>
+                ) : (
+                  <>
+                    <Save className="h-4 w-4" />
+                    Perform Daily Closing
+                  </>
+                )}
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-    {/* All Time Summary Modal */}
-    <AllTimeSummaryModal
-      isOpen={showAllTimeSummary}
-      onClose={() => setShowAllTimeSummary(false)}
-      summaryData={allTimeSummaryData}
-      onDateRangeChange={handleAllTimeDateRangeChange}
-    />
+      {/* All Time Summary Modal */}
+      <AllTimeSummaryModal
+        isOpen={showAllTimeSummary}
+        onClose={() => setShowAllTimeSummary(false)}
+        summaryData={allTimeSummaryData}
+        onDateRangeChange={handleAllTimeDateRangeChange}
+      />
+    </>
   );
 };
 
