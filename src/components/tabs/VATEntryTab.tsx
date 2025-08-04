@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -39,6 +40,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 
+// Updated interface to match the actual database schema
 interface VATEntry {
   id: string;
   entry_type: string;
@@ -48,12 +50,21 @@ interface VATEntry {
   vat_rate: number;
   vat_amount: number;
   total_with_vat: number;
-  bill_generated: boolean;
-  bill_number: string | null;
-  bill_date: string | null;
-  customer_pan: string | null;
-  customer_name: string | null;
+  invoice_number: string;
+  invoice_date: string;
+  buyer_name: string;
+  buyer_address: string;
+  buyer_pan: string;
+  buyer_email?: string;
+  buyer_contact_number?: string;
+  seller_name: string;
+  seller_address: string;
+  seller_pan: string;
+  seller_email?: string;
+  seller_contact_number?: string;
+  payment_mode: string;
   created_at: string;
+  user_id?: string;
 }
 
 interface IncomeEntry {
@@ -74,9 +85,7 @@ const VATEntryTab = () => {
   const [selectedEntry, setSelectedEntry] = useState<IncomeEntry | null>(null);
   const [vatDialogOpen, setVatDialogOpen] = useState(false);
   const [billDialogOpen, setBillDialogOpen] = useState(false);
-  const [selectedVATEntry, setSelectedVATEntry] = useState<VATEntry | null>(
-    null,
-  );
+  const [selectedVATEntry, setSelectedVATEntry] = useState<VATEntry | null>(null);
   const [billForm, setBillForm] = useState({
     customer_name: "",
     customer_pan: "",
@@ -185,7 +194,35 @@ const VATEntryTab = () => {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setVatEntries(data || []);
+      
+      // Map the database entries to match our interface
+      const mappedEntries: VATEntry[] = (data || []).map((entry: any) => ({
+        id: entry.id,
+        entry_type: entry.entry_type || 'manual',
+        entry_id: entry.entry_id || '',
+        item_name: entry.item_name || '',
+        amount: entry.amount || 0,
+        vat_rate: entry.vat_rate || 13,
+        vat_amount: entry.vat_amount || 0,
+        total_with_vat: entry.total_with_vat || 0,
+        invoice_number: entry.invoice_number || '',
+        invoice_date: entry.invoice_date || '',
+        buyer_name: entry.buyer_name || '',
+        buyer_address: entry.buyer_address || '',
+        buyer_pan: entry.buyer_pan || '',
+        buyer_email: entry.buyer_email,
+        buyer_contact_number: entry.buyer_contact_number,
+        seller_name: entry.seller_name || '',
+        seller_address: entry.seller_address || '',
+        seller_pan: entry.seller_pan || '',
+        seller_email: entry.seller_email,
+        seller_contact_number: entry.seller_contact_number,
+        payment_mode: entry.payment_mode || 'Cash',
+        created_at: entry.created_at || '',
+        user_id: entry.user_id
+      }));
+      
+      setVatEntries(mappedEntries);
     } catch (error) {
       logError("fetching VAT entries", error);
       const errorMessage = extractErrorMessage(error);
@@ -231,16 +268,39 @@ const VATEntryTab = () => {
         nepalVATRate,
       );
 
-      // Only insert the base fields, let computed columns be calculated automatically
-      const { error } = await supabase.from("vat_entries").insert({
+      const invoiceNumber = `VAT-${Date.now()}`;
+      const currentDate = new Date().toISOString().split('T')[0];
+
+      // Create VAT entry with all required fields
+      const vatEntryData = {
         user_id: user.id,
         entry_type: selectedEntry.type,
         entry_id: selectedEntry.id,
         item_name: selectedEntry.item_name,
-        amount: vatCalculation.baseAmount, // Store the base amount (excluding VAT)
+        amount: vatCalculation.baseAmount,
         vat_rate: nepalVATRate,
-        // Remove vat_amount and total_with_vat - these are computed columns
-      });
+        vat_amount: vatCalculation.vatAmount,
+        total_with_vat: vatCalculation.totalWithVAT,
+        invoice_number: invoiceNumber,
+        invoice_date: currentDate,
+        buyer_name: 'Customer',
+        buyer_address: 'Address',
+        buyer_pan: '000000000',
+        seller_name: 'Your Business',
+        seller_address: 'Your Address',
+        seller_pan: '123456789',
+        payment_mode: selectedEntry.payment_mode,
+        amount_due: 0,
+        amount_paid: vatCalculation.totalWithVAT,
+        grand_total: vatCalculation.totalWithVAT,
+        vat_total: vatCalculation.vatAmount,
+        sub_total: vatCalculation.baseAmount,
+        items: [{ name: selectedEntry.item_name, quantity: 1, rate: vatCalculation.baseAmount, amount: vatCalculation.baseAmount }],
+        seller_vat_registration_number: '123456789',
+        buyer_vat_registration_number: '000000000'
+      };
+
+      const { error } = await supabase.from("vat_entries").insert(vatEntryData);
 
       if (error) {
         logError("creating VAT entry", error);
@@ -291,15 +351,16 @@ const VATEntryTab = () => {
     try {
       const billNumber = billForm.bill_number || `VAT-${Date.now()}`;
 
+      const updateData = {
+        buyer_name: billForm.customer_name,
+        buyer_pan: billForm.customer_pan || '000000000',
+        invoice_number: billNumber,
+        invoice_date: new Date().toISOString().split("T")[0]
+      };
+
       const { error } = await supabase
         .from("vat_entries")
-        .update({
-          bill_generated: true,
-          bill_number: billNumber,
-          bill_date: new Date().toISOString().split("T")[0],
-          customer_name: billForm.customer_name,
-          customer_pan: billForm.customer_pan,
-        })
+        .update(updateData)
         .eq("id", selectedVATEntry.id);
 
       if (error) throw error;
@@ -552,20 +613,10 @@ Thank you for your business!
                         >
                           {entry.entry_type}
                         </Badge>
-                        {entry.bill_generated ? (
-                          <Badge className="bg-green-100 text-green-800">
-                            <CheckCircle className="h-3 w-3 mr-1" />
-                            Billed
-                          </Badge>
-                        ) : (
-                          <Badge
-                            variant="outline"
-                            className="text-orange-600 border-orange-200"
-                          >
-                            <AlertCircle className="h-3 w-3 mr-1" />
-                            Pending
-                          </Badge>
-                        )}
+                        <Badge className="bg-green-100 text-green-800">
+                          <CheckCircle className="h-3 w-3 mr-1" />
+                          Invoice: {entry.invoice_number}
+                        </Badge>
                       </div>
                       <h4 className="font-medium text-gray-800">
                         {entry.item_name}
@@ -579,23 +630,16 @@ Thank you for your business!
                       </p>
                     </div>
                     <div className="flex gap-2">
-                      {!entry.bill_generated && (
-                        <Button
-                          onClick={() => {
-                            setSelectedVATEntry(entry);
-                            setBillDialogOpen(true);
-                          }}
-                          size="sm"
-                          className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
-                        >
-                          Generate Bill
-                        </Button>
-                      )}
-                      {entry.bill_generated && (
-                        <Badge className="bg-green-100 text-green-800">
-                          Bill: {entry.bill_number}
-                        </Badge>
-                      )}
+                      <Button
+                        onClick={() => {
+                          setSelectedVATEntry(entry);
+                          setBillDialogOpen(true);
+                        }}
+                        size="sm"
+                        className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+                      >
+                        Generate Bill
+                      </Button>
                     </div>
                   </div>
                 ))}

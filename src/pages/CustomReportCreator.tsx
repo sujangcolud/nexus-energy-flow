@@ -1,13 +1,7 @@
+
 import { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -17,22 +11,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Calculator, FileText } from "lucide-react";
 
 interface CustomCalculation {
-  heading: string;
-  formula: {
-    table: string;
-    column: string;
-    operator: string;
-  }[];
+  [key: string]: any;
+  id: string;
+  name: string;
+  formula: string;
+  result?: number;
 }
 
 interface Filter {
-  column: string;
+  [key: string]: any;
+  field: string;
   operator: string;
   value: string;
 }
@@ -40,256 +35,329 @@ interface Filter {
 const CustomReportCreator = () => {
   const { user } = useAuth();
   const [reportName, setReportName] = useState("");
+  const [selectedTables, setSelectedTables] = useState<string[]>([]);
+  const [availableColumns, setAvailableColumns] = useState<Record<string, string[]>>({});
   const [customCalculations, setCustomCalculations] = useState<CustomCalculation[]>([]);
-  const [allColumns, setAllColumns] = useState<Record<string, string[]>>({});
-  const [currentFormula, setCurrentFormula] = useState<{table: string, column: string, operator: string}[]>([]);
-  const [currentHeading, setCurrentHeading] = useState("");
   const [filters, setFilters] = useState<Filter[]>([]);
-  const [reportData, setReportData] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  const availableTables = [
+    "orders",
+    "expenses",
+    "deposits",
+    "withdrawals",
+    "charging_sessions",
+    "cooperative_savings"
+  ];
 
   useEffect(() => {
-    const fetchAllColumns = async () => {
-      const { data, error } = await supabase.rpc('get_all_table_columns');
-      if (error) {
-        console.error("Error fetching all columns:", error);
-      } else {
-        setAllColumns(data);
+    if (selectedTables.length > 0) {
+      fetchTableColumns();
+    }
+  }, [selectedTables]);
+
+  const fetchTableColumns = async () => {
+    try {
+      const columnsData: Record<string, string[]> = {};
+      
+      for (const tableName of selectedTables) {
+        const { data, error } = await supabase
+          .from(tableName as any)
+          .select("*")
+          .limit(1);
+        
+        if (error) {
+          console.error(`Error fetching columns for ${tableName}:`, error);
+          continue;
+        }
+        
+        if (data && data.length > 0) {
+          columnsData[tableName] = Object.keys(data[0]);
+        } else {
+          // Default columns if no data exists
+          columnsData[tableName] = ['id', 'created_at', 'user_id'];
+        }
       }
+      
+      setAvailableColumns(columnsData);
+    } catch (error) {
+      console.error("Error fetching table columns:", error);
+      toast.error("Failed to fetch table columns");
+    }
+  };
+
+  const addCustomCalculation = () => {
+    const newCalculation: CustomCalculation = {
+      id: Date.now().toString(),
+      name: "",
+      formula: ""
     };
-    fetchAllColumns();
-  }, []);
-
-  const handleAddFormulaPart = () => {
-    setCurrentFormula([...currentFormula, { table: "", column: "", operator: "" }]);
+    setCustomCalculations([...customCalculations, newCalculation]);
   };
 
-  const handleFormulaPartChange = (index: number, field: string, value: string) => {
-    const newFormula = [...currentFormula];
-    newFormula[index] = { ...newFormula[index], [field]: value };
-    setCurrentFormula(newFormula);
+  const updateCustomCalculation = (id: string, field: string, value: string) => {
+    setCustomCalculations(prev =>
+      prev.map(calc =>
+        calc.id === id ? { ...calc, [field]: value } : calc
+      )
+    );
   };
 
-  const handleSaveCalculation = () => {
-    if (!currentHeading || currentFormula.length === 0) {
-      toast.error("Please fill in all fields for the custom calculation.");
+  const removeCustomCalculation = (id: string) => {
+    setCustomCalculations(prev => prev.filter(calc => calc.id !== id));
+  };
+
+  const addFilter = () => {
+    const newFilter: Filter = {
+      field: "",
+      operator: "=",
+      value: ""
+    };
+    setFilters([...filters, newFilter]);
+  };
+
+  const updateFilter = (index: number, field: string, value: string) => {
+    setFilters(prev =>
+      prev.map((filter, i) =>
+        i === index ? { ...filter, [field]: value } : filter
+      )
+    );
+  };
+
+  const removeFilter = (index: number) => {
+    setFilters(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const generateReport = async () => {
+    if (!reportName || selectedTables.length === 0) {
+      toast.error("Please enter report name and select at least one table");
       return;
     }
-    setCustomCalculations([...customCalculations, { heading: currentHeading, formula: currentFormula }]);
-    setCurrentHeading("");
-    setCurrentFormula([]);
-  };
 
-  const handleAddFilter = () => {
-    setFilters([...filters, { column: "", operator: "", value: "" }]);
-  };
+    setLoading(true);
+    try {
+      const reportData = {
+        name: reportName,
+        tables: selectedTables,
+        columns: availableColumns,
+        calculations: customCalculations as any, // Type assertion for Json compatibility
+        filters: filters as any, // Type assertion for Json compatibility
+        created_at: new Date().toISOString()
+      };
 
-  const handleFilterChange = (index: number, field: string, value: string) => {
-    const newFilters = [...filters];
-    newFilters[index] = { ...newFilters[index], [field]: value };
-    setFilters(newFilters);
-  };
+      const { error } = await supabase
+        .from("reports")
+        .insert({
+          user_id: user?.id,
+          report_type: "custom",
+          report_data: reportData as any, // Type assertion for Json compatibility
+          date_range_start: new Date().toISOString().split('T')[0],
+          date_range_end: new Date().toISOString().split('T')[0]
+        });
 
-  const handleGenerateReport = async () => {
-    if (customCalculations.length === 0) {
-      toast.error("Please add at least one custom calculation.");
-      return;
-    }
+      if (error) throw error;
 
-    const { data, error } = await supabase.rpc('execute_dynamic_report', {
-      custom_calculations: customCalculations,
-      filters: filters
-    });
-
-    if (error) {
-      console.error("Error generating report:", error);
-      toast.error("Error generating report: " + error.message);
-    } else {
-      setReportData(data);
+      toast.success("Custom report created successfully!");
+      
+      // Reset form
+      setReportName("");
+      setSelectedTables([]);
+      setAvailableColumns({});
+      setCustomCalculations([]);
+      setFilters([]);
+    } catch (error) {
+      console.error("Error creating custom report:", error);
+      toast.error("Failed to create custom report");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="grid grid-cols-2 gap-4 container mx-auto p-4">
-      <div>
-        <Card>
-          <CardHeader>
-            <CardTitle>Report</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {reportData.map((data, index) => (
-              <div key={index} className="p-2 border rounded-md mt-2">
-                <p className="font-bold">{data.heading}</p>
-                <p>{data.value}</p>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      </div>
-      <div>
-        <Card>
-          <CardHeader>
-            <CardTitle>Create Custom Report</CardTitle>
-            <CardDescription>
-              Define your own analytics logic to generate custom reports.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="reportName">Report Name</Label>
-              <Input
-                id="reportName"
-                value={reportName}
-                onChange={(e) => setReportName(e.target.value)}
-                placeholder="e.g., 'My Awesome Report'"
-              />
+    <div className="container mx-auto p-6 space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FileText className="h-6 w-6" />
+            Custom Report Creator
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div>
+            <Label htmlFor="reportName">Report Name</Label>
+            <Input
+              id="reportName"
+              value={reportName}
+              onChange={(e) => setReportName(e.target.value)}
+              placeholder="Enter report name"
+            />
+          </div>
+
+          <div>
+            <Label>Select Tables</Label>
+            <div className="flex flex-wrap gap-2 mt-2">
+              {availableTables.map((table) => (
+                <Button
+                  key={table}
+                  variant={selectedTables.includes(table) ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => {
+                    setSelectedTables(prev =>
+                      prev.includes(table)
+                        ? prev.filter(t => t !== table)
+                        : [...prev, table]
+                    );
+                  }}
+                >
+                  {table}
+                </Button>
+              ))}
             </div>
+          </div>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Custom Calculations</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="heading">Heading</Label>
-                  <Input
-                    id="heading"
-                    value={currentHeading}
-                    onChange={(e) => setCurrentHeading(e.target.value)}
-                    placeholder="e.g., 'Total Revenue'"
-                  />
-                </div>
-
-                {currentFormula.map((part, index) => (
-                  <div key={index} className="grid grid-cols-4 gap-2 items-center">
-                    <Select
-                      value={part.table}
-                      onValueChange={(value) => handleFormulaPartChange(index, "table", value)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select table" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Object.keys(allColumns).map((table) => (
-                          <SelectItem key={table} value={table}>
-                            {table}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <Select
-                      value={part.column}
-                      onValueChange={(value) => handleFormulaPartChange(index, "column", value)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select column" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {(allColumns[part.table] || []).map((col) => (
-                          <SelectItem key={col} value={col}>
-                            {col}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <Select
-                      value={part.operator}
-                      onValueChange={(value) => handleFormulaPartChange(index, "operator", value)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Operator" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="+">+</SelectItem>
-                        <SelectItem value="-">-</SelectItem>
-                        <SelectItem value="*">*</SelectItem>
-                        <SelectItem value="/">/</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <Button variant="outline" size="icon" onClick={() => setCurrentFormula(currentFormula.filter((_, i) => i !== index))}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+          {Object.keys(availableColumns).length > 0 && (
+            <div>
+              <Label>Available Columns</Label>
+              <div className="mt-2 space-y-2">
+                {Object.entries(availableColumns).map(([table, columns]) => (
+                  <div key={table}>
+                    <h4 className="font-medium text-sm text-gray-700">{table}</h4>
+                    <div className="flex flex-wrap gap-1">
+                      {columns.map((column) => (
+                        <Badge key={column} variant="secondary" className="text-xs">
+                          {column}
+                        </Badge>
+                      ))}
+                    </div>
                   </div>
                 ))}
-                <Button onClick={handleAddFormulaPart} variant="outline" size="sm">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Part
-                </Button>
-                <Button onClick={handleSaveCalculation}>Save Calculation</Button>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
+          )}
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Filters</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {filters.map((filter, index) => (
-                  <div key={index} className="grid grid-cols-4 gap-2 items-center">
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <Label>Custom Calculations</Label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={addCustomCalculation}
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                Add Calculation
+              </Button>
+            </div>
+            <div className="space-y-3">
+              {customCalculations.map((calculation) => (
+                <div key={calculation.id} className="flex gap-2 items-end">
+                  <div className="flex-1">
+                    <Input
+                      placeholder="Calculation name"
+                      value={calculation.name}
+                      onChange={(e) => updateCustomCalculation(calculation.id, "name", e.target.value)}
+                    />
+                  </div>
+                  <div className="flex-2">
+                    <Input
+                      placeholder="Formula (e.g., SUM(orders.total))"
+                      value={calculation.formula}
+                      onChange={(e) => updateCustomCalculation(calculation.id, "formula", e.target.value)}
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => removeCustomCalculation(calculation.id)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <Label>Filters</Label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={addFilter}
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                Add Filter
+              </Button>
+            </div>
+            <div className="space-y-3">
+              {filters.map((filter, index) => (
+                <div key={index} className="flex gap-2 items-end">
+                  <div className="flex-1">
                     <Select
-                      value={filter.column}
-                      onValueChange={(value) => handleFilterChange(index, "column", value)}
+                      value={filter.field}
+                      onValueChange={(value) => updateFilter(index, "field", value)}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Select column" />
+                        <SelectValue placeholder="Select field" />
                       </SelectTrigger>
                       <SelectContent>
-                        {Object.keys(allColumns).map((table) =>
-                          allColumns[table].map((col) => (
-                            <SelectItem key={`${table}.${col}`} value={`${table}.${col}`}>
-                              {`${table}.${col}`}
+                        {Object.entries(availableColumns).map(([table, columns]) =>
+                          columns.map((column) => (
+                            <SelectItem key={`${table}.${column}`} value={`${table}.${column}`}>
+                              {table}.{column}
                             </SelectItem>
                           ))
                         )}
                       </SelectContent>
                     </Select>
+                  </div>
+                  <div className="flex-1">
                     <Select
                       value={filter.operator}
-                      onValueChange={(value) => handleFilterChange(index, "operator", value)}
+                      onValueChange={(value) => updateFilter(index, "operator", value)}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Operator" />
+                        <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="=">=</SelectItem>
                         <SelectItem value="!=">!=</SelectItem>
-                        <SelectItem value=">">&gt;</SelectItem>
-                        <SelectItem value="<">&lt;</SelectItem>
-                        <SelectItem value=">=">&gt;=</SelectItem>
-                        <SelectItem value="<=">&lt;=</SelectItem>
+                        <SelectItem value=">">></SelectItem>
+                        <SelectItem value="<"><</SelectItem>
+                        <SelectItem value=">=">>=</SelectItem>
+                        <SelectItem value="<="><=</SelectItem>
+                        <SelectItem value="LIKE">LIKE</SelectItem>
                       </SelectContent>
                     </Select>
-                    <Input
-                      value={filter.value}
-                      onChange={(e) => handleFilterChange(index, "value", e.target.value)}
-                      placeholder="Value"
-                    />
-                    <Button variant="outline" size="icon" onClick={() => setFilters(filters.filter((_, i) => i !== index))}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
                   </div>
-                ))}
-                <Button onClick={handleAddFilter} variant="outline" size="sm">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Filter
-                </Button>
-              </CardContent>
-            </Card>
-
-            <div>
-              <Label>Saved Calculations</Label>
-              {customCalculations.map((calc, index) => (
-                <div key={index} className="p-2 border rounded-md mt-2">
-                  <p className="font-bold">{calc.heading}</p>
-                  <p>{calc.formula.map(p => `${p.table}.${p.column} ${p.operator}`).join(' ')}</p>
+                  <div className="flex-1">
+                    <Input
+                      placeholder="Value"
+                      value={filter.value}
+                      onChange={(e) => updateFilter(index, "value", e.target.value)}
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => removeFilter(index)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                 </div>
               ))}
             </div>
-          </CardContent>
-          <CardFooter>
-            <Button onClick={handleGenerateReport}>Generate Report</Button>
-          </CardFooter>
-        </Card>
-      </div>
+          </div>
+
+          <Button onClick={generateReport} disabled={loading} className="w-full">
+            <Calculator className="h-4 w-4 mr-2" />
+            {loading ? "Generating..." : "Generate Custom Report"}
+          </Button>
+        </CardContent>
+      </Card>
     </div>
   );
 };

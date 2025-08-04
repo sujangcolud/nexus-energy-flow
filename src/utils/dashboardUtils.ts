@@ -1,85 +1,48 @@
+
 import { supabase } from "@/integrations/supabase/client";
-import { extractErrorMessage } from "./errorHandling";
 
-export const checkCustomCalculationsAccess = async (): Promise<{
-  accessible: boolean;
-  error?: string;
-}> => {
+export interface DashboardData {
+  totalOrders: number;
+  totalRevenue: number;
+  totalExpenses: number;
+  totalUsers: number;
+}
+
+export const fetchDashboardData = async (userId: string): Promise<DashboardData> => {
   try {
-    // Try a simple query to check if table exists and is accessible
-    const { error } = await supabase
-      .from("custom_calculations")
-      .select("id", { count: "exact", head: true })
-      .limit(1);
+    // Since custom_calculations table doesn't exist, we'll calculate manually
+    const { data: ordersData } = await supabase
+      .from("orders")
+      .select("total")
+      .eq("user_id", userId);
 
-    if (!error) {
-      console.log("✅ custom_calculations table is accessible");
-      return { accessible: true };
-    }
+    const { data: expensesData } = await supabase
+      .from("expenses")
+      .select("amount")
+      .eq("user_id", userId);
 
-    const errorMessage = extractErrorMessage(error);
-    console.warn("⚠️ custom_calculations table not accessible:", errorMessage);
+    const { data: usersData } = await supabase
+      .from("profiles")
+      .select("id");
+
+    const totalOrders = ordersData?.length || 0;
+    const totalRevenue = ordersData?.reduce((sum, order) => sum + (order.total || 0), 0) || 0;
+    const totalExpenses = expensesData?.reduce((sum, expense) => sum + (expense.amount || 0), 0) || 0;
+    const totalUsers = usersData?.length || 0;
 
     return {
-      accessible: false,
-      error: errorMessage,
+      totalOrders,
+      totalRevenue,
+      totalExpenses,
+      totalUsers
     };
   } catch (error) {
-    const errorMessage = extractErrorMessage(error);
-    console.error("❌ Error checking custom_calculations table:", errorMessage);
+    console.error("Error fetching dashboard data:", error);
     return {
-      accessible: false,
-      error: errorMessage,
+      totalOrders: 0,
+      totalRevenue: 0,
+      totalExpenses: 0,
+      totalUsers: 0
     };
-  }
-};
-
-export const isDashboardStudioSupported = async (): Promise<boolean> => {
-  const { accessible } = await checkCustomCalculationsAccess();
-  return accessible;
-};
-
-// Dashboard storage utilities for localStorage fallback
-export const saveDashboardToStorage = (
-  userId: string,
-  dashboard: any,
-): void => {
-  try {
-    const key = `dashboards_${userId}`;
-    let existingDashboards = [];
-
-    try {
-      const stored = localStorage.getItem(key);
-      existingDashboards = stored ? JSON.parse(stored) : [];
-    } catch (e) {
-      console.error("Error parsing existing dashboards:", e);
-      existingDashboards = [];
-    }
-
-    const existingIndex = existingDashboards.findIndex(
-      (d: any) => d.id === dashboard.id,
-    );
-
-    if (existingIndex >= 0) {
-      existingDashboards[existingIndex] = dashboard;
-    } else {
-      existingDashboards.push(dashboard);
-    }
-
-    localStorage.setItem(key, JSON.stringify(existingDashboards));
-    console.log("Dashboard saved to localStorage");
-  } catch (error) {
-    console.error("Error saving dashboard to localStorage:", error);
-  }
-};
-
-export const loadDashboardsFromStorage = (userId: string): any[] => {
-  try {
-    const key = `dashboards_${userId}`;
-    const stored = localStorage.getItem(key);
-    return stored ? JSON.parse(stored) : [];
-  } catch (error) {
-    console.error("Error loading dashboards from localStorage:", error);
-    return [];
   }
 };

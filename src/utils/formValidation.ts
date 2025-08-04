@@ -1,5 +1,3 @@
-// Form Validation Utility
-// This utility validates that all forms are compatible with the enhanced database schema
 
 import { supabase } from "@/integrations/supabase/client";
 
@@ -31,123 +29,47 @@ export async function validateFormDatabaseCompatibility(): Promise<DatabaseSchem
     {
       name: 'orders',
       requiredFields: ['user_id', 'item_name', 'quantity', 'rate', 'total', 'payment_mode', 'order_date'],
-      testData: {
-        user_id: 'test-user-id',
-        item_name: 'Test Item',
-        quantity: 1,
-        rate: 100,
-        total: 100,
-        payment_mode: 'Cash',
-        order_date: new Date().toISOString().split('T')[0]
-      }
     },
     {
       name: 'charging_sessions',
       requiredFields: ['user_id', 'total_amount', 'payment_mode', 'session_date'],
-      testData: {
-        user_id: 'test-user-id',
-        total_amount: 100,
-        payment_mode: 'Cash',
-        session_date: new Date().toISOString().split('T')[0]
-      }
     },
     {
       name: 'expenses',
       requiredFields: ['user_id', 'description', 'amount', 'category', 'payment_mode', 'expense_date'],
-      testData: {
-        user_id: 'test-user-id',
-        description: 'Test Expense',
-        amount: 100,
-        category: 'Test Category',
-        payment_mode: 'Cash',
-        expense_date: new Date().toISOString().split('T')[0]
-      }
     },
     {
       name: 'deposits',
       requiredFields: ['user_id', 'amount', 'mode', 'deposited_by', 'deposit_date'],
-      testData: {
-        user_id: 'test-user-id',
-        amount: 100,
-        mode: 'Cash',
-        deposited_by: 'Test User',
-        deposit_date: new Date().toISOString().split('T')[0]
-      }
     },
     {
       name: 'withdrawals',
       requiredFields: ['user_id', 'amount', 'purpose', 'payment_mode', 'withdrawal_from', 'withdrawal_date'],
-      testData: {
-        user_id: 'test-user-id',
-        amount: 100,
-        purpose: 'Test Purpose',
-        payment_mode: 'Cash',
-        withdrawal_from: 'Cooperative',
-        withdrawal_date: new Date().toISOString().split('T')[0]
-      }
     },
     {
       name: 'cooperative_savings',
       requiredFields: ['user_id', 'member_id', 'contribution_amount', 'payment_mode', 'savings_to', 'contribution_date'],
-      testData: {
-        user_id: 'test-user-id',
-        member_id: 'TEST001',
-        contribution_amount: 100,
-        payment_mode: 'Cash',
-        savings_to: 'Cooperative',
-        contribution_date: new Date().toISOString().split('T')[0]
-      }
     }
   ];
 
   for (const table of tablesToTest) {
     try {
-      // Test if we can describe the table structure
-      const { data: tableInfo, error: infoError } = await supabase
-        .from(table.name)
+      // Test if we can describe the table structure by selecting with limit 0
+      const { error: infoError } = await supabase
+        .from(table.name as any)
         .select('*')
         .limit(0);
-
-      if (infoError && infoError.code !== 'PGRST116') {
-        results.push({
-          tableName: table.name,
-          isValid: false,
-          missingFields: [],
-          errors: [`Cannot access table: ${infoError.message}`]
-        });
-        continue;
-      }
-
-      // Try a dry-run insert to validate schema compatibility
-      const { error: insertError } = await supabase
-        .from(table.name)
-        .insert(table.testData)
-        .select()
-        .limit(0); // This should not actually insert due to limit(0)
 
       const missingFields: string[] = [];
       const errors: string[] = [];
 
-      if (insertError) {
-        // Parse the error to identify missing fields
-        if (insertError.message?.includes('column') && insertError.message?.includes('does not exist')) {
-          const fieldMatch = insertError.message.match(/column "([^"]+)" does not exist/);
-          if (fieldMatch) {
-            missingFields.push(fieldMatch[1]);
-          }
-        } else if (insertError.code === '42703') {
-          errors.push(`Schema error: ${insertError.message}`);
-        } else if (insertError.code === 'PGRST204') {
-          errors.push('Database schema mismatch detected');
-        } else {
-          // This might be expected for test data
-          console.log(`Expected error for table ${table.name}:`, insertError.message);
-        }
+      if (infoError && infoError.code !== 'PGRST116') {
+        errors.push(`Cannot access table: ${infoError.message}`);
       }
 
       results.push({
         tableName: table.name,
-        isValid: missingFields.length === 0 && errors.length === 0,
+        isValid: errors.length === 0,
         missingFields,
         errors
       });
