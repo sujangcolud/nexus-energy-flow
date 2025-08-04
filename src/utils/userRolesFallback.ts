@@ -18,6 +18,17 @@ export interface RoleDistribution {
 }
 
 /**
+ * Helper function to validate and convert role strings
+ */
+function validateRole(role: string | null | undefined): "user" | "data_entry" | "reports_viewer" | "super_admin" {
+  const validRoles = ["user", "data_entry", "reports_viewer", "super_admin"] as const;
+  if (role && validRoles.includes(role as any)) {
+    return role as "user" | "data_entry" | "reports_viewer" | "super_admin";
+  }
+  return "user";
+}
+
+/**
  * Enhanced fallback function with proper security logging
  */
 export async function getUsersWithRolesFallback(): Promise<UserWithRole[]> {
@@ -31,7 +42,7 @@ export async function getUsersWithRolesFallback(): Promise<UserWithRole[]> {
         email: user.email || "Unknown",
         first_name: user.first_name || "",
         last_name: user.last_name || "",
-        role: user.role as any || 'user',
+        role: validateRole(user.role),
         created_at: user.created_at || new Date().toISOString()
       }));
     }
@@ -57,7 +68,7 @@ export async function getUsersWithRolesFallback(): Promise<UserWithRole[]> {
         email: profile.email || "Unknown",
         first_name: profile.first_name || "",
         last_name: profile.last_name || "",
-        role: profile.role || 'user',
+        role: validateRole(profile.role),
         created_at: profile.created_at || new Date().toISOString()
       }));
     }

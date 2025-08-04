@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
@@ -77,14 +76,7 @@ const EnhancedUserManagementTab: React.FC = () => {
     try {
       // Use the fallback function instead of the RPC that might not exist
       const userData = await getUsersWithRolesFallback();
-      
-      // Ensure roles are properly typed
-      const typedUsers = userData.map(user => ({
-        ...user,
-        role: (user.role as AppRole) || "user"
-      }));
-      
-      setUsers(typedUsers);
+      setUsers(userData);
     } catch (error) {
       logError("fetching users", error);
       toast.error("Failed to load users");
@@ -344,7 +336,7 @@ const EnhancedUserManagementTab: React.FC = () => {
                             size="sm"
                             onClick={() => {
                               setSelectedUser(user);
-                              setNewRole(user.role as AppRole);
+                              setNewRole(user.role);
                             }}
                           >
                             <Edit className="h-3 w-3" />

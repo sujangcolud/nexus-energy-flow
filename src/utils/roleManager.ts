@@ -9,6 +9,8 @@ export interface UserRole {
   created_at: string;
 }
 
+export type RoleManagerRole = "user" | "data_entry" | "reports_viewer" | "super_admin";
+
 /**
  * Get current user's role
  */
@@ -96,5 +98,26 @@ export async function updateUserRole(userId: string, newRole: string): Promise<b
   } catch (error) {
     logError('updating user role', error);
     return false;
+  }
+}
+
+/**
+ * RoleManager class for compatibility
+ */
+export class RoleManager {
+  static async changeUserRole(
+    userId: string, 
+    newRole: RoleManagerRole, 
+    adminUserId: string
+  ): Promise<{ success: boolean; error?: string }> {
+    try {
+      const result = await updateUserRole(userId, newRole);
+      return { success: result };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Unknown error' 
+      };
+    }
   }
 }
