@@ -706,13 +706,7 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
                   </div>
                 </div>
                 <div className="text-center">
-                  <div className="text-sm text-gray-600">Fonepay</div>
-                  <div className="text-lg font-semibold text-purple-600">
-                    {formatCurrency(summaryData.currentBalances.fonepay)}
-                  </div>
-                </div>
-                <div className="text-center">
-                  <div className="text-sm text-gray-600">Bank</div>
+                  <div className="text-sm text-gray-600">Bank/Fonepay</div>
                   <div className="text-lg font-semibold text-orange-600">
                     {formatCurrency(summaryData.currentBalances.bank)}
                   </div>
