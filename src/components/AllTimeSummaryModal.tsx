@@ -99,6 +99,7 @@ export const AllTimeSummaryModal: React.FC<AllTimeSummaryModalProps> = ({
           cashBalance: 0,
           esewaBalance: 0,
           fonepayBalance: 0,
+          bankBalance: 0,
           cooperativeBalance: 0,
           totalBalance: 0,
           netProfit: 0,
