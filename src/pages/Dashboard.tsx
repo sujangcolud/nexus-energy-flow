@@ -653,6 +653,7 @@ const Dashboard = () => {
       <DailyClosingSystem
         isOpen={isDailyClosingOpen}
         onClose={() => setIsDailyClosingOpen(false)}
+        userId={user?.id || ""}
       />
 
       {/* Batch Daily Closing System */}
