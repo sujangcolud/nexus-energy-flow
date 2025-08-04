@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { DatePickerWithRange } from "@/components/ui/date-range-picker";
+import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -35,6 +35,7 @@ import {
   Cell,
   LineChart,
   Line,
+  Pie,
 } from "recharts";
 
 interface DailySummaryData {
@@ -403,7 +404,11 @@ const EnhancedInsightsTab: React.FC = () => {
           <h2 className="text-2xl font-bold text-gray-800">Enhanced Business Insights</h2>
         </div>
         <div className="flex items-center gap-4">
-          <DatePickerWithRange date={dateRange} setDate={setDateRange} />
+          <DateRangePicker onUpdate={(range) => {
+            if (range) {
+              setDateRange({ from: range.from, to: range.to });
+            }
+          }} />
           <Button
             variant="outline"
             size="sm"

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
@@ -343,24 +342,25 @@ const FinancialSummaryWidget: React.FC<FinancialSummaryWidgetProps> = ({
             total_expenses: acc.total_expenses + (day.total_expenses || 0),
             total_deposits: acc.total_deposits + (day.total_deposits || 0),
             total_withdrawals: acc.total_withdrawals + (day.total_withdrawals || 0),
-            net_profit: 0,
           }),
           {
             total_income: 0,
             total_expenses: 0,
             total_deposits: 0,
             total_withdrawals: 0,
-            net_profit: 0,
           },
         );
 
-        monthTotals.net_profit =
+        const net_profit =
           monthTotals.total_income +
           monthTotals.total_deposits -
           monthTotals.total_expenses -
           monthTotals.total_withdrawals;
 
-        setMonthSummary(monthTotals);
+        setMonthSummary({
+          ...monthTotals,
+          net_profit,
+        });
       } else {
         setMonthSummary({
           total_income: 0,
