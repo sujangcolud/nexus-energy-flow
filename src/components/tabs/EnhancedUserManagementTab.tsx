@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
@@ -46,7 +47,7 @@ import {
   getRoleDistributionFallback,
   type UserWithRole 
 } from "@/utils/userRolesFallback";
-import { RoleManager, type UserRole as RoleManagerRole } from "@/utils/roleManager";
+import { RoleManager, type RoleManagerRole } from "@/utils/roleManager";
 import { logError } from "@/utils/errorHandling";
 
 // Use the proper AppRole type from roleBasedAccess
