@@ -692,7 +692,7 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
                 <Banknote className="h-5 w-5" />
                 Current Balances
               </h3>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
                 <div className="text-center">
                   <div className="text-sm text-gray-600">Cash</div>
                   <div className="text-lg font-semibold text-green-600">
