@@ -274,8 +274,8 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
         const totalEsewaIncome = ordersBreakdown.esewa + chargingBreakdown.esewa;
         const totalFonepayIncome = ordersBreakdown.fonepay + chargingBreakdown.fonepay;
 
-        // Calculate deposits and withdrawals
-        const totalDeposits = (depositsResult.data || []).reduce((sum, d) => sum + Number(d.amount), 0);
+        // Calculate deposits by type and destination
+        const deposits = depositsResult.data || [];
         const totalSavings = (savingsResult.data || []).reduce((sum, s) => sum + Number(s.contribution_amount), 0);
 
         const cooperativeWithdrawals = (withdrawalsResult.data || [])
@@ -286,11 +286,37 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
           .filter(w => w.withdrawal_from === 'Bank')
           .reduce((sum, w) => sum + Number(w.amount), 0);
 
-        // Calculate actual current balances
-        const cashBalance = totalCashIncome - expensesBreakdown.cash - totalDeposits;
-        const esewaBalance = totalEsewaIncome - expensesBreakdown.esewa + totalDeposits;
-        const fonepayBalance = totalFonepayIncome - expensesBreakdown.fonepay;
-        const bankBalance = totalDeposits; // Bank balance represents deposited amounts
+        // Calculate deposit flows: from -> to
+        const depositFlows = deposits.reduce((acc, deposit) => {
+          const amount = Number(deposit.amount) || 0;
+          const fromMode = (deposit.mode || '').toLowerCase();
+          const toMode = (deposit.deposited_to || deposit.mode || '').toLowerCase();
+
+          // Track where money is coming from and going to
+          if (fromMode.includes('esewa')) {
+            acc.fromEsewa += amount;
+          } else if (fromMode.includes('fonepay')) {
+            acc.fromFonepay += amount;
+          } else {
+            acc.fromCash += amount; // Default to cash
+          }
+
+          if (toMode.includes('bank') || toMode.includes('fonepay')) {
+            acc.toBank += amount;
+          } else if (toMode.includes('esewa')) {
+            acc.toEsewa += amount;
+          } else {
+            acc.toCash += amount;
+          }
+
+          return acc;
+        }, { fromCash: 0, fromEsewa: 0, fromFonepay: 0, toCash: 0, toEsewa: 0, toBank: 0 });
+
+        // Calculate actual current balances with proper deposit flow logic
+        const cashBalance = totalCashIncome - expensesBreakdown.cash - depositFlows.fromCash + depositFlows.toCash;
+        const esewaBalance = totalEsewaIncome - expensesBreakdown.esewa - depositFlows.fromEsewa + depositFlows.toEsewa;
+        const fonepayBalance = totalFonepayIncome - expensesBreakdown.fonepay - depositFlows.fromFonepay;
+        const bankBalance = depositFlows.toBank; // Bank/Fonepay balance represents deposited amounts
         const cooperativeBalance = totalSavings - cooperativeWithdrawals;
 
         const totalBalance = cashBalance + esewaBalance + fonepayBalance + bankBalance + cooperativeBalance;
