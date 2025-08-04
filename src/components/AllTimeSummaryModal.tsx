@@ -225,8 +225,8 @@ export const AllTimeSummaryModal: React.FC<AllTimeSummaryModalProps> = ({
         fonepayExpenses: aggregatedData.totalExpensesFonepay,
         cashBalance,
         esewaBalance,
-        fonepayBalance,
-        bankBalance,
+        fonepayBalance: 0, // Always 0 since combined with bank
+        bankBalance, // Contains combined Bank + Fonepay
         cooperativeBalance,
         totalBalance,
         netProfit,
