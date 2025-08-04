@@ -98,7 +98,7 @@ export const AllTimeSummaryModal: React.FC<AllTimeSummaryModalProps> = ({
           fonepayExpenses: 0,
           cashBalance: 0,
           esewaBalance: 0,
-          fonepayBalance: 0,
+          fonepayBalance: 0, // Always 0 since combined with bank
           bankBalance: 0,
           cooperativeBalance: 0,
           totalBalance: 0,
