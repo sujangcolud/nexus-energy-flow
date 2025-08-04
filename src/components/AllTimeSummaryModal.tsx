@@ -168,13 +168,14 @@ export const AllTimeSummaryModal: React.FC<AllTimeSummaryModalProps> = ({
       const totalIncome = aggregatedData.totalIncomeFromOrders + aggregatedData.totalIncomeFromCharging;
       const netProfit = totalIncome - aggregatedData.totalExpenses;
 
-      // Get current balances from the latest summary
+      // Get current balances from the latest summary (same logic as AllTimeSummaryWidget)
       const latestSummary = dailySummaries[dailySummaries.length - 1];
-      const cashBalance = safeGet(latestSummary, 'cash_balance');
-      const esewaBalance = safeGet(latestSummary, 'esewa_balance');
-      const fonepayBalance = safeGet(latestSummary, 'fonepay_balance');
-      const cooperativeBalance = safeGet(latestSummary, 'cooperative_balance');
-      const totalBalance = cashBalance + esewaBalance + fonepayBalance + cooperativeBalance;
+      const cashBalance = Number(latestSummary?.cash_balance) || 0;
+      const esewaBalance = Number(latestSummary?.esewa_balance) || 0;
+      const fonepayBalance = Number(latestSummary?.fonepay_balance) || 0;
+      const bankBalance = Number(latestSummary?.bank_balance) || 0;
+      const cooperativeBalance = Number(latestSummary?.cooperative_balance) || 0;
+      const totalBalance = cashBalance + esewaBalance + fonepayBalance + bankBalance + cooperativeBalance;
 
       const calculatedData: AllTimeSummaryData = {
         totalIncome,
