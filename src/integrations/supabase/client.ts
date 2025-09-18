@@ -8,10 +8,21 @@ const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
+// Create auth options conditionally to avoid issues in non-browser environments (SSR, tests)
+const isBrowser = typeof window !== 'undefined' && typeof window.localStorage !== 'undefined';
+
+const authOptions = isBrowser
+  ? {
+      storage: window.localStorage,
+      persistSession: true,
+      autoRefreshToken: true,
+    }
+  : {
+      // No-op auth options for server-side or environments without localStorage
+      persistSession: false,
+      autoRefreshToken: false,
+    };
+
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
-  auth: {
-    storage: localStorage,
-    persistSession: true,
-    autoRefreshToken: true,
-  }
+  auth: authOptions as any,
 });
