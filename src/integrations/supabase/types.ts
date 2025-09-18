@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -1229,86 +1229,86 @@ export type Database = {
       calculate_daily_summary_fixed: {
         Args: { target_date: string; target_user_id: string }
         Returns: {
+          cash_balance: number
+          cooperative_balance: number
+          esewa_balance: number
+          fonepay_balance: number
           summary_date: string
-          total_income_from_orders: number
-          total_income_from_charging: number
-          total_income_fonepay: number
-          total_income_esewa: number
-          total_income_cash: number
+          total_balance: number
+          total_cash_income: number
+          total_deposits: number
+          total_deposits_cash: number
+          total_deposits_esewa: number
+          total_esewa_income: number
           total_expenses: number
           total_expenses_cash: number
           total_expenses_esewa: number
           total_expenses_fonepay: number
-          total_deposits: number
-          total_deposits_cash: number
-          total_deposits_esewa: number
+          total_fonepay_income: number
+          total_income: number
+          total_income_cash: number
+          total_income_esewa: number
+          total_income_fonepay: number
+          total_income_from_charging: number
+          total_income_from_orders: number
           total_savings: number
           total_savings_cash: number
-          total_savings_fonepay: number
           total_savings_esewa: number
+          total_savings_fonepay: number
           total_withdrawals: number
-          total_withdrawals_cooperative: number
           total_withdrawals_bank: number
           total_withdrawals_cash: number
+          total_withdrawals_cooperative: number
           total_withdrawals_esewa: number
           total_withdrawals_fonepay: number
-          total_income: number
-          total_cash_income: number
-          total_fonepay_income: number
-          total_esewa_income: number
-          cash_balance: number
-          esewa_balance: number
-          fonepay_balance: number
-          cooperative_balance: number
-          total_balance: number
         }[]
       }
       calculate_enhanced_daily_summary: {
         Args: { target_date: string }
         Returns: {
+          cash_balance: number
+          cooperative_balance: number
+          esewa_balance: number
+          fonepay_balance: number
           summary_date: string
-          total_income_from_orders: number
-          total_income_from_orders_cash: number
-          total_income_from_orders_fonepay: number
-          total_income_from_orders_esewa: number
-          total_income_from_charging: number
-          total_income_from_charging_fonepay: number
-          total_income_from_charging_esewa: number
-          total_income_from_charging_cash: number
+          total_balance: number
+          total_cash_income: number
+          total_deposits: number
+          total_deposits_cash: number
+          total_deposits_esewa: number
+          total_esewa_income: number
           total_expenses: number
           total_expenses_cash: number
           total_expenses_esewa: number
           total_expenses_fonepay: number
-          total_deposits: number
-          total_deposits_cash: number
-          total_deposits_esewa: number
+          total_fonepay_income: number
+          total_income: number
+          total_income_from_charging: number
+          total_income_from_charging_cash: number
+          total_income_from_charging_esewa: number
+          total_income_from_charging_fonepay: number
+          total_income_from_orders: number
+          total_income_from_orders_cash: number
+          total_income_from_orders_esewa: number
+          total_income_from_orders_fonepay: number
           total_savings: number
           total_savings_cash: number
-          total_savings_fonepay: number
           total_savings_esewa: number
+          total_savings_fonepay: number
           total_withdrawals: number
+          total_withdrawals_bank: number
+          total_withdrawals_bank_cash: number
+          total_withdrawals_bank_esewa: number
           total_withdrawals_cooperative: number
           total_withdrawals_cooperative_cash: number
           total_withdrawals_cooperative_esewa: number
           total_withdrawals_cooperative_fonepay: number
-          total_withdrawals_bank: number
-          total_withdrawals_bank_cash: number
-          total_withdrawals_bank_esewa: number
-          total_income: number
-          total_cash_income: number
-          total_fonepay_income: number
-          total_esewa_income: number
-          cash_balance: number
-          esewa_balance: number
-          fonepay_balance: number
-          cooperative_balance: number
-          total_balance: number
         }[]
       }
       daily_closing: {
         Args:
           | { closing_date: string; user_id_param: string }
-          | { p_user_id: string; p_closing_date: string }
+          | { p_closing_date: string; p_user_id: string }
         Returns: undefined
       }
       execute_dynamic_report: {
@@ -1316,7 +1316,7 @@ export type Database = {
         Returns: Json
       }
       generate_balance_sheet: {
-        Args: { user_id_param: string; date_from: string; date_to: string }
+        Args: { date_from: string; date_to: string; user_id_param: string }
         Returns: undefined
       }
       get_all_table_columns: {
@@ -1326,12 +1326,12 @@ export type Database = {
       get_all_users_with_roles: {
         Args: Record<PropertyKey, never>
         Returns: {
-          id: string
+          created_at: string
           email: string
           first_name: string
+          id: string
           last_name: string
           role: string
-          created_at: string
         }[]
       }
       get_cooperative_savings_trend: {
@@ -1344,8 +1344,8 @@ export type Database = {
       get_cooperative_savings_weekly_10weeks: {
         Args: Record<PropertyKey, never>
         Returns: {
-          week: string
           total_savings: number
+          week: string
         }[]
       }
       get_current_user_role: {
@@ -1379,39 +1379,39 @@ export type Database = {
       get_expense_categorization: {
         Args: Record<PropertyKey, never>
         Returns: {
-          category: string
           amount: number
+          category: string
         }[]
       }
       get_income_breakdown: {
         Args: Record<PropertyKey, never>
         Returns: {
-          source: string
           amount: number
+          source: string
         }[]
       }
       get_menu_item_availability: {
         Args: Record<PropertyKey, never>
         Returns: {
-          status: string
           item_count: number
+          status: string
         }[]
       }
       get_monthly_deposits_withdrawals: {
         Args: Record<PropertyKey, never>
         Returns: {
-          month: string
           deposits: number
+          month: string
           withdrawals: number
         }[]
       }
       get_monthly_financial_summary: {
         Args: Record<PropertyKey, never>
         Returns: {
-          month: string
-          revenue: number
           expenses: number
+          month: string
           profit: number
+          revenue: number
         }[]
       }
       get_new_user_growth: {
@@ -1438,9 +1438,9 @@ export type Database = {
       get_revenue_vs_expenses_3months: {
         Args: Record<PropertyKey, never>
         Returns: {
+          expenses: number
           month: string
           revenue: number
-          expenses: number
         }[]
       }
       get_sales_by_payment_mode: {
@@ -1460,12 +1460,12 @@ export type Database = {
       get_user_profiles_with_roles: {
         Args: Record<PropertyKey, never>
         Returns: {
-          id: string
+          created_at: string
           email: string
           first_name: string
+          id: string
           last_name: string
           role: string
-          created_at: string
         }[]
       }
       get_user_role_distribution: {
@@ -1481,24 +1481,24 @@ export type Database = {
       }
       insert_order_safe: {
         Args: {
-          p_user_id: string
           p_item_name: string
+          p_order_date: string
+          p_payment_mode: string
           p_quantity: number
           p_rate: number
           p_total: number
-          p_payment_mode: string
-          p_order_date: string
+          p_user_id: string
         }
         Returns: {
+          created_at: string
           id: string
-          user_id: string
           item_name: string
+          order_date: string
+          payment_mode: string
           quantity: number
           rate: number
           total: number
-          payment_mode: string
-          order_date: string
-          created_at: string
+          user_id: string
         }[]
       }
       recalculate_historical_daily_summaries: {
@@ -1511,9 +1511,9 @@ export type Database = {
       }
       safe_get_daily_summary_value: {
         Args: {
-          summary_row: Database["public"]["Tables"]["daily_summary"]["Row"]
-          primary_column: string
           fallback_column?: string
+          primary_column: string
+          summary_row: Database["public"]["Tables"]["daily_summary"]["Row"]
         }
         Returns: number
       }
