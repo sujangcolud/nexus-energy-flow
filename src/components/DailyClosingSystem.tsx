@@ -93,35 +93,30 @@ export const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
 
       console.log('Daily summaries data:', dailySummaries);
 
+      // If no daily summary data found, calculate from individual transaction tables
       if (!dailySummaries || dailySummaries.length === 0) {
-        console.warn('No daily summary data found for date range');
-        // Set empty data
-        setClosingData({
-          selectedDate: targetDate || startFilter,
-          totalIncome: 0,
-          totalIncomeFromOrders: 0,
-          totalIncomeFromCharging: 0,
-          totalExpenses: 0,
-          totalDeposits: 0,
-          totalWithdrawals: 0,
-          totalSavings: 0,
-          cashIncome: 0,
-          esewaIncome: 0,
-          fonepayIncome: 0,
-          cashExpenses: 0,
-          esewaExpenses: 0,
-          fonepayExpenses: 0,
-          cashBalance: 0,
-          esewaBalance: 0,
-          fonepayBalance: 0,
-          cooperativeBalance: 0,
-          totalBalance: 0,
-          netProfit: 0,
-          cooperativeWithdrawals: 0,
-          bankWithdrawals: 0
-        });
+        console.warn('No daily summary data found, calculating from transaction tables...');
+        await calculateFromTransactionTables(targetDate || startFilter, startFilter, endFilter);
         return;
       }
+
+      // Check if all data is zeros (might happen with auto-generated entries)
+      const hasNonZeroData = dailySummaries.some(summary => 
+        (summary.total_income_from_orders && summary.total_income_from_orders > 0) ||
+        (summary.total_income_from_charging && summary.total_income_from_charging > 0) ||
+        (summary.total_expenses && summary.total_expenses > 0) ||
+        (summary.total_deposits && summary.total_deposits > 0) ||
+        (summary.total_withdrawals && summary.total_withdrawals > 0) ||
+        (summary.total_savings && summary.total_savings > 0)
+      );
+
+      if (!hasNonZeroData) {
+        console.warn('Daily summary data exists but all values are zero, calculating from transaction tables...');
+        await calculateFromTransactionTables(targetDate || startFilter, startFilter, endFilter);
+        return;
+      }
+
+      // ... keep existing code (helper function and aggregation logic)
 
       // Helper function for safe field access
       const safeGet = (obj: any, field: string): number => {
@@ -207,6 +202,179 @@ export const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
       console.error('Error fetching daily closing data:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const calculateFromTransactionTables = async (targetDate: Date, startFilter: Date, endFilter: Date) => {
+    try {
+      const startDateStr = startFilter.toISOString().split('T')[0];
+      const endDateStr = endFilter.toISOString().split('T')[0];
+
+      console.log('🔄 Calculating from individual transaction tables for:', { startDateStr, endDateStr });
+
+      // Fetch all transaction data in parallel
+      const [ordersRes, chargingRes, expensesRes, depositsRes, withdrawalsRes, savingsRes] = await Promise.all([
+        supabase
+          .from("orders")
+          .select("total, payment_mode, order_date")
+          .gte("order_date", startDateStr)
+          .lte("order_date", endDateStr),
+        
+        supabase
+          .from("charging_sessions")
+          .select("total_amount, payment_mode, session_date")
+          .gte("session_date", startDateStr)
+          .lte("session_date", endDateStr),
+        
+        supabase
+          .from("expenses")
+          .select("amount, payment_mode, expense_date")
+          .gte("expense_date", startDateStr)
+          .lte("expense_date", endDateStr),
+        
+        supabase
+          .from("deposits")
+          .select("amount, mode, deposit_date")
+          .gte("deposit_date", startDateStr)
+          .lte("deposit_date", endDateStr),
+        
+        supabase
+          .from("withdrawals")
+          .select("amount, payment_mode, withdrawal_from, withdrawal_date")
+          .gte("withdrawal_date", startDateStr)
+          .lte("withdrawal_date", endDateStr),
+        
+        supabase
+          .from("cooperative_savings")
+          .select("contribution_amount, payment_mode, contribution_date")
+          .gte("contribution_date", startDateStr)
+          .lte("contribution_date", endDateStr)
+      ]);
+
+      // Check for errors
+      if (ordersRes.error) throw ordersRes.error;
+      if (chargingRes.error) throw chargingRes.error;
+      if (expensesRes.error) throw expensesRes.error;
+      if (depositsRes.error) throw depositsRes.error;
+      if (withdrawalsRes.error) throw withdrawalsRes.error;
+      if (savingsRes.error) throw savingsRes.error;
+
+      console.log('📊 Raw transaction data fetched:', {
+        orders: ordersRes.data?.length || 0,
+        charging: chargingRes.data?.length || 0,
+        expenses: expensesRes.data?.length || 0,
+        deposits: depositsRes.data?.length || 0,
+        withdrawals: withdrawalsRes.data?.length || 0,
+        savings: savingsRes.data?.length || 0
+      });
+
+      // Calculate totals
+      const orders = ordersRes.data || [];
+      const charging = chargingRes.data || [];
+      const expenses = expensesRes.data || [];
+      const deposits = depositsRes.data || [];
+      const withdrawals = withdrawalsRes.data || [];
+      const savings = savingsRes.data || [];
+
+      // Helper function to match payment modes
+      const isPaymentMode = (mode: string, target: string): boolean => {
+        return mode?.toLowerCase().includes(target.toLowerCase()) || false;
+      };
+
+      // Calculate orders income by payment mode
+      const ordersTotal = orders.reduce((acc, order) => acc + (Number(order.total) || 0), 0);
+      const ordersCash = orders.filter(o => isPaymentMode(o.payment_mode, 'cash')).reduce((acc, o) => acc + (Number(o.total) || 0), 0);
+      const ordersEsewa = orders.filter(o => isPaymentMode(o.payment_mode, 'esewa')).reduce((acc, o) => acc + (Number(o.total) || 0), 0);
+      const ordersFonepay = orders.filter(o => isPaymentMode(o.payment_mode, 'fonepay')).reduce((acc, o) => acc + (Number(o.total) || 0), 0);
+
+      // Calculate charging income by payment mode
+      const chargingTotal = charging.reduce((acc, c) => acc + (Number(c.total_amount) || 0), 0);
+      const chargingCash = charging.filter(c => isPaymentMode(c.payment_mode, 'cash')).reduce((acc, c) => acc + (Number(c.total_amount) || 0), 0);
+      const chargingEsewa = charging.filter(c => isPaymentMode(c.payment_mode, 'esewa')).reduce((acc, c) => acc + (Number(c.total_amount) || 0), 0);
+      const chargingFonepay = charging.filter(c => isPaymentMode(c.payment_mode, 'fonepay')).reduce((acc, c) => acc + (Number(c.total_amount) || 0), 0);
+
+      // Calculate expenses by payment mode
+      const expensesTotal = expenses.reduce((acc, e) => acc + (Number(e.amount) || 0), 0);
+      const expensesCash = expenses.filter(e => isPaymentMode(e.payment_mode, 'cash')).reduce((acc, e) => acc + (Number(e.amount) || 0), 0);
+      const expensesEsewa = expenses.filter(e => isPaymentMode(e.payment_mode, 'esewa')).reduce((acc, e) => acc + (Number(e.amount) || 0), 0);
+      const expensesFonepay = expenses.filter(e => isPaymentMode(e.payment_mode, 'fonepay')).reduce((acc, e) => acc + (Number(e.amount) || 0), 0);
+
+      // Calculate other totals
+      const depositsTotal = deposits.reduce((acc, d) => acc + (Number(d.amount) || 0), 0);
+      const withdrawalsTotal = withdrawals.reduce((acc, w) => acc + (Number(w.amount) || 0), 0);
+      const cooperativeWithdrawalsTotal = withdrawals.filter(w => w.withdrawal_from === 'Cooperative').reduce((acc, w) => acc + (Number(w.amount) || 0), 0);
+      const bankWithdrawalsTotal = withdrawals.filter(w => w.withdrawal_from === 'Bank').reduce((acc, w) => acc + (Number(w.amount) || 0), 0);
+      const savingsTotal = savings.reduce((acc, s) => acc + (Number(s.contribution_amount) || 0), 0);
+
+      // Calculate totals by payment mode
+      const totalCashIncome = ordersCash + chargingCash;
+      const totalEsewaIncome = ordersEsewa + chargingEsewa;
+      const totalFonepayIncome = ordersFonepay + chargingFonepay;
+      const totalIncome = ordersTotal + chargingTotal;
+      const netProfit = totalIncome - expensesTotal;
+
+      // Simple balance calculation (this is approximate without opening balances)
+      const cashBalance = totalCashIncome - expensesCash;
+      const esewaBalance = totalEsewaIncome - expensesEsewa;
+      const fonepayBalance = totalFonepayIncome - expensesFonepay;
+      const cooperativeBalance = savingsTotal - cooperativeWithdrawalsTotal;
+      const totalBalance = cashBalance + esewaBalance + fonepayBalance + cooperativeBalance;
+
+      const calculatedData = {
+        selectedDate: targetDate,
+        totalIncome,
+        totalIncomeFromOrders: ordersTotal,
+        totalIncomeFromCharging: chargingTotal,
+        totalExpenses: expensesTotal,
+        totalDeposits: depositsTotal,
+        totalWithdrawals: withdrawalsTotal,
+        totalSavings: savingsTotal,
+        cashIncome: totalCashIncome,
+        esewaIncome: totalEsewaIncome,
+        fonepayIncome: totalFonepayIncome,
+        cashExpenses: expensesCash,
+        esewaExpenses: expensesEsewa,
+        fonepayExpenses: expensesFonepay,
+        cashBalance,
+        esewaBalance,
+        fonepayBalance,
+        cooperativeBalance,
+        totalBalance,
+        netProfit,
+        cooperativeWithdrawals: cooperativeWithdrawalsTotal,
+        bankWithdrawals: bankWithdrawalsTotal
+      };
+
+      console.log('💰 Calculated data from transactions:', calculatedData);
+      setClosingData(calculatedData);
+
+    } catch (error) {
+      console.error('Error calculating from transaction tables:', error);
+      // Set empty data as fallback
+      setClosingData({
+        selectedDate: targetDate,
+        totalIncome: 0,
+        totalIncomeFromOrders: 0,
+        totalIncomeFromCharging: 0,
+        totalExpenses: 0,
+        totalDeposits: 0,
+        totalWithdrawals: 0,
+        totalSavings: 0,
+        cashIncome: 0,
+        esewaIncome: 0,
+        fonepayIncome: 0,
+        cashExpenses: 0,
+        esewaExpenses: 0,
+        fonepayExpenses: 0,
+        cashBalance: 0,
+        esewaBalance: 0,
+        fonepayBalance: 0,
+        cooperativeBalance: 0,
+        totalBalance: 0,
+        netProfit: 0,
+        cooperativeWithdrawals: 0,
+        bankWithdrawals: 0
+      });
     }
   };
 
