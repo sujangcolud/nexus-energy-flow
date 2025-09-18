@@ -40,7 +40,6 @@ interface AllTimeSummaryData {
   cashBalance: number;
   esewaBalance: number;
   fonepayBalance: number;
-  bankBalance: number;
   cooperativeBalance: number;
   totalBalance: number;
 
@@ -98,8 +97,7 @@ export const AllTimeSummaryModal: React.FC<AllTimeSummaryModalProps> = ({
           fonepayExpenses: 0,
           cashBalance: 0,
           esewaBalance: 0,
-          fonepayBalance: 0, // Always 0 since combined with bank
-          bankBalance: 0,
+          fonepayBalance: 0,
           cooperativeBalance: 0,
           totalBalance: 0,
           netProfit: 0,
@@ -177,11 +175,10 @@ export const AllTimeSummaryModal: React.FC<AllTimeSummaryModalProps> = ({
       let cashBalance = Number(latestSummary?.cash_balance) || 0;
       let esewaBalance = Number(latestSummary?.esewa_balance) || 0;
       let fonepayBalance = Number(latestSummary?.fonepay_balance) || 0;
-      let bankBalance = Number(latestSummary?.bank_balance) || 0;
       let cooperativeBalance = Number(latestSummary?.cooperative_balance) || 0;
 
       // If all balances are zero, calculate from aggregated totals
-      if (cashBalance === 0 && esewaBalance === 0 && fonepayBalance === 0 && bankBalance === 0 && cooperativeBalance === 0) {
+      if (cashBalance === 0 && esewaBalance === 0 && fonepayBalance === 0 && cooperativeBalance === 0) {
         console.log("📊 Daily summary balances are zero, calculating from transaction totals...");
 
         // Calculate actual balances from transaction totals
@@ -192,22 +189,13 @@ export const AllTimeSummaryModal: React.FC<AllTimeSummaryModalProps> = ({
         esewaBalance = aggregatedData.totalIncomeEsewa - aggregatedData.totalExpensesEsewa;
 
         // Bank/Fonepay = Fonepay Income - Fonepay Expenses + Deposits to Bank/Fonepay (combined as user mentioned)
-        const combinedBankFonepayBalance = aggregatedData.totalIncomeFonepay - aggregatedData.totalExpensesFonepay + aggregatedData.totalDeposits;
+        fonepayBalance = aggregatedData.totalIncomeFonepay - aggregatedData.totalExpensesFonepay + aggregatedData.totalDeposits;
 
         // Cooperative = Total Savings - Cooperative Withdrawals
         cooperativeBalance = aggregatedData.totalSavings - aggregatedData.cooperativeWithdrawals;
-
-        // Bank and Fonepay are same per user instruction
-        bankBalance = combinedBankFonepayBalance;
-        fonepayBalance = 0; // Set to 0 since it's included in bank
-      } else {
-        // Use daily_summary balances but combine Bank and Fonepay as user requested
-        const combinedBankFonepayBalance = bankBalance + fonepayBalance;
-        bankBalance = combinedBankFonepayBalance;
-        fonepayBalance = 0; // Set to 0 since it's included in bank
       }
 
-      const totalBalance = cashBalance + esewaBalance + bankBalance + cooperativeBalance;
+      const totalBalance = cashBalance + esewaBalance + fonepayBalance + cooperativeBalance;
 
       const calculatedData: AllTimeSummaryData = {
         totalIncome,
@@ -225,8 +213,7 @@ export const AllTimeSummaryModal: React.FC<AllTimeSummaryModalProps> = ({
         fonepayExpenses: aggregatedData.totalExpensesFonepay,
         cashBalance,
         esewaBalance,
-        fonepayBalance: 0, // Always 0 since combined with bank
-        bankBalance, // Contains combined Bank + Fonepay
+        fonepayBalance,
         cooperativeBalance,
         totalBalance,
         netProfit,
@@ -361,7 +348,7 @@ export const AllTimeSummaryModal: React.FC<AllTimeSummaryModalProps> = ({
                   </div>
                   <div className="flex justify-between">
                     <span className="text-orange-600">Bank/Fonepay:</span>
-                    <span className={allTimeData.bankBalance < 0 ? 'text-red-600' : ''}>{formatCurrency(allTimeData.bankBalance)}</span>
+                    <span className={allTimeData.fonepayBalance < 0 ? 'text-red-600' : ''}>{formatCurrency(allTimeData.fonepayBalance)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-purple-600">Cooperative:</span>

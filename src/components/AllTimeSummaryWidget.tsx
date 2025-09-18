@@ -35,7 +35,6 @@ interface AllTimeSummaryData {
     cash: number;
     esewa: number;
     fonepay: number;
-    bank: number;
     cooperative: number;
     total: number;
   };
@@ -82,7 +81,7 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
     totalWithdrawals: 0,
     cooperativeSavings: 0,
     netProfit: 0,
-    currentBalances: { cash: 0, esewa: 0, fonepay: 0, bank: 0, cooperative: 0, total: 0 },
+    currentBalances: { cash: 0, esewa: 0, fonepay: 0, cooperative: 0, total: 0 },
     incomeBreakdown: { fromOrders: 0, fromCharging: 0 },
     paymentMethodBreakdown: { cash: 0, esewa: 0, fonepay: 0 },
     withdrawalBreakdown: {
@@ -151,7 +150,7 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
             totalWithdrawals: 0,
             cooperativeSavings: 0,
             netProfit: 0,
-            currentBalances: { cash: 0, esewa: 0, fonepay: 0, bank: 0, cooperative: 0, total: 0 },
+            currentBalances: { cash: 0, esewa: 0, fonepay: 0, cooperative: 0, total: 0 },
             incomeBreakdown: { fromOrders: 0, fromCharging: 0 },
             paymentMethodBreakdown: { cash: 0, esewa: 0, fonepay: 0 },
             withdrawalBreakdown: {
@@ -243,11 +242,10 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
         let cashBalance = Number(latestSummary?.cash_balance) || 0;
         let esewaBalance = Number(latestSummary?.esewa_balance) || 0;
         let fonepayBalance = Number(latestSummary?.fonepay_balance) || 0;
-        let bankBalance = Number(latestSummary?.bank_balance) || 0;
         let cooperativeBalance = Number(latestSummary?.cooperative_balance) || 0;
 
         // If all balances are zero, calculate from aggregated totals
-        if (cashBalance === 0 && esewaBalance === 0 && fonepayBalance === 0 && bankBalance === 0 && cooperativeBalance === 0) {
+        if (cashBalance === 0 && esewaBalance === 0 && fonepayBalance === 0 && cooperativeBalance === 0) {
           console.log("📊 Daily summary balances are zero, calculating from transaction totals...");
 
           // Calculate actual balances from transaction totals
@@ -258,27 +256,18 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
           esewaBalance = aggregatedSummary.totalIncomeEsewa - aggregatedSummary.totalExpensesEsewa + aggregatedSummary.totalDepositsEsewa;
 
           // Bank/Fonepay = Fonepay Income - Fonepay Expenses + Deposits to Bank/Fonepay (combined as user mentioned)
-          const combinedBankFonepayBalance = aggregatedSummary.totalIncomeFonepay - aggregatedSummary.totalExpensesFonepay + aggregatedSummary.totalDepositsCash;
+          fonepayBalance = aggregatedSummary.totalIncomeFonepay - aggregatedSummary.totalExpensesFonepay + aggregatedSummary.totalDepositsCash;
 
           // Cooperative = Total Savings - Cooperative Withdrawals
           cooperativeBalance = aggregatedSummary.totalSavings - aggregatedSummary.totalWithdrawalsCooperative;
-
-          // Bank and Fonepay are same per user instruction
-          bankBalance = combinedBankFonepayBalance;
-          fonepayBalance = 0; // Set to 0 since it's included in bank
-        } else {
-          // Use daily_summary balances but combine Bank and Fonepay as user requested
-          const combinedBankFonepayBalance = bankBalance + fonepayBalance;
-          bankBalance = combinedBankFonepayBalance;
-          fonepayBalance = 0; // Set to 0 since it's included in bank
         }
 
-        const totalBalance = cashBalance + esewaBalance + bankBalance + cooperativeBalance;
+        const totalBalance = cashBalance + esewaBalance + fonepayBalance + cooperativeBalance;
 
         console.log("💰 Calculated balances:", {
           cash: cashBalance,
           esewa: esewaBalance,
-          bank: bankBalance,
+          fonepay: fonepayBalance,
           cooperative: cooperativeBalance,
           total: totalBalance
         });
@@ -286,8 +275,7 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
         const currentBalances = {
           cash: cashBalance,
           esewa: esewaBalance,
-          fonepay: 0, // Always 0 since combined with bank
-          bank: bankBalance, // Contains combined Bank + Fonepay
+          fonepay: fonepayBalance,
           cooperative: cooperativeBalance,
           total: totalBalance,
         };
@@ -370,7 +358,7 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
           totalWithdrawals: 0,
           cooperativeSavings: 0,
           netProfit: 0,
-          currentBalances: { cash: 0, esewa: 0, fonepay: 0, bank: 0, cooperative: 0, total: 0 },
+          currentBalances: { cash: 0, esewa: 0, fonepay: 0, cooperative: 0, total: 0 },
           incomeBreakdown: { fromOrders: 0, fromCharging: 0 },
           paymentMethodBreakdown: { cash: 0, esewa: 0, fonepay: 0 },
           withdrawalBreakdown: {
@@ -708,7 +696,7 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
                 <div className="text-center">
                   <div className="text-sm text-gray-600">Bank/Fonepay</div>
                   <div className="text-lg font-semibold text-orange-600">
-                    {formatCurrency(summaryData.currentBalances.bank)}
+                    {formatCurrency(summaryData.currentBalances.fonepay)}
                   </div>
                 </div>
                 <div className="text-center">
