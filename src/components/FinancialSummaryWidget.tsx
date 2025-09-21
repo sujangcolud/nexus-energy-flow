@@ -344,6 +344,71 @@ const FinancialSummaryWidget: React.FC<FinancialSummaryWidgetProps> = ({
 
       if (error) {
         logError("fetching month summary", error);
+
+        // If network issue (Failed to fetch) or similar, attempt to compute monthly totals from raw tables as a fallback
+        if (
+          error.message?.includes("Failed to fetch") ||
+          error instanceof TypeError ||
+          String(error).includes("Failed to fetch")
+        ) {
+          console.warn("Network fetch failed when reading daily_summary; attempting raw aggregation fallback");
+
+          try {
+            const [ordersRes, chargingRes, expensesRes, depositsRes, withdrawalsRes, cooperativeRes] = await Promise.all([
+              supabase
+                .from("orders")
+                .select("total")
+                .gte("order_date", monthStart)
+                .lte("order_date", monthEnd),
+              supabase
+                .from("charging_sessions")
+                .select("total_amount")
+                .gte("session_date", monthStart)
+                .lte("session_date", monthEnd),
+              supabase
+                .from("expenses")
+                .select("amount")
+                .gte("date", monthStart)
+                .lte("date", monthEnd),
+              supabase
+                .from("deposits")
+                .select("amount")
+                .gte("deposit_date", monthStart)
+                .lte("deposit_date", monthEnd),
+              supabase
+                .from("withdrawals")
+                .select("amount")
+                .gte("withdrawal_date", monthStart)
+                .lte("withdrawal_date", monthEnd),
+              supabase
+                .from("cooperative_savings")
+                .select("contribution_amount")
+                .gte("contribution_date", monthStart)
+                .lte("contribution_date", monthEnd),
+            ]);
+
+            const orders = ordersRes.data || [];
+            const charging = chargingRes.data || [];
+            const expenses = expensesRes.data || [];
+            const deposits = depositsRes.data || [];
+            const withdrawals = withdrawalsRes.data || [];
+            const cooperative = cooperativeRes.data || [];
+
+            const total_income = orders.reduce((s, o) => s + (o.total || 0), 0) + charging.reduce((s, c) => s + (c.total_amount || 0), 0);
+            const total_expenses = expenses.reduce((s, e) => s + (e.amount || 0), 0);
+            const total_deposits = deposits.reduce((s, d) => s + (d.amount || 0), 0);
+            const total_withdrawals = withdrawals.reduce((s, w) => s + (w.amount || 0), 0);
+
+            const net_profit = total_income + total_deposits - total_expenses - total_withdrawals;
+
+            setMonthSummary({ total_income, total_expenses, total_deposits, total_withdrawals, net_profit });
+            return;
+          } catch (fallbackError) {
+            logError("fallback aggregation for month summary failed", fallbackError);
+            console.error("Fallback aggregation error:", fallbackError);
+          }
+        }
+
         throw error;
       }
 
@@ -385,6 +450,9 @@ const FinancialSummaryWidget: React.FC<FinancialSummaryWidgetProps> = ({
     } catch (error) {
       logError("fetching month summary", error);
       console.error("Error fetching month summary:", error);
+
+      // Friendly user message
+      toast.error("Unable to load monthly summary. Check your network or Supabase configuration.");
     }
   };
 
