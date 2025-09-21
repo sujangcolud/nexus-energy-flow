@@ -1070,7 +1070,7 @@ export type Database = {
           sub_total: number
           total_discount: number | null
           total_with_vat: number
-          user_id: string | null
+          user_id: string
           vat_amount: number
           vat_rate: number
           vat_total: number
@@ -1109,7 +1109,7 @@ export type Database = {
           sub_total: number
           total_discount?: number | null
           total_with_vat?: number
-          user_id?: string | null
+          user_id: string
           vat_amount?: number
           vat_rate?: number
           vat_total: number
@@ -1148,7 +1148,7 @@ export type Database = {
           sub_total?: number
           total_discount?: number | null
           total_with_vat?: number
-          user_id?: string | null
+          user_id?: string
           vat_amount?: number
           vat_rate?: number
           vat_total?: number
