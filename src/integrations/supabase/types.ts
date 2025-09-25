@@ -1504,6 +1504,10 @@ export type Database = {
           user_id: string
         }[]
       }
+      is_super_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       recalculate_historical_daily_summaries: {
         Args: { target_user_id: string }
         Returns: number
