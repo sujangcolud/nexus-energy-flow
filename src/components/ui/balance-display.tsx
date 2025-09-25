@@ -23,6 +23,15 @@ export const BalanceDisplay: React.FC<BalanceDisplayProps> = ({
   size = "md",
   showDetails = true,
 }) => {
+  // Validate balance calculations
+  const isValidBalance = totalBalance === (cashBalance + bankBalance + cooperativeBalance + esewaBalance);
+  
+  if (!isValidBalance) {
+    console.warn('⚠️ Balance Display: Total balance does not match sum of individual balances', {
+      calculated: cashBalance + bankBalance + cooperativeBalance + esewaBalance,
+      provided: totalBalance
+    });
+  }
   const cardClass = size === "sm" ? "p-3" : size === "lg" ? "p-6" : "p-4";
   const titleSize =
     size === "sm" ? "text-sm" : size === "lg" ? "text-lg" : "text-base";

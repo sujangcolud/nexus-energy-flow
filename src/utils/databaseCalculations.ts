@@ -301,7 +301,7 @@ export function calculateSavingsData(data: DatabaseTransactionData) {
 }
 
 /**
- * Calculate accurate balances based on database schema
+ * Calculate accurate balances based on proper accounting principles
  */
 export function calculateAccurateBalances(
   income: ReturnType<typeof calculateIncomeData>,
@@ -310,15 +310,15 @@ export function calculateAccurateBalances(
   withdrawals: ReturnType<typeof calculateWithdrawalData>,
   savings: ReturnType<typeof calculateSavingsData>
 ) {
-  // Cash Balance = Cash Income + Cash Withdrawals - Cash Expenses - Cash Savings - Cash Deposits
+  // CASH IN HAND = Cash Income - Cash Expenses - Cash Savings + Cash Withdrawals
+  // (Deposits from cash reduce cash, deposits to cash increase cash)
   const cashBalance = 
-    income.incomeByPaymentMode.cash +
-    withdrawals.withdrawalsByPaymentMode.cash -
+    income.incomeByPaymentMode.cash -
     expenses.expensesByPaymentMode.cash -
-    savings.savingsByPaymentMode.cash -
-    deposits.depositsByDestination.cash;
+    savings.savingsByPaymentMode.cash +
+    withdrawals.withdrawalsByPaymentMode.cash;
 
-  // eSewa Balance = eSewa Income + Deposits to eSewa - eSewa Expenses - eSewa Savings - Withdrawals from eSewa
+  // ESEWA BALANCE = eSewa Income + Deposits to eSewa - eSewa Expenses - eSewa Savings - Withdrawals from eSewa
   const esewaBalance = 
     income.incomeByPaymentMode.esewa +
     deposits.depositsByDestination.esewa -
@@ -326,25 +326,27 @@ export function calculateAccurateBalances(
     savings.savingsByPaymentMode.esewa -
     withdrawals.withdrawalsBySource.fromEsewa;
 
-  // Fonepay/Bank Balance = Fonepay Income + Bank Income + Bank Deposits - Fonepay Expenses - Bank Expenses - Bank Withdrawals
+  // FONEPAY/DIGITAL WALLET BALANCE = Fonepay Income - Fonepay Expenses - Fonepay Savings + Fonepay Withdrawals
   const fonepayBalance = 
-    income.incomeByPaymentMode.fonepay +
-    income.incomeByPaymentMode.bank +
-    deposits.depositsByDestination.fonepay +
-    deposits.depositsByDestination.bank -
+    income.incomeByPaymentMode.fonepay -
     expenses.expensesByPaymentMode.fonepay -
-    expenses.expensesByPaymentMode.bank -
-    withdrawals.withdrawalsBySource.fromBank;
+    savings.savingsByPaymentMode.fonepay +
+    withdrawals.withdrawalsByPaymentMode.fonepay;
 
-  // Cooperative Balance = Savings to Cooperative - Withdrawals from Cooperative
+  // BANK BALANCE = Bank Income + Bank Deposits - Bank Expenses - Bank Withdrawals + Savings to Bank
+  const bankBalance = 
+    income.incomeByPaymentMode.bank +
+    deposits.depositsByDestination.bank -
+    expenses.expensesByPaymentMode.bank -
+    withdrawals.withdrawalsBySource.fromBank +
+    savings.savingsByDestination.toBank;
+
+  // COOPERATIVE BALANCE = Total Savings to Cooperative - Withdrawals from Cooperative
   const cooperativeBalance = 
     savings.savingsByDestination.toCooperative -
     withdrawals.withdrawalsBySource.fromCooperative;
 
-  // Bank Balance (separate from Fonepay) = Savings to Bank
-  const bankBalance = savings.savingsByDestination.toBank;
-
-  const totalBalance = cashBalance + esewaBalance + fonepayBalance + cooperativeBalance + bankBalance;
+  const totalBalance = cashBalance + esewaBalance + fonepayBalance + bankBalance + cooperativeBalance;
 
   return {
     cash: Math.round(cashBalance * 100) / 100,

@@ -244,21 +244,24 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
         let fonepayBalance = Number(latestSummary?.fonepay_balance) || 0;
         let cooperativeBalance = Number(latestSummary?.cooperative_balance) || 0;
 
-        // If all balances are zero, calculate from aggregated totals
+        // If all balances are zero, calculate from aggregated totals using PROPER ACCOUNTING PRINCIPLES
         if (cashBalance === 0 && esewaBalance === 0 && fonepayBalance === 0 && cooperativeBalance === 0) {
           console.log("📊 Daily summary balances are zero, calculating from transaction totals...");
 
-          // Calculate actual balances from transaction totals
-          // Cash = Cash Income - Cash Expenses - Deposits from Cash + Deposits to Cash
-          cashBalance = aggregatedSummary.totalIncomeCash - aggregatedSummary.totalExpensesCash - aggregatedSummary.totalDepositsCash;
+          // CASH IN HAND = Cash Income - Cash Expenses - Cash Savings + Cash Withdrawals
+          // (When you make expenses in cash, cash reduces. When you save cash, cash reduces. When you withdraw cash, cash increases)
+          cashBalance = aggregatedSummary.totalIncomeCash - aggregatedSummary.totalExpensesCash - aggregatedSummary.totalSavings + aggregatedSummary.totalWithdrawalsCash;
 
-          // eSewa = eSewa Income - eSewa Expenses + Deposits to eSewa - Deposits from eSewa
+          // ESEWA BALANCE = eSewa Income - eSewa Expenses + Deposits to eSewa - Withdrawals from eSewa  
+          // (Deposits to eSewa increase eSewa balance, withdrawals from eSewa decrease it)
           esewaBalance = aggregatedSummary.totalIncomeEsewa - aggregatedSummary.totalExpensesEsewa + aggregatedSummary.totalDepositsEsewa;
 
-          // Bank/Fonepay = Fonepay Income - Fonepay Expenses + Deposits to Bank/Fonepay (combined as user mentioned)
-          fonepayBalance = aggregatedSummary.totalIncomeFonepay - aggregatedSummary.totalExpensesFonepay + aggregatedSummary.totalDepositsCash;
+          // FONEPAY/BANK BALANCE = Fonepay Income - Fonepay Expenses + Deposits to Bank - Bank Withdrawals
+          // (Bank deposits increase bank balance, bank withdrawals decrease it)
+          fonepayBalance = aggregatedSummary.totalIncomeFonepay - aggregatedSummary.totalExpensesFonepay + aggregatedSummary.totalDepositsCash - aggregatedSummary.totalWithdrawalsBank;
 
-          // Cooperative = Total Savings - Cooperative Withdrawals
+          // COOPERATIVE BALANCE = Total Savings - Cooperative Withdrawals
+          // (This is correct - savings go into cooperative, withdrawals come out)
           cooperativeBalance = aggregatedSummary.totalSavings - aggregatedSummary.totalWithdrawalsCooperative;
         }
 
