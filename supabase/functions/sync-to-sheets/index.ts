@@ -36,7 +36,7 @@ serve(async (req) => {
 
     const { table, startDate, endDate }: SyncRequest = await req.json();
 
-    let query = supabase.from(table).select('*');
+    let query = supabase.from(table).select('*', { count: 'exact' });
     
     // Apply date filters based on table
     if (startDate && endDate) {
@@ -46,14 +46,38 @@ serve(async (req) => {
       }
     }
 
-    const { data, error } = await query;
-
-    if (error) {
-      throw error;
+    // Fetch all rows without limit - paginate if needed
+    let allData: any[] = [];
+    let from = 0;
+    const pageSize = 1000;
+    
+    while (true) {
+      const { data, error, count } = await query.range(from, from + pageSize - 1);
+      
+      if (error) {
+        throw error;
+      }
+      
+      if (data && data.length > 0) {
+        allData = [...allData, ...data];
+        from += pageSize;
+        
+        // Break if we've fetched all rows
+        if (count && allData.length >= count) {
+          break;
+        }
+        
+        // Break if we got less than pageSize (last page)
+        if (data.length < pageSize) {
+          break;
+        }
+      } else {
+        break;
+      }
     }
 
     return new Response(
-      JSON.stringify({ data, table }),
+      JSON.stringify({ data: allData, table }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200 
