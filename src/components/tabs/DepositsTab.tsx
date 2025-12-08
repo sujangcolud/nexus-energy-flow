@@ -179,8 +179,7 @@ const DepositsTab = () => {
       key: "actions",
       label: "Actions",
       className: "font-semibold text-gray-700",
-      render: (_: any, deposit: Deposit) =>
-        canEditTransactions && (
+      render: (_: any, deposit: Deposit) => (
           <div className="flex gap-2">
             <Button
               variant="outline"
