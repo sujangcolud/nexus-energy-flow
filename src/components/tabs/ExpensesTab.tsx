@@ -133,14 +133,12 @@ const ExpensesTab = () => {
   useEffect(() => {
     fetchExpenses();
     fetchCategories();
+    // Default to true if no setting exists
     const canEdit = localStorage.getItem("canEditTransactions");
-    if (canEdit) {
-      setCanEditTransactions(JSON.parse(canEdit));
-    }
+    setCanEditTransactions(canEdit === null ? true : JSON.parse(canEdit));
+    
     const canAdd = localStorage.getItem("canAddExpenseCategory");
-    if (canAdd) {
-      setCanAddCategory(JSON.parse(canAdd));
-    }
+    setCanAddCategory(canAdd === null ? true : JSON.parse(canAdd));
   }, [user, page, range]);
 
   const fetchCategories = async () => {
