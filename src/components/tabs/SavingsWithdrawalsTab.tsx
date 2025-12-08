@@ -199,10 +199,9 @@ const SavingsWithdrawalsTab = () => {
   useEffect(() => {
     fetchSavings();
     fetchWithdrawals();
+    // Default to true if no setting exists
     const canEdit = localStorage.getItem("canEditTransactions");
-    if (canEdit) {
-      setCanEditTransactions(JSON.parse(canEdit));
-    }
+    setCanEditTransactions(canEdit === null ? true : JSON.parse(canEdit));
   }, [user, page, range]);
 
   const fetchSavings = async () => {

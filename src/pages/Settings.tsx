@@ -52,7 +52,7 @@ const Settings = () => {
     expenseBookings: true
   });
 
-  // Transaction editing settings
+  // Transaction editing settings - all enabled by default
   const [editSettings, setEditSettings] = useState({
     allowEditOrders: true,
     allowEditExpenses: true,
@@ -60,7 +60,7 @@ const Settings = () => {
     allowEditWithdrawals: true,
     allowEditCharging: true,
     allowEditSavings: true,
-    allowDeleteTransactions: false,
+    allowDeleteTransactions: true,
     requireApprovalForEdits: false,
     logAllChanges: true
   });
@@ -99,6 +99,12 @@ const Settings = () => {
     }
     if (savedEditSettings) {
       setEditSettings(JSON.parse(savedEditSettings));
+    } else {
+      // If no settings saved yet, set canEditTransactions to true by default
+      localStorage.setItem('canEditTransactions', JSON.stringify(true));
+      localStorage.setItem('canAddExpenseCategory', JSON.stringify(true));
+      localStorage.setItem('canAddDepositCategory', JSON.stringify(true));
+      localStorage.setItem('canAddChargingCategory', JSON.stringify(true));
     }
     if (savedAppSettings) {
       setAppSettings(JSON.parse(savedAppSettings));
@@ -110,6 +116,16 @@ const Settings = () => {
     localStorage.setItem('tabSettings', JSON.stringify(tabSettings));
     localStorage.setItem('editSettings', JSON.stringify(editSettings));
     localStorage.setItem('appSettings', JSON.stringify(appSettings));
+    
+    // Save individual edit permission flags that components read
+    const canEdit = editSettings.allowEditOrders || editSettings.allowEditExpenses || 
+                   editSettings.allowEditDeposits || editSettings.allowEditWithdrawals || 
+                   editSettings.allowEditCharging || editSettings.allowEditSavings;
+    localStorage.setItem('canEditTransactions', JSON.stringify(canEdit));
+    localStorage.setItem('canAddExpenseCategory', JSON.stringify(true));
+    localStorage.setItem('canAddDepositCategory', JSON.stringify(true));
+    localStorage.setItem('canAddChargingCategory', JSON.stringify(true));
+    
     toast.success("Settings saved successfully!");
   };
 
