@@ -1308,12 +1308,15 @@ export type Database = {
           total_withdrawals_cooperative_fonepay: number
         }[]
       }
-      daily_closing: {
-        Args:
-          | { closing_date: string; user_id_param: string }
-          | { p_closing_date: string; p_user_id: string }
-        Returns: undefined
-      }
+      daily_closing:
+        | {
+            Args: { p_closing_date: string; p_user_id: string }
+            Returns: undefined
+          }
+        | {
+            Args: { closing_date: string; user_id_param: string }
+            Returns: undefined
+          }
       execute_dynamic_report: {
         Args: { custom_calculations: Json; filters: Json }
         Returns: Json
@@ -1322,12 +1325,9 @@ export type Database = {
         Args: { date_from: string; date_to: string; user_id_param: string }
         Returns: undefined
       }
-      get_all_table_columns: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      get_all_table_columns: { Args: never; Returns: Json }
       get_all_users_with_roles: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           created_at: string
           email: string
@@ -1338,25 +1338,25 @@ export type Database = {
         }[]
       }
       get_cooperative_savings_trend: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           month: string
           total_savings: number
         }[]
       }
       get_cooperative_savings_weekly_10weeks: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           total_savings: number
           week: string
         }[]
       }
       get_current_user_role: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: Database["public"]["Enums"]["app_role"]
       }
       get_daily_charging_sessions_30days: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           day: string
           session_count: number
@@ -1364,7 +1364,7 @@ export type Database = {
         }[]
       }
       get_daily_expenses_30days: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           day: string
           expense_count: number
@@ -1372,7 +1372,7 @@ export type Database = {
         }[]
       }
       get_daily_orders_30days: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           day: string
           order_count: number
@@ -1380,28 +1380,28 @@ export type Database = {
         }[]
       }
       get_expense_categorization: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           amount: number
           category: string
         }[]
       }
       get_income_breakdown: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           amount: number
           source: string
         }[]
       }
       get_menu_item_availability: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           item_count: number
           status: string
         }[]
       }
       get_monthly_deposits_withdrawals: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           deposits: number
           month: string
@@ -1409,7 +1409,7 @@ export type Database = {
         }[]
       }
       get_monthly_financial_summary: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           expenses: number
           month: string
@@ -1418,28 +1418,28 @@ export type Database = {
         }[]
       }
       get_new_user_growth: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           month: string
           new_users: number
         }[]
       }
       get_popular_products: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           item_name: string
           purchase_count: number
         }[]
       }
       get_profitability_trend_3months: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           month: string
           profit: number
         }[]
       }
       get_revenue_vs_expenses_3months: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           expenses: number
           month: string
@@ -1447,7 +1447,7 @@ export type Database = {
         }[]
       }
       get_sales_by_payment_mode: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           payment_mode: string
           total_sales: number
@@ -1461,7 +1461,7 @@ export type Database = {
         }[]
       }
       get_user_profiles_with_roles: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           created_at: string
           email: string
@@ -1472,16 +1472,13 @@ export type Database = {
         }[]
       }
       get_user_role_distribution: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           role: string
           user_count: number
         }[]
       }
-      has_role: {
-        Args: { required_role: string }
-        Returns: boolean
-      }
+      has_role: { Args: { required_role: string }; Returns: boolean }
       insert_order_safe: {
         Args: {
           p_item_name: string
@@ -1504,18 +1501,12 @@ export type Database = {
           user_id: string
         }[]
       }
-      is_super_admin: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
+      is_super_admin: { Args: never; Returns: boolean }
       recalculate_historical_daily_summaries: {
         Args: { target_user_id: string }
         Returns: number
       }
-      refresh_schema_cache: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
+      refresh_schema_cache: { Args: never; Returns: boolean }
       safe_get_daily_summary_value: {
         Args: {
           fallback_column?: string
@@ -1544,10 +1535,7 @@ export type Database = {
         Args: { target_date: string }
         Returns: undefined
       }
-      update_all_daily_summaries: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      update_all_daily_summaries: { Args: never; Returns: undefined }
       update_daily_summary: {
         Args: { p_summary_date: string }
         Returns: undefined
