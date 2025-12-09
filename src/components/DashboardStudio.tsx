@@ -1,10 +1,8 @@
-
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -14,13 +12,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
@@ -29,477 +20,390 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
-  Plus, 
-  Edit, 
-  Trash2, 
-  Save, 
-  X, 
-  Calculator,
+  Database,
   BarChart3,
-  Settings,
-  Code,
-  Play,
-  FileText
+  RefreshCw,
+  Download,
+  Filter,
+  Search,
+  TrendingUp,
+  DollarSign,
+  ShoppingCart,
+  Zap,
+  Wallet,
+  PiggyBank,
+  ArrowUpDown
 } from "lucide-react";
 import { toast } from "sonner";
-import { extractErrorMessage, logError } from "@/utils/errorHandling";
+import { format } from "date-fns";
 
-interface Dashboard {
-  id: string;
+interface TableData {
   name: string;
-  description: string;
-  calculation_config: any;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
+  data: any[];
+  loading: boolean;
+  columns: string[];
 }
 
-const DashboardStudio: React.FC = () => {
-  const [dashboards, setDashboards] = useState<Dashboard[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [editingDashboard, setEditingDashboard] = useState<Dashboard | null>(null);
-  const [selectedTab, setSelectedTab] = useState("overview");
-  const [showCreateDialog, setShowCreateDialog] = useState(false);
+const TABLE_CONFIG = [
+  { name: "orders", icon: ShoppingCart, color: "text-blue-600", dateColumn: "order_date" },
+  { name: "expenses", icon: Wallet, color: "text-red-600", dateColumn: "expense_date" },
+  { name: "deposits", icon: TrendingUp, color: "text-green-600", dateColumn: "deposit_date" },
+  { name: "withdrawals", icon: ArrowUpDown, color: "text-orange-600", dateColumn: "withdrawal_date" },
+  { name: "charging_sessions", icon: Zap, color: "text-yellow-600", dateColumn: "session_date" },
+  { name: "cooperative_savings", icon: PiggyBank, color: "text-purple-600", dateColumn: "contribution_date" },
+  { name: "share_investments", icon: DollarSign, color: "text-indigo-600", dateColumn: "investment_date" },
+  { name: "vat_entries", icon: Database, color: "text-cyan-600", dateColumn: "invoice_date" },
+  { name: "daily_summary", icon: BarChart3, color: "text-emerald-600", dateColumn: "summary_date" },
+];
 
-  // Form states
-  const [newDashboardName, setNewDashboardName] = useState("");
-  const [newDashboardDescription, setNewDashboardDescription] = useState("");
-  const [calculationConfig, setCalculationConfig] = useState("{}");
+const DashboardStudio: React.FC = () => {
+  const [tableData, setTableData] = useState<Record<string, TableData>>({});
+  const [selectedTable, setSelectedTable] = useState("orders");
+  const [loading, setLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [summaryStats, setSummaryStats] = useState({
+    totalOrders: 0,
+    totalExpenses: 0,
+    totalIncome: 0,
+    totalDeposits: 0,
+    totalWithdrawals: 0,
+    totalSavings: 0
+  });
 
   useEffect(() => {
-    checkDashboardStudioSupport();
+    fetchAllData();
   }, []);
 
-  const checkDashboardStudioSupport = async () => {
+  const fetchAllData = async () => {
     setLoading(true);
     try {
-      // Since custom_calculations table doesn't exist, we'll use localStorage for now
-      const storedDashboards = localStorage.getItem('custom_dashboards');
-      if (storedDashboards) {
-        setDashboards(JSON.parse(storedDashboards));
-      }
+      const promises = TABLE_CONFIG.map(async (table) => {
+        const { data, error } = await supabase
+          .from(table.name as any)
+          .select("*")
+          .order(table.dateColumn, { ascending: false })
+          .limit(1000);
+
+        if (error) {
+          console.error(`Error fetching ${table.name}:`, error);
+          return { name: table.name, data: [], columns: [] };
+        }
+
+        const columns = data && data.length > 0 ? Object.keys(data[0]) : [];
+        return { name: table.name, data: data || [], columns };
+      });
+
+      const results = await Promise.all(promises);
       
-      toast.info("Dashboard Studio is running in local mode. Custom calculations table is not available.");
+      const newTableData: Record<string, TableData> = {};
+      results.forEach((result) => {
+        newTableData[result.name] = {
+          name: result.name,
+          data: result.data,
+          loading: false,
+          columns: result.columns
+        };
+      });
+
+      setTableData(newTableData);
+      calculateSummary(newTableData);
+      toast.success("All data loaded successfully!");
     } catch (error) {
-      logError("checking dashboard studio support", error);
-      toast.error("Dashboard Studio is not available in this environment");
+      console.error("Error fetching data:", error);
+      toast.error("Failed to load some data");
     } finally {
       setLoading(false);
     }
   };
 
-  const saveDashboard = async () => {
-    if (!newDashboardName.trim()) {
-      toast.error("Please enter a dashboard name");
+  const calculateSummary = (data: Record<string, TableData>) => {
+    const orders = data.orders?.data || [];
+    const expenses = data.expenses?.data || [];
+    const deposits = data.deposits?.data || [];
+    const withdrawals = data.withdrawals?.data || [];
+    const savings = data.cooperative_savings?.data || [];
+    const charging = data.charging_sessions?.data || [];
+
+    setSummaryStats({
+      totalOrders: orders.reduce((sum, o) => sum + (o.total || 0), 0),
+      totalExpenses: expenses.reduce((sum, e) => sum + (e.amount || 0), 0),
+      totalIncome: orders.reduce((sum, o) => sum + (o.total || 0), 0) + 
+                   charging.reduce((sum, c) => sum + (c.total_amount || 0), 0),
+      totalDeposits: deposits.reduce((sum, d) => sum + (d.amount || 0), 0),
+      totalWithdrawals: withdrawals.reduce((sum, w) => sum + (w.amount || 0), 0),
+      totalSavings: savings.reduce((sum, s) => sum + (s.contribution_amount || 0), 0)
+    });
+  };
+
+  const getFilteredData = () => {
+    const currentData = tableData[selectedTable]?.data || [];
+    if (!searchTerm) return currentData;
+
+    return currentData.filter((row) =>
+      Object.values(row).some((value) =>
+        String(value).toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    );
+  };
+
+  const exportToCSV = () => {
+    const data = getFilteredData();
+    if (data.length === 0) {
+      toast.error("No data to export");
       return;
     }
 
-    try {
-      let config;
+    const columns = tableData[selectedTable]?.columns || [];
+    const csvContent = [
+      columns.join(","),
+      ...data.map((row) =>
+        columns.map((col) => {
+          const value = row[col];
+          if (value === null || value === undefined) return "";
+          if (typeof value === "object") return JSON.stringify(value);
+          return String(value).includes(",") ? `"${value}"` : value;
+        }).join(",")
+      )
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `${selectedTable}_export_${format(new Date(), "yyyy-MM-dd")}.csv`;
+    link.click();
+    toast.success("Data exported successfully!");
+  };
+
+  const formatCellValue = (value: any, columnName: string) => {
+    if (value === null || value === undefined) return "-";
+    if (typeof value === "object") return JSON.stringify(value);
+    if (columnName.includes("date") || columnName.includes("_at")) {
       try {
-        config = JSON.parse(calculationConfig);
+        return format(new Date(value), "yyyy-MM-dd HH:mm");
       } catch {
-        toast.error("Invalid JSON configuration");
-        return;
+        return value;
       }
-
-      const newDashboard: Dashboard = {
-        id: crypto.randomUUID(),
-        name: newDashboardName.trim(),
-        description: newDashboardDescription.trim(),
-        calculation_config: config,
-        is_active: true,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-
-      const updatedDashboards = [...dashboards, newDashboard];
-      setDashboards(updatedDashboards);
-      localStorage.setItem('custom_dashboards', JSON.stringify(updatedDashboards));
-
-      toast.success("Dashboard created successfully!");
-      resetForm();
-      setShowCreateDialog(false);
-    } catch (error) {
-      logError("creating dashboard", error);
-      toast.error(`Error creating dashboard: ${extractErrorMessage(error)}`);
     }
-  };
-
-  const updateDashboard = async (dashboard: Dashboard) => {
-    try {
-      const updatedDashboards = dashboards.map(d => 
-        d.id === dashboard.id 
-          ? { ...dashboard, updated_at: new Date().toISOString() }
-          : d
-      );
-      
-      setDashboards(updatedDashboards);
-      localStorage.setItem('custom_dashboards', JSON.stringify(updatedDashboards));
-
-      toast.success("Dashboard updated successfully!");
-      setEditingDashboard(null);
-    } catch (error) {
-      logError("updating dashboard", error);
-      toast.error(`Error updating dashboard: ${extractErrorMessage(error)}`);
+    if (typeof value === "number") {
+      return value.toLocaleString();
     }
+    return String(value);
   };
 
-  const deleteDashboard = async (dashboard: Dashboard) => {
-    if (!confirm(`Are you sure you want to delete "${dashboard.name}"?`)) {
-      return;
-    }
-
-    try {
-      const updatedDashboards = dashboards.filter(d => d.id !== dashboard.id);
-      setDashboards(updatedDashboards);
-      localStorage.setItem('custom_dashboards', JSON.stringify(updatedDashboards));
-
-      toast.success("Dashboard deleted successfully!");
-    } catch (error) {
-      logError("deleting dashboard", error);
-      toast.error(`Error deleting dashboard: ${extractErrorMessage(error)}`);
-    }
-  };
-
-  const resetForm = () => {
-    setNewDashboardName("");
-    setNewDashboardDescription("");
-    setCalculationConfig("{}");
-  };
-
-  const sampleCalculationConfig = {
-    title: "Custom Financial Summary",
-    calculations: [
-      {
-        name: "Total Revenue",
-        formula: "orders.total + charging_sessions.total_amount",
-        type: "sum"
-      },
-      {
-        name: "Net Profit",
-        formula: "revenue - expenses.amount",
-        type: "calculation"
-      }
-    ],
-    charts: [
-      {
-        type: "bar",
-        title: "Monthly Revenue",
-        data_source: "orders",
-        group_by: "month"
-      }
-    ]
-  };
+  const currentTableConfig = TABLE_CONFIG.find((t) => t.name === selectedTable);
+  const filteredData = getFilteredData();
+  const columns = tableData[selectedTable]?.columns || [];
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard Studio</h1>
-          <p className="text-gray-600 mt-2">
-            Create and manage custom financial dashboards with advanced calculations
+          <h1 className="text-3xl font-bold text-foreground">Dashboard Studio</h1>
+          <p className="text-muted-foreground mt-2">
+            Analyze all your financial data in one place - like a connected spreadsheet
           </p>
         </div>
-        <Button onClick={() => setShowCreateDialog(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Create Dashboard
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={fetchAllData} disabled={loading}>
+            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
+            Refresh
+          </Button>
+          <Button onClick={exportToCSV}>
+            <Download className="h-4 w-4 mr-2" />
+            Export CSV
+          </Button>
+        </div>
       </div>
 
-      <Tabs value={selectedTab} onValueChange={setSelectedTab}>
-        <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="dashboards">My Dashboards</TabsTrigger>
-          <TabsTrigger value="templates">Templates</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="overview" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center space-x-2">
-                  <Calculator className="h-8 w-8 text-blue-600" />
-                  <div>
-                    <p className="text-2xl font-bold">{dashboards.length}</p>
-                    <p className="text-sm text-gray-600">Custom Dashboards</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center space-x-2">
-                  <BarChart3 className="h-8 w-8 text-green-600" />
-                  <div>
-                    <p className="text-2xl font-bold">{dashboards.filter(d => d.is_active).length}</p>
-                    <p className="text-sm text-gray-600">Active Dashboards</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center space-x-2">
-                  <Settings className="h-8 w-8 text-purple-600" />
-                  <div>
-                    <p className="text-2xl font-bold">Local Mode</p>
-                    <p className="text-sm text-gray-600">Storage Mode</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Getting Started</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <p className="text-gray-600">
-                  Dashboard Studio allows you to create custom financial dashboards with advanced calculations.
-                  Currently running in local mode - your dashboards will be saved to browser storage.
-                </p>
-                
-                <div className="bg-blue-50 p-4 rounded-lg">
-                  <h4 className="font-semibold text-blue-900 mb-2">Features:</h4>
-                  <ul className="list-disc list-inside text-blue-800 space-y-1">
-                    <li>Create custom calculation formulas</li>
-                    <li>Build interactive charts and visualizations</li>
-                    <li>Save and manage multiple dashboards</li>
-                    <li>Real-time data integration</li>
-                  </ul>
-                </div>
+      {/* Summary Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <Card>
+          <CardContent className="pt-4">
+            <div className="flex items-center gap-2">
+              <ShoppingCart className="h-5 w-5 text-blue-600" />
+              <div>
+                <p className="text-xs text-muted-foreground">Total Orders</p>
+                <p className="text-lg font-bold">Rs. {summaryStats.totalOrders.toLocaleString()}</p>
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4">
+            <div className="flex items-center gap-2">
+              <Zap className="h-5 w-5 text-yellow-600" />
+              <div>
+                <p className="text-xs text-muted-foreground">Total Income</p>
+                <p className="text-lg font-bold">Rs. {summaryStats.totalIncome.toLocaleString()}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4">
+            <div className="flex items-center gap-2">
+              <Wallet className="h-5 w-5 text-red-600" />
+              <div>
+                <p className="text-xs text-muted-foreground">Total Expenses</p>
+                <p className="text-lg font-bold">Rs. {summaryStats.totalExpenses.toLocaleString()}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4">
+            <div className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-green-600" />
+              <div>
+                <p className="text-xs text-muted-foreground">Total Deposits</p>
+                <p className="text-lg font-bold">Rs. {summaryStats.totalDeposits.toLocaleString()}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4">
+            <div className="flex items-center gap-2">
+              <ArrowUpDown className="h-5 w-5 text-orange-600" />
+              <div>
+                <p className="text-xs text-muted-foreground">Total Withdrawals</p>
+                <p className="text-lg font-bold">Rs. {summaryStats.totalWithdrawals.toLocaleString()}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4">
+            <div className="flex items-center gap-2">
+              <PiggyBank className="h-5 w-5 text-purple-600" />
+              <div>
+                <p className="text-xs text-muted-foreground">Total Savings</p>
+                <p className="text-lg font-bold">Rs. {summaryStats.totalSavings.toLocaleString()}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
-        <TabsContent value="dashboards" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>My Dashboards</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {loading ? (
-                <div className="text-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
-                  <p className="mt-2 text-gray-600">Loading dashboards...</p>
-                </div>
-              ) : dashboards.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  <BarChart3 className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                  <p>No custom dashboards found. Create your first dashboard to get started.</p>
-                </div>
-              ) : (
+      {/* Data Explorer */}
+      <Card>
+        <CardHeader>
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <CardTitle className="flex items-center gap-2">
+              <Database className="h-5 w-5" />
+              Data Explorer
+            </CardTitle>
+            <div className="flex flex-wrap gap-2">
+              <Select value={selectedTable} onValueChange={setSelectedTable}>
+                <SelectTrigger className="w-[200px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {TABLE_CONFIG.map((table) => {
+                    const Icon = table.icon;
+                    const count = tableData[table.name]?.data?.length || 0;
+                    return (
+                      <SelectItem key={table.name} value={table.name}>
+                        <div className="flex items-center gap-2">
+                          <Icon className={`h-4 w-4 ${table.color}`} />
+                          <span className="capitalize">{table.name.replace(/_/g, " ")}</span>
+                          <Badge variant="secondary" className="ml-1">{count}</Badge>
+                        </div>
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search data..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-9 w-[200px]"
+                />
+              </div>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+              <p className="mt-2 text-muted-foreground">Loading data...</p>
+            </div>
+          ) : filteredData.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <Database className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p>No data found in {selectedTable.replace(/_/g, " ")}</p>
+            </div>
+          ) : (
+            <>
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-sm text-muted-foreground">
+                  Showing {filteredData.length} of {tableData[selectedTable]?.data?.length || 0} records
+                </p>
+                {currentTableConfig && (
+                  <Badge variant="outline" className="flex items-center gap-1">
+                    {React.createElement(currentTableConfig.icon, { className: `h-3 w-3 ${currentTableConfig.color}` })}
+                    {selectedTable.replace(/_/g, " ")}
+                  </Badge>
+                )}
+              </div>
+              <ScrollArea className="h-[500px] rounded-md border">
                 <Table>
-                  <TableHeader>
+                  <TableHeader className="sticky top-0 bg-background z-10">
                     <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Description</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Created</TableHead>
-                      <TableHead>Updated</TableHead>
-                      <TableHead>Actions</TableHead>
+                      {columns.map((col) => (
+                        <TableHead key={col} className="whitespace-nowrap font-semibold">
+                          {col.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase())}
+                        </TableHead>
+                      ))}
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {dashboards.map((dashboard) => (
-                      <TableRow key={dashboard.id}>
-                        <TableCell>
-                          {editingDashboard?.id === dashboard.id ? (
-                            <Input
-                              value={editingDashboard.name}
-                              onChange={(e) =>
-                                setEditingDashboard({
-                                  ...editingDashboard,
-                                  name: e.target.value,
-                                })
-                              }
-                            />
-                          ) : (
-                            <div className="font-medium">{dashboard.name}</div>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          {editingDashboard?.id === dashboard.id ? (
-                            <Textarea
-                              value={editingDashboard.description}
-                              onChange={(e) =>
-                                setEditingDashboard({
-                                  ...editingDashboard,
-                                  description: e.target.value,
-                                })
-                              }
-                              rows={2}
-                            />
-                          ) : (
-                            <div className="text-sm text-gray-600">
-                              {dashboard.description || "No description"}
-                            </div>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={dashboard.is_active ? "default" : "secondary"}>
-                            {dashboard.is_active ? "Active" : "Inactive"}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          {new Date(dashboard.created_at).toLocaleDateString()}
-                        </TableCell>
-                        <TableCell>
-                          {new Date(dashboard.updated_at).toLocaleDateString()}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex gap-2">
-                            {editingDashboard?.id === dashboard.id ? (
-                              <>
-                                <Button
-                                  size="sm"
-                                  onClick={() => updateDashboard(editingDashboard)}
-                                >
-                                  <Save className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => setEditingDashboard(null)}
-                                >
-                                  <X className="h-4 w-4" />
-                                </Button>
-                              </>
-                            ) : (
-                              <>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => setEditingDashboard(dashboard)}
-                                >
-                                  <Edit className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="destructive"
-                                  onClick={() => deleteDashboard(dashboard)}
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </>
-                            )}
-                          </div>
-                        </TableCell>
+                    {filteredData.map((row, idx) => (
+                      <TableRow key={row.id || idx}>
+                        {columns.map((col) => (
+                          <TableCell key={col} className="whitespace-nowrap max-w-[200px] truncate">
+                            {formatCellValue(row[col], col)}
+                          </TableCell>
+                        ))}
                       </TableRow>
                     ))}
                   </TableBody>
                 </Table>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
+              </ScrollArea>
+            </>
+          )}
+        </CardContent>
+      </Card>
 
-        <TabsContent value="templates" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Dashboard Templates</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="border rounded-lg p-4">
-                  <h4 className="font-semibold mb-2">Financial Overview</h4>
-                  <p className="text-sm text-gray-600 mb-4">
-                    Complete financial summary with income, expenses, and profit calculations.
-                  </p>
-                  <Button 
-                    size="sm" 
-                    onClick={() => {
-                      setNewDashboardName("Financial Overview");
-                      setNewDashboardDescription("Complete financial summary dashboard");
-                      setCalculationConfig(JSON.stringify(sampleCalculationConfig, null, 2));
-                      setShowCreateDialog(true);
-                    }}
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Use Template
-                  </Button>
+      {/* Quick Stats by Table */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {TABLE_CONFIG.slice(0, 6).map((table) => {
+          const Icon = table.icon;
+          const count = tableData[table.name]?.data?.length || 0;
+          return (
+            <Card key={table.name} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setSelectedTable(table.name)}>
+              <CardContent className="pt-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Icon className={`h-8 w-8 ${table.color}`} />
+                    <div>
+                      <p className="font-medium capitalize">{table.name.replace(/_/g, " ")}</p>
+                      <p className="text-sm text-muted-foreground">{count} records</p>
+                    </div>
+                  </div>
+                  <Button variant="ghost" size="sm">View</Button>
                 </div>
-
-                <div className="border rounded-lg p-4">
-                  <h4 className="font-semibold mb-2">Payment Mode Analysis</h4>
-                  <p className="text-sm text-gray-600 mb-4">
-                    Detailed breakdown of transactions by payment modes (Cash, eSewa, Fonepay).
-                  </p>
-                  <Button size="sm" disabled>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Coming Soon
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-
-      {/* Create Dashboard Dialog */}
-      <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Create Custom Dashboard</DialogTitle>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium mb-2">Dashboard Name</label>
-              <Input
-                value={newDashboardName}
-                onChange={(e) => setNewDashboardName(e.target.value)}
-                placeholder="Enter dashboard name"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-2">Description</label>
-              <Textarea
-                value={newDashboardDescription}
-                onChange={(e) => setNewDashboardDescription(e.target.value)}
-                placeholder="Enter dashboard description"
-                rows={3}
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-2">Calculation Configuration (JSON)</label>
-              <Textarea
-                value={calculationConfig}
-                onChange={(e) => setCalculationConfig(e.target.value)}
-                placeholder="Enter JSON configuration"
-                rows={10}
-                className="font-mono text-sm"
-              />
-            </div>
-
-            <div className="bg-gray-50 p-3 rounded">
-              <p className="text-xs text-gray-600">
-                Note: Dashboard Studio is currently running in local mode. 
-                Your configurations will be saved to browser storage.
-              </p>
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
-              Cancel
-            </Button>
-            <Button onClick={saveDashboard}>
-              <Save className="h-4 w-4 mr-2" />
-              Create Dashboard
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
     </div>
   );
 };

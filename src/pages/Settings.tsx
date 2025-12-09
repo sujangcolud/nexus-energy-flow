@@ -60,6 +60,10 @@ const Settings = () => {
     allowEditWithdrawals: true,
     allowEditCharging: true,
     allowEditSavings: true,
+    allowEditVAT: true,
+    allowEditInventory: true,
+    allowEditShareInvestments: true,
+    allowEditExpenseBookings: true,
     allowDeleteTransactions: true,
     requireApprovalForEdits: false,
     logAllChanges: true
@@ -117,11 +121,21 @@ const Settings = () => {
     localStorage.setItem('editSettings', JSON.stringify(editSettings));
     localStorage.setItem('appSettings', JSON.stringify(appSettings));
     
-    // Save individual edit permission flags that components read
-    const canEdit = editSettings.allowEditOrders || editSettings.allowEditExpenses || 
-                   editSettings.allowEditDeposits || editSettings.allowEditWithdrawals || 
-                   editSettings.allowEditCharging || editSettings.allowEditSavings;
-    localStorage.setItem('canEditTransactions', JSON.stringify(canEdit));
+    // Save individual module edit/delete permissions
+    localStorage.setItem('allowEditOrders', JSON.stringify(editSettings.allowEditOrders));
+    localStorage.setItem('allowEditExpenses', JSON.stringify(editSettings.allowEditExpenses));
+    localStorage.setItem('allowEditDeposits', JSON.stringify(editSettings.allowEditDeposits));
+    localStorage.setItem('allowEditWithdrawals', JSON.stringify(editSettings.allowEditWithdrawals));
+    localStorage.setItem('allowEditCharging', JSON.stringify(editSettings.allowEditCharging));
+    localStorage.setItem('allowEditSavings', JSON.stringify(editSettings.allowEditSavings));
+    localStorage.setItem('allowEditVAT', JSON.stringify(editSettings.allowEditVAT));
+    localStorage.setItem('allowEditInventory', JSON.stringify(editSettings.allowEditInventory));
+    localStorage.setItem('allowEditShareInvestments', JSON.stringify(editSettings.allowEditShareInvestments));
+    localStorage.setItem('allowEditExpenseBookings', JSON.stringify(editSettings.allowEditExpenseBookings));
+    localStorage.setItem('allowDeleteTransactions', JSON.stringify(editSettings.allowDeleteTransactions));
+    
+    // Legacy support
+    localStorage.setItem('canEditTransactions', JSON.stringify(true));
     localStorage.setItem('canAddExpenseCategory', JSON.stringify(true));
     localStorage.setItem('canAddDepositCategory', JSON.stringify(true));
     localStorage.setItem('canAddChargingCategory', JSON.stringify(true));
