@@ -12,7 +12,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
   SelectContent,
@@ -26,7 +25,6 @@ import {
   BarChart3,
   RefreshCw,
   Download,
-  Filter,
   Search,
   TrendingUp,
   DollarSign,
@@ -80,19 +78,35 @@ const DashboardStudio: React.FC = () => {
     setLoading(true);
     try {
       const promises = TABLE_CONFIG.map(async (table) => {
-        const { data, error } = await supabase
-          .from(table.name as any)
-          .select("*")
-          .order(table.dateColumn, { ascending: false })
-          .limit(1000);
+        // Fetch all data using pagination (no limit)
+        let allData: any[] = [];
+        let from = 0;
+        const batchSize = 1000;
+        let hasMore = true;
 
-        if (error) {
-          console.error(`Error fetching ${table.name}:`, error);
-          return { name: table.name, data: [], columns: [] };
+        while (hasMore) {
+          const { data, error } = await supabase
+            .from(table.name as any)
+            .select("*")
+            .order(table.dateColumn, { ascending: false })
+            .range(from, from + batchSize - 1);
+
+          if (error) {
+            console.error(`Error fetching ${table.name}:`, error);
+            break;
+          }
+
+          if (data && data.length > 0) {
+            allData = [...allData, ...data];
+            from += batchSize;
+            hasMore = data.length === batchSize;
+          } else {
+            hasMore = false;
+          }
         }
 
-        const columns = data && data.length > 0 ? Object.keys(data[0]) : [];
-        return { name: table.name, data: data || [], columns };
+        const columns = allData.length > 0 ? Object.keys(allData[0]) : [];
+        return { name: table.name, data: allData, columns };
       });
 
       const results = await Promise.all(promises);
@@ -332,7 +346,7 @@ const DashboardStudio: React.FC = () => {
           {loading ? (
             <div className="text-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-              <p className="mt-2 text-muted-foreground">Loading data...</p>
+              <p className="mt-2 text-muted-foreground">Loading all data...</p>
             </div>
           ) : filteredData.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
