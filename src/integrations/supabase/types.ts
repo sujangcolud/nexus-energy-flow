@@ -1310,11 +1310,11 @@ export type Database = {
       }
       daily_closing:
         | {
-            Args: { p_closing_date: string; p_user_id: string }
+            Args: { closing_date: string; user_id_param: string }
             Returns: undefined
           }
         | {
-            Args: { closing_date: string; user_id_param: string }
+            Args: { p_closing_date: string; p_user_id: string }
             Returns: undefined
           }
       execute_dynamic_report: {
