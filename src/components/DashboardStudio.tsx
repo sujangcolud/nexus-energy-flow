@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Database,
   BarChart3,
@@ -32,10 +33,29 @@ import {
   Zap,
   Wallet,
   PiggyBank,
-  ArrowUpDown
+  ArrowUpDown,
+  LineChart,
+  PieChart
 } from "lucide-react";
 import { toast } from "sonner";
-import { format } from "date-fns";
+import { format, subDays, parseISO, startOfDay } from "date-fns";
+import {
+  LineChart as RechartsLineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  PieChart as RechartsPieChart,
+  Pie,
+  Cell,
+  AreaChart,
+  Area
+} from "recharts";
 
 interface TableData {
   name: string;
@@ -150,6 +170,85 @@ const DashboardStudio: React.FC = () => {
       totalSavings: savings.reduce((sum, s) => sum + (s.contribution_amount || 0), 0)
     });
   };
+
+  // Chart data calculations
+  const chartData = useMemo(() => {
+    const orders = tableData.orders?.data || [];
+    const expenses = tableData.expenses?.data || [];
+    const charging = tableData.charging_sessions?.data || [];
+    const deposits = tableData.deposits?.data || [];
+    const withdrawals = tableData.withdrawals?.data || [];
+
+    // Last 30 days trend
+    const last30Days: Record<string, { date: string; orders: number; expenses: number; income: number; deposits: number; withdrawals: number }> = {};
+    for (let i = 29; i >= 0; i--) {
+      const date = format(subDays(new Date(), i), "yyyy-MM-dd");
+      last30Days[date] = { date: format(subDays(new Date(), i), "MMM dd"), orders: 0, expenses: 0, income: 0, deposits: 0, withdrawals: 0 };
+    }
+
+    orders.forEach((o) => {
+      const date = o.order_date || o.date;
+      if (date && last30Days[date]) {
+        last30Days[date].orders += o.total || 0;
+        last30Days[date].income += o.total || 0;
+      }
+    });
+
+    charging.forEach((c) => {
+      const date = c.session_date || c.date;
+      if (date && last30Days[date]) {
+        last30Days[date].income += c.total_amount || 0;
+      }
+    });
+
+    expenses.forEach((e) => {
+      const date = e.expense_date || e.date;
+      if (date && last30Days[date]) {
+        last30Days[date].expenses += e.amount || 0;
+      }
+    });
+
+    deposits.forEach((d) => {
+      const date = d.deposit_date || d.date;
+      if (date && last30Days[date]) {
+        last30Days[date].deposits += d.amount || 0;
+      }
+    });
+
+    withdrawals.forEach((w) => {
+      const date = w.withdrawal_date || w.date;
+      if (date && last30Days[date]) {
+        last30Days[date].withdrawals += w.amount || 0;
+      }
+    });
+
+    const trendData = Object.values(last30Days);
+
+    // Payment mode distribution
+    const paymentModes: Record<string, number> = {};
+    orders.forEach((o) => {
+      const mode = o.payment_mode || "Unknown";
+      paymentModes[mode] = (paymentModes[mode] || 0) + (o.total || 0);
+    });
+    charging.forEach((c) => {
+      const mode = c.payment_mode || "Unknown";
+      paymentModes[mode] = (paymentModes[mode] || 0) + (c.total_amount || 0);
+    });
+
+    const paymentModeData = Object.entries(paymentModes).map(([name, value]) => ({ name, value }));
+
+    // Expense categories
+    const expenseCategories: Record<string, number> = {};
+    expenses.forEach((e) => {
+      const cat = e.category || "Other";
+      expenseCategories[cat] = (expenseCategories[cat] || 0) + (e.amount || 0);
+    });
+    const expenseCategoryData = Object.entries(expenseCategories).map(([name, value]) => ({ name, value }));
+
+    return { trendData, paymentModeData, expenseCategoryData };
+  }, [tableData]);
+
+  const COLORS = ["hsl(var(--primary))", "hsl(var(--chart-2))", "hsl(var(--chart-3))", "hsl(var(--chart-4))", "hsl(var(--chart-5))"];
 
   const getFilteredData = () => {
     const currentData = tableData[selectedTable]?.data || [];
@@ -297,6 +396,163 @@ const DashboardStudio: React.FC = () => {
                 <p className="text-lg font-bold">Rs. {summaryStats.totalSavings.toLocaleString()}</p>
               </div>
             </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Charts Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Income vs Expenses Trend */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <LineChart className="h-5 w-5 text-primary" />
+              Income vs Expenses (Last 30 Days)
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <AreaChart data={chartData.trendData}>
+                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                <XAxis dataKey="date" tick={{ fontSize: 12 }} className="text-muted-foreground" />
+                <YAxis tick={{ fontSize: 12 }} className="text-muted-foreground" />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: "hsl(var(--background))", 
+                    border: "1px solid hsl(var(--border))",
+                    borderRadius: "8px"
+                  }} 
+                  formatter={(value: number) => [`Rs. ${value.toLocaleString()}`, ""]}
+                />
+                <Legend />
+                <Area type="monotone" dataKey="income" stackId="1" stroke="hsl(var(--chart-2))" fill="hsl(var(--chart-2))" fillOpacity={0.6} name="Income" />
+                <Area type="monotone" dataKey="expenses" stackId="2" stroke="hsl(var(--destructive))" fill="hsl(var(--destructive))" fillOpacity={0.6} name="Expenses" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        {/* Orders Trend */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BarChart3 className="h-5 w-5 text-blue-600" />
+              Daily Orders Revenue (Last 30 Days)
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={chartData.trendData}>
+                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+                <YAxis tick={{ fontSize: 12 }} />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: "hsl(var(--background))", 
+                    border: "1px solid hsl(var(--border))",
+                    borderRadius: "8px"
+                  }}
+                  formatter={(value: number) => [`Rs. ${value.toLocaleString()}`, "Orders"]}
+                />
+                <Bar dataKey="orders" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        {/* Payment Mode Distribution */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <PieChart className="h-5 w-5 text-green-600" />
+              Payment Mode Distribution
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <RechartsPieChart>
+                <Pie
+                  data={chartData.paymentModeData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                  outerRadius={100}
+                  fill="#8884d8"
+                  dataKey="value"
+                >
+                  {chartData.paymentModeData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: "hsl(var(--background))", 
+                    border: "1px solid hsl(var(--border))",
+                    borderRadius: "8px"
+                  }}
+                  formatter={(value: number) => [`Rs. ${value.toLocaleString()}`, ""]}
+                />
+              </RechartsPieChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        {/* Expense Categories */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Wallet className="h-5 w-5 text-red-600" />
+              Expense Categories
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={chartData.expenseCategoryData} layout="vertical">
+                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                <XAxis type="number" tick={{ fontSize: 12 }} />
+                <YAxis type="category" dataKey="name" tick={{ fontSize: 12 }} width={100} />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: "hsl(var(--background))", 
+                    border: "1px solid hsl(var(--border))",
+                    borderRadius: "8px"
+                  }}
+                  formatter={(value: number) => [`Rs. ${value.toLocaleString()}`, ""]}
+                />
+                <Bar dataKey="value" fill="hsl(var(--destructive))" radius={[0, 4, 4, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        {/* Deposits vs Withdrawals */}
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-emerald-600" />
+              Deposits vs Withdrawals (Last 30 Days)
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <RechartsLineChart data={chartData.trendData}>
+                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+                <YAxis tick={{ fontSize: 12 }} />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: "hsl(var(--background))", 
+                    border: "1px solid hsl(var(--border))",
+                    borderRadius: "8px"
+                  }}
+                  formatter={(value: number) => [`Rs. ${value.toLocaleString()}`, ""]}
+                />
+                <Legend />
+                <Line type="monotone" dataKey="deposits" stroke="hsl(var(--chart-2))" strokeWidth={2} dot={false} name="Deposits" />
+                <Line type="monotone" dataKey="withdrawals" stroke="hsl(var(--chart-4))" strokeWidth={2} dot={false} name="Withdrawals" />
+              </RechartsLineChart>
+            </ResponsiveContainer>
           </CardContent>
         </Card>
       </div>
