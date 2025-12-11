@@ -65,15 +65,15 @@ interface TableData {
 }
 
 const TABLE_CONFIG = [
-  { name: "orders", icon: ShoppingCart, color: "text-blue-600", dateColumn: "order_date" },
-  { name: "expenses", icon: Wallet, color: "text-red-600", dateColumn: "expense_date" },
-  { name: "deposits", icon: TrendingUp, color: "text-green-600", dateColumn: "deposit_date" },
-  { name: "withdrawals", icon: ArrowUpDown, color: "text-orange-600", dateColumn: "withdrawal_date" },
-  { name: "charging_sessions", icon: Zap, color: "text-yellow-600", dateColumn: "session_date" },
-  { name: "cooperative_savings", icon: PiggyBank, color: "text-purple-600", dateColumn: "contribution_date" },
-  { name: "share_investments", icon: DollarSign, color: "text-indigo-600", dateColumn: "investment_date" },
-  { name: "vat_entries", icon: Database, color: "text-cyan-600", dateColumn: "invoice_date" },
-  { name: "daily_summary", icon: BarChart3, color: "text-emerald-600", dateColumn: "summary_date" },
+  { name: "orders", icon: ShoppingCart, color: "text-primary", dateColumn: "order_date" },
+  { name: "expenses", icon: Wallet, color: "text-destructive", dateColumn: "expense_date" },
+  { name: "deposits", icon: TrendingUp, color: "text-chart-2", dateColumn: "deposit_date" },
+  { name: "withdrawals", icon: ArrowUpDown, color: "text-chart-3", dateColumn: "withdrawal_date" },
+  { name: "charging_sessions", icon: Zap, color: "text-chart-3", dateColumn: "session_date" },
+  { name: "cooperative_savings", icon: PiggyBank, color: "text-chart-4", dateColumn: "contribution_date" },
+  { name: "share_investments", icon: DollarSign, color: "text-chart-5", dateColumn: "investment_date" },
+  { name: "vat_entries", icon: Database, color: "text-chart-5", dateColumn: "invoice_date" },
+  { name: "daily_summary", icon: BarChart3, color: "text-chart-2", dateColumn: "summary_date" },
 ];
 
 const DashboardStudio: React.FC = () => {
@@ -335,7 +335,7 @@ const DashboardStudio: React.FC = () => {
         <Card>
           <CardContent className="pt-4">
             <div className="flex items-center gap-2">
-              <ShoppingCart className="h-5 w-5 text-blue-600" />
+              <ShoppingCart className="h-5 w-5 text-primary" />
               <div>
                 <p className="text-xs text-muted-foreground">Total Orders</p>
                 <p className="text-lg font-bold">Rs. {summaryStats.totalOrders.toLocaleString()}</p>
@@ -346,7 +346,7 @@ const DashboardStudio: React.FC = () => {
         <Card>
           <CardContent className="pt-4">
             <div className="flex items-center gap-2">
-              <Zap className="h-5 w-5 text-yellow-600" />
+              <Zap className="h-5 w-5 text-chart-3" />
               <div>
                 <p className="text-xs text-muted-foreground">Total Income</p>
                 <p className="text-lg font-bold">Rs. {summaryStats.totalIncome.toLocaleString()}</p>
@@ -357,7 +357,7 @@ const DashboardStudio: React.FC = () => {
         <Card>
           <CardContent className="pt-4">
             <div className="flex items-center gap-2">
-              <Wallet className="h-5 w-5 text-red-600" />
+              <Wallet className="h-5 w-5 text-destructive" />
               <div>
                 <p className="text-xs text-muted-foreground">Total Expenses</p>
                 <p className="text-lg font-bold">Rs. {summaryStats.totalExpenses.toLocaleString()}</p>
@@ -368,7 +368,7 @@ const DashboardStudio: React.FC = () => {
         <Card>
           <CardContent className="pt-4">
             <div className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-green-600" />
+              <TrendingUp className="h-5 w-5 text-chart-2" />
               <div>
                 <p className="text-xs text-muted-foreground">Total Deposits</p>
                 <p className="text-lg font-bold">Rs. {summaryStats.totalDeposits.toLocaleString()}</p>
@@ -379,7 +379,7 @@ const DashboardStudio: React.FC = () => {
         <Card>
           <CardContent className="pt-4">
             <div className="flex items-center gap-2">
-              <ArrowUpDown className="h-5 w-5 text-orange-600" />
+              <ArrowUpDown className="h-5 w-5 text-chart-3" />
               <div>
                 <p className="text-xs text-muted-foreground">Total Withdrawals</p>
                 <p className="text-lg font-bold">Rs. {summaryStats.totalWithdrawals.toLocaleString()}</p>
@@ -390,7 +390,7 @@ const DashboardStudio: React.FC = () => {
         <Card>
           <CardContent className="pt-4">
             <div className="flex items-center gap-2">
-              <PiggyBank className="h-5 w-5 text-purple-600" />
+              <PiggyBank className="h-5 w-5 text-chart-4" />
               <div>
                 <p className="text-xs text-muted-foreground">Total Savings</p>
                 <p className="text-lg font-bold">Rs. {summaryStats.totalSavings.toLocaleString()}</p>
@@ -436,7 +436,7 @@ const DashboardStudio: React.FC = () => {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <BarChart3 className="h-5 w-5 text-blue-600" />
+              <BarChart3 className="h-5 w-5 text-primary" />
               Daily Orders Revenue (Last 30 Days)
             </CardTitle>
           </CardHeader>
@@ -464,7 +464,7 @@ const DashboardStudio: React.FC = () => {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <PieChart className="h-5 w-5 text-green-600" />
+              <PieChart className="h-5 w-5 text-chart-2" />
               Payment Mode Distribution
             </CardTitle>
           </CardHeader>
@@ -502,7 +502,7 @@ const DashboardStudio: React.FC = () => {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Wallet className="h-5 w-5 text-red-600" />
+              <Wallet className="h-5 w-5 text-destructive" />
               Expense Categories
             </CardTitle>
           </CardHeader>
@@ -530,7 +530,7 @@ const DashboardStudio: React.FC = () => {
         <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-emerald-600" />
+              <TrendingUp className="h-5 w-5 text-chart-2" />
               Deposits vs Withdrawals (Last 30 Days)
             </CardTitle>
           </CardHeader>
