@@ -933,6 +933,45 @@ export type Database = {
         }
         Relationships: []
       }
+      share_expenses: {
+        Row: {
+          amount: number
+          category: string | null
+          created_at: string | null
+          description: string
+          expense_date: string | null
+          id: string
+          payment_mode: string
+          remarks: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          category?: string | null
+          created_at?: string | null
+          description: string
+          expense_date?: string | null
+          id?: string
+          payment_mode?: string
+          remarks?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          category?: string | null
+          created_at?: string | null
+          description?: string
+          expense_date?: string | null
+          id?: string
+          payment_mode?: string
+          remarks?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       share_investments: {
         Row: {
           contribution_amount: number
