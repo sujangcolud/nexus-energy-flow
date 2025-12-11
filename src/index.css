@@ -44,101 +44,100 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Professional neutral color palette */
-    --background: 210 20% 98%; /* Clean off-white */
-    --foreground: 220 20% 15%; /* Deep slate */
+    /* Light neutral color palette */
+    --background: 0 0% 100%;
+    --foreground: 0 0% 10%;
 
-    --card: 0 0% 100%; /* Pure white cards */
-    --card-foreground: 220 20% 15%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 10%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 220 20% 15%;
+    --popover-foreground: 0 0% 10%;
 
-    /* Professional blue - subdued and corporate */
-    --primary: 220 70% 45%; /* Deep professional blue */
+    --primary: 0 0% 15%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 15% 94%; /* Light gray */
-    --secondary-foreground: 220 20% 25%;
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 15%;
 
-    --muted: 220 15% 94%;
-    --muted-foreground: 220 10% 50%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 45%;
 
-    --accent: 220 60% 96%; /* Very subtle blue tint */
-    --accent-foreground: 220 70% 35%;
+    --accent: 0 0% 96%;
+    --accent-foreground: 0 0% 15%;
 
-    --destructive: 0 65% 50%; /* Professional red */
+    --destructive: 0 70% 50%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 15% 90%;
-    --input: 220 15% 90%;
-    --ring: 220 70% 45%;
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 0 0% 15%;
 
     --radius: 0.5rem;
 
-    /* Chart colors - cohesive professional palette */
-    --chart-1: 220 70% 45%; /* Primary blue */
-    --chart-2: 160 50% 40%; /* Professional green */
-    --chart-3: 35 80% 50%; /* Warm amber */
-    --chart-4: 280 45% 50%; /* Muted purple */
-    --chart-5: 200 60% 45%; /* Teal */
+    /* Chart colors - neutral grays */
+    --chart-1: 0 0% 25%;
+    --chart-2: 0 0% 45%;
+    --chart-3: 0 0% 60%;
+    --chart-4: 0 0% 75%;
+    --chart-5: 0 0% 35%;
 
-    /* Sidebar - clean professional look */
-    --sidebar-background: 220 20% 98%;
-    --sidebar-foreground: 220 15% 30%;
-    --sidebar-primary: 220 70% 45%;
+    /* Sidebar */
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 0 0% 25%;
+    --sidebar-primary: 0 0% 15%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 15% 94%;
-    --sidebar-accent-foreground: 220 20% 25%;
-    --sidebar-border: 220 15% 90%;
-    --sidebar-ring: 220 70% 45%;
+    --sidebar-accent: 0 0% 94%;
+    --sidebar-accent-foreground: 0 0% 20%;
+    --sidebar-border: 0 0% 90%;
+    --sidebar-ring: 0 0% 15%;
   }
 
   .dark {
-    --background: 220 20% 10%; /* Deep slate */
-    --foreground: 220 15% 95%;
+    --background: 0 0% 8%;
+    --foreground: 0 0% 95%;
 
-    --card: 220 20% 13%;
-    --card-foreground: 220 15% 95%;
+    --card: 0 0% 12%;
+    --card-foreground: 0 0% 95%;
 
-    --popover: 220 20% 13%;
-    --popover-foreground: 220 15% 95%;
+    --popover: 0 0% 12%;
+    --popover-foreground: 0 0% 95%;
 
-    --primary: 220 65% 55%; /* Slightly brighter in dark mode */
-    --primary-foreground: 0 0% 100%;
+    --primary: 0 0% 90%;
+    --primary-foreground: 0 0% 10%;
 
-    --secondary: 220 15% 20%;
-    --secondary-foreground: 220 15% 90%;
+    --secondary: 0 0% 18%;
+    --secondary-foreground: 0 0% 90%;
 
-    --muted: 220 15% 20%;
-    --muted-foreground: 220 10% 60%;
+    --muted: 0 0% 18%;
+    --muted-foreground: 0 0% 60%;
 
-    --accent: 220 20% 18%;
-    --accent-foreground: 220 15% 90%;
+    --accent: 0 0% 18%;
+    --accent-foreground: 0 0% 90%;
 
     --destructive: 0 60% 45%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 15% 20%;
-    --input: 220 15% 20%;
-    --ring: 220 65% 55%;
+    --border: 0 0% 20%;
+    --input: 0 0% 20%;
+    --ring: 0 0% 90%;
 
     /* Chart colors - dark mode */
-    --chart-1: 220 65% 55%;
-    --chart-2: 160 50% 50%;
-    --chart-3: 35 75% 55%;
-    --chart-4: 280 40% 55%;
-    --chart-5: 200 55% 50%;
+    --chart-1: 0 0% 75%;
+    --chart-2: 0 0% 55%;
+    --chart-3: 0 0% 40%;
+    --chart-4: 0 0% 65%;
+    --chart-5: 0 0% 85%;
 
     /* Sidebar - dark mode */
-    --sidebar-background: 220 20% 10%;
-    --sidebar-foreground: 220 15% 90%;
-    --sidebar-primary: 220 65% 55%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 15% 18%;
-    --sidebar-accent-foreground: 220 15% 90%;
-    --sidebar-border: 220 15% 18%;
-    --sidebar-ring: 220 65% 55%;
+    --sidebar-background: 0 0% 8%;
+    --sidebar-foreground: 0 0% 90%;
+    --sidebar-primary: 0 0% 90%;
+    --sidebar-primary-foreground: 0 0% 10%;
+    --sidebar-accent: 0 0% 15%;
+    --sidebar-accent-foreground: 0 0% 90%;
+    --sidebar-border: 0 0% 18%;
+    --sidebar-ring: 0 0% 90%;
   }
 }
 
