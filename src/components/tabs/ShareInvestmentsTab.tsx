@@ -303,12 +303,12 @@ const ShareInvestmentsTab = () => {
         <Card>
           <CardContent className="pt-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <TrendingUp className="h-5 w-5 text-green-600" />
+              <div className="p-2 bg-chart-2/15 rounded-lg">
+                <TrendingUp className="h-5 w-5 text-chart-2" />
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Total Investments</p>
-                <p className="text-xl font-bold text-green-600">₹{totalInvestments.toLocaleString()}</p>
+                <p className="text-xl font-bold text-chart-2">₹{totalInvestments.toLocaleString()}</p>
               </div>
             </div>
           </CardContent>
@@ -316,12 +316,12 @@ const ShareInvestmentsTab = () => {
         <Card>
           <CardContent className="pt-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-red-100 rounded-lg">
-                <TrendingDown className="h-5 w-5 text-red-600" />
+              <div className="p-2 bg-destructive/15 rounded-lg">
+                <TrendingDown className="h-5 w-5 text-destructive" />
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Total Share Expenses</p>
-                <p className="text-xl font-bold text-red-600">₹{totalExpenses.toLocaleString()}</p>
+                <p className="text-xl font-bold text-destructive">₹{totalExpenses.toLocaleString()}</p>
               </div>
             </div>
           </CardContent>
@@ -329,12 +329,12 @@ const ShareInvestmentsTab = () => {
         <Card>
           <CardContent className="pt-4">
             <div className="flex items-center gap-3">
-              <div className={`p-2 rounded-lg ${netBalance >= 0 ? "bg-blue-100" : "bg-orange-100"}`}>
-                <ArrowUpDown className={`h-5 w-5 ${netBalance >= 0 ? "text-blue-600" : "text-orange-600"}`} />
+              <div className={`p-2 rounded-lg ${netBalance >= 0 ? "bg-primary/15" : "bg-chart-3/15"}`}>
+                <ArrowUpDown className={`h-5 w-5 ${netBalance >= 0 ? "text-primary" : "text-chart-3"}`} />
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Net Balance</p>
-                <p className={`text-xl font-bold ${netBalance >= 0 ? "text-blue-600" : "text-orange-600"}`}>
+                <p className={`text-xl font-bold ${netBalance >= 0 ? "text-primary" : "text-chart-3"}`}>
                   ₹{netBalance.toLocaleString()}
                 </p>
               </div>
@@ -344,12 +344,12 @@ const ShareInvestmentsTab = () => {
         <Card>
           <CardContent className="pt-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <DollarSign className="h-5 w-5 text-purple-600" />
+              <div className="p-2 bg-chart-4/15 rounded-lg">
+                <DollarSign className="h-5 w-5 text-chart-4" />
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Opening Balance</p>
-                <p className="text-xl font-bold text-purple-600">
+                <p className="text-xl font-bold text-chart-4">
                   ₹{openingBalance ? openingBalance.opening_balance_amount.toLocaleString() : "0"}
                 </p>
               </div>
@@ -368,7 +368,7 @@ const ShareInvestmentsTab = () => {
         </CardHeader>
         <CardContent>
           {openingBalance ? (
-            <div className="mb-4 p-4 bg-primary/10 rounded-lg">
+            <div className="mb-4 p-4 bg-accent rounded-lg">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-muted-foreground">Cutoff Date</p>
@@ -376,7 +376,7 @@ const ShareInvestmentsTab = () => {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Opening Balance</p>
-                  <p className="text-lg font-semibold text-green-600">₹{openingBalance.opening_balance_amount.toLocaleString()}</p>
+                  <p className="text-lg font-semibold text-chart-2">₹{openingBalance.opening_balance_amount.toLocaleString()}</p>
                 </div>
               </div>
             </div>
@@ -533,7 +533,7 @@ const ShareInvestmentsTab = () => {
                     {investments.map((investment) => (
                       <TableRow key={investment.id}>
                         <TableCell className="font-medium">{investment.shareholder_name}</TableCell>
-                        <TableCell className="text-green-600 font-semibold">₹{investment.contribution_amount.toLocaleString()}</TableCell>
+                        <TableCell className="text-chart-2 font-semibold">₹{investment.contribution_amount.toLocaleString()}</TableCell>
                         <TableCell>{format(new Date(investment.investment_date), "dd/MM/yyyy")}</TableCell>
                         <TableCell className="capitalize">{investment.payment_mode.replace("_", " ")}</TableCell>
                         <TableCell>
@@ -680,7 +680,7 @@ const ShareInvestmentsTab = () => {
                     {expenses.map((expense) => (
                       <TableRow key={expense.id}>
                         <TableCell className="font-medium">{expense.description}</TableCell>
-                        <TableCell className="text-red-600 font-semibold">₹{expense.amount.toLocaleString()}</TableCell>
+                        <TableCell className="text-destructive font-semibold">₹{expense.amount.toLocaleString()}</TableCell>
                         <TableCell>{format(new Date(expense.expense_date), "dd/MM/yyyy")}</TableCell>
                         <TableCell className="capitalize">{expense.category}</TableCell>
                         <TableCell className="capitalize">{expense.payment_mode.replace("_", " ")}</TableCell>
