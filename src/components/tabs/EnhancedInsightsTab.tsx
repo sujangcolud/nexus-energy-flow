@@ -4,17 +4,12 @@ import { useAuth } from "@/context/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   BarChart3,
   TrendingUp,
   TrendingDown,
-  DollarSign,
-  Calendar,
   RefreshCw,
   PieChart,
-  Target,
   Activity,
 } from "lucide-react";
 import { DateRange } from "react-day-picker";
@@ -84,7 +79,7 @@ interface PaymentModeData {
   color: string;
 }
 
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
+const COLORS = ['hsl(var(--muted-foreground))', 'hsl(var(--foreground))', 'hsl(var(--border))'];
 
 const EnhancedInsightsTab: React.FC = () => {
   const { user } = useAuth();
@@ -106,9 +101,7 @@ const EnhancedInsightsTab: React.FC = () => {
 
       const { data, error } = await supabase
         .from("daily_summary")
-        .select(`
-          *
-        `)
+        .select(`*`)
         .gte("summary_date", fromDate)
         .lte("summary_date", toDate)
         .order("summary_date", { ascending: true });
@@ -120,7 +113,6 @@ const EnhancedInsightsTab: React.FC = () => {
 
       const typedData = (data || []).map(item => ({
         ...item,
-        // Provide default values for optional payment mode breakdowns
         total_expenses_cash: item.total_expenses_cash || 0,
         total_expenses_esewa: item.total_expenses_esewa || 0,
         total_expenses_fonepay: item.total_expenses_fonepay || 0,
@@ -157,50 +149,14 @@ const EnhancedInsightsTab: React.FC = () => {
     const latestBalance = data[data.length - 1]?.total_balance || 0;
     
     const metrics: InsightMetric[] = [
-      {
-        label: "Total Income",
-        value: totalIncome,
-        format: "currency",
-        trend: totalIncome > 0 ? "up" : "stable"
-      },
-      {
-        label: "Total Expenses", 
-        value: totalExpenses,
-        format: "currency",
-        trend: totalExpenses > avgDailyExpenses * data.length ? "up" : "down"
-      },
-      {
-        label: "Net Profit",
-        value: netProfit,
-        format: "currency", 
-        trend: netProfit > 0 ? "up" : "down"
-      },
-      {
-        label: "Profit Margin",
-        value: profitMargin,
-        format: "percentage",
-        trend: profitMargin > 10 ? "up" : profitMargin > 5 ? "stable" : "down"
-      },
-      {
-        label: "Average Daily Income",
-        value: avgDailyIncome,
-        format: "currency"
-      },
-      {
-        label: "Current Balance",
-        value: latestBalance,
-        format: "currency"
-      },
-      {
-        label: "Total Savings",
-        value: totalSavings,
-        format: "currency"
-      },
-      {
-        label: "Total Deposits", 
-        value: totalDeposits,
-        format: "currency"
-      }
+      { label: "Total Income", value: totalIncome, format: "currency", trend: totalIncome > 0 ? "up" : "stable" },
+      { label: "Total Expenses", value: totalExpenses, format: "currency", trend: totalExpenses > avgDailyExpenses * data.length ? "up" : "down" },
+      { label: "Net Profit", value: netProfit, format: "currency", trend: netProfit > 0 ? "up" : "down" },
+      { label: "Profit Margin", value: profitMargin, format: "percentage", trend: profitMargin > 10 ? "up" : profitMargin > 5 ? "stable" : "down" },
+      { label: "Average Daily Income", value: avgDailyIncome, format: "currency" },
+      { label: "Current Balance", value: latestBalance, format: "currency" },
+      { label: "Total Savings", value: totalSavings, format: "currency" },
+      { label: "Total Deposits", value: totalDeposits, format: "currency" }
     ];
 
     setSelectedMetrics(metrics);
@@ -216,103 +172,9 @@ const EnhancedInsightsTab: React.FC = () => {
     if (grandTotal === 0) return [];
 
     return [
-      {
-        mode: "Cash",
-        amount: totalCash,
-        percentage: (totalCash / grandTotal) * 100,
-        color: COLORS[0]
-      },
-      {
-        mode: "eSewa", 
-        amount: totalEsewa,
-        percentage: (totalEsewa / grandTotal) * 100,
-        color: COLORS[1]
-      },
-      {
-        mode: "Fonepay",
-        amount: totalFonepay,
-        percentage: (totalFonepay / grandTotal) * 100,
-        color: COLORS[2]
-      }
-    ].filter(item => item.amount > 0);
-  };
-
-  const getSavingsBreakdown = (): PaymentModeData[] => {
-    const totalCash = dailyData.reduce((sum, day) => sum + (day.total_savings_cash || 0), 0);
-    const totalEsewa = dailyData.reduce((sum, day) => sum + (day.total_savings_esewa || 0), 0);
-    const totalFonepay = dailyData.reduce((sum, day) => sum + (day.total_savings_fonepay || 0), 0);
-    
-    const grandTotal = totalCash + totalEsewa + totalFonepay;
-    
-    if (grandTotal === 0) return [];
-
-    return [
-      {
-        mode: "Cash Savings",
-        amount: totalCash,
-        percentage: (totalCash / grandTotal) * 100,
-        color: COLORS[0]
-      },
-      {
-        mode: "eSewa Savings",
-        amount: totalEsewa,
-        percentage: (totalEsewa / grandTotal) * 100,
-        color: COLORS[1]
-      },
-      {
-        mode: "Fonepay Savings",
-        amount: totalFonepay,
-        percentage: (totalFonepay / grandTotal) * 100,
-        color: COLORS[2]
-      }
-    ].filter(item => item.amount > 0);
-  };
-
-  const getDepositsBreakdown = (): PaymentModeData[] => {
-    const totalCash = dailyData.reduce((sum, day) => sum + (day.total_deposits_cash || 0), 0);
-    const totalEsewa = dailyData.reduce((sum, day) => sum + (day.total_deposits_esewa || 0), 0);
-    
-    const grandTotal = totalCash + totalEsewa;
-    
-    if (grandTotal === 0) return [];
-
-    return [
-      {
-        mode: "Cash Deposits",
-        amount: totalCash,
-        percentage: (totalCash / grandTotal) * 100,
-        color: COLORS[0]
-      },
-      {
-        mode: "eSewa Deposits", 
-        amount: totalEsewa,
-        percentage: (totalEsewa / grandTotal) * 100,
-        color: COLORS[1]
-      }
-    ].filter(item => item.amount > 0);
-  };
-
-  const getWithdrawalsBreakdown = (): PaymentModeData[] => {
-    const totalCooperative = dailyData.reduce((sum, day) => sum + (day.total_withdrawals_cooperative || 0), 0);
-    const totalBank = dailyData.reduce((sum, day) => sum + (day.total_withdrawals_bank || 0), 0);
-    
-    const grandTotal = totalCooperative + totalBank;
-    
-    if (grandTotal === 0) return [];
-
-    return [
-      {
-        mode: "Cooperative Withdrawals",
-        amount: totalCooperative, 
-        percentage: (totalCooperative / grandTotal) * 100,
-        color: COLORS[0]
-      },
-      {
-        mode: "Bank Withdrawals",
-        amount: totalBank,
-        percentage: (totalBank / grandTotal) * 100,
-        color: COLORS[1]
-      }
+      { mode: "Cash", amount: totalCash, percentage: (totalCash / grandTotal) * 100, color: COLORS[0] },
+      { mode: "eSewa", amount: totalEsewa, percentage: (totalEsewa / grandTotal) * 100, color: COLORS[1] },
+      { mode: "Fonepay", amount: totalFonepay, percentage: (totalFonepay / grandTotal) * 100, color: COLORS[2] }
     ].filter(item => item.amount > 0);
   };
 
@@ -342,11 +204,11 @@ const EnhancedInsightsTab: React.FC = () => {
   const getTrendIcon = (trend?: string) => {
     switch (trend) {
       case "up":
-        return <TrendingUp className="h-4 w-4 text-green-600" />;
+        return <TrendingUp className="h-4 w-4 text-foreground" />;
       case "down":
-        return <TrendingDown className="h-4 w-4 text-red-600" />;
+        return <TrendingDown className="h-4 w-4 text-muted-foreground" />;
       default:
-        return <Activity className="h-4 w-4 text-gray-600" />;
+        return <Activity className="h-4 w-4 text-muted-foreground" />;
     }
   };
 
@@ -366,10 +228,10 @@ const EnhancedInsightsTab: React.FC = () => {
   if (loading) {
     return (
       <div className="space-y-6 animate-pulse">
-        <div className="h-8 bg-gray-200 rounded w-1/4"></div>
+        <div className="h-8 bg-muted rounded w-1/4"></div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="h-24 bg-gray-200 rounded"></div>
+            <div key={i} className="h-24 bg-muted rounded"></div>
           ))}
         </div>
       </div>
@@ -378,11 +240,10 @@ const EnhancedInsightsTab: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header Controls */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex items-center gap-2">
-          <BarChart3 className="h-6 w-6 text-blue-600" />
-          <h2 className="text-2xl font-bold text-gray-800">Enhanced Business Insights</h2>
+          <BarChart3 className="h-4 w-4 text-muted-foreground" />
+          <h2 className="text-lg font-semibold text-foreground">Business Insights</h2>
         </div>
         <div className="flex items-center gap-4">
           <DateRangePicker onUpdate={(range) => {
@@ -403,228 +264,107 @@ const EnhancedInsightsTab: React.FC = () => {
         </div>
       </div>
 
-      {/* Key Metrics Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {selectedMetrics.map((metric, index) => (
-          <Card key={index} className="hover:shadow-md transition-shadow">
+          <Card key={index} className="bg-card border">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600 flex items-center gap-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                 {getTrendIcon(metric.trend)}
                 {metric.label}
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-gray-900">
+              <div className="text-xl font-bold text-foreground">
                 {formatValue(metric.value, metric.format)}
               </div>
-              {metric.change && (
-                <div className={`text-sm mt-1 ${metric.trend === 'up' ? 'text-green-600' : metric.trend === 'down' ? 'text-red-600' : 'text-gray-600'}`}>
-                  {metric.change > 0 ? '+' : ''}{metric.change.toFixed(1)}% from previous period
-                </div>
-              )}
             </CardContent>
           </Card>
         ))}
       </div>
 
-      {/* Charts and Detailed Analysis */}
-      <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="expenses">Expenses</TabsTrigger>
-          <TabsTrigger value="savings">Savings</TabsTrigger>
-          <TabsTrigger value="flows">Cash Flows</TabsTrigger>
-        </TabsList>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="bg-card border">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base font-medium text-foreground">
+              <TrendingUp className="h-4 w-4" />
+              Daily Financial Trends
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={250}>
+              <LineChart data={dailyData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="summary_date" stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                <Tooltip 
+                  formatter={(value, name) => [formatValue(Number(value), "currency"), name]}
+                  contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}
+                />
+                <Legend />
+                <Line type="monotone" dataKey="total_income" stroke="hsl(var(--foreground))" name="Income" strokeWidth={2} />
+                <Line type="monotone" dataKey="total_expenses" stroke="hsl(var(--muted-foreground))" name="Expenses" strokeWidth={2} />
+              </LineChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
 
-        <TabsContent value="overview" className="space-y-6">
-          {/* Daily Trend Chart */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5" />
-                Daily Financial Trends
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={dailyData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="summary_date" />
-                  <YAxis />
-                  <Tooltip formatter={(value, name) => [formatValue(Number(value), "currency"), name]} />
-                  <Legend />
-                  <Line type="monotone" dataKey="total_income" stroke="#22c55e" name="Income" />
-                  <Line type="monotone" dataKey="total_expenses" stroke="#ef4444" name="Expenses" />
-                  <Line type="monotone" dataKey="total_balance" stroke="#3b82f6" name="Balance" />
-                </LineChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
+        <Card className="bg-card border">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base font-medium text-foreground">
+              <BarChart3 className="h-4 w-4" />
+              Income vs Expenses
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={250}>
+              <BarChart data={dailyData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="summary_date" stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                <Tooltip 
+                  formatter={(value, name) => [formatValue(Number(value), "currency"), name]}
+                  contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}
+                />
+                <Legend />
+                <Bar dataKey="total_income_from_orders" fill="hsl(var(--foreground))" name="Orders Income" />
+                <Bar dataKey="total_income_from_charging" fill="hsl(var(--muted-foreground))" name="Charging Income" />
+                <Bar dataKey="total_expenses" fill="hsl(var(--border))" name="Expenses" />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </div>
 
-          {/* Income vs Expenses Comparison */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BarChart3 className="h-5 w-5" />
-                Income vs Expenses Analysis
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={dailyData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="summary_date" />
-                  <YAxis />
-                  <Tooltip formatter={(value, name) => [formatValue(Number(value), "currency"), name]} />
-                  <Legend />
-                  <Bar dataKey="total_income_from_orders" fill="#22c55e" name="Orders Income" />
-                  <Bar dataKey="total_income_from_charging" fill="#10b981" name="Charging Income" />
-                  <Bar dataKey="total_expenses" fill="#ef4444" name="Expenses" />
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="expenses" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <PieChart className="h-5 w-5" />
-                Expenses by Payment Mode
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <RechartsPieChart>
-                  <Pie
-                    data={getPaymentModeBreakdown()}
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={100}
-                    dataKey="amount"
-                    nameKey="mode"
-                  >
-                    {getPaymentModeBreakdown().map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip formatter={(value) => [formatValue(Number(value), "currency")]} />
-                  <Legend />
-                </RechartsPieChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="savings" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Target className="h-5 w-5" />
-                Savings Distribution
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <RechartsPieChart>
-                  <Pie
-                    data={getSavingsBreakdown()}
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={100}
-                    dataKey="amount"
-                    nameKey="mode"
-                  >
-                    {getSavingsBreakdown().map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip formatter={(value) => [formatValue(Number(value), "currency")]} />
-                  <Legend />
-                </RechartsPieChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="flows" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <DollarSign className="h-5 w-5" />
-                  Deposits Breakdown
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={250}>
-                  <RechartsPieChart>
-                    <Pie
-                      data={getDepositsBreakdown()}
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={80}
-                      dataKey="amount"
-                      nameKey="mode"
-                    >
-                      {getDepositsBreakdown().map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip formatter={(value) => [formatValue(Number(value), "currency")]} />
-                    <Legend />
-                  </RechartsPieChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <TrendingDown className="h-5 w-5" />
-                  Withdrawals Breakdown
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={250}>
-                  <RechartsPieChart>
-                    <Pie
-                      data={getWithdrawalsBreakdown()}
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={80}
-                      dataKey="amount"
-                      nameKey="mode"
-                    >
-                      {getWithdrawalsBreakdown().map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip formatter={(value) => [formatValue(Number(value), "currency")]} />
-                    <Legend />
-                  </RechartsPieChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-      </Tabs>
-
-      {/* Data Source Info */}
-      <Card className="bg-blue-50 border-blue-200">
-        <CardContent className="p-4">
-          <div className="flex items-center gap-2 text-sm">
-            <Calendar className="h-4 w-4 text-blue-600" />
-            <span className="text-blue-700 font-medium">
-              Data Source: daily_summary table
-            </span>
-            <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-              Period: {dateRange?.from && dateRange?.to && 
-                `${format(dateRange.from, 'MMM dd')} - ${format(dateRange.to, 'MMM dd, yyyy')}`
-              }
-            </Badge>
-          </div>
+      <Card className="bg-card border">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base font-medium text-foreground">
+            <PieChart className="h-4 w-4" />
+            Expenses by Payment Mode
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={250}>
+            <RechartsPieChart>
+              <Pie
+                data={getPaymentModeBreakdown()}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                outerRadius={80}
+                fill="hsl(var(--foreground))"
+                dataKey="amount"
+                label={({ mode, percentage }) => `${mode}: ${percentage.toFixed(1)}%`}
+              >
+                {getPaymentModeBreakdown().map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip 
+                formatter={(value) => [formatValue(Number(value), "currency"), "Amount"]}
+                contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}
+              />
+            </RechartsPieChart>
+          </ResponsiveContainer>
         </CardContent>
       </Card>
     </div>

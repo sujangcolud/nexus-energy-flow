@@ -1,8 +1,7 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { 
   Select,
@@ -16,7 +15,6 @@ import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
 import { FileDown, Calendar, TrendingUp } from "lucide-react";
 import { addDays, format } from "date-fns";
-import { DateRange } from "react-day-picker";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
 
 interface SummaryData {
@@ -49,7 +47,6 @@ const SummaryReportTab = () => {
       const fromDate = format(dateRange.from, "yyyy-MM-dd");
       const toDate = format(dateRange.to, "yyyy-MM-dd");
 
-      // Get orders data
       const { data: ordersData, error: ordersError } = await supabase
         .from("orders")
         .select("total")
@@ -59,7 +56,6 @@ const SummaryReportTab = () => {
 
       if (ordersError) throw ordersError;
 
-      // Get expenses data
       const { data: expensesData, error: expensesError } = await supabase
         .from("expenses")
         .select("amount")
@@ -69,7 +65,6 @@ const SummaryReportTab = () => {
 
       if (expensesError) throw expensesError;
 
-      // Get deposits data
       const { data: depositsData, error: depositsError } = await supabase
         .from("deposits")
         .select("amount")
@@ -79,7 +74,6 @@ const SummaryReportTab = () => {
 
       if (depositsError) throw depositsError;
 
-      // Get withdrawals data
       const { data: withdrawalsData, error: withdrawalsError } = await supabase
         .from("withdrawals")
         .select("amount")
@@ -143,18 +137,18 @@ const SummaryReportTab = () => {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2">
-        <TrendingUp className="h-6 w-6 text-blue-600" />
-        <h2 className="text-2xl font-bold text-gray-800">Summary Report</h2>
+        <TrendingUp className="h-4 w-4 text-muted-foreground" />
+        <h2 className="text-lg font-semibold text-foreground">Summary Report</h2>
       </div>
 
-      <Card>
+      <Card className="bg-card border">
         <CardHeader>
-          <CardTitle>Generate Summary Report</CardTitle>
+          <CardTitle className="text-base font-medium text-foreground">Generate Summary Report</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="reportType">Report Type</Label>
+              <Label htmlFor="reportType" className="text-foreground">Report Type</Label>
               <Select value={reportType} onValueChange={setReportType}>
                 <SelectTrigger>
                   <SelectValue />
@@ -168,10 +162,8 @@ const SummaryReportTab = () => {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Date Range</Label>
-              <DateRangePicker
-                onUpdate={setDateRange}
-              />
+              <Label className="text-foreground">Date Range</Label>
+              <DateRangePicker onUpdate={setDateRange} />
             </div>
           </div>
           <Button onClick={generateSummaryReport} disabled={loading} className="w-full">
@@ -182,9 +174,9 @@ const SummaryReportTab = () => {
       </Card>
 
       {summaryData && (
-        <Card>
+        <Card className="bg-card border">
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Summary Results</CardTitle>
+            <CardTitle className="text-base font-medium text-foreground">Summary Results</CardTitle>
             <Button onClick={downloadReport} variant="outline" size="sm">
               <FileDown className="h-4 w-4 mr-2" />
               Download CSV
@@ -192,41 +184,39 @@ const SummaryReportTab = () => {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <div className="p-4 bg-green-50 rounded-lg">
-                <h3 className="text-sm font-medium text-green-600">Total Income</h3>
-                <p className="text-2xl font-bold text-green-700">
+              <div className="p-4 bg-muted rounded-lg">
+                <h3 className="text-sm font-medium text-muted-foreground">Total Income</h3>
+                <p className="text-xl font-bold text-foreground">
                   Rs. {summaryData.total_income.toLocaleString()}
                 </p>
               </div>
-              <div className="p-4 bg-red-50 rounded-lg">
-                <h3 className="text-sm font-medium text-red-600">Total Expenses</h3>
-                <p className="text-2xl font-bold text-red-700">
+              <div className="p-4 bg-muted rounded-lg">
+                <h3 className="text-sm font-medium text-muted-foreground">Total Expenses</h3>
+                <p className="text-xl font-bold text-foreground">
                   Rs. {summaryData.total_expenses.toLocaleString()}
                 </p>
               </div>
-              <div className="p-4 bg-blue-50 rounded-lg">
-                <h3 className="text-sm font-medium text-blue-600">Total Deposits</h3>
-                <p className="text-2xl font-bold text-blue-700">
+              <div className="p-4 bg-muted rounded-lg">
+                <h3 className="text-sm font-medium text-muted-foreground">Total Deposits</h3>
+                <p className="text-xl font-bold text-foreground">
                   Rs. {summaryData.total_deposits.toLocaleString()}
                 </p>
               </div>
-              <div className="p-4 bg-orange-50 rounded-lg">
-                <h3 className="text-sm font-medium text-orange-600">Total Withdrawals</h3>
-                <p className="text-2xl font-bold text-orange-700">
+              <div className="p-4 bg-muted rounded-lg">
+                <h3 className="text-sm font-medium text-muted-foreground">Total Withdrawals</h3>
+                <p className="text-xl font-bold text-foreground">
                   Rs. {summaryData.total_withdrawals.toLocaleString()}
                 </p>
               </div>
-              <div className={`p-4 rounded-lg ${summaryData.net_profit >= 0 ? 'bg-green-50' : 'bg-red-50'}`}>
-                <h3 className={`text-sm font-medium ${summaryData.net_profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  Net Profit
-                </h3>
-                <p className={`text-2xl font-bold ${summaryData.net_profit >= 0 ? 'text-green-700' : 'text-red-700'}`}>
+              <div className="p-4 bg-muted rounded-lg">
+                <h3 className="text-sm font-medium text-muted-foreground">Net Profit</h3>
+                <p className="text-xl font-bold text-foreground">
                   Rs. {summaryData.net_profit.toLocaleString()}
                 </p>
               </div>
-              <div className="p-4 bg-gray-50 rounded-lg">
-                <h3 className="text-sm font-medium text-gray-600">Date Range</h3>
-                <p className="text-sm font-bold text-gray-700">
+              <div className="p-4 bg-muted rounded-lg">
+                <h3 className="text-sm font-medium text-muted-foreground">Date Range</h3>
+                <p className="text-sm font-medium text-foreground">
                   {summaryData.date_range}
                 </p>
               </div>

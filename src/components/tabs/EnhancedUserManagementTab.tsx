@@ -27,10 +27,7 @@ import {
   Users, 
   Shield, 
   UserPlus, 
-  Edit, 
-  Trash2,
-  Eye,
-  Settings
+  Edit
 } from "lucide-react";
 import {
   Dialog,
@@ -41,7 +38,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   getUsersWithRolesFallback, 
   getRoleDistributionFallback,
@@ -50,7 +46,6 @@ import {
 import { RoleManager, type RoleManagerRole } from "@/utils/roleManager";
 import { logError } from "@/utils/errorHandling";
 
-// Use the proper AppRole type from roleBasedAccess
 type AppRole = "user" | "data_entry" | "reports_viewer" | "super_admin";
 
 interface RoleDistribution {
@@ -75,7 +70,6 @@ const EnhancedUserManagementTab: React.FC = () => {
 
   const fetchUsers = async () => {
     try {
-      // Use the fallback function instead of the RPC that might not exist
       const userData = await getUsersWithRolesFallback();
       setUsers(userData);
     } catch (error) {
@@ -133,11 +127,9 @@ const EnhancedUserManagementTab: React.FC = () => {
 
   const handleCreateUser = async () => {
     try {
-      // For now, just show a message since we don't have the create user function
       toast.info("User creation is not available. Please use the standard signup process.");
       setIsCreateUserDialogOpen(false);
       
-      // Reset form
       setNewUserEmail("");
       setNewUserPassword("");
       setNewUserFirstName("");
@@ -165,28 +157,27 @@ const EnhancedUserManagementTab: React.FC = () => {
   if (loading) {
     return (
       <div className="space-y-6 animate-pulse">
-        <div className="h-8 bg-gray-200 rounded w-1/4"></div>
+        <div className="h-8 bg-muted rounded w-1/4"></div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="h-24 bg-gray-200 rounded"></div>
+            <div key={i} className="h-24 bg-muted rounded"></div>
           ))}
         </div>
-        <div className="h-64 bg-gray-200 rounded"></div>
+        <div className="h-64 bg-muted rounded"></div>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Users className="h-6 w-6 text-blue-600" />
-          <h2 className="text-2xl font-bold text-gray-800">Enhanced User Management</h2>
+          <Users className="h-4 w-4 text-muted-foreground" />
+          <h2 className="text-lg font-semibold text-foreground">User Management</h2>
         </div>
         <Dialog open={isCreateUserDialogOpen} onOpenChange={setIsCreateUserDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="flex items-center gap-2">
+            <Button variant="outline" size="sm" className="flex items-center gap-2">
               <UserPlus className="h-4 w-4" />
               Create User
             </Button>
@@ -200,9 +191,7 @@ const EnhancedUserManagementTab: React.FC = () => {
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="email" className="text-right">
-                  Email
-                </Label>
+                <Label htmlFor="email" className="text-right">Email</Label>
                 <Input
                   id="email"
                   type="email"
@@ -212,9 +201,7 @@ const EnhancedUserManagementTab: React.FC = () => {
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="password" className="text-right">
-                  Password
-                </Label>
+                <Label htmlFor="password" className="text-right">Password</Label>
                 <Input
                   id="password"
                   type="password"
@@ -224,9 +211,7 @@ const EnhancedUserManagementTab: React.FC = () => {
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="firstName" className="text-right">
-                  First Name
-                </Label>
+                <Label htmlFor="firstName" className="text-right">First Name</Label>
                 <Input
                   id="firstName"
                   value={newUserFirstName}
@@ -235,9 +220,7 @@ const EnhancedUserManagementTab: React.FC = () => {
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="lastName" className="text-right">
-                  Last Name
-                </Label>
+                <Label htmlFor="lastName" className="text-right">Last Name</Label>
                 <Input
                   id="lastName"
                   value={newUserLastName}
@@ -246,9 +229,7 @@ const EnhancedUserManagementTab: React.FC = () => {
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="role" className="text-right">
-                  Role
-                </Label>
+                <Label htmlFor="role" className="text-right">Role</Label>
                 <Select value={newUserRole} onValueChange={(value) => setNewUserRole(value as AppRole)}>
                   <SelectTrigger className="col-span-3">
                     <SelectValue />
@@ -269,18 +250,17 @@ const EnhancedUserManagementTab: React.FC = () => {
         </Dialog>
       </div>
 
-      {/* Role Distribution Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {roleDistribution.map((dist) => (
-          <Card key={dist.role}>
+          <Card key={dist.role} className="bg-card border">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <CardTitle className="text-sm font-medium flex items-center gap-2 text-muted-foreground">
                 <Shield className="h-4 w-4" />
                 {dist.role.replace('_', ' ').toUpperCase()}
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{dist.count}</div>
+              <div className="text-2xl font-bold text-foreground">{dist.count}</div>
               <p className="text-xs text-muted-foreground">
                 {((dist.count / users.length) * 100 || 0).toFixed(1)}% of total
               </p>
@@ -289,10 +269,9 @@ const EnhancedUserManagementTab: React.FC = () => {
         ))}
       </div>
 
-      {/* Users Table */}
-      <Card>
+      <Card className="bg-card border">
         <CardHeader>
-          <CardTitle>All Users</CardTitle>
+          <CardTitle className="text-base font-medium text-foreground">All Users</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
@@ -309,71 +288,65 @@ const EnhancedUserManagementTab: React.FC = () => {
               {users.map((user) => (
                 <TableRow key={user.id}>
                   <TableCell>
-                    <div>
-                      <div className="font-medium">
-                        {user.first_name} {user.last_name}
-                      </div>
+                    <div className="font-medium text-foreground">
+                      {user.first_name} {user.last_name}
                     </div>
                   </TableCell>
-                  <TableCell>{user.email}</TableCell>
+                  <TableCell className="text-muted-foreground">{user.email}</TableCell>
                   <TableCell>
                     <Badge variant={getRoleBadgeVariant(user.role)}>
                       {user.role.replace('_', ' ').toUpperCase()}
                     </Badge>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="text-muted-foreground">
                     {new Date(user.created_at).toLocaleDateString()}
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Dialog open={isRoleDialogOpen && selectedUser?.id === user.id} 
-                              onOpenChange={(open) => {
-                                setIsRoleDialogOpen(open);
-                                if (!open) setSelectedUser(null);
-                              }}>
-                        <DialogTrigger asChild>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setSelectedUser(user);
-                              setNewRole(user.role);
-                            }}
-                          >
-                            <Edit className="h-3 w-3" />
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                          <DialogHeader>
-                            <DialogTitle>Change User Role</DialogTitle>
-                            <DialogDescription>
-                              Update the role for {user.first_name} {user.last_name}
-                            </DialogDescription>
-                          </DialogHeader>
-                          <div className="grid gap-4 py-4">
-                            <div className="grid grid-cols-4 items-center gap-4">
-                              <Label htmlFor="role" className="text-right">
-                                New Role
-                              </Label>
-                              <Select value={newRole} onValueChange={(value) => setNewRole(value as AppRole)}>
-                                <SelectTrigger className="col-span-3">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="user">User</SelectItem>
-                                  <SelectItem value="data_entry">Data Entry</SelectItem>
-                                  <SelectItem value="reports_viewer">Reports Viewer</SelectItem>
-                                  <SelectItem value="super_admin">Super Admin</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
+                    <Dialog open={isRoleDialogOpen && selectedUser?.id === user.id} 
+                            onOpenChange={(open) => {
+                              setIsRoleDialogOpen(open);
+                              if (!open) setSelectedUser(null);
+                            }}>
+                      <DialogTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedUser(user);
+                            setNewRole(user.role);
+                          }}
+                        >
+                          <Edit className="h-3 w-3" />
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Change User Role</DialogTitle>
+                          <DialogDescription>
+                            Update the role for {user.first_name} {user.last_name}
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="grid gap-4 py-4">
+                          <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="role" className="text-right">New Role</Label>
+                            <Select value={newRole} onValueChange={(value) => setNewRole(value as AppRole)}>
+                              <SelectTrigger className="col-span-3">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="user">User</SelectItem>
+                                <SelectItem value="data_entry">Data Entry</SelectItem>
+                                <SelectItem value="reports_viewer">Reports Viewer</SelectItem>
+                                <SelectItem value="super_admin">Super Admin</SelectItem>
+                              </SelectContent>
+                            </Select>
                           </div>
-                          <DialogFooter>
-                            <Button onClick={handleRoleChange}>Update Role</Button>
-                          </DialogFooter>
-                        </DialogContent>
-                      </Dialog>
-                    </div>
+                        </div>
+                        <DialogFooter>
+                          <Button onClick={handleRoleChange}>Update Role</Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
                   </TableCell>
                 </TableRow>
               ))}

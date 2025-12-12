@@ -33,14 +33,12 @@ const FileUploadTab = () => {
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
     if (selectedFile) {
-      const validTypes = ['text/csv', 'application/json', '.csv', '.json'];
       const fileExtension = selectedFile.name.toLowerCase().split('.').pop();
       
       if (selectedFile.type === 'text/csv' || selectedFile.type === 'application/json' || 
           fileExtension === 'csv' || fileExtension === 'json') {
         setFile(selectedFile);
         setUploadStatus('idle');
-        console.log('File selected:', selectedFile.name, 'Type:', selectedFile.type);
       } else {
         toast.error('Please select a valid CSV or JSON file');
         event.target.value = '';
@@ -50,7 +48,6 @@ const FileUploadTab = () => {
   };
 
   const parseCSV = (csvText: string): any[] => {
-    console.log('Parsing CSV data...');
     const lines = csvText.trim().split('\n');
     if (lines.length < 2) {
       throw new Error('CSV file must have at least a header row and one data row');
@@ -70,14 +67,11 @@ const FileUploadTab = () => {
       }
     }
     
-    console.log('CSV parsed successfully:', data.length, 'records');
     return data;
   };
 
   const validateData = (data: any[], type: string): boolean => {
-    console.log('Validating data for type:', type);
     if (!data || data.length === 0) {
-      console.error('No data to validate');
       return false;
     }
 
@@ -93,41 +87,29 @@ const FileUploadTab = () => {
 
     const required = requiredFields[type];
     if (!required) {
-      console.error('Unknown data type:', type);
       return false;
     }
 
-    const missingFields: string[] = [];
-    const isValid = data.every((row, index) => {
+    const isValid = data.every((row) => {
       const rowMissingFields = required.filter(field => !row.hasOwnProperty(field) || row[field] === '');
-      if (rowMissingFields.length > 0) {
-        missingFields.push(`Row ${index + 1}: ${rowMissingFields.join(', ')}`);
-        return false;
-      }
-      return true;
+      return rowMissingFields.length === 0;
     });
 
     if (!isValid) {
-      console.error('Validation failed. Missing fields:', missingFields);
-      toast.error(`Validation failed. Missing required fields in some rows. Check console for details.`);
-    } else {
-      console.log('Data validation successful');
+      toast.error(`Validation failed. Missing required fields in some rows.`);
     }
 
     return isValid;
   };
 
   const transformData = (data: any[], type: string) => {
-    console.log('Transforming data for type:', type);
-    return data.map((row, index) => {
+    return data.map((row) => {
       const transformed: any = { ...row };
       
-      // Add user_id to all records
       if (user) {
         transformed.user_id = user.id;
       }
 
-      // Type-specific transformations
       switch (type) {
         case 'orders':
           transformed.quantity = parseInt(transformed.quantity) || 1;
@@ -166,7 +148,6 @@ const FileUploadTab = () => {
           break;
       }
 
-      console.log(`Transformed row ${index + 1}:`, transformed);
       return transformed;
     });
   };
@@ -177,29 +158,23 @@ const FileUploadTab = () => {
       return;
     }
 
-    console.log('Starting upload process...', { fileName: file.name, dataType, userId: user.id });
     setUploading(true);
     setProgress(0);
     setUploadStatus('idle');
 
     try {
       const fileText = await file.text();
-      console.log('File read successfully, length:', fileText.length);
       
       let data: any[];
 
       if (file.type === 'application/json' || file.name.toLowerCase().endsWith('.json')) {
-        console.log('Parsing as JSON...');
         data = JSON.parse(fileText);
         if (!Array.isArray(data)) {
           throw new Error('JSON file must contain an array of objects');
         }
       } else {
-        console.log('Parsing as CSV...');
         data = parseCSV(fileText);
       }
-
-      console.log('Parsed data:', data.length, 'records');
 
       if (!validateData(data, dataType)) {
         setUploadStatus('error');
@@ -207,38 +182,31 @@ const FileUploadTab = () => {
       }
 
       const transformedData = transformData(data, dataType);
-      console.log('Data transformed successfully');
 
-      const batchSize = 50; // Reduced batch size for better reliability
+      const batchSize = 50;
       const totalBatches = Math.ceil(transformedData.length / batchSize);
-      console.log('Will process in', totalBatches, 'batches of', batchSize, 'records each');
 
       for (let i = 0; i < totalBatches; i++) {
         const batch = transformedData.slice(i * batchSize, (i + 1) * batchSize);
-        console.log(`Processing batch ${i + 1}/${totalBatches}, records:`, batch.length);
         
         const { error } = await supabase
           .from(dataType as DataType)
           .insert(batch);
 
         if (error) {
-          console.error('Batch insert error:', error);
           throw error;
         }
 
         const progressPercent = ((i + 1) / totalBatches) * 100;
         setProgress(progressPercent);
-        console.log(`Batch ${i + 1} completed, progress: ${progressPercent.toFixed(1)}%`);
       }
 
-      console.log('All batches processed successfully');
       toast.success(`Successfully uploaded ${transformedData.length} records!`);
       setUploadStatus('success');
       setFile(null);
       setDataType('');
       setProgress(0);
     } catch (error) {
-      console.error('Error uploading data:', error);
       setUploadStatus('error');
       if (error instanceof Error) {
         toast.error(`Failed to upload data: ${error.message}`);
@@ -251,15 +219,15 @@ const FileUploadTab = () => {
   };
 
   return (
-    <div className="space-y-6"> {/* Removed top padding pt-4 md:pt-6 */}
+    <div className="space-y-6">
       <div className="flex items-center gap-2">
-        <Upload className="h-5 w-5 text-blue-600" />
-        <h2 className="text-xl font-semibold text-gray-900">File Upload</h2>
+        <Upload className="h-4 w-4 text-muted-foreground" />
+        <h2 className="text-lg font-semibold text-foreground">File Upload</h2>
       </div>
 
-      <Card>
+      <Card className="bg-card border">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-base font-medium text-foreground">
             <FileText className="h-4 w-4" />
             Upload Existing Data
           </CardTitle>
@@ -267,7 +235,7 @@ const FileUploadTab = () => {
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Data Type *</label>
+              <label className="text-sm font-medium text-foreground">Data Type *</label>
               <Select value={dataType} onValueChange={(value: DataType) => setDataType(value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select data type" />
@@ -283,7 +251,7 @@ const FileUploadTab = () => {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">File (CSV or JSON) *</label>
+              <label className="text-sm font-medium text-foreground">File (CSV or JSON) *</label>
               <Input
                 type="file"
                 accept=".csv,.json,text/csv,application/json"
@@ -294,11 +262,11 @@ const FileUploadTab = () => {
           </div>
 
           {file && (
-            <div className="p-3 bg-blue-50 rounded-lg border">
+            <div className="p-3 bg-muted rounded-lg border">
               <div className="flex items-center gap-2">
-                <FileText className="h-4 w-4 text-blue-600" />
-                <span className="text-sm font-medium">Selected file: {file.name}</span>
-                <span className="text-xs text-gray-500">({(file.size / 1024).toFixed(1)} KB)</span>
+                <FileText className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm font-medium text-foreground">Selected file: {file.name}</span>
+                <span className="text-xs text-muted-foreground">({(file.size / 1024).toFixed(1)} KB)</span>
               </div>
             </div>
           )}
@@ -306,22 +274,22 @@ const FileUploadTab = () => {
           {uploading && (
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
-                <span>Uploading data...</span>
-                <span>{Math.round(progress)}%</span>
+                <span className="text-muted-foreground">Uploading data...</span>
+                <span className="text-foreground">{Math.round(progress)}%</span>
               </div>
               <Progress value={progress} className="w-full" />
             </div>
           )}
 
           {uploadStatus === 'success' && (
-            <div className="flex items-center gap-2 text-green-600 bg-green-50 p-3 rounded-lg">
+            <div className="flex items-center gap-2 text-primary bg-primary/10 p-3 rounded-lg">
               <CheckCircle className="h-4 w-4" />
               <span className="text-sm font-medium">Upload completed successfully!</span>
             </div>
           )}
 
           {uploadStatus === 'error' && (
-            <div className="flex items-center gap-2 text-red-600 bg-red-50 p-3 rounded-lg">
+            <div className="flex items-center gap-2 text-destructive bg-destructive/10 p-3 rounded-lg">
               <AlertCircle className="h-4 w-4" />
               <span className="text-sm font-medium">Upload failed. Please check the file format and try again.</span>
             </div>
@@ -337,10 +305,9 @@ const FileUploadTab = () => {
         </CardContent>
       </Card>
 
-      {/* Format Guidelines */}
-      <Card>
+      <Card className="bg-card border">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-base font-medium text-foreground">
             <AlertCircle className="h-4 w-4" />
             File Format Guidelines
           </CardTitle>
@@ -348,33 +315,33 @@ const FileUploadTab = () => {
         <CardContent>
           <div className="space-y-4 text-sm">
             <div>
-              <h4 className="font-medium mb-2">Supported Formats:</h4>
-              <ul className="list-disc list-inside space-y-1 text-gray-600">
+              <h4 className="font-medium mb-2 text-foreground">Supported Formats:</h4>
+              <ul className="list-disc list-inside space-y-1 text-muted-foreground">
                 <li>CSV files with headers in the first row</li>
                 <li>JSON files with array of objects</li>
               </ul>
             </div>
 
             <div>
-              <h4 className="font-medium mb-2">Required Fields by Data Type:</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+              <h4 className="font-medium mb-2 text-foreground">Required Fields by Data Type:</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-muted-foreground">
                 <div className="space-y-1">
-                  <div><strong>Orders:</strong> item_name, quantity, rate, total, payment_mode</div>
-                  <div><strong>Charging Sessions:</strong> total_amount, payment_mode</div>
-                  <div><strong>Expenses:</strong> description, amount, category, payment_mode</div>
-                  <div><strong>Deposits:</strong> amount, deposited_by, mode</div>
+                  <div><strong className="text-foreground">Orders:</strong> item_name, quantity, rate, total, payment_mode</div>
+                  <div><strong className="text-foreground">Charging Sessions:</strong> total_amount, payment_mode</div>
+                  <div><strong className="text-foreground">Expenses:</strong> description, amount, category, payment_mode</div>
+                  <div><strong className="text-foreground">Deposits:</strong> amount, deposited_by, mode</div>
                 </div>
                 <div className="space-y-1">
-                  <div><strong>Withdrawals:</strong> amount, purpose</div>
-                  <div><strong>Cooperative Savings:</strong> member_id, contribution_amount, cycle_period</div>
-                  <div><strong>Menu Items:</strong> name, price, category</div>
+                  <div><strong className="text-foreground">Withdrawals:</strong> amount, purpose</div>
+                  <div><strong className="text-foreground">Cooperative Savings:</strong> member_id, contribution_amount, cycle_period</div>
+                  <div><strong className="text-foreground">Menu Items:</strong> name, price, category</div>
                 </div>
               </div>
             </div>
 
-            <div className="bg-yellow-50 p-3 rounded-md">
-              <p className="text-yellow-800 text-xs">
-                <strong>Note:</strong> All uploaded data will be associated with your user account. 
+            <div className="bg-muted p-3 rounded-md">
+              <p className="text-muted-foreground text-xs">
+                <strong className="text-foreground">Note:</strong> All uploaded data will be associated with your user account. 
                 Date fields will default to today's date if not provided. Ensure your data follows the exact field names shown above.
               </p>
             </div>
