@@ -344,7 +344,7 @@ const ExpensesTab = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-red-50 via-pink-50 to-purple-50 relative overflow-hidden">
+    <div className="min-h-screen bg-background">
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -425,108 +425,88 @@ const ExpensesTab = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      {/* Animated Background Elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-20 w-64 h-64 bg-gradient-to-r from-red-400/20 to-pink-500/20 rounded-full blur-3xl animate-pulse"></div>
-        <div
-          className="absolute top-1/3 right-20 w-80 h-80 bg-gradient-to-r from-pink-400/20 to-purple-500/20 rounded-full blur-3xl animate-pulse"
-          style={{ animationDelay: "1s" }}
-        ></div>
-        <div
-          className="absolute bottom-20 left-1/4 w-72 h-72 bg-gradient-to-r from-purple-400/20 to-indigo-500/20 rounded-full blur-3xl animate-pulse"
-          style={{ animationDelay: "2s" }}
-        ></div>
-      </div>
 
-      <div className="relative z-10 space-y-8 p-6">
+      <div className="space-y-6 p-4 sm:p-6">
         {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="p-4 rounded-2xl bg-gradient-to-r from-red-500 to-pink-600 text-white shadow-xl animate-pulse">
-              <Receipt className="h-8 w-8" />
+        <div className="mb-6">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="p-2 rounded-md bg-primary text-primary-foreground">
+              <Receipt className="h-4 w-4" />
             </div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-red-600 via-pink-600 to-purple-600 bg-clip-text text-transparent">
+            <h1 className="text-xl font-semibold text-foreground">
               Expense Tracker
             </h1>
-            <Sparkles className="h-8 w-8 text-pink-500 animate-bounce" />
           </div>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+          <p className="text-sm text-muted-foreground">
             Track and manage your business expenses with detailed categorization
           </p>
         </div>
 
         {/* All-Time Total Display */}
-        <AllTimeTotalDisplay type="expenses" className="mb-8" />
+        <AllTimeTotalDisplay type="expenses" className="mb-6" />
 
         {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card className="bg-gradient-to-br from-red-50 to-pink-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
-            <CardContent className="p-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <Card className="bg-card border">
+            <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-red-600 font-medium">
-                    Total Expenses
-                  </p>
-                  <p className="text-2xl font-bold text-red-800">
+                  <p className="text-xs text-muted-foreground font-medium">Total Expenses</p>
+                  <p className="text-lg font-semibold text-foreground">
                     NRs. {totalExpenses.toFixed(2)}
                   </p>
                 </div>
-                <div className="p-3 bg-gradient-to-r from-red-500 to-pink-500 rounded-xl text-white">
-                  <TrendingDown className="h-6 w-6" />
+                <div className="p-2 bg-muted rounded-md">
+                  <TrendingDown className="h-4 w-4 text-muted-foreground" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-pink-50 to-purple-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
-            <CardContent className="p-6">
+          <Card className="bg-card border">
+            <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-pink-600 font-medium">
-                    Total Entries
-                  </p>
-                  <p className="text-2xl font-bold text-pink-800">
-                    {expenses.length}
-                  </p>
+                  <p className="text-xs text-muted-foreground font-medium">Total Entries</p>
+                  <p className="text-lg font-semibold text-foreground">{expenses.length}</p>
                 </div>
-                <div className="p-3 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl text-white">
-                  <FileText className="h-6 w-6" />
+                <div className="p-2 bg-muted rounded-md">
+                  <FileText className="h-4 w-4 text-muted-foreground" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-purple-50 to-indigo-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
-            <CardContent className="p-6">
+          <Card className="bg-card border">
+            <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-purple-600 font-medium">
-                    Categories
-                  </p>
-                  <p className="text-2xl font-bold text-purple-800">
-                    {Object.keys(categoryBreakdown).length}
+                  <p className="text-xs text-muted-foreground font-medium">Avg. Expense</p>
+                  <p className="text-lg font-semibold text-foreground">
+                    NRs.{" "}
+                    {expenses.length > 0
+                      ? (totalExpenses / expenses.length).toFixed(2)
+                      : "0.00"}
                   </p>
                 </div>
-                <div className="p-3 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-xl text-white">
-                  <Tag className="h-6 w-6" />
+                <div className="p-2 bg-muted rounded-md">
+                  <DollarSign className="h-4 w-4 text-muted-foreground" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-indigo-50 to-blue-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
-            <CardContent className="p-6">
+          <Card className="bg-card border">
+            <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-indigo-600 font-medium">
-                    Top Category
-                  </p>
-                  <p className="text-lg font-bold text-indigo-800 truncate">
-                    {topCategory ? topCategory[0] : "None"}
+                  <p className="text-xs text-muted-foreground font-medium">Top Category</p>
+                  <p className="text-lg font-semibold text-foreground">
+                    {topCategory ? topCategory[0] : "N/A"}
                   </p>
                 </div>
-                <div className="p-3 bg-gradient-to-r from-indigo-500 to-blue-500 rounded-xl text-white">
-                  <DollarSign className="h-6 w-6" />
+                <div className="p-2 bg-muted rounded-md">
+                  <Tag className="h-4 w-4 text-muted-foreground" />
                 </div>
               </div>
             </CardContent>
