@@ -15,9 +15,7 @@ import { toast } from "sonner";
 import {
   Save,
   Database,
-  UploadCloud,
-  Sparkles,
-  Zap,
+  Upload,
   FileUp,
   TrendingUp,
 } from "lucide-react";
@@ -169,7 +167,6 @@ const DataInputTab = () => {
         .filter((f) => f.required)
         .map((f) => f.name);
 
-      // Trim data, split into rows, and slice(1) to remove the header row.
       const rows = bulkData.trim().split("\n").slice(1);
 
       if (rows.length === 0) {
@@ -180,10 +177,7 @@ const DataInputTab = () => {
       }
 
       const parsedData = rows.map((row, index) => {
-        // We log index + 2 because index 0 is the first data row (row 2 in the sheet)
-        console.log(`Row ${index + 2} raw data: "${row}"`);
         const columns = row.split("\t");
-        console.log(`Row ${index + 1} split into columns:`, columns);
 
         if (columns.length !== fields.length) {
           throw new Error(
@@ -196,7 +190,6 @@ const DataInputTab = () => {
           rowData[field.name] = columns[i].trim();
         });
 
-        console.log(`Row ${index + 1} parsed into object:`, rowData);
         return rowData;
       });
 
@@ -219,7 +212,6 @@ const DataInputTab = () => {
 
         fields.forEach((field) => {
           if (field.type === "number") {
-            // If the field is a number, parse it. If it's an empty string, set it to null.
             const numValue = transformed[field.name];
             transformed[field.name] = numValue
               ? parseFloat(numValue) || 0
@@ -228,8 +220,6 @@ const DataInputTab = () => {
           if (field.type === "date") {
             const dateString = transformed[field.name];
             if (dateString) {
-              // Use date-fns's parse function for reliable parsing.
-              // It requires a format string. We'll assume 'yyyy-MM-dd'.
               const parsedDate = parse(dateString, "yyyy-MM-dd", new Date());
               if (!isNaN(parsedDate.getTime())) {
                 transformed[field.name] = format(parsedDate, "yyyy-MM-dd");
@@ -239,7 +229,6 @@ const DataInputTab = () => {
                 );
               }
             } else {
-              // If no date is provided, default to today.
               transformed[field.name] = format(new Date(), "yyyy-MM-dd");
             }
           }
@@ -273,242 +262,186 @@ const DataInputTab = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-50 via-blue-50 to-indigo-50 relative overflow-hidden">
-      {/* Animated Background Elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-20 w-64 h-64 bg-gradient-to-r from-sky-400/20 to-blue-500/20 rounded-full blur-3xl animate-pulse"></div>
-        <div
-          className="absolute top-1/3 right-20 w-80 h-80 bg-gradient-to-r from-blue-400/20 to-indigo-500/20 rounded-full blur-3xl animate-pulse"
-          style={{ animationDelay: "1s" }}
-        ></div>
-        <div
-          className="absolute bottom-20 left-1/4 w-72 h-72 bg-gradient-to-r from-indigo-400/20 to-cyan-500/20 rounded-full blur-3xl animate-pulse"
-          style={{ animationDelay: "2s" }}
-        ></div>
+    <div className="space-y-6 bg-background">
+      <div className="flex items-center gap-2">
+        <Upload className="h-4 w-4 text-muted-foreground" />
+        <h2 className="text-lg font-semibold text-foreground">Bulk Data Import</h2>
       </div>
 
-      <div className="relative z-10 space-y-8 p-6">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="p-4 rounded-2xl bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-xl animate-pulse">
-              <UploadCloud className="h-8 w-8" />
-            </div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-sky-600 via-blue-600 to-indigo-600 bg-clip-text text-transparent">
-              Bulk Data Import
-            </h1>
-            <Sparkles className="h-8 w-8 text-blue-500 animate-bounce" />
-          </div>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Import large datasets efficiently with our powerful bulk upload
-            system
-          </p>
-        </div>
-
-        {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card className="bg-gradient-to-br from-sky-50 to-blue-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-sky-600 font-medium">Data Types</p>
-                  <p className="text-2xl font-bold text-sky-800">
-                    {dataTypes.length}
-                  </p>
-                </div>
-                <div className="p-3 bg-gradient-to-r from-sky-500 to-blue-500 rounded-xl text-white">
-                  <Database className="h-6 w-6" />
-                </div>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card className="bg-card border">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Data Types</p>
+                <p className="text-xl font-bold text-foreground">{dataTypes.length}</p>
               </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-blue-600 font-medium">
-                    Selected Type
-                  </p>
-                  <p className="text-lg font-bold text-blue-800">
-                    {dataType
-                      ? dataTypes.find((t) => t.value === dataType)?.label
-                      : "None"}
-                  </p>
-                </div>
-                <div className="p-3 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl text-white">
-                  <FileUp className="h-6 w-6" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-indigo-50 to-purple-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-indigo-600 font-medium">
-                    Data Rows
-                  </p>
-                  <p className="text-2xl font-bold text-indigo-800">
-                    {bulkData ? bulkData.split("\n").length - 1 : 0}
-                  </p>
-                </div>
-                <div className="p-3 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-xl text-white">
-                  <TrendingUp className="h-6 w-6" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-purple-50 to-pink-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-purple-600 font-medium">Status</p>
-                  <p className="text-lg font-bold text-purple-800">
-                    {saving ? "Uploading" : "Ready"}
-                  </p>
-                </div>
-                <div className="p-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl text-white">
-                  <Zap className="h-6 w-6" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Data Input Area */}
-        <Card className="bg-gradient-to-br from-white/90 to-sky-50/90 backdrop-blur-sm border-0 shadow-2xl">
-          <CardHeader className="bg-gradient-to-r from-sky-500 to-blue-600 text-white rounded-t-lg">
-            <CardTitle className="flex items-center gap-3 text-xl">
-              <div className="p-2 bg-white/20 rounded-lg">
-                <UploadCloud className="h-6 w-6" />
-              </div>
-              Copy and Paste Data
-              <Sparkles className="h-5 w-5 animate-pulse" />
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-              <div className="space-y-2 md:col-span-1">
-                <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                  <Database className="h-4 w-4 text-sky-600" />
-                  Data Type *
-                </label>
-                <Select
-                  value={dataType}
-                  onValueChange={(value: DataType) => setDataType(value)}
-                >
-                  <SelectTrigger className="border-sky-200 focus:border-sky-500 focus:ring-sky-500 h-12">
-                    <SelectValue placeholder="Select data type to upload" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {dataTypes.map((type) => (
-                      <SelectItem key={type.value} value={type.value}>
-                        <div className="flex items-center gap-2">
-                          <div className="w-2 h-2 rounded-full bg-gradient-to-r from-sky-500 to-blue-500"></div>
-                          {type.label}
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                <FileUp className="h-4 w-4 text-blue-600" />
-                Paste Data from Spreadsheet
-              </label>
-              <div className="relative">
-                <Textarea
-                  placeholder="Copy data from Google Sheets, Excel, or a TSV file and paste it here. Each row should be on a new line, and each column separated by a tab."
-                  value={bulkData}
-                  onChange={(e) => setBulkData(e.target.value)}
-                  rows={15}
-                  disabled={!dataType}
-                  className="border-blue-200 focus:border-blue-500 focus:ring-blue-500 bg-white/80 backdrop-blur-sm"
-                />
-                {!dataType && (
-                  <div className="absolute inset-0 bg-gray-100/50 backdrop-blur-sm rounded-md flex items-center justify-center">
-                    <p className="text-gray-500 font-medium">
-                      Please select a data type first
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="mt-6 flex justify-end">
-              <Button
-                onClick={saveData}
-                disabled={saving || !dataType || !bulkData}
-                className="h-12 bg-gradient-to-r from-sky-500 via-blue-500 to-indigo-500 hover:from-sky-600 hover:via-blue-600 hover:to-indigo-600 text-white font-semibold shadow-lg transition-all duration-300 transform hover:scale-105"
-              >
-                {saving ? (
-                  <div className="flex items-center gap-2">
-                    <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                    Uploading...
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <UploadCloud className="h-5 w-5" />
-                    Parse and Upload Data
-                  </div>
-                )}
-              </Button>
+              <Database className="h-4 w-4 text-muted-foreground" />
             </div>
           </CardContent>
         </Card>
 
-        {/* Field Guidelines */}
-        {dataType && (
-          <Card className="bg-gradient-to-br from-white/90 to-blue-50/90 backdrop-blur-sm border-0 shadow-2xl animate-in fade-in slide-in-from-bottom duration-500">
-            <CardHeader className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-t-lg">
-              <CardTitle className="flex items-center gap-3 text-xl">
-                <div className="p-2 bg-white/20 rounded-lg">
-                  <TrendingUp className="h-6 w-6" />
-                </div>
-                Column Order for "
-                {dataTypes.find((t) => t.value === dataType)?.label}"
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-6">
-              <p className="text-sm text-blue-800 mb-4 font-medium">
-                When you copy from your spreadsheet, ensure the columns are in
-                the following order. Required fields are marked with{" "}
-                <span className="text-red-500 font-bold">*</span>.
-              </p>
-              <div className="text-sm font-mono bg-gradient-to-r from-white to-blue-50 p-4 rounded-lg border border-blue-200 shadow-inner">
-                {tableFields[dataType].map((field, index) => (
-                  <span key={field.name} className="inline-block">
-                    <span
-                      className={`px-2 py-1 rounded ${field.required ? "bg-red-100 text-red-800 border border-red-200" : "bg-blue-100 text-blue-800 border border-blue-200"}`}
-                    >
-                      {field.name}
-                      {field.required && (
-                        <span className="text-red-500 font-bold">*</span>
-                      )}
-                    </span>
-                    {index < tableFields[dataType].length - 1 && (
-                      <span className="text-gray-400 mx-2 font-bold"> → </span>
-                    )}
-                  </span>
-                ))}
-              </div>
-              <div className="mt-4 p-3 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg">
-                <p className="text-sm text-green-800 font-medium flex items-center gap-2">
-                  <Sparkles className="h-4 w-4" />
-                  Pro Tip: Copy the header row from your spreadsheet first, then
-                  copy the data rows to ensure proper column alignment.
+        <Card className="bg-card border">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Selected Type</p>
+                <p className="text-base font-semibold text-foreground">
+                  {dataType ? dataTypes.find((t) => t.value === dataType)?.label : "None"}
                 </p>
               </div>
-            </CardContent>
-          </Card>
-        )}
+              <FileUp className="h-4 w-4 text-muted-foreground" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-card border">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Data Rows</p>
+                <p className="text-xl font-bold text-foreground">
+                  {bulkData ? bulkData.split("\n").length - 1 : 0}
+                </p>
+              </div>
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-card border">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Status</p>
+                <p className="text-base font-semibold text-foreground">
+                  {saving ? "Uploading" : "Ready"}
+                </p>
+              </div>
+              <Save className="h-4 w-4 text-muted-foreground" />
+            </div>
+          </CardContent>
+        </Card>
       </div>
+
+      <Card className="bg-card border">
+        <CardHeader className="border-b">
+          <CardTitle className="flex items-center gap-2 text-base font-medium text-foreground">
+            <Upload className="h-4 w-4" />
+            Copy and Paste Data
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <div className="space-y-2 md:col-span-1">
+              <label className="text-sm font-medium text-foreground flex items-center gap-2">
+                <Database className="h-4 w-4 text-muted-foreground" />
+                Data Type *
+              </label>
+              <Select
+                value={dataType}
+                onValueChange={(value: DataType) => setDataType(value)}
+              >
+                <SelectTrigger className="h-10">
+                  <SelectValue placeholder="Select data type to upload" />
+                </SelectTrigger>
+                <SelectContent>
+                  {dataTypes.map((type) => (
+                    <SelectItem key={type.value} value={type.value}>
+                      {type.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-foreground flex items-center gap-2">
+              <FileUp className="h-4 w-4 text-muted-foreground" />
+              Paste Data from Spreadsheet
+            </label>
+            <div className="relative">
+              <Textarea
+                placeholder="Copy data from Google Sheets, Excel, or a TSV file and paste it here. Each row should be on a new line, and each column separated by a tab."
+                value={bulkData}
+                onChange={(e) => setBulkData(e.target.value)}
+                rows={12}
+                disabled={!dataType}
+                className="bg-background"
+              />
+              {!dataType && (
+                <div className="absolute inset-0 bg-muted/50 rounded-md flex items-center justify-center">
+                  <p className="text-muted-foreground font-medium">
+                    Please select a data type first
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="mt-6 flex justify-end">
+            <Button
+              onClick={saveData}
+              disabled={saving || !dataType || !bulkData}
+            >
+              {saving ? (
+                <div className="flex items-center gap-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-foreground"></div>
+                  Uploading...
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Save className="h-4 w-4" />
+                  Upload Data
+                </div>
+              )}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {dataType && (
+        <Card className="bg-card border">
+          <CardHeader>
+            <CardTitle className="text-base font-medium text-foreground">
+              Expected Format for {dataTypes.find((t) => t.value === dataType)?.label}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left py-2 px-3 font-medium text-muted-foreground">Field</th>
+                    <th className="text-left py-2 px-3 font-medium text-muted-foreground">Type</th>
+                    <th className="text-left py-2 px-3 font-medium text-muted-foreground">Required</th>
+                    <th className="text-left py-2 px-3 font-medium text-muted-foreground">Options</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {tableFields[dataType].map((field) => (
+                    <tr key={field.name} className="border-b last:border-0">
+                      <td className="py-2 px-3 font-medium text-foreground">{field.name}</td>
+                      <td className="py-2 px-3 text-muted-foreground">{field.type}</td>
+                      <td className="py-2 px-3">
+                        {field.required ? (
+                          <span className="text-destructive">Yes</span>
+                        ) : (
+                          <span className="text-muted-foreground">No</span>
+                        )}
+                      </td>
+                      <td className="py-2 px-3 text-muted-foreground">
+                        {field.options?.join(", ") || "-"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };

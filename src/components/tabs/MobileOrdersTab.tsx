@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -22,7 +22,6 @@ interface OrderItem {
 interface PaymentMode {
   name: string;
   icon: React.ComponentType<{ className?: string }>;
-  color: string;
 }
 
 const MobileOrdersTab: React.FC = () => {
@@ -36,9 +35,9 @@ const MobileOrdersTab: React.FC = () => {
   const [paymentMode, setPaymentMode] = useState("cash");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [availablePaymentModes] = useState<PaymentMode[]>([
-    { name: "cash", icon: Banknote, color: "bg-green-100 text-green-800" },
-    { name: "esewa", icon: Smartphone, color: "bg-blue-100 text-blue-800" },
-    { name: "fonepay", icon: CreditCard, color: "bg-purple-100 text-purple-800" },
+    { name: "cash", icon: Banknote },
+    { name: "esewa", icon: Smartphone },
+    { name: "fonepay", icon: CreditCard },
   ]);
 
   const addOrderItem = () => {
@@ -95,7 +94,6 @@ const MobileOrdersTab: React.FC = () => {
 
       const results = await Promise.all(orderPromises);
       
-      // Check for any errors
       const errors = results.filter(result => result.error);
       if (errors.length > 0) {
         const firstError = errors[0].error;
@@ -103,13 +101,11 @@ const MobileOrdersTab: React.FC = () => {
         throw firstError;
       }
 
-      // Clear the form
       setOrderItems([]);
       setPaymentMode("cash");
       
       toast.success(`Order submitted successfully! Total: NRs. ${getOrderTotal().toFixed(2)}`);
       
-      // Update daily summary for today
       const today = new Date().toISOString().split('T')[0];
       await supabase.rpc("update_enhanced_daily_summary", {
         target_date: today,
@@ -123,29 +119,23 @@ const MobileOrdersTab: React.FC = () => {
     }
   };
 
-  const getPaymentModeDetails = (mode: string) => {
-    return availablePaymentModes.find(pm => pm.name === mode) || availablePaymentModes[0];
-  };
-
   return (
     <div className="space-y-6 p-4 max-w-md mx-auto">
-      {/* Header */}
       <div className="text-center">
         <div className="flex items-center justify-center gap-2 mb-2">
-          <ShoppingCart className="h-6 w-6 text-blue-600" />
-          <h2 className="text-2xl font-bold text-gray-800">Mobile Orders</h2>
+          <ShoppingCart className="h-4 w-4 text-muted-foreground" />
+          <h2 className="text-lg font-semibold text-foreground">Mobile Orders</h2>
         </div>
-        <p className="text-gray-600">Quick order entry for mobile devices</p>
+        <p className="text-sm text-muted-foreground">Quick order entry for mobile devices</p>
       </div>
 
-      {/* Add Item Form */}
-      <Card>
+      <Card className="bg-card border">
         <CardHeader>
-          <CardTitle className="text-lg">Add Order Item</CardTitle>
+          <CardTitle className="text-base font-medium text-foreground">Add Order Item</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <Label htmlFor="item_name">Item Name</Label>
+            <Label htmlFor="item_name" className="text-foreground">Item Name</Label>
             <Input
               id="item_name"
               type="text"
@@ -160,7 +150,7 @@ const MobileOrdersTab: React.FC = () => {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="quantity">Quantity</Label>
+              <Label htmlFor="quantity" className="text-foreground">Quantity</Label>
               <Input
                 id="quantity"
                 type="number"
@@ -177,7 +167,7 @@ const MobileOrdersTab: React.FC = () => {
             </div>
 
             <div>
-              <Label htmlFor="rate">Rate (NRs.)</Label>
+              <Label htmlFor="rate" className="text-foreground">Rate (NRs.)</Label>
               <Input
                 id="rate"
                 type="number"
@@ -195,22 +185,17 @@ const MobileOrdersTab: React.FC = () => {
             </div>
           </div>
 
-          <Button
-            onClick={addOrderItem}
-            className="w-full"
-            variant="outline"
-          >
+          <Button onClick={addOrderItem} className="w-full" variant="outline">
             <Plus className="h-4 w-4 mr-2" />
             Add Item
           </Button>
         </CardContent>
       </Card>
 
-      {/* Order Items List */}
       {orderItems.length > 0 && (
-        <Card>
+        <Card className="bg-card border">
           <CardHeader>
-            <CardTitle className="text-lg flex items-center justify-between">
+            <CardTitle className="text-base font-medium flex items-center justify-between text-foreground">
               Order Summary
               <Badge variant="secondary">
                 {orderItems.length} item{orderItems.length > 1 ? 's' : ''}
@@ -219,27 +204,19 @@ const MobileOrdersTab: React.FC = () => {
           </CardHeader>
           <CardContent className="space-y-3">
             {orderItems.map((item, index) => (
-              <div
-                key={index}
-                className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-              >
+              <div key={index} className="flex items-center justify-between p-3 bg-muted rounded-lg">
                 <div className="flex-1">
-                  <div className="font-medium text-gray-900">
-                    {item.item_name}
-                  </div>
-                  <div className="text-sm text-gray-600">
+                  <div className="font-medium text-foreground">{item.item_name}</div>
+                  <div className="text-sm text-muted-foreground">
                     {item.quantity} × NRs. {item.rate.toFixed(2)}
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <div className="font-semibold text-gray-900">
-                    NRs. {item.total.toFixed(2)}
-                  </div>
+                  <div className="font-semibold text-foreground">NRs. {item.total.toFixed(2)}</div>
                   <Button
                     size="sm"
                     variant="outline"
                     onClick={() => removeOrderItem(index)}
-                    className="text-red-600 hover:text-red-700"
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -248,7 +225,7 @@ const MobileOrdersTab: React.FC = () => {
             ))}
 
             <div className="border-t pt-3 mt-4">
-              <div className="flex justify-between items-center font-bold text-lg">
+              <div className="flex justify-between items-center font-bold text-lg text-foreground">
                 <span>Total:</span>
                 <span>NRs. {getOrderTotal().toFixed(2)}</span>
               </div>
@@ -257,10 +234,9 @@ const MobileOrdersTab: React.FC = () => {
         </Card>
       )}
 
-      {/* Payment Mode Selection */}
-      <Card>
+      <Card className="bg-card border">
         <CardHeader>
-          <CardTitle className="text-lg">Payment Method</CardTitle>
+          <CardTitle className="text-base font-medium text-foreground">Payment Method</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 gap-3">
@@ -272,16 +248,16 @@ const MobileOrdersTab: React.FC = () => {
                   onClick={() => setPaymentMode(mode.name)}
                   className={`flex items-center gap-3 p-3 rounded-lg border-2 transition-all ${
                     paymentMode === mode.name
-                      ? "border-blue-500 bg-blue-50"
-                      : "border-gray-200 hover:border-gray-300"
+                      ? "border-primary bg-primary/5"
+                      : "border-border hover:border-muted-foreground"
                   }`}
                 >
-                  <IconComponent className="h-5 w-5" />
-                  <span className="flex-1 text-left font-medium capitalize">
+                  <IconComponent className="h-4 w-4 text-muted-foreground" />
+                  <span className="flex-1 text-left font-medium capitalize text-foreground">
                     {mode.name}
                   </span>
                   {paymentMode === mode.name && (
-                    <div className="h-2 w-2 bg-blue-500 rounded-full"></div>
+                    <div className="h-2 w-2 bg-primary rounded-full"></div>
                   )}
                 </button>
               );
@@ -290,26 +266,24 @@ const MobileOrdersTab: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Submit Button */}
       <Button
         onClick={submitOrder}
         disabled={isSubmitting || orderItems.length === 0}
-        className="w-full h-12 text-lg"
+        className="w-full h-12"
       >
         {isSubmitting ? (
           "Submitting Order..."
         ) : (
           <>
-            <ShoppingCart className="h-5 w-5 mr-2" />
+            <ShoppingCart className="h-4 w-4 mr-2" />
             Submit Order (NRs. {getOrderTotal().toFixed(2)})
           </>
         )}
       </Button>
 
-      {/* Current Date Info */}
-      <Card className="bg-blue-50 border-blue-200">
+      <Card className="bg-muted border">
         <CardContent className="p-4 text-center">
-          <div className="text-sm text-blue-700">
+          <div className="text-sm text-muted-foreground">
             Order Date: {format(new Date(), 'PPP')}
           </div>
         </CardContent>
