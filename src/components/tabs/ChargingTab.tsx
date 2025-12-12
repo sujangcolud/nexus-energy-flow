@@ -365,7 +365,7 @@ const ChargingTab = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-orange-50 to-red-50 relative overflow-hidden">
+    <div className="min-h-screen bg-background">
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -477,112 +477,83 @@ const ChargingTab = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      {/* Animated Background Elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-20 w-64 h-64 bg-gradient-to-r from-yellow-400/20 to-orange-500/20 rounded-full blur-3xl animate-pulse"></div>
-        <div
-          className="absolute top-1/3 right-20 w-80 h-80 bg-gradient-to-r from-orange-400/20 to-red-500/20 rounded-full blur-3xl animate-pulse"
-          style={{ animationDelay: "1s" }}
-        ></div>
-        <div
-          className="absolute bottom-20 left-1/4 w-72 h-72 bg-gradient-to-r from-red-400/20 to-pink-500/20 rounded-full blur-3xl animate-pulse"
-          style={{ animationDelay: "2s" }}
-        ></div>
-      </div>
 
-      <div className="relative z-10 space-y-6 sm:space-y-8 p-4 sm:p-6">
+      <div className="space-y-6 p-4 sm:p-6">
         {/* Header */}
-        <div className="text-center mb-6 sm:mb-8">
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 mb-4">
-            <div className="p-3 sm:p-4 rounded-2xl bg-gradient-to-r from-yellow-500 to-orange-600 text-white shadow-xl animate-pulse">
-              <Zap className="h-6 w-6 sm:h-8 sm:w-8" />
+        <div className="mb-6">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="p-2 rounded-md bg-primary text-primary-foreground">
+              <Zap className="h-4 w-4" />
             </div>
-            <h1 className="text-2xl sm:text-4xl font-bold bg-gradient-to-r from-yellow-600 via-orange-600 to-red-600 bg-clip-text text-transparent text-center">
-              {isMobile ? "EV Charging" : "Energy Charging Station"}
+            <h1 className="text-xl font-semibold text-foreground">
+              Charging Sessions
             </h1>
-            <Zap className="h-6 w-6 sm:h-8 sm:w-8 text-yellow-500 animate-bounce" />
           </div>
-          <p className="text-sm sm:text-xl text-gray-600 max-w-2xl mx-auto px-4">
-            Track your electric vehicle charging sessions with precision
+          <p className="text-sm text-muted-foreground">
+            Track and manage EV charging sessions
           </p>
         </div>
 
         {/* All-Time Total Display */}
-        <AllTimeTotalDisplay type="charging" className="mb-6 sm:mb-8" />
+        <AllTimeTotalDisplay type="charging" className="mb-6" />
 
         {/* Quick Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
-          <Card className="bg-gradient-to-br from-yellow-50 to-orange-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
-            <CardContent className="p-3 sm:p-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <Card className="bg-card border">
+            <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs sm:text-sm text-yellow-600 font-medium">
-                    {isMobile ? "Sessions" : "Total Sessions"}
-                  </p>
-                  <p className="text-lg sm:text-2xl font-bold text-yellow-800">
-                    {sessions.length}
+                  <p className="text-xs text-muted-foreground font-medium">Total Revenue</p>
+                  <p className="text-lg font-semibold text-foreground">
+                    NRs. {totalSessionCost.toFixed(2)}
                   </p>
                 </div>
-                <div className="p-2 sm:p-3 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-xl text-white">
-                  <BatteryCharging className="h-4 w-4 sm:h-6 sm:w-6" />
+                <div className="p-2 bg-muted rounded-md">
+                  <TrendingUp className="h-4 w-4 text-muted-foreground" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-orange-50 to-red-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
-            <CardContent className="p-3 sm:p-6">
+          <Card className="bg-card border">
+            <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs sm:text-sm text-orange-600 font-medium">
-                    {isMobile ? "Cost" : "Total Cost"}
-                  </p>
-                  <p className="text-sm sm:text-2xl font-bold text-orange-800">
-                    {isMobile
-                      ? `₹${totalSessionCost.toFixed(0)}`
-                      : `NRs. ${totalSessionCost.toFixed(2)}`}
-                  </p>
+                  <p className="text-xs text-muted-foreground font-medium">Total Sessions</p>
+                  <p className="text-lg font-semibold text-foreground">{sessions.length}</p>
                 </div>
-                <div className="p-2 sm:p-3 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl text-white">
-                  <TrendingUp className="h-4 w-4 sm:h-6 sm:w-6" />
+                <div className="p-2 bg-muted rounded-md">
+                  <Activity className="h-4 w-4 text-muted-foreground" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-red-50 to-pink-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
-            <CardContent className="p-3 sm:p-6">
+          <Card className="bg-card border">
+            <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs sm:text-sm text-red-600 font-medium">
-                    {isMobile ? "Avg" : "Average Cost"}
-                  </p>
-                  <p className="text-sm sm:text-2xl font-bold text-red-800">
-                    {isMobile
-                      ? `₹${averageSessionCost.toFixed(0)}`
-                      : `NRs. ${averageSessionCost.toFixed(2)}`}
+                  <p className="text-xs text-muted-foreground font-medium">Avg. Cost</p>
+                  <p className="text-lg font-semibold text-foreground">
+                    NRs. {averageSessionCost.toFixed(2)}
                   </p>
                 </div>
-                <div className="p-2 sm:p-3 bg-gradient-to-r from-red-500 to-pink-500 rounded-xl text-white">
-                  <Activity className="h-4 w-4 sm:h-6 sm:w-6" />
+                <div className="p-2 bg-muted rounded-md">
+                  <Battery className="h-4 w-4 text-muted-foreground" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-pink-50 to-purple-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
-            <CardContent className="p-3 sm:p-6">
+          <Card className="bg-card border">
+            <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs sm:text-sm text-pink-600 font-medium">
-                    {isMobile ? "Energy" : "Total Energy"}
-                  </p>
-                  <p className="text-sm sm:text-2xl font-bold text-pink-800">
-                    {totalKcal} kCal
-                  </p>
+                  <p className="text-xs text-muted-foreground font-medium">Total kCal</p>
+                  <p className="text-lg font-semibold text-foreground">{totalKcal.toFixed(2)}</p>
                 </div>
-                <div className="p-2 sm:p-3 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl text-white">
-                  <Battery className="h-4 w-4 sm:h-6 sm:w-6" />
+                <div className="p-2 bg-muted rounded-md">
+                  <BatteryCharging className="h-4 w-4 text-muted-foreground" />
                 </div>
               </div>
             </CardContent>

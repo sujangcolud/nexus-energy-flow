@@ -119,7 +119,7 @@ const Dashboard = () => {
     setIsDailyClosingOpen(true);
   };
 
-  // Define role-based navigation items with clean color schemes
+  // Define role-based navigation items with clean neutral color schemes
   const getNavItems = () => {
     const allItems = [
       // Data Entry - accessible to all users for broader access
@@ -130,8 +130,8 @@ const Dashboard = () => {
         icon: ShoppingCart,
         component: OrdersTab,
         roles: ["user", "data_entry", "reports_viewer", "super_admin"],
-        color: "bg-orange-600",
-        bgColor: "bg-orange-50",
+        color: "bg-foreground",
+        bgColor: "bg-muted",
         description: "Manage food orders",
       },
       {
@@ -141,8 +141,8 @@ const Dashboard = () => {
         icon: Zap,
         component: ChargingTab,
         roles: ["user", "data_entry", "reports_viewer", "super_admin"],
-        color: "bg-yellow-600",
-        bgColor: "bg-yellow-50",
+        color: "bg-foreground",
+        bgColor: "bg-muted",
         description: "Track energy consumption",
       },
       {
@@ -152,8 +152,8 @@ const Dashboard = () => {
         icon: Receipt,
         component: ExpensesTab,
         roles: ["user", "data_entry", "reports_viewer", "super_admin"],
-        color: "bg-red-600",
-        bgColor: "bg-red-50",
+        color: "bg-foreground",
+        bgColor: "bg-muted",
         description: "Monitor business expenses",
       },
       {
@@ -163,8 +163,8 @@ const Dashboard = () => {
         icon: CreditCard,
         component: DepositsTab,
         roles: ["user", "data_entry", "reports_viewer", "super_admin"],
-        color: "bg-green-600",
-        bgColor: "bg-green-50",
+        color: "bg-foreground",
+        bgColor: "bg-muted",
         description: "Handle financial deposits",
       },
       {
@@ -174,8 +174,8 @@ const Dashboard = () => {
         icon: Banknote,
         component: SavingsWithdrawalsTab,
         roles: ["user", "data_entry", "reports_viewer", "super_admin"],
-        color: "bg-blue-600",
-        bgColor: "bg-blue-50",
+        color: "bg-foreground",
+        bgColor: "bg-muted",
         description: "Manage savings and withdrawals",
       },
       {
@@ -185,8 +185,8 @@ const Dashboard = () => {
         icon: TrendingUp,
         component: ShareInvestmentsTab,
         roles: ["user", "data_entry", "reports_viewer", "super_admin"],
-        color: "bg-emerald-600",
-        bgColor: "bg-emerald-50",
+        color: "bg-foreground",
+        bgColor: "bg-muted",
         description: "Manage share investments",
       },
 
@@ -197,8 +197,8 @@ const Dashboard = () => {
         icon: Package,
         component: InventoryTab,
         roles: ["user", "data_entry", "reports_viewer", "super_admin"],
-        color: "bg-teal-600",
-        bgColor: "bg-teal-50",
+        color: "bg-foreground",
+        bgColor: "bg-muted",
         description: "Inventory tracking and management",
       },
       // Unified tabs - accessible to appropriate users
@@ -209,8 +209,8 @@ const Dashboard = () => {
         label: "Bulk Import",
         icon: Upload,
         roles: ["reports_viewer", "super_admin"],
-        color: "bg-green-600",
-        bgColor: "bg-green-50",
+        color: "bg-foreground",
+        bgColor: "bg-muted",
         description: "Data import & file upload",
       },
       {
@@ -220,8 +220,8 @@ const Dashboard = () => {
         icon: UtensilsCrossed,
         component: MenuManagementTab,
         roles: ["super_admin"],
-        color: "bg-amber-600",
-        bgColor: "bg-amber-50",
+        color: "bg-foreground",
+        bgColor: "bg-muted",
         description: "Manage menu items",
       },
       {
@@ -231,8 +231,8 @@ const Dashboard = () => {
         icon: UserCog,
         component: UserManagementTab,
         roles: ["super_admin"],
-        color: "bg-slate-600",
-        bgColor: "bg-slate-50",
+        color: "bg-foreground",
+        bgColor: "bg-muted",
         description: "Manage users & permissions",
       },
       {
@@ -242,8 +242,8 @@ const Dashboard = () => {
         icon: FileText,
         component: ExpenseBookingsTab,
         roles: ["user", "data_entry", "reports_viewer", "super_admin"],
-        color: "bg-cyan-600",
-        bgColor: "bg-cyan-50",
+        color: "bg-foreground",
+        bgColor: "bg-muted",
         description: "Manage expense bookings",
       },
       {
@@ -253,8 +253,8 @@ const Dashboard = () => {
         icon: FileText,
         component: VATEntryTab,
         roles: ["user", "data_entry", "reports_viewer", "super_admin"],
-        color: "bg-lime-600",
-        bgColor: "bg-lime-50",
+        color: "bg-foreground",
+        bgColor: "bg-muted",
         description: "Manage VAT entries",
       },
       {
@@ -263,8 +263,8 @@ const Dashboard = () => {
         label: "Dashboard Studio",
         icon: BarChart3,
         roles: ["user", "reports_viewer", "super_admin"],
-        color: "bg-indigo-600",
-        bgColor: "bg-indigo-50",
+        color: "bg-foreground",
+        bgColor: "bg-muted",
         description: "Create custom dashboards with drag-and-drop",
       },
     ];
@@ -395,18 +395,18 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b border-slate-200 sticky top-0 z-50">
+      <header className="bg-card shadow-sm border-b border-border sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center gap-4">
+          <div className="flex justify-between items-center py-3">
+            <div className="flex items-center gap-3">
               {isSubPageActive && (
                 <Button
                   variant="outline"
                   size="icon"
                   onClick={() => navigate(-1)}
-                  className="hover:bg-slate-100 hover:border-slate-300 transition-colors"
+                  className="h-8 w-8"
                 >
                   <ArrowLeft className="h-4 w-4" />
                 </Button>
@@ -415,22 +415,22 @@ const Dashboard = () => {
                 to="/dashboard"
                 end
                 className={({ isActive }) =>
-                  `flex items-center gap-3 group ${isActive ? "cursor-default" : ""}`
+                  `flex items-center gap-2 group ${isActive ? "cursor-default" : ""}`
                 }
               >
                 {({ isActive }) => (
                   <>
-                    <div className="p-3 rounded-lg shadow-sm transition-all group-hover:shadow-md bg-slate-600 text-white">
-                      <BarChart3 className="h-6 w-6" />
+                    <div className="p-2 rounded-md bg-primary text-primary-foreground">
+                      <BarChart3 className="h-4 w-4" />
                     </div>
                     <div>
                       <h1
-                        className={`text-xl font-bold transition-colors ${isActive ? "text-slate-800" : "text-slate-700 group-hover:text-slate-800"}`}
+                        className={`text-lg font-semibold transition-colors ${isActive ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"}`}
                       >
                         EcoSoft Pro
                       </h1>
-                      <p className="text-sm text-slate-600">
-                        Business Management System
+                      <p className="text-xs text-muted-foreground">
+                        Business Management
                       </p>
                     </div>
                   </>
@@ -438,24 +438,20 @@ const Dashboard = () => {
               </NavLink>
             </div>
 
-            <div className="flex items-center gap-2 sm:gap-4">
-              <div className="hidden sm:flex items-center gap-2 text-sm text-slate-700">
-                <div className="p-2 rounded-full bg-slate-100">
-                  <User className="h-4 w-4 text-slate-600" />
+            <div className="flex items-center gap-2">
+              <div className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground">
+                <div className="p-1.5 rounded-full bg-muted">
+                  <User className="h-3 w-3" />
                 </div>
-                <span className="font-medium">{user?.email}</span>
+                <span className="font-medium text-foreground">{user?.email}</span>
                 {userRole && (
-                  <span className="bg-slate-100 text-slate-700 px-3 py-1 rounded-full text-xs font-medium border border-slate-200">
+                  <span className="bg-muted px-2 py-0.5 rounded text-xs font-medium border border-border">
                     {userRole.replace("_", " ")}
                   </span>
                 )}
               </div>
 
-              <Button
-                variant="outline"
-                size="icon"
-                className="hover:bg-slate-100 hover:border-slate-300 transition-colors"
-              >
+              <Button variant="outline" size="icon" className="h-8 w-8">
                 <Bell className="h-4 w-4" />
               </Button>
 
@@ -463,9 +459,9 @@ const Dashboard = () => {
                 variant="outline"
                 size="sm"
                 onClick={handleDailyClosing}
-                className="flex items-center gap-1 sm:gap-2 hover:bg-blue-50 hover:border-blue-300 transition-colors text-xs sm:text-sm px-2 sm:px-3"
+                className="h-8 text-xs"
               >
-                <Database className="h-4 w-4" />
+                <Database className="h-3 w-3 mr-1" />
                 <span className="hidden sm:inline">Daily Closing</span>
                 <span className="sm:hidden">Daily</span>
               </Button>
@@ -474,29 +470,24 @@ const Dashboard = () => {
                   variant="outline"
                   size="sm"
                   onClick={() => setIsBatchClosingOpen(true)}
-                  className="flex items-center gap-1 sm:gap-2 hover:bg-green-50 hover:border-green-300 transition-colors text-xs sm:text-sm px-2 sm:px-3"
+                  className="h-8 text-xs"
                 >
-                  <Calendar className="h-4 w-4" />
-                  <span className="hidden sm:inline">Batch Closing</span>
-                  <span className="sm:hidden">Batch</span>
+                  <Calendar className="h-3 w-3 mr-1" />
+                  <span className="hidden sm:inline">Batch</span>
                 </Button>
               )}
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleSignOut}
-                className="flex items-center gap-1 sm:gap-2 hover:bg-red-50 hover:border-red-300 transition-colors text-xs sm:text-sm px-2 sm:px-3"
+                className="h-8 text-xs"
               >
-                <LogOut className="h-4 w-4" />
+                <LogOut className="h-3 w-3 mr-1" />
                 <span className="hidden sm:inline">Sign Out</span>
               </Button>
 
               <Link to="settings">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="hover:bg-slate-100 hover:border-slate-300 transition-colors"
-                >
+                <Button variant="outline" size="icon" className="h-8 w-8">
                   <SettingsIcon className="h-4 w-4" />
                 </Button>
               </Link>
@@ -506,11 +497,11 @@ const Dashboard = () => {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Mobile-only active page title */}
         {isSubPageActive && (
-          <div className="sm:hidden mb-6 text-center">
-            <h2 className="text-2xl font-bold text-slate-800">
+          <div className="sm:hidden mb-4 text-center">
+            <h2 className="text-xl font-semibold text-foreground">
               {currentPageTitle}
             </h2>
           </div>
@@ -518,27 +509,26 @@ const Dashboard = () => {
 
         {/* Show navigation cards only on the main /dashboard path */}
         {!isSubPageActive ? (
-          <div className="space-y-8">
+          <div className="space-y-6">
             {/* Welcome Section */}
-            <div className="text-center mb-12">
-              <h1 className="text-4xl font-bold text-slate-800 mb-4">
-                Welcome back, {user?.name || "User"}!
+            <div className="text-center mb-8">
+              <h1 className="text-2xl font-semibold text-foreground mb-2">
+                Welcome back, {user?.name || "User"}
               </h1>
-              <p className="text-xl text-slate-600 max-w-2xl mx-auto">
+              <p className="text-sm text-muted-foreground max-w-xl mx-auto">
                 Choose a module below to manage your business operations
-                efficiently
               </p>
             </div>
 
             {/* Navigation Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-8">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-6">
               {navItems.map((item, index) => {
                 const Icon = item.icon;
                 return (
                   <Card
                     key={item.id}
                     onClick={() => navigate(item.path)}
-                    className={`relative cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-105 ${item.bgColor} border border-slate-200 h-full group`}
+                    className="relative cursor-pointer transition-all duration-200 hover:shadow-md bg-card border border-border h-full group"
                   >
                     {canDeleteTabs && (
                       <Button
