@@ -47,15 +47,6 @@ export async function getUsersWithRolesFallback(): Promise<UserWithRole[]> {
       }));
     }
 
-    // Log the fallback usage
-    await logSecurityEvent(
-      null,
-      "USERS_FALLBACK_USED",
-      "user_management",
-      "system",
-      { error: rpcError?.message }
-    );
-
     // Try to get basic user data from profiles
     const { data: profilesData, error: profilesError } = await supabase
       .from("profiles")
@@ -73,39 +64,69 @@ export async function getUsersWithRolesFallback(): Promise<UserWithRole[]> {
       }));
     }
 
-    // Final fallback - return empty array with security warning
-    await logSecurityEvent(
-      null,
-      "USERS_FALLBACK_FAILED",
-      "user_management", 
-      "system",
-      { profilesError: profilesError?.message }
-    );
-
     return [];
   } catch (error) {
     logError("users fallback", error);
-    console.error("All fallback methods failed:", error);
-
-    // Log the complete failure
-    await logSecurityEvent(
-      null,
-      "USERS_FALLBACK_CRITICAL_FAILURE",
-      "user_management",
-      "system",
-      { error: error instanceof Error ? error.message : 'Unknown error' }
-    );
-
     return [];
   }
 }
 
 /**
- * Fallback function for role distribution with security logging
+ * Update user role in both profiles and user_roles tables
+ */
+export async function updateUserRole(
+  userId: string, 
+  newRole: "user" | "data_entry" | "reports_viewer" | "super_admin"
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    // Update profiles table
+    const { error: profileError } = await supabase
+      .from("profiles")
+      .update({ role: newRole })
+      .eq("id", userId);
+
+    if (profileError) {
+      console.error("Error updating profile role:", profileError);
+    }
+
+    // Update user_roles table
+    const { error: userRolesError } = await supabase
+      .from("user_roles")
+      .upsert({ 
+        user_id: userId, 
+        role: newRole 
+      }, { 
+        onConflict: 'user_id' 
+      });
+
+    if (userRolesError) {
+      console.error("Error updating user_roles:", userRolesError);
+    }
+
+    // Log the role change
+    await logSecurityEvent(
+      userId,
+      "ROLE_CHANGED",
+      "user_roles",
+      userId,
+      { newRole }
+    );
+
+    return { success: true };
+  } catch (error) {
+    logError("updating user role", error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : "Unknown error" 
+    };
+  }
+}
+
+/**
+ * Fallback function for role distribution
  */
 export async function getRoleDistributionFallback(): Promise<RoleDistribution[]> {
   try {
-    // Try proper RPC function first
     const { data: rpcData, error: rpcError } = await supabase.rpc('get_user_role_distribution');
     
     if (!rpcError && rpcData) {
@@ -116,8 +137,6 @@ export async function getRoleDistributionFallback(): Promise<RoleDistribution[]>
     }
 
     const users = await getUsersWithRolesFallback();
-
-    // Count roles manually
     const roleCount: Record<string, number> = {};
     users.forEach((user) => {
       roleCount[user.role] = (roleCount[user.role] || 0) + 1;
@@ -129,47 +148,12 @@ export async function getRoleDistributionFallback(): Promise<RoleDistribution[]>
     }));
   } catch (error) {
     logError("role distribution fallback", error);
-
-    // Return minimal distribution
-    return [
-      { role: "user", count: 0 },
-    ];
+    return [{ role: "user", count: 0 }];
   }
 }
 
 /**
- * Check if user roles system is available with security logging
- */
-export async function checkUserRolesAvailability(): Promise<boolean> {
-  try {
-    const { error } = await supabase.rpc("get_current_user_role");
-    const isAvailable = !error;
-    
-    if (!isAvailable) {
-      await logSecurityEvent(
-        null,
-        "USER_ROLES_SYSTEM_UNAVAILABLE",
-        "system",
-        "check",
-        { error: error?.message }
-      );
-    }
-    
-    return isAvailable;
-  } catch (error) {
-    await logSecurityEvent(
-      null,
-      "USER_ROLES_SYSTEM_CHECK_FAILED",
-      "system",
-      "check",
-      { error: error instanceof Error ? error.message : 'Unknown error' }
-    );
-    return false;
-  }
-}
-
-/**
- * Get current user role with enhanced fallback and logging
+ * Get current user role with fallback
  */
 export async function getCurrentUserRoleWithFallback(): Promise<string> {
   try {
@@ -177,20 +161,8 @@ export async function getCurrentUserRoleWithFallback(): Promise<string> {
     if (!error && data) {
       return data;
     }
-
-    // Log the fallback usage
-    const { data: { user } } = await supabase.auth.getUser();
-    await logSecurityEvent(
-      user?.id || null,
-      "ROLE_CHECK_FALLBACK",
-      "user_roles",
-      user?.id || "unknown",
-      { error: error?.message }
-    );
   } catch (error) {
     logError("getting current user role", error);
   }
-
-  // Fallback: default to 'user'
   return "user";
 }
