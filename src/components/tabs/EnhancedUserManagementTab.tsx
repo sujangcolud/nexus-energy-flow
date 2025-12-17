@@ -23,12 +23,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { 
-  Users, 
-  Shield, 
-  UserPlus, 
-  Edit
-} from "lucide-react";
+import { Users, Shield, Edit } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -41,10 +36,9 @@ import {
 import { 
   getUsersWithRolesFallback, 
   getRoleDistributionFallback,
+  updateUserRole,
   type UserWithRole 
 } from "@/utils/userRolesFallback";
-import { RoleManager, type RoleManagerRole } from "@/utils/roleManager";
-import { logError } from "@/utils/errorHandling";
 
 type AppRole = "user" | "data_entry" | "reports_viewer" | "super_admin";
 
@@ -61,19 +55,14 @@ const EnhancedUserManagementTab: React.FC = () => {
   const [selectedUser, setSelectedUser] = useState<UserWithRole | null>(null);
   const [newRole, setNewRole] = useState<AppRole>("user");
   const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
-  const [newUserEmail, setNewUserEmail] = useState("");
-  const [newUserPassword, setNewUserPassword] = useState("");
-  const [newUserFirstName, setNewUserFirstName] = useState("");
-  const [newUserLastName, setNewUserLastName] = useState("");
-  const [newUserRole, setNewUserRole] = useState<AppRole>("user");
-  const [isCreateUserDialogOpen, setIsCreateUserDialogOpen] = useState(false);
+  const [updating, setUpdating] = useState(false);
 
   const fetchUsers = async () => {
     try {
       const userData = await getUsersWithRolesFallback();
       setUsers(userData);
     } catch (error) {
-      logError("fetching users", error);
+      console.error("Error fetching users:", error);
       toast.error("Failed to load users");
     }
   };
@@ -83,32 +72,25 @@ const EnhancedUserManagementTab: React.FC = () => {
       const distribution = await getRoleDistributionFallback();
       setRoleDistribution(distribution);
     } catch (error) {
-      logError("fetching role distribution", error);
+      console.error("Error fetching role distribution:", error);
     }
   };
 
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
-      await Promise.all([
-        fetchUsers(),
-        fetchRoleDistribution()
-      ]);
+      await Promise.all([fetchUsers(), fetchRoleDistribution()]);
       setLoading(false);
     };
-
     loadData();
   }, []);
 
   const handleRoleChange = async () => {
     if (!selectedUser || !currentUser) return;
 
+    setUpdating(true);
     try {
-      const result = await RoleManager.changeUserRole(
-        selectedUser.id,
-        newRole as RoleManagerRole,
-        currentUser.id
-      );
+      const result = await updateUserRole(selectedUser.id, newRole);
 
       if (result.success) {
         toast.success("User role updated successfully");
@@ -120,24 +102,10 @@ const EnhancedUserManagementTab: React.FC = () => {
         toast.error(result.error || "Failed to update user role");
       }
     } catch (error) {
-      logError("changing user role", error);
+      console.error("Error changing user role:", error);
       toast.error("Failed to update user role");
-    }
-  };
-
-  const handleCreateUser = async () => {
-    try {
-      toast.info("User creation is not available. Please use the standard signup process.");
-      setIsCreateUserDialogOpen(false);
-      
-      setNewUserEmail("");
-      setNewUserPassword("");
-      setNewUserFirstName("");
-      setNewUserLastName("");
-      setNewUserRole("user");
-    } catch (error) {
-      logError("creating user", error);
-      toast.error("Failed to create user");
+    } finally {
+      setUpdating(false);
     }
   };
 
@@ -158,8 +126,8 @@ const EnhancedUserManagementTab: React.FC = () => {
     return (
       <div className="space-y-6 animate-pulse">
         <div className="h-8 bg-muted rounded w-1/4"></div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {Array.from({ length: 3 }).map((_, i) => (
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="h-24 bg-muted rounded"></div>
           ))}
         </div>
@@ -169,108 +137,32 @@ const EnhancedUserManagementTab: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Users className="h-4 w-4 text-muted-foreground" />
-          <h2 className="text-lg font-semibold text-foreground">User Management</h2>
-        </div>
-        <Dialog open={isCreateUserDialogOpen} onOpenChange={setIsCreateUserDialogOpen}>
-          <DialogTrigger asChild>
-            <Button variant="outline" size="sm" className="flex items-center gap-2">
-              <UserPlus className="h-4 w-4" />
-              Create User
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Create New User</DialogTitle>
-              <DialogDescription>
-                Create a new user account with specified role and permissions.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="email" className="text-right">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={newUserEmail}
-                  onChange={(e) => setNewUserEmail(e.target.value)}
-                  className="col-span-3"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="password" className="text-right">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={newUserPassword}
-                  onChange={(e) => setNewUserPassword(e.target.value)}
-                  className="col-span-3"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="firstName" className="text-right">First Name</Label>
-                <Input
-                  id="firstName"
-                  value={newUserFirstName}
-                  onChange={(e) => setNewUserFirstName(e.target.value)}
-                  className="col-span-3"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="lastName" className="text-right">Last Name</Label>
-                <Input
-                  id="lastName"
-                  value={newUserLastName}
-                  onChange={(e) => setNewUserLastName(e.target.value)}
-                  className="col-span-3"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="role" className="text-right">Role</Label>
-                <Select value={newUserRole} onValueChange={(value) => setNewUserRole(value as AppRole)}>
-                  <SelectTrigger className="col-span-3">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="user">User</SelectItem>
-                    <SelectItem value="data_entry">Data Entry</SelectItem>
-                    <SelectItem value="reports_viewer">Reports Viewer</SelectItem>
-                    <SelectItem value="super_admin">Super Admin</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <DialogFooter>
-              <Button onClick={handleCreateUser}>Create User</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+    <div className="space-y-6 p-4">
+      <div className="flex items-center gap-2">
+        <Users className="h-5 w-5 text-muted-foreground" />
+        <h2 className="text-lg font-semibold text-foreground">User Management</h2>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {roleDistribution.map((dist) => (
           <Card key={dist.role} className="bg-card border">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium flex items-center gap-2 text-muted-foreground">
-                <Shield className="h-4 w-4" />
-                {dist.role.replace('_', ' ').toUpperCase()}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-foreground">{dist.count}</div>
-              <p className="text-xs text-muted-foreground">
-                {((dist.count / users.length) * 100 || 0).toFixed(1)}% of total
-              </p>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2">
+                <Shield className="h-4 w-4 text-muted-foreground" />
+                <div>
+                  <p className="text-xs text-muted-foreground">
+                    {dist.role.replace('_', ' ').toUpperCase()}
+                  </p>
+                  <p className="text-xl font-bold text-foreground">{dist.count}</p>
+                </div>
+              </div>
             </CardContent>
           </Card>
         ))}
       </div>
 
       <Card className="bg-card border">
-        <CardHeader>
+        <CardHeader className="pb-3">
           <CardTitle className="text-base font-medium text-foreground">All Users</CardTitle>
         </CardHeader>
         <CardContent>
@@ -288,9 +180,9 @@ const EnhancedUserManagementTab: React.FC = () => {
               {users.map((user) => (
                 <TableRow key={user.id}>
                   <TableCell>
-                    <div className="font-medium text-foreground">
+                    <span className="font-medium text-foreground">
                       {user.first_name} {user.last_name}
-                    </div>
+                    </span>
                   </TableCell>
                   <TableCell className="text-muted-foreground">{user.email}</TableCell>
                   <TableCell>
@@ -302,11 +194,13 @@ const EnhancedUserManagementTab: React.FC = () => {
                     {new Date(user.created_at).toLocaleDateString()}
                   </TableCell>
                   <TableCell>
-                    <Dialog open={isRoleDialogOpen && selectedUser?.id === user.id} 
-                            onOpenChange={(open) => {
-                              setIsRoleDialogOpen(open);
-                              if (!open) setSelectedUser(null);
-                            }}>
+                    <Dialog 
+                      open={isRoleDialogOpen && selectedUser?.id === user.id} 
+                      onOpenChange={(open) => {
+                        setIsRoleDialogOpen(open);
+                        if (!open) setSelectedUser(null);
+                      }}
+                    >
                       <DialogTrigger asChild>
                         <Button
                           variant="outline"
@@ -323,27 +217,27 @@ const EnhancedUserManagementTab: React.FC = () => {
                         <DialogHeader>
                           <DialogTitle>Change User Role</DialogTitle>
                           <DialogDescription>
-                            Update the role for {user.first_name} {user.last_name}
+                            Update role for {user.first_name} {user.last_name} ({user.email})
                           </DialogDescription>
                         </DialogHeader>
-                        <div className="grid gap-4 py-4">
-                          <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="role" className="text-right">New Role</Label>
-                            <Select value={newRole} onValueChange={(value) => setNewRole(value as AppRole)}>
-                              <SelectTrigger className="col-span-3">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="user">User</SelectItem>
-                                <SelectItem value="data_entry">Data Entry</SelectItem>
-                                <SelectItem value="reports_viewer">Reports Viewer</SelectItem>
-                                <SelectItem value="super_admin">Super Admin</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
+                        <div className="py-4">
+                          <Label htmlFor="role">New Role</Label>
+                          <Select value={newRole} onValueChange={(value) => setNewRole(value as AppRole)}>
+                            <SelectTrigger className="mt-2">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="user">User</SelectItem>
+                              <SelectItem value="data_entry">Data Entry</SelectItem>
+                              <SelectItem value="reports_viewer">Reports Viewer</SelectItem>
+                              <SelectItem value="super_admin">Super Admin</SelectItem>
+                            </SelectContent>
+                          </Select>
                         </div>
                         <DialogFooter>
-                          <Button onClick={handleRoleChange}>Update Role</Button>
+                          <Button onClick={handleRoleChange} disabled={updating}>
+                            {updating ? "Updating..." : "Update Role"}
+                          </Button>
                         </DialogFooter>
                       </DialogContent>
                     </Dialog>
