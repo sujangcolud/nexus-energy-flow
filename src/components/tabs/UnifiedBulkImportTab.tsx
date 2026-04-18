@@ -1,4 +1,5 @@
 import { useState } from "react";
+import * as XLSX from "xlsx";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -154,8 +155,7 @@ const SCHEMAS: Record<DataType, { label: string; fields: FieldDef[] }> = {
   },
 };
 
-const downloadCSV = (filename: string, content: string) => {
-  const blob = new Blob([content], { type: "text/csv;charset=utf-8;" });
+const downloadBlob = (filename: string, blob: Blob) => {
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
@@ -171,6 +171,28 @@ const buildTemplateCSV = (type: DataType): string => {
   const header = fields.map((f) => f.name).join(",");
   const example = fields.map((f) => f.example).join(",");
   return `${header}\n${example}\n`;
+};
+
+const downloadTemplateXLSX = (type: DataType) => {
+  const fields = SCHEMAS[type].fields;
+  const header = fields.map((f) => f.name);
+  const example = fields.map((f) => f.example);
+  const ws = XLSX.utils.aoa_to_sheet([header, example]);
+  ws["!cols"] = header.map(() => ({ wch: 18 }));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, SCHEMAS[type].label.slice(0, 31));
+  const out = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+  downloadBlob(`${type}_template.xlsx`, new Blob([out], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }));
+};
+
+const parseXLSX = async (file: File): Promise<any[]> => {
+  const buf = await file.arrayBuffer();
+  const wb = XLSX.read(buf, { type: "array", cellDates: true });
+  const sheetName = wb.SheetNames[0];
+  if (!sheetName) throw new Error("Workbook has no sheets");
+  const ws = wb.Sheets[sheetName];
+  const rows = XLSX.utils.sheet_to_json<any>(ws, { defval: "", raw: false });
+  return rows;
 };
 
 const parseCSV = (text: string): any[] => {
@@ -257,14 +279,18 @@ const UnifiedBulkImportTab = () => {
   const [progress, setProgress] = useState(0);
   const [uploadStatus, setUploadStatus] = useState<"idle" | "success" | "error">("idle");
 
-  const handleDownloadTemplate = () => {
+  const handleDownloadTemplate = (format: "csv" | "xlsx" = "xlsx") => {
     if (!dataType) {
       toast.error("Please select a data type first");
       return;
     }
-    const csv = buildTemplateCSV(dataType);
-    downloadCSV(`${dataType}_template.csv`, csv);
-    toast.success(`${SCHEMAS[dataType].label} template downloaded`);
+    if (format === "csv") {
+      const csv = buildTemplateCSV(dataType);
+      downloadBlob(`${dataType}_template.csv`, new Blob([csv], { type: "text/csv;charset=utf-8;" }));
+    } else {
+      downloadTemplateXLSX(dataType);
+    }
+    toast.success(`${SCHEMAS[dataType].label} template downloaded (${format.toUpperCase()})`);
   };
 
   const insertRows = async (type: DataType, rows: any[]) => {
@@ -311,8 +337,8 @@ const UnifiedBulkImportTab = () => {
     const f = e.target.files?.[0];
     if (!f) return;
     const ext = f.name.toLowerCase().split(".").pop();
-    if (ext !== "csv" && ext !== "json") {
-      toast.error("Please select a CSV or JSON file");
+    if (!["csv", "json", "xlsx", "xls"].includes(ext || "")) {
+      toast.error("Please select a CSV, JSON, or Excel (.xlsx/.xls) file");
       e.target.value = "";
       return;
     }
@@ -329,12 +355,16 @@ const UnifiedBulkImportTab = () => {
     setProgress(0);
     setUploadStatus("idle");
     try {
-      const text = await file.text();
+      const lower = file.name.toLowerCase();
       let raw: any[];
-      if (file.name.toLowerCase().endsWith(".json")) {
+      if (lower.endsWith(".xlsx") || lower.endsWith(".xls")) {
+        raw = await parseXLSX(file);
+      } else if (lower.endsWith(".json")) {
+        const text = await file.text();
         raw = JSON.parse(text);
         if (!Array.isArray(raw)) throw new Error("JSON must be an array");
       } else {
+        const text = await file.text();
         raw = parseCSV(text);
       }
       if (raw.length === 0) throw new Error("No rows found");
