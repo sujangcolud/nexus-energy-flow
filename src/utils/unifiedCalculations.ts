@@ -157,50 +157,86 @@ export function calculateWithdrawalBreakdown(
 }
 
 /**
- * Calculate current balances using standardized formulas
+ * Calculate current balances using the standardized rules:
+ *  cash_balance       = cash_income - cash_expenses - cash_savings + cash_withdrawals - deposits_to_esewa - deposits_to_fonepay
+ *  esewa_balance      = esewa_income - esewa_expenses - esewa_savings + deposits_to_esewa
+ *  fonepay_balance    = fonepay_income - fonepay_expenses - fonepay_savings + deposits_to_fonepay
+ *  cooperative_balance = total_savings - total_withdrawals_cooperative
+ *  total_balance      = cash + esewa + fonepay + cooperative
+ *
+ * Deposits are treated as cash-to-wallet transfers based on `deposited_to`.
+ * Pass raw deposits/withdrawals arrays in `rawData` for accurate cooperative/bank split.
  */
 export function calculateBalances(
   data: FinancialData,
   paymentBreakdown: PaymentModeBreakdown,
+  rawData?: { deposits?: any[]; withdrawals?: any[] },
 ): BalanceBreakdown {
-  // Get payment mode totals for expenses
+  // Expenses by payment mode
   const cashExpenses = data.expenses.by_payment.cash?.total || 0;
   const esewaExpenses = data.expenses.by_payment.esewa?.total || 0;
-  const fonepayExpenses = data.expenses.by_payment.fonepay?.total || 0;
-  const bankExpenses = data.expenses.by_payment.bank?.total || 0;
+  const fonepayExpenses =
+    (data.expenses.by_payment.fonepay?.total || 0) +
+    (data.expenses.by_payment.bank?.total || 0); // bank counted as fonepay/digital
 
-  // Get payment mode totals for deposits
-  const cashDeposits = data.deposits.by_payment.cash?.total || 0;
-  const esewaDeposits = data.deposits.by_payment.esewa?.total || 0;
-  const fonepayDeposits = data.deposits.by_payment.fonepay?.total || 0;
-  const bankDeposits = data.deposits.by_payment.bank?.total || 0;
-
-  // Get payment mode totals for savings (assume cash if not specified)
-  const cashSavings = data.cooperative_savings.by_payment.cash?.total || 
-                     (data.cooperative_savings.total - 
-                      (data.cooperative_savings.by_payment.esewa?.total || 0) - 
-                      (data.cooperative_savings.by_payment.fonepay?.total || 0) - 
-                      (data.cooperative_savings.by_payment.bank?.total || 0));
+  // Savings by payment mode
+  const cashSavings = data.cooperative_savings.by_payment.cash?.total || 0;
   const esewaSavings = data.cooperative_savings.by_payment.esewa?.total || 0;
   const fonepaySavings = data.cooperative_savings.by_payment.fonepay?.total || 0;
 
-  // Get withdrawal totals by payment method
-  const cashWithdrawals = data.withdrawals.by_payment.cash?.total || 0;
-  const esewaWithdrawals = data.withdrawals.by_payment.esewa?.total || 0;
-  const fonepayWithdrawals = data.withdrawals.by_payment.fonepay?.total || 0;
+  // Deposits split by destination wallet (deposited_to) — these MOVE cash into wallets
+  const depositsList = rawData?.deposits || [];
+  const depositsToEsewa = depositsList
+    .filter((d) => normalizePaymentMode(d.deposited_to || d.mode || "") === "esewa")
+    .reduce((s, d) => s + (Number(d.amount) || 0), 0);
+  const depositsToFonepay = depositsList
+    .filter((d) => {
+      const t = normalizePaymentMode(d.deposited_to || d.mode || "");
+      return t === "fonepay" || t === "bank";
+    })
+    .reduce((s, d) => s + (Number(d.amount) || 0), 0);
 
-  // Calculate balances using standardized formulas
-  const cash = paymentBreakdown.cash - cashExpenses - cashSavings - cashDeposits + cashWithdrawals;
-  const esewa = paymentBreakdown.esewa - esewaExpenses - esewaSavings + esewaDeposits - esewaWithdrawals;
-  const fonepay = paymentBreakdown.fonepay + paymentBreakdown.bank - fonepayExpenses - fonepaySavings + fonepayDeposits + bankDeposits - fonepayWithdrawals;
-  const cooperative = data.cooperative_savings.total - data.withdrawals.total;
+  // Withdrawals — split cooperative vs bank, plus by payment mode (bank withdrawals add to cash)
+  const withdrawalsList = rawData?.withdrawals || [];
+  const cashWithdrawals = withdrawalsList
+    .filter((w) => {
+      const src = (w.withdrawal_from || "").toLowerCase();
+      return src.includes("bank") || src.includes("cooperative");
+    })
+    .reduce((s, w) => s + (Number(w.amount) || 0), 0) ||
+    (data.withdrawals.by_payment.cash?.total || 0);
 
+  const cooperativeWithdrawals = withdrawalsList
+    .filter((w) => (w.withdrawal_from || "").toLowerCase().includes("cooperative"))
+    .reduce((s, w) => s + (Number(w.amount) || 0), 0);
+
+  // Apply formulas
+  const cash =
+    paymentBreakdown.cash -
+    cashExpenses -
+    cashSavings +
+    cashWithdrawals -
+    depositsToEsewa -
+    depositsToFonepay;
+
+  const esewa =
+    paymentBreakdown.esewa - esewaExpenses - esewaSavings + depositsToEsewa;
+
+  const fonepay =
+    (paymentBreakdown.fonepay + paymentBreakdown.bank) -
+    fonepayExpenses -
+    fonepaySavings +
+    depositsToFonepay;
+
+  const cooperative = data.cooperative_savings.total - cooperativeWithdrawals;
+
+  const round = (n: number) => Math.round(n * 100) / 100;
   return {
-    cash: Math.round(cash * 100) / 100, // Round to 2 decimal places
-    esewa: Math.round(esewa * 100) / 100,
-    fonepay: Math.round(fonepay * 100) / 100,
-    cooperative: Math.round(cooperative * 100) / 100,
-    total: Math.round((cash + esewa + fonepay + cooperative) * 100) / 100,
+    cash: round(cash),
+    esewa: round(esewa),
+    fonepay: round(fonepay),
+    cooperative: round(cooperative),
+    total: round(cash + esewa + fonepay + cooperative),
   };
 }
 
