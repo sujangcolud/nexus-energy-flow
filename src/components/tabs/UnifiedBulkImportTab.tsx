@@ -403,7 +403,7 @@ const UnifiedBulkImportTab = () => {
         {/* Shared data-type selector + template download */}
         <Card className="bg-card border">
           <CardContent className="p-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
               <div className="md:col-span-2 space-y-1">
                 <label className="text-sm font-medium text-foreground">Data Type</label>
                 <Select value={dataType} onValueChange={(v: DataType) => setDataType(v)}>
@@ -417,8 +417,11 @@ const UnifiedBulkImportTab = () => {
                   </SelectContent>
                 </Select>
               </div>
-              <Button variant="outline" onClick={handleDownloadTemplate} disabled={!dataType}>
-                <Download className="h-4 w-4 mr-2" />Download Template
+              <Button variant="outline" onClick={() => handleDownloadTemplate("xlsx")} disabled={!dataType}>
+                <Download className="h-4 w-4 mr-2" />Excel Template
+              </Button>
+              <Button variant="outline" onClick={() => handleDownloadTemplate("csv")} disabled={!dataType}>
+                <Download className="h-4 w-4 mr-2" />CSV Template
               </Button>
             </div>
           </CardContent>
@@ -463,12 +466,12 @@ const UnifiedBulkImportTab = () => {
           <TabsContent value="file-upload">
             <Card className="bg-card border">
               <CardHeader className="pb-3">
-                <CardTitle className="text-base">Upload CSV or JSON File</CardTitle>
+                <CardTitle className="text-base">Upload Excel, CSV or JSON File</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <Input
                   type="file"
-                  accept=".csv,.json"
+                  accept=".csv,.json,.xlsx,.xls"
                   onChange={handleFileChange}
                   disabled={uploading || !dataType}
                 />
