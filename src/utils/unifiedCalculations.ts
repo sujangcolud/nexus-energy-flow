@@ -243,11 +243,14 @@ export function calculateBalances(
 /**
  * Calculate comprehensive financial summary
  */
-export function calculateFinancialSummary(data: FinancialData) {
+export function calculateFinancialSummary(
+  data: FinancialData,
+  rawData?: { deposits?: any[]; withdrawals?: any[] },
+) {
   const incomeBreakdown = calculateIncomeBreakdown(data.orders, data.charging);
   const paymentModeBreakdown = calculatePaymentModeBreakdown(data.orders, data.charging);
-  const balances = calculateBalances(data, paymentModeBreakdown);
-  const withdrawalBreakdown = calculateWithdrawalBreakdown(data.withdrawals);
+  const balances = calculateBalances(data, paymentModeBreakdown, rawData);
+  const withdrawalBreakdown = calculateWithdrawalBreakdown(data.withdrawals, rawData?.withdrawals || []);
 
   const netProfit = incomeBreakdown.total - data.expenses.total;
   const netCashFlow = incomeBreakdown.total + data.deposits.total - data.expenses.total - data.withdrawals.total;
