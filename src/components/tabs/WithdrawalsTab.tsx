@@ -67,6 +67,8 @@ import {
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import useTableControls from "@/hooks/useTableControls";
+import MultiWithdrawalEntry from "@/components/MultiWithdrawalEntry";
+import HistoryDateRangeFilter from "@/components/HistoryDateRangeFilter";
 
 interface Withdrawal {
   id: string;
@@ -383,20 +385,24 @@ const WithdrawalsTab = () => {
 
       <div className="relative z-10 space-y-8 p-6">
         {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="p-4 rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-xl animate-pulse">
-              <Banknote className="h-8 w-8" />
+        <div className="mb-8 flex items-start justify-between gap-4 flex-wrap">
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-3 rounded-xl bg-primary text-primary-foreground">
+                <Banknote className="h-6 w-6" />
+              </div>
+              <h1 className="text-2xl font-semibold text-foreground">
+                Withdrawal Manager
+              </h1>
             </div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
-              Withdrawal Manager
-            </h1>
-            <Sparkles className="h-8 w-8 text-indigo-500 animate-bounce" />
+            <p className="text-sm text-muted-foreground">
+              Track withdrawals with detailed purpose tracking.
+            </p>
           </div>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Track and manage cash withdrawals with detailed purpose tracking and
-            analytics
-          </p>
+          <div className="flex items-center gap-2">
+            <HistoryDateRangeFilter range={range} onChange={onRangeChange} />
+            <MultiWithdrawalEntry onComplete={fetchWithdrawals} />
+          </div>
         </div>
 
         {/* All-Time Total Display */}

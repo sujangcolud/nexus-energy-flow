@@ -72,6 +72,7 @@ import { cn } from "@/lib/utils";
 import useTableControls from "@/hooks/useTableControls";
 import BalanceDisplay from "@/components/ui/balance-display";
 import AllTimeTotalDisplay from "@/components/AllTimeTotalDisplay";
+import MultiOrderEntry from "@/components/MultiOrderEntry";
 
 interface Order {
   id: string;
@@ -603,19 +604,21 @@ const OrdersTab = () => {
 
       <div className="relative z-10 space-y-8 p-6">
         {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="p-4 rounded-2xl bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-xl animate-pulse">
-              <ChefHat className="h-8 w-8" />
+        <div className="mb-8 flex items-start justify-between gap-4 flex-wrap">
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-3 rounded-xl bg-primary text-primary-foreground">
+                <ChefHat className="h-6 w-6" />
+              </div>
+              <h1 className="text-2xl font-semibold text-foreground">
+                Restaurant Orders
+              </h1>
             </div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-orange-600 via-red-600 to-pink-600 bg-clip-text text-transparent">
-              Restaurant Orders
-            </h1>
-            <Sparkles className="h-8 w-8 text-pink-500 animate-bounce" />
+            <p className="text-sm text-muted-foreground">
+              Browse the menu and place orders, or bulk-add past orders.
+            </p>
           </div>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Browse our delicious menu and place your orders with ease
-          </p>
+          <MultiOrderEntry onComplete={fetchOrders} />
         </div>
 
         {/* All-Time Total Display */}
