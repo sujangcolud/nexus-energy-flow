@@ -67,6 +67,8 @@ import {
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import useTableControls from "@/hooks/useTableControls";
+import MultiSavingsEntry from "@/components/MultiSavingsEntry";
+import HistoryDateRangeFilter from "@/components/HistoryDateRangeFilter";
 
 interface Saving {
   id: string;
@@ -420,20 +422,24 @@ const CooperativeSavingsTab = () => {
 
       <div className="relative z-10 space-y-8 p-6">
         {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="p-4 rounded-2xl bg-gradient-to-r from-teal-500 to-cyan-600 text-white shadow-xl animate-pulse">
-              <PiggyBank className="h-8 w-8" />
+        <div className="mb-8 flex items-start justify-between gap-4 flex-wrap">
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-3 rounded-xl bg-primary text-primary-foreground">
+                <PiggyBank className="h-6 w-6" />
+              </div>
+              <h1 className="text-2xl font-semibold text-foreground">
+                Cooperative Savings
+              </h1>
             </div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-teal-600 via-cyan-600 to-blue-600 bg-clip-text text-transparent">
-              Cooperative Savings
-            </h1>
-            <Sparkles className="h-8 w-8 text-cyan-500 animate-bounce" />
+            <p className="text-sm text-muted-foreground">
+              Manage community savings contributions and member tracking.
+            </p>
           </div>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Manage community savings contributions with comprehensive member
-            tracking
-          </p>
+          <div className="flex items-center gap-2">
+            <HistoryDateRangeFilter range={range} onChange={onRangeChange} />
+            <MultiSavingsEntry onComplete={fetchSavings} />
+          </div>
         </div>
 
         {/* All-Time Total Display */}
