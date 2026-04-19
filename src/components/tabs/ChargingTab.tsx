@@ -65,6 +65,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import useTableControls from "@/hooks/useTableControls";
+import MultiChargingEntry from "@/components/MultiChargingEntry";
 
 interface ChargingSession {
   id: string;
@@ -480,18 +481,21 @@ const ChargingTab = () => {
 
       <div className="space-y-6 p-4 sm:p-6">
         {/* Header */}
-        <div className="mb-6">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="p-2 rounded-md bg-primary text-primary-foreground">
-              <Zap className="h-4 w-4" />
+        <div className="mb-6 flex items-start justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <div className="p-2 rounded-md bg-primary text-primary-foreground">
+                <Zap className="h-4 w-4" />
+              </div>
+              <h1 className="text-xl font-semibold text-foreground">
+                Charging Sessions
+              </h1>
             </div>
-            <h1 className="text-xl font-semibold text-foreground">
-              Charging Sessions
-            </h1>
+            <p className="text-sm text-muted-foreground">
+              Track and manage EV charging sessions
+            </p>
           </div>
-          <p className="text-sm text-muted-foreground">
-            Track and manage EV charging sessions
-          </p>
+          <MultiChargingEntry categories={categories} onComplete={fetchSessions} />
         </div>
 
         {/* All-Time Total Display */}

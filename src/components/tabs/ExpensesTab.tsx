@@ -66,6 +66,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import useTableControls from "@/hooks/useTableControls";
+import MultiExpenseEntry from "@/components/MultiExpenseEntry";
 
 interface Expense {
   id: string;
@@ -428,18 +429,21 @@ const ExpensesTab = () => {
 
       <div className="space-y-6 p-4 sm:p-6">
         {/* Header */}
-        <div className="mb-6">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="p-2 rounded-md bg-primary text-primary-foreground">
-              <Receipt className="h-4 w-4" />
+        <div className="mb-6 flex items-start justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <div className="p-2 rounded-md bg-primary text-primary-foreground">
+                <Receipt className="h-4 w-4" />
+              </div>
+              <h1 className="text-xl font-semibold text-foreground">
+                Expense Tracker
+              </h1>
             </div>
-            <h1 className="text-xl font-semibold text-foreground">
-              Expense Tracker
-            </h1>
+            <p className="text-sm text-muted-foreground">
+              Track and manage your business expenses with detailed categorization
+            </p>
           </div>
-          <p className="text-sm text-muted-foreground">
-            Track and manage your business expenses with detailed categorization
-          </p>
+          <MultiExpenseEntry categories={categories} onComplete={fetchExpenses} />
         </div>
 
         {/* All-Time Total Display */}
