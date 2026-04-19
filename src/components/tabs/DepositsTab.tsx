@@ -70,6 +70,8 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import MobileDateRange from "@/components/ui/mobile-date-range";
 import MobileTable from "@/components/ui/mobile-table";
 import MobileForm from "@/components/ui/mobile-form";
+import MultiDepositEntry from "@/components/MultiDepositEntry";
+import HistoryDateRangeFilter from "@/components/HistoryDateRangeFilter";
 
 interface Deposit {
   id: string;
