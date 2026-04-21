@@ -12,7 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { CalendarIcon, Download, RefreshCw, Zap, ShoppingCart, Receipt, PiggyBank, Banknote } from "lucide-react";
+import { CalendarIcon, Download, RefreshCw, Zap, ShoppingCart, Receipt, PiggyBank, Banknote, TrendingUp, TrendingDown } from "lucide-react";
 import { format, subDays, startOfDay, endOfDay, formatISO } from "date-fns";
 import { DateRange } from "react-day-picker";
 import { cn } from "@/lib/utils";
@@ -343,6 +343,57 @@ const DailySummaryReport = () => {
           );
         })}
       </div>
+
+      {/* Profit / Loss card */}
+      {(() => {
+        const totalIncome = totals.charging + totals.orders;
+        const netProfit = totalIncome - totals.expenses;
+        const isProfit = netProfit >= 0;
+        const StatusIcon = isProfit ? TrendingUp : TrendingDown;
+        return (
+          <Card className={cn("border-2", isProfit ? "border-foreground/20" : "border-destructive/40")}>
+            <CardContent className="p-5">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  <div className={cn("p-3 rounded-md", isProfit ? "bg-muted" : "bg-destructive/10")}>
+                    <StatusIcon className={cn("h-6 w-6", isProfit ? "text-foreground" : "text-destructive")} />
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground uppercase tracking-wide">
+                      {isProfit ? "Net Profit" : "Net Loss"} (Income − Expenses)
+                    </p>
+                    <p className={cn("text-2xl md:text-3xl font-bold mt-1", isProfit ? "text-foreground" : "text-destructive")}>
+                      {fmtCurrency(Math.abs(netProfit))}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {range?.from && range?.to
+                        ? `${format(range.from, "LLL dd, y")} – ${format(range.to, "LLL dd, y")}`
+                        : "Selected range"}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-4 md:gap-6 text-sm">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Total Income</p>
+                    <p className="font-semibold text-foreground">{fmtCurrency(totalIncome)}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Total Expenses</p>
+                    <p className="font-semibold text-foreground">{fmtCurrency(totals.expenses)}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Margin</p>
+                    <p className="font-semibold text-foreground">
+                      {totalIncome > 0 ? `${((netProfit / totalIncome) * 100).toFixed(2)}%` : "—"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        );
+      })()}
 
       {/* Detailed table */}
       <Card>
