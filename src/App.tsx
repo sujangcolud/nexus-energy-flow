@@ -39,6 +39,7 @@ import CustomReportCreator from "./pages/CustomReportCreator";
 import Settings from "./pages/Settings";
 import Analytics from "./pages/Analytics";
 import DashboardStudioPage from "./pages/DashboardStudio";
+import DailySummaryReport from "./pages/DailySummaryReport";
 import { Outlet } from "react-router-dom"; // Needed for nested routes
 
 const queryClient = new QueryClient();
@@ -149,6 +150,10 @@ const App = () => {
                 <Route
                   path="dashboard-studio"
                   element={<DashboardStudioPage />}
+                />
+                <Route
+                  path="daily-summary-report"
+                  element={<DailySummaryReport />}
                 />
                 {/* It might be good to have an index route that explicitly shows the cards */}
                 {/* <Route index element={<DashboardPageWithCards />} /> */}
