@@ -267,6 +267,16 @@ const Dashboard = () => {
         bgColor: "bg-muted",
         description: "Create custom dashboards with drag-and-drop",
       },
+      {
+        id: "daily_summary_report",
+        path: "daily-summary-report",
+        label: "Daily Summary Report",
+        icon: FileText,
+        roles: ["user", "data_entry", "reports_viewer", "super_admin"],
+        color: "bg-foreground",
+        bgColor: "bg-muted",
+        description: "Daily summary data with date range filter",
+      },
     ];
 
     if (!userRole) return [];
