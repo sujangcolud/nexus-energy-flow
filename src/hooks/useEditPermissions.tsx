@@ -1,4 +1,7 @@
 import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/context/AuthContext";
 
 interface EditPermissions {
   allowEditOrders: boolean;
@@ -30,6 +33,28 @@ const defaultPermissions: EditPermissions = {
 
 export const useEditPermissions = () => {
   const [permissions, setPermissions] = useState<EditPermissions>(defaultPermissions);
+  const { user } = useAuth();
+
+  // Check if current user is super admin
+  const { data: isSuperAdmin = false } = useQuery({
+    queryKey: ["is-super-admin", user?.id],
+    queryFn: async () => {
+      if (!user?.id) return false;
+      const { data, error } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .eq("role", "super_admin")
+        .maybeSingle();
+      if (error) {
+        console.warn("Role check failed:", error);
+        return false;
+      }
+      return !!data;
+    },
+    enabled: !!user?.id,
+    staleTime: 5 * 60 * 1000,
+  });
 
   useEffect(() => {
     const loadPermissions = () => {
@@ -60,7 +85,6 @@ export const useEditPermissions = () => {
 
     loadPermissions();
 
-    // Listen for storage changes (when settings are updated)
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'editSettings') {
         loadPermissions();
@@ -71,30 +95,47 @@ export const useEditPermissions = () => {
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
+  // Non-super-admins are view-only: override all edit/delete to false
+  const effective: EditPermissions = isSuperAdmin
+    ? permissions
+    : {
+        allowEditOrders: false,
+        allowEditExpenses: false,
+        allowEditDeposits: false,
+        allowEditWithdrawals: false,
+        allowEditCharging: false,
+        allowEditSavings: false,
+        allowEditVAT: false,
+        allowEditInventory: false,
+        allowEditShareInvestments: false,
+        allowEditExpenseBookings: false,
+        allowDeleteTransactions: false,
+      };
+
   const canEdit = (module: keyof Omit<EditPermissions, 'allowDeleteTransactions'>) => {
-    return permissions[module];
+    return effective[module];
   };
 
   const canDelete = () => {
-    return permissions.allowDeleteTransactions;
+    return effective.allowDeleteTransactions;
   };
 
   return {
-    permissions,
+    permissions: effective,
+    isSuperAdmin,
     canEdit,
     canDelete,
-    // Convenience methods for each module
-    canEditOrders: permissions.allowEditOrders,
-    canEditExpenses: permissions.allowEditExpenses,
-    canEditDeposits: permissions.allowEditDeposits,
-    canEditWithdrawals: permissions.allowEditWithdrawals,
-    canEditCharging: permissions.allowEditCharging,
-    canEditSavings: permissions.allowEditSavings,
-    canEditVAT: permissions.allowEditVAT,
-    canEditInventory: permissions.allowEditInventory,
-    canEditShareInvestments: permissions.allowEditShareInvestments,
-    canEditExpenseBookings: permissions.allowEditExpenseBookings,
-    canDeleteTransactions: permissions.allowDeleteTransactions,
+    canEditOrders: effective.allowEditOrders,
+    canEditExpenses: effective.allowEditExpenses,
+    canEditDeposits: effective.allowEditDeposits,
+    canEditWithdrawals: effective.allowEditWithdrawals,
+    canEditCharging: effective.allowEditCharging,
+    canEditSavings: effective.allowEditSavings,
+    canEditVAT: effective.allowEditVAT,
+    canEditInventory: effective.allowEditInventory,
+    canEditShareInvestments: effective.allowEditShareInvestments,
+    canEditExpenseBookings: effective.allowEditExpenseBookings,
+    canDeleteTransactions: effective.allowDeleteTransactions,
   };
 };
 
