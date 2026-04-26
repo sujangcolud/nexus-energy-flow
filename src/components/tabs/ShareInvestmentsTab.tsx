@@ -117,21 +117,19 @@ const ShareInvestmentsTab = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      // Fetch share investments
+      // Fetch share investments (visible to all authenticated users)
       const { data: investmentsData, error: investmentsError } = await supabase
         .from("share_investments")
         .select("*")
-        .eq("user_id", user?.id)
         .order("investment_date", { ascending: false });
 
       if (investmentsError) throw investmentsError;
       setInvestments(investmentsData || []);
 
-      // Fetch share expenses
+      // Fetch share expenses (visible to all authenticated users)
       const { data: expensesData, error: expensesError } = await supabase
         .from("share_expenses")
         .select("*")
-        .eq("user_id", user?.id)
         .order("expense_date", { ascending: false });
 
       if (expensesError) throw expensesError;

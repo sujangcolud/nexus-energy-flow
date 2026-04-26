@@ -63,7 +63,7 @@ const InventoryTab = () => {
   const fetchInventory = async () => {
     if (!user) return;
     try {
-      const { data, error } = await supabase.from("inventory").select("*").eq("user_id", user.id).eq("is_active", true).order("item_name");
+      const { data, error } = await supabase.from("inventory").select("*").eq("is_active", true).order("item_name");
       if (error) throw error;
       setInventory(data || []);
     } catch (error) {

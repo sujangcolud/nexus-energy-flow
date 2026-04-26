@@ -124,8 +124,7 @@ const ChargingTab = () => {
     try {
       let query = supabase
         .from("charging_sessions")
-        .select("*", { count: "exact" })
-        .eq("user_id", user.id);
+        .select("*", { count: "exact" });
 
       if (range?.from) {
         query = query.gte("session_date", format(range.from, "yyyy-MM-dd"));

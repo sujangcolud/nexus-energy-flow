@@ -139,8 +139,7 @@ const OrdersTab = () => {
     try {
       let query = supabase
         .from("orders")
-        .select("*", { count: "exact" })
-        .eq("user_id", user.id);
+        .select("*", { count: "exact" });
 
       if (range?.from) {
         query = query.gte("order_date", format(range.from, "yyyy-MM-dd"));
@@ -159,8 +158,7 @@ const OrdersTab = () => {
       // Get total count without pagination
       const { count: totalCount, error: countError } = await supabase
         .from("orders")
-        .select("*", { count: "exact", head: true })
-        .eq("user_id", user.id);
+        .select("*", { count: "exact", head: true });
 
       if (!countError && totalCount !== null) {
         setTotalOrdersCount(totalCount);

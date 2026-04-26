@@ -142,8 +142,7 @@ const WithdrawalsTab = () => {
     try {
       let query = supabase
         .from("withdrawals")
-        .select("*")
-        .eq("user_id", user.id);
+        .select("*");
 
       if (range?.from) {
         query = query.gte("withdrawal_date", format(range.from, "yyyy-MM-dd"));
