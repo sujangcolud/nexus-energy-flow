@@ -1541,6 +1541,27 @@ export type Database = {
         }[]
       }
       is_super_admin: { Args: never; Returns: boolean }
+      nexus_behavioral_insights: {
+        Args: { p_end_date: string; p_start_date: string }
+        Returns: Json
+      }
+      nexus_cashflow_map: {
+        Args: { p_end_date: string; p_start_date: string }
+        Returns: Json
+      }
+      nexus_detect_anomalies: {
+        Args: { p_lookback_days?: number; p_z_threshold?: number }
+        Returns: Json
+      }
+      nexus_forecast_cashflow: {
+        Args: { p_forecast_days?: number; p_lookback_days?: number }
+        Returns: Json
+      }
+      nexus_kpi_summary: {
+        Args: { p_end_date: string; p_start_date: string }
+        Returns: Json
+      }
+      nexus_reconcile: { Args: { p_check_date?: string }; Returns: Json }
       recalculate_historical_daily_summaries: {
         Args: { target_user_id: string }
         Returns: number

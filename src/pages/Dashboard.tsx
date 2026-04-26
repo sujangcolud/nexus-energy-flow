@@ -47,6 +47,10 @@ import {
   Package,
   Trash,
   Calendar,
+  Activity,
+  Lock,
+  FileSpreadsheet,
+  Boxes,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -276,6 +280,46 @@ const Dashboard = () => {
         color: "bg-foreground",
         bgColor: "bg-muted",
         description: "Daily summary data with date range filter",
+      },
+      {
+        id: "command_center",
+        path: "command-center",
+        label: "Command Center",
+        icon: Activity,
+        roles: ["user", "data_entry", "reports_viewer", "super_admin"],
+        color: "bg-foreground",
+        bgColor: "bg-muted",
+        description: "KPIs, cashflow map, forecast & anomalies",
+      },
+      {
+        id: "closing_wizard",
+        path: "closing-wizard",
+        label: "Closing Wizard",
+        icon: Lock,
+        roles: ["super_admin"],
+        color: "bg-foreground",
+        bgColor: "bg-muted",
+        description: "Reconcile and lock the day",
+      },
+      {
+        id: "report_builder",
+        path: "report-builder",
+        label: "Report Builder",
+        icon: FileSpreadsheet,
+        roles: ["user", "data_entry", "reports_viewer", "super_admin"],
+        color: "bg-foreground",
+        bgColor: "bg-muted",
+        description: "Drag & drop custom reports + CSV export",
+      },
+      {
+        id: "inventory_bridge",
+        path: "inventory-bridge",
+        label: "Inventory Bridge",
+        icon: Boxes,
+        roles: ["user", "data_entry", "reports_viewer", "super_admin"],
+        color: "bg-foreground",
+        bgColor: "bg-muted",
+        description: "Auto-suggest stock-outs from sales",
       },
     ];
 
