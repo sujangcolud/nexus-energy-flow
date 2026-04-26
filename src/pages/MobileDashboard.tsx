@@ -53,6 +53,9 @@ import {
   Wifi,
   Battery,
   Signal,
+  Lock,
+  FileSpreadsheet,
+  Boxes,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
