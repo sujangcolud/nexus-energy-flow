@@ -80,8 +80,8 @@ const VATEntryTab = () => {
   const fetchIncomeEntries = async () => {
     if (!user) return;
     try {
-      const { data: ordersData } = await supabase.from("orders").select("id, item_name, total, payment_mode, order_date").eq("user_id", user.id).order("created_at", { ascending: false });
-      const { data: chargingData } = await supabase.from("charging_sessions").select("id, total_amount, payment_mode, session_date").eq("user_id", user.id).order("created_at", { ascending: false });
+      const { data: ordersData } = await supabase.from("orders").select("id, item_name, total, payment_mode, order_date").order("created_at", { ascending: false });
+      const { data: chargingData } = await supabase.from("charging_sessions").select("id, total_amount, payment_mode, session_date").order("created_at", { ascending: false });
       const combined: IncomeEntry[] = [
         ...(ordersData || []).map((o) => ({ id: o.id, type: "order" as const, item_name: o.item_name, amount: o.total, payment_mode: o.payment_mode, date: o.order_date || new Date().toISOString().split("T")[0] })),
         ...(chargingData || []).map((c) => ({ id: c.id, type: "charging" as const, item_name: "Charging Session", amount: c.total_amount, payment_mode: c.payment_mode, date: c.session_date || new Date().toISOString().split("T")[0] })),
@@ -97,7 +97,7 @@ const VATEntryTab = () => {
   const fetchVATEntries = async () => {
     if (!user) return;
     try {
-      const { data, error } = await supabase.from("vat_entries").select("*").eq("user_id", user.id).order("created_at", { ascending: false });
+      const { data, error } = await supabase.from("vat_entries").select("*").order("created_at", { ascending: false });
       if (error) throw error;
       setVatEntries((data || []).map((e: any) => ({
         id: e.id, entry_type: e.entry_type || "manual", item_name: e.item_name || "", amount: e.amount || 0,

@@ -161,7 +161,7 @@ const ExpensesTab = () => {
 
     setLoading(true);
     try {
-      let query = supabase.from("expenses").select("*").eq("user_id", user.id);
+      let query = supabase.from("expenses").select("*");
 
       if (range?.from) {
         query = query.gte("expense_date", format(range.from, "yyyy-MM-dd"));

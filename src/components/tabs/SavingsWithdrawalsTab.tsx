@@ -134,7 +134,7 @@ const SavingsWithdrawalsTab = () => {
     if (!user) return;
     setLoading(true);
     try {
-      let query = supabase.from("cooperative_savings").select("*").eq("user_id", user.id);
+      let query = supabase.from("cooperative_savings").select("*");
       if (range?.from) query = query.gte("contribution_date", format(range.from, "yyyy-MM-dd"));
       if (range?.to) query = query.lte("contribution_date", format(range.to, "yyyy-MM-dd"));
       const { data, error } = await query.order("contribution_date", { ascending: false }).range((page - 1) * itemsPerPage, page * itemsPerPage - 1);
@@ -151,7 +151,7 @@ const SavingsWithdrawalsTab = () => {
   const fetchWithdrawals = async () => {
     if (!user) return;
     try {
-      let query = supabase.from("withdrawals").select("*").eq("user_id", user.id);
+      let query = supabase.from("withdrawals").select("*");
       if (range?.from) query = query.gte("withdrawal_date", format(range.from, "yyyy-MM-dd"));
       if (range?.to) query = query.lte("withdrawal_date", format(range.to, "yyyy-MM-dd"));
       const { data, error } = await query.order("withdrawal_date", { ascending: false }).range((page - 1) * itemsPerPage, page * itemsPerPage - 1);

@@ -53,6 +53,9 @@ import {
   Wifi,
   Battery,
   Signal,
+  Lock,
+  FileSpreadsheet,
+  Boxes,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -151,23 +154,12 @@ const MobileDashboard = () => {
       {
         id: "withdrawals",
         path: "withdrawals",
-        label: "Withdrawals",
+        label: "Savings & Withdrawals",
         icon: Banknote,
         roles: ["user", "data_entry", "reports_viewer", "super_admin"],
         color: "from-blue-500 to-blue-600",
         bgColor: "bg-blue-50",
-        description: "Process withdrawals",
-        category: "financial",
-      },
-      {
-        id: "cooperative",
-        path: "cooperative",
-        label: "Savings",
-        icon: Users,
-        roles: ["user", "data_entry", "reports_viewer", "super_admin"],
-        color: "from-teal-500 to-teal-600",
-        bgColor: "bg-teal-50",
-        description: "Cooperative savings",
+        description: "Savings & withdrawals",
         category: "financial",
       },
       {
@@ -179,6 +171,17 @@ const MobileDashboard = () => {
         color: "from-emerald-500 to-emerald-600",
         bgColor: "bg-emerald-50",
         description: "Share investments",
+        category: "financial",
+      },
+      {
+        id: "expense_bookings",
+        path: "expense-bookings",
+        label: "Expense Bookings",
+        icon: FileText,
+        roles: ["user", "data_entry", "reports_viewer", "super_admin"],
+        color: "from-rose-500 to-rose-600",
+        bgColor: "bg-rose-50",
+        description: "Manage expense bookings",
         category: "financial",
       },
       {
@@ -245,8 +248,63 @@ const MobileDashboard = () => {
         roles: ["user", "reports_viewer", "super_admin"],
         color: "from-purple-500 to-purple-600",
         bgColor: "bg-purple-50",
-        description: "Create custom dashboards",
+        description: "Custom dashboards",
         category: "analytics",
+      },
+      {
+        id: "daily_summary_report",
+        path: "daily-summary-report",
+        label: "Daily Summary",
+        icon: FileText,
+        roles: ["user", "data_entry", "reports_viewer", "super_admin"],
+        color: "from-sky-500 to-sky-600",
+        bgColor: "bg-sky-50",
+        description: "Daily summary with date range",
+        category: "analytics",
+      },
+      {
+        id: "command_center",
+        path: "command-center",
+        label: "Command Center",
+        icon: Activity,
+        roles: ["user", "data_entry", "reports_viewer", "super_admin"],
+        color: "from-fuchsia-500 to-fuchsia-600",
+        bgColor: "bg-fuchsia-50",
+        description: "KPIs, cashflow & forecast",
+        category: "analytics",
+      },
+      {
+        id: "report_builder",
+        path: "report-builder",
+        label: "Report Builder",
+        icon: FileSpreadsheet,
+        roles: ["user", "data_entry", "reports_viewer", "super_admin"],
+        color: "from-cyan-500 to-cyan-600",
+        bgColor: "bg-cyan-50",
+        description: "Custom reports + CSV",
+        category: "analytics",
+      },
+      {
+        id: "closing_wizard",
+        path: "closing-wizard",
+        label: "Closing Wizard",
+        icon: Lock,
+        roles: ["super_admin"],
+        color: "from-slate-500 to-slate-600",
+        bgColor: "bg-slate-50",
+        description: "Reconcile & lock the day",
+        category: "management",
+      },
+      {
+        id: "inventory_bridge",
+        path: "inventory-bridge",
+        label: "Inventory Bridge",
+        icon: Boxes,
+        roles: ["user", "data_entry", "reports_viewer", "super_admin"],
+        color: "from-violet-500 to-violet-600",
+        bgColor: "bg-violet-50",
+        description: "Auto stock-out from sales",
+        category: "management",
       },
     ];
 
@@ -280,7 +338,8 @@ const MobileDashboard = () => {
         return "Transactions";
       case "financial":
         return "Financial";
-
+      case "analytics":
+        return "Analytics & Reports";
       case "management":
         return "Management";
       default:
@@ -294,7 +353,8 @@ const MobileDashboard = () => {
         return ShoppingCart;
       case "financial":
         return CreditCard;
-
+      case "analytics":
+        return BarChart3;
       case "management":
         return Settings;
       default:

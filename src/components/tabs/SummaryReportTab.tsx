@@ -92,17 +92,17 @@ const SummaryReportTab = () => {
         { data: savings = [] },
       ] = await Promise.all([
         supabase.from("orders").select("total, payment_mode")
-          .eq("user_id", user.id).gte("order_date", fromDate).lte("order_date", toDate),
+          .gte("order_date", fromDate).lte("order_date", toDate),
         supabase.from("charging_sessions").select("total_amount, payment_mode")
-          .eq("user_id", user.id).gte("session_date", fromDate).lte("session_date", toDate),
+          .gte("session_date", fromDate).lte("session_date", toDate),
         supabase.from("expenses").select("amount, payment_mode")
-          .eq("user_id", user.id).gte("expense_date", fromDate).lte("expense_date", toDate),
+          .gte("expense_date", fromDate).lte("expense_date", toDate),
         supabase.from("deposits").select("amount, mode, deposited_to, payment_mode")
-          .eq("user_id", user.id).gte("deposit_date", fromDate).lte("deposit_date", toDate),
+          .gte("deposit_date", fromDate).lte("deposit_date", toDate),
         supabase.from("withdrawals").select("amount, payment_mode, withdrawal_from")
-          .eq("user_id", user.id).gte("withdrawal_date", fromDate).lte("withdrawal_date", toDate),
+          .gte("withdrawal_date", fromDate).lte("withdrawal_date", toDate),
         supabase.from("cooperative_savings").select("contribution_amount, payment_mode")
-          .eq("user_id", user.id).gte("contribution_date", fromDate).lte("contribution_date", toDate),
+          .gte("contribution_date", fromDate).lte("contribution_date", toDate),
       ]);
 
       const data = {

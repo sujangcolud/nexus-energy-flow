@@ -68,7 +68,7 @@ const ExpenseBookingsTab = () => {
     if (!user) return;
     setLoading(true);
     try {
-      const { data, error } = await supabase.from("expense_bookings").select("*").eq("user_id", user.id).order("created_at", { ascending: false });
+      const { data, error } = await supabase.from("expense_bookings").select("*").order("created_at", { ascending: false });
       if (error) throw error;
       setBookings(data || []);
     } catch (error) {

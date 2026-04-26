@@ -280,7 +280,7 @@ const DepositsTab = () => {
 
     setLoading(true);
     try {
-      let query = supabase.from("deposits").select("*").eq("user_id", user.id);
+      let query = supabase.from("deposits").select("*");
 
       if (range?.from) {
         query = query.gte("deposit_date", format(range.from, "yyyy-MM-dd"));

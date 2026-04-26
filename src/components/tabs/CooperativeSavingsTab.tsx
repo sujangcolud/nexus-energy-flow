@@ -161,8 +161,7 @@ const CooperativeSavingsTab = () => {
     try {
       let query = supabase
         .from("cooperative_savings")
-        .select("*")
-        .eq("user_id", user.id);
+        .select("*");
 
       if (range?.from) {
         query = query.gte(
