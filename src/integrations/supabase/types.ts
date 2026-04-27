@@ -1457,10 +1457,6 @@ export type Database = {
             Args: { p_closing_date: string; p_user_id: string }
             Returns: undefined
           }
-      execute_dynamic_report: {
-        Args: { custom_calculations: Json; filters: Json }
-        Returns: Json
-      }
       generate_balance_sheet: {
         Args: { date_from: string; date_to: string; user_id_param: string }
         Returns: undefined
