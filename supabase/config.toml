@@ -2,3 +2,9 @@ project_id = "coacymsqarronnlytceu"
 
 [functions.openai-chat]
 verify_jwt = true
+
+[functions.nl-query-engine]
+verify_jwt = true
+
+[functions.nexus-insights]
+verify_jwt = true
