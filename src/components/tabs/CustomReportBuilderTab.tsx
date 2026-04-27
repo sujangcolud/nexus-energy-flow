@@ -101,6 +101,25 @@ const CustomReportBuilderTab = () => {
     });
   }, [rows, filters]);
 
+  // Detect numeric columns and compute totals for the totals row
+  const totals = useMemo(() => {
+    const t: Record<string, number> = {};
+    for (const f of selectedFields) {
+      let sum = 0;
+      let isNumeric = false;
+      for (const r of filtered) {
+        const v = r[f];
+        if (v === null || v === undefined || v === "") continue;
+        const n = Number(v);
+        if (!Number.isFinite(n)) { isNumeric = false; break; }
+        isNumeric = true;
+        sum += n;
+      }
+      if (isNumeric && filtered.length > 0) t[f] = sum;
+    }
+    return t;
+  }, [filtered, selectedFields]);
+
   const exportCsv = () => {
     if (!filtered.length) return;
     const cols = [meta.dateField, ...selectedFields];
@@ -277,6 +296,18 @@ const CustomReportBuilderTab = () => {
                 </tr>
               </thead>
               <tbody>
+                {filtered.length > 0 && (
+                  <tr className="border-b border-border bg-muted/60 font-semibold">
+                    <td className="py-1.5 px-2 text-xs uppercase tracking-wide text-muted-foreground">Total ({filtered.length})</td>
+                    {selectedFields.map((f) => (
+                      <td key={f} className="py-1.5 px-2">
+                        {totals[f] !== undefined
+                          ? Number(totals[f]).toLocaleString(undefined, { maximumFractionDigits: 2 })
+                          : ""}
+                      </td>
+                    ))}
+                  </tr>
+                )}
                 {filtered.slice(0, 200).map((r, i) => (
                   <tr key={i} className="border-b border-border last:border-0 hover:bg-muted/30">
                     <td className="py-1.5 px-2 whitespace-nowrap">{r[meta.dateField]}</td>

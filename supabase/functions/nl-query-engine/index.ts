@@ -299,11 +299,11 @@ serve(async (req) => {
     const userClient = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!, {
       global: { headers: { Authorization: authHeader } },
     });
-    const { data: claims, error: authErr } = await userClient.auth.getClaims(authHeader.replace("Bearer ", ""));
-    if (authErr || !claims?.claims) {
+    const { data: userData, error: authErr } = await userClient.auth.getUser();
+    if (authErr || !userData?.user) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
-    userId = claims.claims.sub;
+    userId = userData.user.id;
 
     const body = await req.json();
     question = String(body.question || "").slice(0, 2000);
