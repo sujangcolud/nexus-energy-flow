@@ -14,6 +14,107 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_audit_log: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          id: string
+          latency_ms: number | null
+          plan: Json | null
+          question: string
+          row_count: number | null
+          success: boolean
+          target_table: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          latency_ms?: number | null
+          plan?: Json | null
+          question: string
+          row_count?: number | null
+          success?: boolean
+          target_table?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          latency_ms?: number | null
+          plan?: Json | null
+          question?: string
+          row_count?: number | null
+          success?: boolean
+          target_table?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      ai_chat_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          payload: Json | null
+          role: string
+          session_id: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          payload?: Json | null
+          role: string
+          session_id: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          payload?: Json | null
+          role?: string
+          session_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_chat_messages_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "ai_chat_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_chat_sessions: {
+        Row: {
+          created_at: string
+          id: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          title?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       analytics_cache: {
         Row: {
           cache_key: string
@@ -1541,6 +1642,33 @@ export type Database = {
         }[]
       }
       is_super_admin: { Args: never; Returns: boolean }
+      nexus_alert_thresholds: {
+        Args: {
+          cash_min?: number
+          cooperative_min?: number
+          esewa_min?: number
+          fonepay_min?: number
+        }
+        Returns: {
+          account: string
+          breached: boolean
+          current_balance: number
+          threshold: number
+        }[]
+      }
+      nexus_anomalies: {
+        Args: { days_back?: number }
+        Returns: {
+          amount: number
+          description: string
+          mean_amount: number
+          source: string
+          stddev_amount: number
+          txn_date: string
+          txn_id: string
+          z_score: number
+        }[]
+      }
       nexus_behavioral_insights: {
         Args: { p_end_date: string; p_start_date: string }
         Returns: Json
@@ -1552,6 +1680,16 @@ export type Database = {
       nexus_detect_anomalies: {
         Args: { p_lookback_days?: number; p_z_threshold?: number }
         Returns: Json
+      }
+      nexus_forecast: {
+        Args: { days_ahead?: number; days_back?: number }
+        Returns: {
+          expenses: number
+          is_forecast: boolean
+          net: number
+          revenue: number
+          series_date: string
+        }[]
       }
       nexus_forecast_cashflow: {
         Args: { p_forecast_days?: number; p_lookback_days?: number }
