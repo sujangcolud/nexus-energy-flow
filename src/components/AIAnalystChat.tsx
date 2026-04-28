@@ -361,6 +361,7 @@ function PayloadView({ payload }: { payload: AssistantPayload }) {
           </div>
         )}
       </div>
+      )}
 
       {payload.plan?.explanation && (
         <Badge variant="outline" className="text-[10px] font-normal">
