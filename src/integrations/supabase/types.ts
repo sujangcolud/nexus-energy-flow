@@ -1448,15 +1448,10 @@ export type Database = {
           total_withdrawals_cooperative_fonepay: number
         }[]
       }
-      daily_closing:
-        | {
-            Args: { closing_date: string; user_id_param: string }
-            Returns: undefined
-          }
-        | {
-            Args: { p_closing_date: string; p_user_id: string }
-            Returns: undefined
-          }
+      daily_closing: {
+        Args: { p_closing_date: string; p_user_id: string }
+        Returns: undefined
+      }
       generate_balance_sheet: {
         Args: { date_from: string; date_to: string; user_id_param: string }
         Returns: undefined
