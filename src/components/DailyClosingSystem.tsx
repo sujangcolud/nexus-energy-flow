@@ -75,8 +75,8 @@ export const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
       const startFilter = start || date;
       const endFilter = end || date;
 
-      const startDateStr = startFilter.toISOString().split('T')[0];
-      const endDateStr = endFilter.toISOString().split('T')[0];
+      const startDateStr = toDateStr(startFilter);
+      const endDateStr = toDateStr(endFilter);
 
       console.log('Date filters:', { startDateStr, endDateStr });
 
