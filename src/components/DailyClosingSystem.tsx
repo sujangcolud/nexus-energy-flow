@@ -4,11 +4,15 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, Loader2, Download } from "lucide-react";
+import { CalendarIcon, Loader2, Download, RefreshCw } from "lucide-react";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { formatCurrency } from "@/utils/unifiedCalculations";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+
+// Use local-timezone date string (not UTC) so "today" matches the user's calendar day.
+const toDateStr = (d: Date) => format(d, "yyyy-MM-dd");
 import { AllTimeSummaryModal } from './AllTimeSummaryModal';
 
 interface DailyClosingSystemProps {
