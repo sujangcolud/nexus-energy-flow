@@ -333,6 +333,7 @@ function PayloadView({ payload }: { payload: AssistantPayload }) {
         </div>
       )}
 
+      {data.length > 0 && (
       <div className="overflow-x-auto rounded border">
         <table className="text-xs w-full">
           <thead className="bg-background">
