@@ -280,14 +280,27 @@ function MessageBubble({ msg }: { msg: Msg }) {
 
 function PayloadView({ payload }: { payload: AssistantPayload }) {
   const data = payload.aggregated && payload.aggregated.length > 0 ? payload.aggregated : payload.rows || [];
-  if (!data || data.length === 0) return null;
+  const hasInsights = payload.insights && payload.insights.length > 0;
+  if ((!data || data.length === 0) && !hasInsights) return null;
 
   const chart = payload.chart;
-  const xKey = chart?.x || (payload.aggregated ? Object.keys(data[0])[0] : null);
+  const xKey = chart?.x || (payload.aggregated && data.length > 0 ? Object.keys(data[0])[0] : null);
   const yKey = chart?.y || "value";
 
   return (
     <div className="mt-2 space-y-3">
+      {payload.composite && (
+        <Badge variant="secondary" className="text-[10px] font-normal capitalize">
+          Multi-table: {payload.composite}
+        </Badge>
+      )}
+      {hasInsights && (
+        <ul className="text-xs space-y-1 border-l-2 border-foreground/30 pl-3">
+          {payload.insights!.map((i, idx) => (
+            <li key={idx}><ReactMarkdown>{i}</ReactMarkdown></li>
+          ))}
+        </ul>
+      )}
       {chart && xKey && (
         <div className="h-48 w-full">
           <ResponsiveContainer width="100%" height="100%">
