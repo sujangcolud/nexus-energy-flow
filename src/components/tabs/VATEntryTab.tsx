@@ -97,7 +97,7 @@ const VATEntryTab = () => {
   const fetchVATEntries = async () => {
     if (!user) return;
     try {
-      const { data, error } = await supabase.from("vat_entries").select("*").order("created_at", { ascending: false });
+      const { data, error } = await supabase.from("vat_entries").select("*").order("invoice_date", { ascending: false }).order("created_at", { ascending: false });
       if (error) throw error;
       setVatEntries((data || []).map((e: any) => ({
         id: e.id, entry_type: e.entry_type || "manual", item_name: e.item_name || "", amount: e.amount || 0,
