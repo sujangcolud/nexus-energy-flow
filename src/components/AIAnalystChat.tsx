@@ -301,7 +301,7 @@ function PayloadView({ payload }: { payload: AssistantPayload }) {
           ))}
         </ul>
       )}
-      {chart && xKey && (
+      {chart && xKey && data.length > 0 && (
         <div className="h-48 w-full">
           <ResponsiveContainer width="100%" height="100%">
             {chart.type === "line" ? (
