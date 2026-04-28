@@ -24,6 +24,8 @@ interface AssistantPayload {
   aggregated?: any[] | null;
   chart?: ChartHint | null;
   plan?: any;
+  insights?: string[];
+  composite?: string | null;
 }
 interface Msg {
   id: string;
