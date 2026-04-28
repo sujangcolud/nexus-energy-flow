@@ -546,8 +546,31 @@ export const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
               </Button>
             </div>
 
-            <Button 
-              variant="default" 
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={async () => {
+                try {
+                  setLoading(true);
+                  const target = startDate && endDate ? startDate : selectedDate;
+                  const { error } = await (supabase.rpc as any)("sync_daily_summary_for_date", {
+                    target_date: toDateStr(target),
+                  });
+                  if (error) throw error;
+                  toast.success("Summary rebuilt from transactions");
+                  await fetchDailyClosingData(selectedDate, startDate, endDate);
+                } catch (e: any) {
+                  toast.error(e.message || "Rebuild failed");
+                  setLoading(false);
+                }
+              }}
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Rebuild
+            </Button>
+
+            <Button
+              variant="default"
               onClick={handleAllTimeSummary}
               className="bg-purple-600 hover:bg-purple-700"
             >
