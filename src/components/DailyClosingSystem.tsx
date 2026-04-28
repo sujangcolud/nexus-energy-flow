@@ -211,8 +211,8 @@ export const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
 
   const calculateFromTransactionTables = async (targetDate: Date, startFilter: Date, endFilter: Date) => {
     try {
-      const startDateStr = startFilter.toISOString().split('T')[0];
-      const endDateStr = endFilter.toISOString().split('T')[0];
+      const startDateStr = toDateStr(startFilter);
+      const endDateStr = toDateStr(endFilter);
 
       console.log('🔄 Calculating from individual transaction tables for:', { startDateStr, endDateStr });
 
