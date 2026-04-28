@@ -147,6 +147,7 @@ export default function AIAnalystChat({ isOpen, onToggle }: Props) {
       } else {
         const payload: AssistantPayload = {
           rows: data.rows, aggregated: data.aggregated, chart: data.chart, plan: data.plan,
+          insights: data.insights, composite: data.composite,
         };
         const m: Msg = {
           id: crypto.randomUUID(), role: "assistant",
