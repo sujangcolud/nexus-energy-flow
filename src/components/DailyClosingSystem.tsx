@@ -4,11 +4,15 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, Loader2, Download } from "lucide-react";
+import { CalendarIcon, Loader2, Download, RefreshCw } from "lucide-react";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { formatCurrency } from "@/utils/unifiedCalculations";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+
+// Use local-timezone date string (not UTC) so "today" matches the user's calendar day.
+const toDateStr = (d: Date) => format(d, "yyyy-MM-dd");
 import { AllTimeSummaryModal } from './AllTimeSummaryModal';
 
 interface DailyClosingSystemProps {
@@ -71,8 +75,8 @@ export const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
       const startFilter = start || date;
       const endFilter = end || date;
 
-      const startDateStr = startFilter.toISOString().split('T')[0];
-      const endDateStr = endFilter.toISOString().split('T')[0];
+      const startDateStr = toDateStr(startFilter);
+      const endDateStr = toDateStr(endFilter);
 
       console.log('Date filters:', { startDateStr, endDateStr });
 
@@ -207,8 +211,8 @@ export const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
 
   const calculateFromTransactionTables = async (targetDate: Date, startFilter: Date, endFilter: Date) => {
     try {
-      const startDateStr = startFilter.toISOString().split('T')[0];
-      const endDateStr = endFilter.toISOString().split('T')[0];
+      const startDateStr = toDateStr(startFilter);
+      const endDateStr = toDateStr(endFilter);
 
       console.log('🔄 Calculating from individual transaction tables for:', { startDateStr, endDateStr });
 
@@ -542,8 +546,31 @@ export const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
               </Button>
             </div>
 
-            <Button 
-              variant="default" 
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={async () => {
+                try {
+                  setLoading(true);
+                  const target = startDate && endDate ? startDate : selectedDate;
+                  const { error } = await (supabase.rpc as any)("sync_daily_summary_for_date", {
+                    target_date: toDateStr(target),
+                  });
+                  if (error) throw error;
+                  toast.success("Summary rebuilt from transactions");
+                  await fetchDailyClosingData(selectedDate, startDate, endDate);
+                } catch (e: any) {
+                  toast.error(e.message || "Rebuild failed");
+                  setLoading(false);
+                }
+              }}
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Rebuild
+            </Button>
+
+            <Button
+              variant="default"
               onClick={handleAllTimeSummary}
               className="bg-purple-600 hover:bg-purple-700"
             >
