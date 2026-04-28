@@ -1,5 +1,5 @@
 // Nexus Energy Flow — NL→Structured Plan→Safe Query engine.
-// Uses Lovable AI Gateway. Whitelist-only table/column access. Audit logged.
+// Whitelist-only. No raw SQL. RLS-respecting. Multi-table intents (profit).
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
@@ -10,7 +10,6 @@ const corsHeaders = {
 };
 
 // =============== SEMANTIC LAYER (whitelist) ===============
-// Only these tables / columns are queryable through the AI.
 type TableSpec = {
   columns: string[];
   dateColumn: string;
@@ -80,17 +79,44 @@ const ALLOWED_OPS = new Set(["eq", "neq", "gt", "gte", "lt", "lte", "like", "ili
 
 type Plan = {
   table: string;
-  select?: string[];          // columns to return
+  select?: string[];
   filters?: { column: string; op: string; value: any }[];
-  date_from?: string;         // ISO date
+  date_from?: string;
   date_to?: string;
-  group_by?: string;          // single column
-  aggregate?: { fn: string; column: string }; // sum(total)
+  group_by?: string;
+  aggregate?: { fn: string; column: string };
   order_by?: { column: string; desc?: boolean };
   limit?: number;
   chart?: { type: "bar" | "line" | "pie"; x: string; y: string };
   explanation?: string;
+  // New: multi-table composite intent (computed, not LLM-controlled)
+  composite?: "profit" | null;
 };
+
+// ---------- date range shortcuts (server-side safety net) ----------
+function resolveDateShortcut(q: string): { date_from?: string; date_to?: string } {
+  const today = new Date();
+  const iso = (d: Date) => d.toISOString().slice(0, 10);
+  const start = new Date(today);
+  const ql = q.toLowerCase();
+
+  const startOfDay = (d: Date) => { const x = new Date(d); x.setHours(0,0,0,0); return x; };
+  const addDays = (d: Date, n: number) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+
+  if (/\btoday\b/.test(ql)) return { date_from: iso(today), date_to: iso(today) };
+  if (/\byesterday\b/.test(ql)) { const y = addDays(today, -1); return { date_from: iso(y), date_to: iso(y) }; }
+  if (/\blast 7 days|past week|last week\b/.test(ql)) return { date_from: iso(addDays(today, -7)), date_to: iso(today) };
+  if (/\blast 30 days|past month|last month\b/.test(ql)) return { date_from: iso(addDays(today, -30)), date_to: iso(today) };
+  if (/\bthis month\b/.test(ql)) { const s = new Date(today.getFullYear(), today.getMonth(), 1); return { date_from: iso(s), date_to: iso(today) }; }
+  if (/\bthis year|year to date|ytd\b/.test(ql)) { const s = new Date(today.getFullYear(), 0, 1); return { date_from: iso(s), date_to: iso(today) }; }
+  return {};
+}
+
+function detectComposite(q: string): "profit" | null {
+  const ql = q.toLowerCase();
+  if (/\b(profit|net income|net earning|bottom line|margin)\b/.test(ql)) return "profit";
+  return null;
+}
 
 function validatePlan(plan: any): { ok: true; plan: Plan } | { ok: false; error: string } {
   if (!plan || typeof plan !== "object") return { ok: false, error: "plan must be object" };
@@ -135,9 +161,54 @@ function validatePlan(plan: any): { ok: true; plan: Plan } | { ok: false; error:
   return { ok: true, plan: out };
 }
 
+async function sumColumn(supabase: any, table: string, dateFrom?: string, dateTo?: string): Promise<number> {
+  const spec = SCHEMA[table];
+  if (!spec?.amountColumn) return 0;
+  let q = supabase.from(table).select(spec.amountColumn);
+  if (dateFrom) q = q.gte(spec.dateColumn, dateFrom);
+  if (dateTo) q = q.lte(spec.dateColumn, dateTo);
+  q = q.limit(10000);
+  const { data, error } = await q;
+  if (error) throw new Error(error.message);
+  return (data || []).reduce((s: number, r: any) => s + Number(r[spec.amountColumn!] || 0), 0);
+}
+
+/**
+ * Composite multi-table computation (e.g. profit = orders + charging − expenses).
+ * Uses safe Supabase query builder calls — no raw SQL.
+ */
+async function executeComposite(
+  supabase: any,
+  kind: "profit",
+  dateFrom?: string,
+  dateTo?: string,
+) {
+  if (kind === "profit") {
+    const [orders, charging, expenses] = await Promise.all([
+      sumColumn(supabase, "orders", dateFrom, dateTo),
+      sumColumn(supabase, "charging_sessions", dateFrom, dateTo),
+      sumColumn(supabase, "expenses", dateFrom, dateTo),
+    ]);
+    const revenue = orders + charging;
+    const profit = revenue - expenses;
+    const margin = revenue > 0 ? (profit / revenue) * 100 : 0;
+    return {
+      rows: [],
+      aggregated: [
+        { metric: "Orders revenue", value: orders },
+        { metric: "Charging revenue", value: charging },
+        { metric: "Total revenue", value: revenue },
+        { metric: "Expenses", value: expenses },
+        { metric: "Net profit", value: profit },
+        { metric: "Margin %", value: Number(margin.toFixed(2)) },
+      ],
+    };
+  }
+  return { rows: [], aggregated: [] };
+}
+
 async function executePlan(supabase: any, plan: Plan) {
   const spec = SCHEMA[plan.table];
-  // If aggregation+group_by, fetch raw rows then aggregate in JS (safe path, bounded).
   const selectCols = plan.aggregate || plan.group_by
     ? Array.from(new Set([
         ...(plan.group_by ? [plan.group_by] : []),
@@ -152,7 +223,7 @@ async function executePlan(supabase: any, plan: Plan) {
   if (plan.date_to) q = q.lte(spec.dateColumn, plan.date_to);
 
   for (const f of plan.filters || []) {
-    // @ts-ignore — dynamic op
+    // @ts-ignore — dynamic op, validated against ALLOWED_OPS
     q = q[f.op](f.column, f.value);
   }
   if (plan.order_by) q = q.order(plan.order_by.column, { ascending: !plan.order_by.desc });
@@ -161,7 +232,7 @@ async function executePlan(supabase: any, plan: Plan) {
   const { data, error } = await q;
   if (error) throw new Error(error.message);
 
-  let rows: any[] = data || [];
+  const rows: any[] = data || [];
   let aggregated: any[] | null = null;
 
   if (plan.aggregate && plan.group_by) {
@@ -191,12 +262,43 @@ async function executePlan(supabase: any, plan: Plan) {
       fn === "sum" ? vals.reduce((a, b) => a + b, 0) :
       fn === "avg" ? (vals.reduce((a, b) => a + b, 0) / Math.max(vals.length, 1)) :
       fn === "count" ? vals.length :
-      fn === "min" ? Math.min(...vals) :
-      fn === "max" ? Math.max(...vals) : 0;
+      fn === "min" ? (vals.length ? Math.min(...vals) : 0) :
+      fn === "max" ? (vals.length ? Math.max(...vals) : 0) : 0;
     aggregated = [{ metric: `${fn}(${plan.aggregate.column})`, value: v }];
   }
 
   return { rows, aggregated };
+}
+
+/** Light statistical insight layer, computed in TS from returned data. */
+function computeInsights(rows: any[], aggregated: any[] | null, plan: Plan): string[] {
+  const out: string[] = [];
+  const spec = SCHEMA[plan.table];
+  const amountCol = plan.aggregate?.column || spec?.amountColumn;
+
+  if (aggregated && aggregated.length > 1) {
+    const vals = aggregated.map((a: any) => Number(a.value || 0));
+    const top = aggregated[0];
+    const total = vals.reduce((a, b) => a + b, 0);
+    const topShare = total > 0 ? (Number(top.value) / total) * 100 : 0;
+    const groupKey = plan.group_by || "metric";
+    if (top && topShare > 0) {
+      out.push(`**${top[groupKey]}** leads with **${Number(top.value).toLocaleString()}** (${topShare.toFixed(1)}% of total).`);
+    }
+  }
+
+  if (amountCol && rows.length >= 3) {
+    const vals = rows.map((r) => Number(r[amountCol] || 0)).filter((v) => !Number.isNaN(v));
+    if (vals.length >= 3) {
+      const mean = vals.reduce((a, b) => a + b, 0) / vals.length;
+      const std = Math.sqrt(vals.reduce((s, v) => s + (v - mean) ** 2, 0) / vals.length);
+      const outliers = vals.filter((v) => std > 0 && Math.abs(v - mean) > 2 * std).length;
+      if (outliers > 0) {
+        out.push(`Detected **${outliers}** outlier transaction${outliers > 1 ? "s" : ""} (>2σ from mean of ${mean.toFixed(0)}).`);
+      }
+    }
+  }
+  return out;
 }
 
 function schemaPrompt() {
@@ -217,24 +319,25 @@ Never write raw SQL. Output ONLY a single JSON object matching this shape:
 
 {
   "table": "<one table>",
-  "select": ["col1", "col2"],            // optional, omit for aggregates
+  "select": ["col1", "col2"],
   "filters": [{"column":"...","op":"eq|neq|gt|gte|lt|lte|like|ilike|in","value": ...}],
-  "date_from": "YYYY-MM-DD",            // optional
-  "date_to":   "YYYY-MM-DD",            // optional
-  "group_by": "column",                 // optional
-  "aggregate": {"fn": "sum|avg|count|min|max", "column": "col"}, // optional
+  "date_from": "YYYY-MM-DD",
+  "date_to":   "YYYY-MM-DD",
+  "group_by": "column",
+  "aggregate": {"fn": "sum|avg|count|min|max", "column": "col"},
   "order_by": {"column":"col","desc":true},
   "limit": 200,
   "chart": {"type":"bar|line|pie","x":"col_or_group","y":"value"},
-  "explanation": "1–2 sentence plain-English description of what we are computing"
+  "explanation": "1–2 sentence plain-English description"
 }
 
 Rules:
 - Use the date column listed for the chosen table.
-- If user says "this month", "last 7 days", etc., compute concrete YYYY-MM-DD using today=${new Date().toISOString().slice(0,10)}.
-- Prefer aggregate+group_by when user asks "by category", "by payment mode", "top N".
-- Always include a chart hint when the result is groupable.
-- If the question is ambiguous or unrelated, return: {"clarify":"<your clarifying question>"}.
+- Resolve relative dates (today=${new Date().toISOString().slice(0,10)}): "this month", "last 7 days", etc. into concrete YYYY-MM-DD.
+- Prefer aggregate+group_by for "by category", "by payment mode", "top N", "breakdown".
+- Add a chart hint whenever results are groupable.
+- If ambiguous or unrelated to the schema, return: {"clarify":"<clarifying question>"}.
+- For profit / net income / margin questions, still choose a sensible primary table (orders); the server will compute the cross-table composite.
 - Output JSON ONLY, no markdown.`;
 
 async function callLLM(question: string, history: { role: string; content: string }[]) {
@@ -264,17 +367,26 @@ async function callLLM(question: string, history: { role: string; content: strin
   return JSON.parse(content);
 }
 
-async function summarize(question: string, plan: Plan, result: { rows: any[]; aggregated: any[] | null }) {
+async function summarize(
+  question: string,
+  plan: Plan | null,
+  result: { rows: any[]; aggregated: any[] | null },
+  insights: string[],
+  composite: string | null,
+) {
   const apiKey = Deno.env.get("LOVABLE_API_KEY");
   const sample = result.aggregated ?? result.rows.slice(0, 20);
+  const ctx = composite
+    ? `Composite computation: ${composite}. The aggregated array contains the breakdown.`
+    : `Plan: ${JSON.stringify(plan)}`;
   const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({
       model: "google/gemini-2.5-flash",
       messages: [
-        { role: "system", content: "You are a concise business analyst. Summarize the data in 3–6 sentences with concrete numbers, then add 1–2 actionable insights. Use markdown. End with a short 'Try next:' bullet list of 2 follow-up questions." },
-        { role: "user", content: `Question: ${question}\nPlan: ${JSON.stringify(plan)}\nResult sample (first rows): ${JSON.stringify(sample)}\nTotal rows: ${result.rows.length}` },
+        { role: "system", content: "You are a concise business analyst for a Nepal-based restaurant + EV charging business. Amounts are in NRs (Nepali Rupees). Summarize the data in 3–6 sentences with concrete numbers, then add 1–2 actionable insights. Use markdown. End with a short 'Try next:' bullet list of 2 follow-up questions." },
+        { role: "user", content: `Question: ${question}\n${ctx}\nPre-computed insights: ${insights.join(" | ") || "none"}\nResult sample: ${JSON.stringify(sample)}\nTotal rows: ${result.rows.length}` },
       ],
     }),
   });
@@ -312,31 +424,67 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: "Question required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
+    // Detect composite intent early (profit etc.)
+    const composite = detectComposite(question);
+    const shortcut = resolveDateShortcut(question);
+
     const raw = await callLLM(question, history);
-    if (raw && raw.clarify) {
+    if (raw && raw.clarify && !composite) {
       return new Response(JSON.stringify({ clarify: raw.clarify }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    const v = validatePlan(raw);
-    if (!v.ok) throw new Error("Plan validation failed: " + v.error);
-    plan = v.plan;
 
-    // RLS-respecting execution: use the user's auth context, not service role.
-    const result = await executePlan(userClient, plan);
-    const answer = await summarize(question, plan, result);
+    let result: { rows: any[]; aggregated: any[] | null };
+    let chart: Plan["chart"] | null = null;
+    let explanation = "";
+
+    if (composite === "profit") {
+      const df = shortcut.date_from || raw?.date_from;
+      const dt = shortcut.date_to || raw?.date_to;
+      result = await executeComposite(userClient, "profit", df, dt);
+      chart = { type: "bar", x: "metric", y: "value" };
+      explanation = `Profit = Orders revenue + Charging revenue − Expenses${df ? ` (from ${df} to ${dt || "today"})` : ""}.`;
+      plan = {
+        table: "orders",
+        composite: "profit",
+        date_from: df,
+        date_to: dt,
+        chart,
+        explanation,
+      };
+    } else {
+      const v = validatePlan(raw);
+      if (!v.ok) throw new Error("Plan validation failed: " + v.error);
+      plan = v.plan;
+      // Merge server-side date shortcut if LLM missed it
+      if (!plan.date_from && shortcut.date_from) plan.date_from = shortcut.date_from;
+      if (!plan.date_to && shortcut.date_to) plan.date_to = shortcut.date_to;
+      result = await executePlan(userClient, plan);
+      chart = plan.chart || null;
+    }
+
+    const insights = computeInsights(result.rows, result.aggregated, plan);
+
+    // Graceful empty-data message
+    const hasData = (result.aggregated && result.aggregated.length > 0) || result.rows.length > 0;
+    const answer = hasData
+      ? await summarize(question, plan, result, insights, composite)
+      : "I couldn't find any matching records for that question. Try widening the date range or rephrasing.";
 
     // Audit
-    const adminClient = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
-    await adminClient.from("ai_audit_log").insert({
-      user_id: userId,
-      question,
-      plan,
-      target_table: plan.table,
-      row_count: result.rows.length,
-      latency_ms: Date.now() - start,
-      success: true,
-    });
+    try {
+      const adminClient = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+      await adminClient.from("ai_audit_log").insert({
+        user_id: userId,
+        question,
+        plan,
+        target_table: plan?.table ?? null,
+        row_count: result.rows.length,
+        latency_ms: Date.now() - start,
+        success: true,
+      });
+    } catch (_) {}
 
     return new Response(
       JSON.stringify({
@@ -344,7 +492,9 @@ serve(async (req) => {
         plan,
         rows: result.rows.slice(0, 200),
         aggregated: result.aggregated,
-        chart: plan.chart || null,
+        chart,
+        insights,
+        composite,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
