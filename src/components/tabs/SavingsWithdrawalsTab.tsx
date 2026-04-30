@@ -26,7 +26,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { extractErrorMessage, logError } from "@/utils/errorHandling";
 import TransactionDatePicker from "@/components/ui/transaction-date-picker";
-import { format } from "date-fns";
+import HistoryDateRangeFilter from "@/components/HistoryDateRangeFilter";
+import { format, subDays } from "date-fns";
 import {
   PiggyBank,
   Trash2,
@@ -112,6 +113,17 @@ const SavingsWithdrawalsTab = () => {
   const [transactionDate, setTransactionDate] = useState(format(new Date(), "yyyy-MM-dd"));
   const { user } = useAuth();
   const { page, range, onPageChange, onRangeChange, itemsPerPage } = useTableControls();
+
+  // Set default range to last 30 days on mount if not already set
+  useEffect(() => {
+    if (range?.from === range?.to && format(range?.from || new Date(), "yyyy-MM-dd") === format(new Date(), "yyyy-MM-dd")) {
+      onRangeChange({
+        from: subDays(new Date(), 30),
+        to: new Date()
+      });
+    }
+  }, []);
+
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<Saving | Withdrawal | null>(null);
   const [editType, setEditType] = useState<"saving" | "withdrawal">("saving");
@@ -317,7 +329,10 @@ const SavingsWithdrawalsTab = () => {
               </CardContent>
             </Card>
             <Card className="bg-card border">
-              <CardHeader className="pb-3"><CardTitle className="text-base">Savings History</CardTitle></CardHeader>
+              <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
+                <CardTitle className="text-base">Savings History</CardTitle>
+                <HistoryDateRangeFilter range={range} onChange={onRangeChange} />
+              </CardHeader>
               <CardContent>
                 <Table>
                   <TableHeader><TableRow><TableHead>Date</TableHead><TableHead>Amount</TableHead><TableHead>Member</TableHead><TableHead>Mode</TableHead><TableHead>To</TableHead><TableHead>Actions</TableHead></TableRow></TableHeader>
@@ -359,7 +374,10 @@ const SavingsWithdrawalsTab = () => {
               </CardContent>
             </Card>
             <Card className="bg-card border">
-              <CardHeader className="pb-3"><CardTitle className="text-base">Withdrawals History</CardTitle></CardHeader>
+              <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
+                <CardTitle className="text-base">Withdrawals History</CardTitle>
+                <HistoryDateRangeFilter range={range} onChange={onRangeChange} />
+              </CardHeader>
               <CardContent>
                 <Table>
                   <TableHeader><TableRow><TableHead>Date</TableHead><TableHead>Amount</TableHead><TableHead>Purpose</TableHead><TableHead>From</TableHead><TableHead>Mode</TableHead><TableHead>Actions</TableHead></TableRow></TableHeader>
