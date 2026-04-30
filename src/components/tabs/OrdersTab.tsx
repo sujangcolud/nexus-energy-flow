@@ -149,6 +149,7 @@ const OrdersTab = () => {
       }
 
       const { data, error, count } = await query
+        .order("order_date", { ascending: false })
         .order("created_at", { ascending: false })
         .range((page - 1) * itemsPerPage, page * itemsPerPage - 1);
 

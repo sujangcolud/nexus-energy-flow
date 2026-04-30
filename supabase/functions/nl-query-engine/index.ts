@@ -348,7 +348,7 @@ async function callLLM(question: string, history: { role: string; content: strin
     method: "POST",
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "google/gemini-2.5-flash",
+      model: "gemini-1.5-flash",
       messages: [
         { role: "system", content: SYSTEM_PROMPT },
         ...history.slice(-6),
@@ -383,7 +383,7 @@ async function summarize(
     method: "POST",
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "google/gemini-2.5-flash",
+      model: "gemini-1.5-flash",
       messages: [
         { role: "system", content: "You are a concise business analyst for a Nepal-based restaurant + EV charging business. Amounts are in NRs (Nepali Rupees). Summarize the data in 3–6 sentences with concrete numbers, then add 1–2 actionable insights. Use markdown. End with a short 'Try next:' bullet list of 2 follow-up questions." },
         { role: "user", content: `Question: ${question}\n${ctx}\nPre-computed insights: ${insights.join(" | ") || "none"}\nResult sample: ${JSON.stringify(sample)}\nTotal rows: ${result.rows.length}` },

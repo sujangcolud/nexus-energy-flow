@@ -23,7 +23,7 @@ BEGIN
         COALESCE(SUM(CASE WHEN payment_mode = 'fonepay' THEN total ELSE 0 END), 0) as fonepay_total
     INTO orders_data
     FROM orders 
-    WHERE DATE(created_at) = target_date;
+    WHERE order_date = target_date;
 
     -- Get charging data for the date (using 'total_amount' column and 'payment_mode')
     SELECT 
@@ -34,7 +34,7 @@ BEGIN
         COALESCE(SUM(CASE WHEN payment_mode = 'fonepay' THEN total_amount ELSE 0 END), 0) as fonepay_total
     INTO charging_data
     FROM charging_sessions 
-    WHERE DATE(created_at) = target_date;
+    WHERE session_date = target_date;
 
     -- Get expenses data for the date (using 'amount' column and 'payment_mode')
     SELECT 
@@ -45,7 +45,7 @@ BEGIN
         COALESCE(SUM(CASE WHEN payment_mode = 'fonepay' THEN amount ELSE 0 END), 0) as fonepay_total
     INTO expenses_data
     FROM expenses 
-    WHERE DATE(created_at) = target_date;
+    WHERE expense_date = target_date;
 
     -- Get deposits data for the date (using 'amount' column and 'mode' column)
     SELECT 
@@ -56,7 +56,7 @@ BEGIN
         COALESCE(SUM(CASE WHEN mode = 'fonepay' THEN amount ELSE 0 END), 0) as fonepay_total
     INTO deposits_data
     FROM deposits 
-    WHERE DATE(created_at) = target_date;
+    WHERE deposit_date = target_date;
 
     -- Get withdrawals data for the date (using 'withdrawal_from' and 'payment_mode' columns)
     SELECT 
@@ -73,7 +73,7 @@ BEGIN
         COALESCE(SUM(CASE WHEN withdrawal_from = 'Bank' THEN amount ELSE 0 END), 0) as bank_total
     INTO withdrawals_data
     FROM withdrawals 
-    WHERE DATE(created_at) = target_date;
+    WHERE withdrawal_date = target_date;
 
     -- Get cooperative savings data for the date (using 'contribution_amount' column and 'payment_mode')
     SELECT 
@@ -84,7 +84,7 @@ BEGIN
         COALESCE(SUM(CASE WHEN payment_mode = 'Fonepay' THEN contribution_amount ELSE 0 END), 0) as fonepay_total
     INTO savings_data
     FROM cooperative_savings 
-    WHERE DATE(created_at) = target_date;
+    WHERE contribution_date = target_date;
 
     -- Calculate running balances
     SELECT 
@@ -269,20 +269,21 @@ DECLARE
 BEGIN
     -- Get all unique dates from all transaction tables
     FOR target_date IN (
-        SELECT DISTINCT DATE(created_at) as transaction_date
+        SELECT DISTINCT transaction_date
         FROM (
-            SELECT created_at FROM orders
+            SELECT order_date as transaction_date FROM orders
             UNION
-            SELECT created_at FROM charging_sessions
+            SELECT session_date as transaction_date FROM charging_sessions
             UNION
-            SELECT created_at FROM expenses
+            SELECT expense_date as transaction_date FROM expenses
             UNION
-            SELECT created_at FROM deposits
+            SELECT deposit_date as transaction_date FROM deposits
             UNION
-            SELECT created_at FROM withdrawals
+            SELECT withdrawal_date as transaction_date FROM withdrawals
             UNION
-            SELECT created_at FROM cooperative_savings
+            SELECT contribution_date as transaction_date FROM cooperative_savings
         ) all_dates
+        WHERE transaction_date IS NOT NULL
         ORDER BY transaction_date
     ) LOOP
         -- Sync daily summary for each date
@@ -299,20 +300,21 @@ DECLARE
     target_date DATE;
 BEGIN
     FOR target_date IN (
-        SELECT DISTINCT DATE(created_at) as transaction_date
+        SELECT DISTINCT transaction_date
         FROM (
-            SELECT created_at FROM orders WHERE created_at >= CURRENT_DATE - INTERVAL '30 days'
+            SELECT order_date as transaction_date FROM orders WHERE order_date >= CURRENT_DATE - INTERVAL '30 days'
             UNION
-            SELECT created_at FROM charging_sessions WHERE created_at >= CURRENT_DATE - INTERVAL '30 days'
+            SELECT session_date as transaction_date FROM charging_sessions WHERE session_date >= CURRENT_DATE - INTERVAL '30 days'
             UNION
-            SELECT created_at FROM expenses WHERE created_at >= CURRENT_DATE - INTERVAL '30 days'
+            SELECT expense_date as transaction_date FROM expenses WHERE expense_date >= CURRENT_DATE - INTERVAL '30 days'
             UNION
-            SELECT created_at FROM deposits WHERE created_at >= CURRENT_DATE - INTERVAL '30 days'
+            SELECT deposit_date as transaction_date FROM deposits WHERE deposit_date >= CURRENT_DATE - INTERVAL '30 days'
             UNION
-            SELECT created_at FROM withdrawals WHERE created_at >= CURRENT_DATE - INTERVAL '30 days'
+            SELECT withdrawal_date as transaction_date FROM withdrawals WHERE withdrawal_date >= CURRENT_DATE - INTERVAL '30 days'
             UNION
-            SELECT created_at FROM cooperative_savings WHERE created_at >= CURRENT_DATE - INTERVAL '30 days'
+            SELECT contribution_date as transaction_date FROM cooperative_savings WHERE contribution_date >= CURRENT_DATE - INTERVAL '30 days'
         ) recent_dates
+        WHERE transaction_date IS NOT NULL
         ORDER BY transaction_date
     ) LOOP
         PERFORM sync_daily_summary_for_date(target_date);

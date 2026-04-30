@@ -172,6 +172,7 @@ const ExpensesTab = () => {
 
       const { data, error } = await query
         .order("expense_date", { ascending: false })
+        .order("created_at", { ascending: false })
         .range((page - 1) * itemsPerPage, page * itemsPerPage - 1);
 
       if (error) throw error;
