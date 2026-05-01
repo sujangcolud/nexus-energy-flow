@@ -17,6 +17,7 @@ import { format, subDays, startOfDay, endOfDay, formatISO } from "date-fns";
 import { DateRange } from "react-day-picker";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import DayEntriesEditor from "@/components/DayEntriesEditor";
 
 interface DailySummaryRow {
   summary_date: string;
@@ -454,6 +455,16 @@ const DailySummaryReport = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Per-module entry lists with totals */}
+      {range?.from && range?.to && (
+        <DayEntriesEditor
+          fromDate={format(range.from, "yyyy-MM-dd")}
+          toDate={format(range.to, "yyyy-MM-dd")}
+          editable={false}
+          title="Module Entries"
+        />
+      )}
     </div>
   );
 };
