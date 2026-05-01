@@ -7,9 +7,10 @@ import { Input } from "@/components/ui/input";
 import {
   Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { Loader2, Pencil, Save, X, RefreshCw, Trash2 } from "lucide-react";
+import { Loader2, Pencil, Save, X, RefreshCw, Trash2, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { formatCurrency } from "@/utils/unifiedCalculations";
+import { useAuth } from "@/context/AuthContext";
 
 type ModuleConfig = {
   key: string;
