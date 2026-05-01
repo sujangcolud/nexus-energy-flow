@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { formatCurrency } from "@/utils/unifiedCalculations";
 import { useAuth } from "@/context/AuthContext";
 
+type FieldDef = { key: string; label: string; type?: "text" | "number" | "date"; editable?: boolean };
 type ModuleConfig = {
   key: string;
   title: string;
@@ -19,7 +20,9 @@ type ModuleConfig = {
   dateColumn: string;
   amountColumn: string;
   // columns shown in the table; first item = primary label/description
-  columns: { key: string; label: string; type?: "text" | "number" | "date"; editable?: boolean }[];
+  columns: FieldDef[];
+  // additional fields shown only in the expanded edit panel (not in the table)
+  extraEditFields?: FieldDef[];
 };
 
 const MODULES: ModuleConfig[] = [
