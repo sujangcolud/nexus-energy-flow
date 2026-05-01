@@ -1450,7 +1450,7 @@ export type Database = {
       }
       daily_closing: {
         Args: { p_closing_date: string; p_user_id: string }
-        Returns: undefined
+        Returns: Json
       }
       generate_balance_sheet: {
         Args: { date_from: string; date_to: string; user_id_param: string }

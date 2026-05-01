@@ -17,6 +17,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { toast } from "sonner";
 import { formatCurrency } from "@/utils/unifiedCalculations";
 import { cn } from "@/lib/utils";
+import DayEntriesEditor from "@/components/DayEntriesEditor";
 
 const fmt = (n: number) => formatCurrency(Number(n) || 0);
 
@@ -381,6 +382,17 @@ const DailyClosingWizardTab = () => {
                   </tbody>
                 </table>
               )}
+
+              <div className="pt-4 border-t border-border">
+                <h3 className="text-sm font-semibold text-foreground mb-1">
+                  Day Entries — Edit & Update
+                </h3>
+                <p className="text-xs text-muted-foreground mb-3">
+                  All transactions recorded for {dateStr}. Edit any entry inline and save —
+                  then click <b>Rebuild summary</b> above to refresh totals.
+                </p>
+                <DayEntriesEditor fromDate={dateStr} toDate={dateStr} editable />
+              </div>
             </div>
           )}
 
