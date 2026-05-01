@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { formatCurrency } from "@/utils/unifiedCalculations";
 import { useAuth } from "@/context/AuthContext";
 
+type FieldDef = { key: string; label: string; type?: "text" | "number" | "date"; editable?: boolean };
 type ModuleConfig = {
   key: string;
   title: string;
@@ -19,7 +20,9 @@ type ModuleConfig = {
   dateColumn: string;
   amountColumn: string;
   // columns shown in the table; first item = primary label/description
-  columns: { key: string; label: string; type?: "text" | "number" | "date"; editable?: boolean }[];
+  columns: FieldDef[];
+  // additional fields shown only in the expanded edit panel (not in the table)
+  extraEditFields?: FieldDef[];
 };
 
 const MODULES: ModuleConfig[] = [
@@ -44,11 +47,17 @@ const MODULES: ModuleConfig[] = [
     dateColumn: "session_date",
     amountColumn: "total_amount",
     columns: [
-      { key: "category", label: "Category", type: "text", editable: true },
-      { key: "kcal", label: "kWh", type: "number", editable: true },
+      { key: "start_percentage", label: "From %", type: "number", editable: true },
+      { key: "end_percentage", label: "To %", type: "number", editable: true },
       { key: "per_unit_rate", label: "Rate", type: "number", editable: true },
       { key: "payment_mode", label: "Payment", type: "text", editable: true },
       { key: "total_amount", label: "Total", type: "number", editable: true },
+    ],
+    extraEditFields: [
+      { key: "category", label: "Category", type: "text", editable: true },
+      { key: "kcal", label: "kWh", type: "number", editable: true },
+      { key: "per_percent_rate", label: "Rate / %", type: "number", editable: true },
+      { key: "amount", label: "Amount", type: "number", editable: true },
     ],
   },
   {
@@ -144,10 +153,15 @@ const ModuleSection = ({ config, fromDate, toDate, editable }: ModuleSectionProp
     },
   });
 
+  const allEditFields: FieldDef[] = [
+    ...config.columns,
+    ...(config.extraEditFields || []),
+  ];
+
   const updateMutation = useMutation({
     mutationFn: async ({ id, patch }: { id: string; patch: any }) => {
       const cleaned: any = {};
-      for (const col of config.columns) {
+      for (const col of allEditFields) {
         if (!col.editable) continue;
         const v = patch[col.key];
         if (v === undefined) continue;
@@ -184,7 +198,7 @@ const ModuleSection = ({ config, fromDate, toDate, editable }: ModuleSectionProp
         user_id: user.id,
         [config.dateColumn]: fromDate,
       };
-      for (const col of config.columns) {
+      for (const col of allEditFields) {
         const v = patch[col.key];
         if (v === undefined || v === "") continue;
         payload[col.key] = col.type === "number" ? Number(v) : v;
@@ -209,7 +223,7 @@ const ModuleSection = ({ config, fromDate, toDate, editable }: ModuleSectionProp
   const startEdit = (row: any) => {
     setEditingId(row.id);
     const d: any = {};
-    for (const col of config.columns) d[col.key] = row[col.key] ?? "";
+    for (const col of allEditFields) d[col.key] = row[col.key] ?? "";
     setDraft(d);
   };
 
@@ -325,25 +339,17 @@ const ModuleSection = ({ config, fromDate, toDate, editable }: ModuleSectionProp
                   </TableCell>
                 </TableRow>
               ) : (
-                (rows as any[]).map((row) => {
+                (rows as any[]).flatMap((row) => {
                   const isEditing = editable && editingId === row.id;
-                  return (
+                  const colSpan = config.columns.length + (editable ? 2 : 1);
+                  const mainRow = (
                     <TableRow key={row.id}>
                       <TableCell className="text-xs whitespace-nowrap">
                         {row[config.dateColumn] || "—"}
                       </TableCell>
                       {config.columns.map((c) => (
                         <TableCell key={c.key} className="text-xs whitespace-nowrap">
-                          {isEditing && c.editable ? (
-                            <Input
-                              type={c.type === "number" ? "number" : "text"}
-                              value={draft[c.key] ?? ""}
-                              onChange={(e) =>
-                                setDraft((d: any) => ({ ...d, [c.key]: e.target.value }))
-                              }
-                              className="h-7 text-xs min-w-[80px]"
-                            />
-                          ) : c.type === "number" ? (
+                          {c.type === "number" ? (
                             <span className="tabular-nums">
                               {row[c.key] === null || row[c.key] === undefined
                                 ? "—"
@@ -356,54 +362,85 @@ const ModuleSection = ({ config, fromDate, toDate, editable }: ModuleSectionProp
                       ))}
                       {editable && (
                         <TableCell className="text-right whitespace-nowrap">
-                          {isEditing ? (
-                            <div className="flex justify-end gap-1">
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() =>
-                                  updateMutation.mutate({ id: row.id, patch: draft })
-                                }
-                                disabled={updateMutation.isPending}
-                              >
-                                {updateMutation.isPending ? (
-                                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                ) : (
-                                  <Save className="h-3.5 w-3.5" />
-                                )}
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => {
-                                  setEditingId(null);
-                                  setDraft({});
-                                }}
-                              >
+                          <div className="flex justify-end gap-1">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => (isEditing ? setEditingId(null) : startEdit(row))}
+                            >
+                              {isEditing ? (
                                 <X className="h-3.5 w-3.5" />
-                              </Button>
-                            </div>
-                          ) : (
-                            <div className="flex justify-end gap-1">
-                              <Button size="sm" variant="ghost" onClick={() => startEdit(row)}>
+                              ) : (
                                 <Pencil className="h-3.5 w-3.5" />
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => {
-                                  if (confirm("Delete this entry?")) deleteMutation.mutate(row.id);
-                                }}
-                                disabled={deleteMutation.isPending}
-                              >
-                                <Trash2 className="h-3.5 w-3.5 text-destructive" />
-                              </Button>
-                            </div>
-                          )}
+                              )}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => {
+                                if (confirm("Delete this entry?")) deleteMutation.mutate(row.id);
+                              }}
+                              disabled={deleteMutation.isPending}
+                            >
+                              <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                            </Button>
+                          </div>
                         </TableCell>
                       )}
                     </TableRow>
                   );
+                  const editRow = isEditing ? (
+                    <TableRow key={`${row.id}-edit`} className="bg-muted/30 hover:bg-muted/30">
+                      <TableCell colSpan={colSpan} className="p-3">
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                          {allEditFields
+                            .filter((c) => c.editable)
+                            .map((c) => (
+                              <div key={c.key} className="flex flex-col gap-1">
+                                <label className="text-[11px] text-muted-foreground">
+                                  {c.label}
+                                </label>
+                                <Input
+                                  type={c.type === "number" ? "number" : "text"}
+                                  value={draft[c.key] ?? ""}
+                                  onChange={(e) =>
+                                    setDraft((d: any) => ({ ...d, [c.key]: e.target.value }))
+                                  }
+                                  className="h-8 text-xs"
+                                />
+                              </div>
+                            ))}
+                        </div>
+                        <div className="flex justify-end gap-2 mt-3">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              setEditingId(null);
+                              setDraft({});
+                            }}
+                          >
+                            <X className="h-3.5 w-3.5 mr-1" /> Cancel
+                          </Button>
+                          <Button
+                            size="sm"
+                            onClick={() =>
+                              updateMutation.mutate({ id: row.id, patch: draft })
+                            }
+                            disabled={updateMutation.isPending}
+                          >
+                            {updateMutation.isPending ? (
+                              <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
+                            ) : (
+                              <Save className="h-3.5 w-3.5 mr-1" />
+                            )}
+                            Save
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ) : null;
+                  return editRow ? [mainRow, editRow] : [mainRow];
                 })
               )}
             </TableBody>
