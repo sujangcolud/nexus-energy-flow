@@ -120,8 +120,11 @@ interface ModuleSectionProps {
 
 const ModuleSection = ({ config, fromDate, toDate, editable }: ModuleSectionProps) => {
   const qc = useQueryClient();
+  const { user } = useAuth();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState<any>({});
+  const [adding, setAdding] = useState(false);
+  const [newDraft, setNewDraft] = useState<any>({});
 
   const queryKey = ["day-entries", config.table, fromDate, toDate];
 
@@ -172,6 +175,30 @@ const ModuleSection = ({ config, fromDate, toDate, editable }: ModuleSectionProp
       await qc.invalidateQueries({ queryKey });
     },
     onError: (e: any) => toast.error(e.message || "Delete failed"),
+  });
+
+  const insertMutation = useMutation({
+    mutationFn: async (patch: any) => {
+      if (!user?.id) throw new Error("Not signed in");
+      const payload: any = {
+        user_id: user.id,
+        [config.dateColumn]: fromDate,
+      };
+      for (const col of config.columns) {
+        const v = patch[col.key];
+        if (v === undefined || v === "") continue;
+        payload[col.key] = col.type === "number" ? Number(v) : v;
+      }
+      const { error } = await (supabase as any).from(config.table).insert(payload);
+      if (error) throw error;
+    },
+    onSuccess: async () => {
+      toast.success(`${config.title.replace(/s$/, "")} added`);
+      setAdding(false);
+      setNewDraft({});
+      await qc.invalidateQueries({ queryKey });
+    },
+    onError: (e: any) => toast.error(e.message || "Insert failed"),
   });
 
   const total = (rows as any[]).reduce(
