@@ -225,6 +225,19 @@ const ModuleSection = ({ config, fromDate, toDate, editable }: ModuleSectionProp
         <div className="flex items-center gap-2">
           <span className="text-xs text-muted-foreground">Total:</span>
           <span className="text-sm font-semibold tabular-nums">{fmt(total)}</span>
+          {editable && fromDate === toDate && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setAdding(true);
+                setNewDraft({});
+              }}
+              disabled={adding}
+            >
+              <Plus className="h-3.5 w-3.5 mr-1" /> Add
+            </Button>
+          )}
           <Button variant="ghost" size="sm" onClick={() => refetch()} disabled={isFetching}>
             {isFetching ? (
               <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -249,6 +262,50 @@ const ModuleSection = ({ config, fromDate, toDate, editable }: ModuleSectionProp
               </TableRow>
             </TableHeader>
             <TableBody>
+              {adding && editable && (
+                <TableRow className="bg-muted/40">
+                  <TableCell className="text-xs whitespace-nowrap">{fromDate}</TableCell>
+                  {config.columns.map((c) => (
+                    <TableCell key={c.key} className="text-xs">
+                      <Input
+                        type={c.type === "number" ? "number" : "text"}
+                        value={newDraft[c.key] ?? ""}
+                        onChange={(e) =>
+                          setNewDraft((d: any) => ({ ...d, [c.key]: e.target.value }))
+                        }
+                        placeholder={c.label}
+                        className="h-7 text-xs min-w-[80px]"
+                      />
+                    </TableCell>
+                  ))}
+                  <TableCell className="text-right whitespace-nowrap">
+                    <div className="flex justify-end gap-1">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => insertMutation.mutate(newDraft)}
+                        disabled={insertMutation.isPending}
+                      >
+                        {insertMutation.isPending ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <Save className="h-3.5 w-3.5" />
+                        )}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                          setAdding(false);
+                          setNewDraft({});
+                        }}
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              )}
               {isLoading ? (
                 <TableRow>
                   <TableCell
