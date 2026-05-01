@@ -153,10 +153,15 @@ const ModuleSection = ({ config, fromDate, toDate, editable }: ModuleSectionProp
     },
   });
 
+  const allEditFields: FieldDef[] = [
+    ...config.columns,
+    ...(config.extraEditFields || []),
+  ];
+
   const updateMutation = useMutation({
     mutationFn: async ({ id, patch }: { id: string; patch: any }) => {
       const cleaned: any = {};
-      for (const col of config.columns) {
+      for (const col of allEditFields) {
         if (!col.editable) continue;
         const v = patch[col.key];
         if (v === undefined) continue;
@@ -193,7 +198,7 @@ const ModuleSection = ({ config, fromDate, toDate, editable }: ModuleSectionProp
         user_id: user.id,
         [config.dateColumn]: fromDate,
       };
-      for (const col of config.columns) {
+      for (const col of allEditFields) {
         const v = patch[col.key];
         if (v === undefined || v === "") continue;
         payload[col.key] = col.type === "number" ? Number(v) : v;
@@ -218,7 +223,7 @@ const ModuleSection = ({ config, fromDate, toDate, editable }: ModuleSectionProp
   const startEdit = (row: any) => {
     setEditingId(row.id);
     const d: any = {};
-    for (const col of config.columns) d[col.key] = row[col.key] ?? "";
+    for (const col of allEditFields) d[col.key] = row[col.key] ?? "";
     setDraft(d);
   };
 
