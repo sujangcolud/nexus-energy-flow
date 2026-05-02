@@ -345,7 +345,7 @@ const BusinessIntelligenceSuite = () => {
   const trafficData = rows.map((r) => ({
     date: format(new Date(r.business_date), "MMM d"),
     "Vehicle Flow": r.charging_count,
-    "Order Flow": r.orders_count,
+    "Dish Qty": r.orders_count,
   }));
 
   return (
@@ -491,7 +491,7 @@ const BusinessIntelligenceSuite = () => {
                   <th className="px-4 py-3">Business Date</th>
                   <th className="px-4 py-3 text-right">Vehicles (Sessions)</th>
                   <th className="px-4 py-3 text-right">Charging Income</th>
-                  <th className="px-4 py-3 text-right">Order Count</th>
+                  <th className="px-4 py-3 text-right">Dish Qty (Thali/Khana)</th>
                   <th className="px-4 py-3 text-right">Restaurant Income</th>
                 </tr>
               </thead>
@@ -568,7 +568,7 @@ const BusinessIntelligenceSuite = () => {
                 <Tooltip contentStyle={{ backgroundColor: "hsl(var(--background))", border: "1px solid hsl(var(--border))" }} />
                 <Legend />
                 <Bar dataKey="Vehicle Flow" fill="hsl(var(--chart-2))" radius={[3, 3, 0, 0]} />
-                <Bar dataKey="Order Flow" fill="hsl(var(--primary))" radius={[3, 3, 0, 0]} />
+                <Bar dataKey="Dish Qty" fill="hsl(var(--primary))" radius={[3, 3, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
