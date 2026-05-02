@@ -342,6 +342,12 @@ const BusinessIntelligenceSuite = () => {
     Expenses: r.expenses_total,
   }));
 
+  const trafficData = rows.map((r) => ({
+    date: format(new Date(r.business_date), "MMM d"),
+    "Vehicle Flow": r.charging_count,
+    "Order Flow": r.orders_count,
+  }));
+
   return (
     <div className="space-y-6 p-4 sm:p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -546,6 +552,28 @@ const BusinessIntelligenceSuite = () => {
       </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="border border-border">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Activity className="w-4 h-4" /> Vehicle Flow & Traffic Trends
+            </CardTitle>
+            <CardDescription>Daily volume of charging sessions vs restaurant orders.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={260}>
+              <BarChart data={trafficData}>
+                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                <XAxis dataKey="date" tick={{ fontSize: 11 }} />
+                <YAxis tick={{ fontSize: 11 }} />
+                <Tooltip contentStyle={{ backgroundColor: "hsl(var(--background))", border: "1px solid hsl(var(--border))" }} />
+                <Legend />
+                <Bar dataKey="Vehicle Flow" fill="hsl(var(--chart-2))" radius={[3, 3, 0, 0]} />
+                <Bar dataKey="Order Flow" fill="hsl(var(--primary))" radius={[3, 3, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
         <Card className="border border-border">
           <CardHeader className="pb-2">
             <CardTitle className="text-base flex items-center gap-2">
