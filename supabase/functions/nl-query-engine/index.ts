@@ -73,7 +73,7 @@ const SCHEMA: Record<string, TableSpec> = {
     description: "VAT invoices.",
   },
   advanced_business_intelligence: {
-    columns: ["business_date", "category_group", "daily_cost", "daily_sales", "rolling_cost_7d", "rolling_sales_7d", "gross_margin_pct_7d", "charging_revenue", "charging_count", "orders_revenue", "orders_count", "charging_to_food_conversion", "total_revenue", "commission_total", "revenue_per_commission_rupee"],
+    columns: ["business_date", "category_group", "daily_cost", "daily_sales", "rolling_cost_7d", "rolling_sales_7d", "gross_margin_pct_7d", "charging_revenue", "charging_count", "orders_revenue", "orders_count", "charging_to_food_conversion", "total_revenue", "expenses_total", "commission_total", "withdrawals_total", "deposits_total", "revenue_per_commission_rupee"],
     dateColumn: "business_date",
     description: "Advanced BI with 7-day rolling margins and cross-stream KPIs.",
   },
@@ -124,7 +124,7 @@ function resolveDateShortcut(q: string): { date_from?: string; date_to?: string 
 
 function detectComposite(q: string): "profit" | "correlation" | "business_day" | "health" | null {
   const ql = q.toLowerCase();
-  if (/\b(business health|health dashboard|category profitability|leakage|waste|audit alerts)\b/.test(ql)) return "health";
+  if (/\b(business health|health dashboard|category profitability|leakage|waste|audit alerts|withdrawal|audit)\b/.test(ql)) return "health";
   if (/\b(correlation|correlate|relationship between|charging vs (sales|orders|food)|sales vs charging|revenue mix|hook day)\b/.test(ql)) return "correlation";
   if (/\b(commission burden|commission efficiency|business day|business-day|activity date)\b/.test(ql)) return "business_day";
   if (/\b(profit|net income|net earning|bottom line|margin)\b/.test(ql)) return "profit";

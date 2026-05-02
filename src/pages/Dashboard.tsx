@@ -39,7 +39,6 @@ import {
   UserCog,
   Upload,
   LayoutDashboard,
-  HeartPulse,
   Settings as SettingsIcon,
   Settings,
   Bell,
@@ -331,16 +330,6 @@ const Dashboard = () => {
         color: "bg-foreground",
         bgColor: "bg-muted",
         description: "Date-aligned correlations, audit & recommendations",
-      },
-      {
-        id: "health",
-        path: "health",
-        label: "Business Health",
-        icon: HeartPulse,
-        roles: ["user", "data_entry", "reports_viewer", "super_admin"],
-        color: "bg-foreground",
-        bgColor: "bg-muted",
-        description: "Advanced intelligence, margins & anomaly detection",
       },
     ];
 

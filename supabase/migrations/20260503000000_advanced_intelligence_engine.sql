@@ -55,7 +55,9 @@ daily_perf AS (
     charging_count,
     total_revenue,
     expenses_total,
-    commission_total
+    commission_total,
+    withdrawals_total,
+    deposits_total
   FROM public.daily_business_performance
 )
 SELECT
@@ -78,7 +80,10 @@ SELECT
     ELSE 0
   END as charging_to_food_conversion,
   p.total_revenue,
+  p.expenses_total,
   p.commission_total,
+  p.withdrawals_total,
+  p.deposits_total,
   CASE
     WHEN p.commission_total > 0 THEN ROUND(p.total_revenue / p.commission_total, 2)
     ELSE 0
@@ -105,6 +110,22 @@ streak_calc AS (
     is_leakage,
     SUM(is_leakage) OVER (PARTITION BY category_group ORDER BY business_date ROWS BETWEEN 2 PRECEDING AND CURRENT ROW) as streak_count
   FROM leakage_check
+),
+withdrawal_audit AS (
+  SELECT
+    business_date,
+    'General' as category_group,
+    CASE
+      WHEN withdrawals_total > 0 AND expenses_total = 0 THEN 'Unmatched Withdrawal'
+      WHEN withdrawals_total > 0 AND expenses_total > 0 THEN 'Withdrawal with Expense'
+      ELSE NULL
+    END as alert_type,
+    CASE
+      WHEN withdrawals_total > 0 AND expenses_total = 0 THEN 'Withdrawal of ' || withdrawals_total || ' NRs made but no matching expenses recorded.'
+      WHEN withdrawals_total > 0 AND expenses_total > 0 THEN 'Withdrawal of ' || withdrawals_total || ' NRs confirmed by ' || expenses_total || ' NRs in expenses.'
+      ELSE NULL
+    END as alert_description
+  FROM public.daily_business_performance
 )
 SELECT
   business_date,
@@ -112,7 +133,17 @@ SELECT
   'Potential Waste/Leakage Alert' as alert_type,
   'Cost exceeded revenue for 3+ consecutive days' as alert_description
 FROM streak_calc
-WHERE streak_count >= 3 AND is_leakage = 1;
+WHERE streak_count >= 3 AND is_leakage = 1
+
+UNION ALL
+
+SELECT
+  business_date,
+  category_group,
+  alert_type,
+  alert_description
+FROM withdrawal_audit
+WHERE alert_type IS NOT NULL;
 
 -- Security
 GRANT SELECT ON public.advanced_business_intelligence TO authenticated;
