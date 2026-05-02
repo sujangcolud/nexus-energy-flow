@@ -112,8 +112,10 @@ function resolveDateShortcut(q: string): { date_from?: string; date_to?: string 
   return {};
 }
 
-function detectComposite(q: string): "profit" | null {
+function detectComposite(q: string): "profit" | "correlation" | "business_day" | null {
   const ql = q.toLowerCase();
+  if (/\b(correlation|correlate|relationship between|charging vs (sales|orders|food)|sales vs charging|revenue mix|hook day)\b/.test(ql)) return "correlation";
+  if (/\b(commission burden|commission efficiency|business day|business-day|activity date)\b/.test(ql)) return "business_day";
   if (/\b(profit|net income|net earning|bottom line|margin)\b/.test(ql)) return "profit";
   return null;
 }
