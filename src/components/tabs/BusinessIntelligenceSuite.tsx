@@ -140,6 +140,19 @@ const BusinessIntelligenceSuite = () => {
     },
   });
 
+  const { data: kitchenIntel = [] } = useQuery({
+    queryKey: ["kitchen-intelligence", range.from, range.to],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('nepali_kitchen_intelligence')
+        .select('*')
+        .gte('business_date', range.from)
+        .lte('business_date', range.to);
+      if (error) throw error;
+      return data;
+    },
+  });
+
   // ---------- Advanced Aggregation ----------
   const aggregatedAdvData = useMemo(() => {
     const map = new Map<string, any>();
@@ -196,6 +209,27 @@ const BusinessIntelligenceSuite = () => {
     }));
   }, [categoryUsage]);
 
+  const kitchenMetrics = useMemo(() => {
+    const map = new Map<string, any>();
+    kitchenIntel.forEach(row => {
+      if (!map.has(row.category)) {
+        map.set(row.category, { category: row.category, expense: 0, sales: 0, count: 0, lastMargin: 0, lastEfficiency: 0 });
+      }
+      const entry = map.get(row.category);
+      entry.expense += (row.daily_expense || 0);
+      entry.sales += (row.daily_sales || 0);
+      entry.count++;
+      // We take the latest rolling metrics for margin and efficiency
+      entry.lastMargin = row.gross_margin_pct_7d;
+      entry.lastEfficiency = row.efficiency_ratio;
+    });
+    return Array.from(map.values()).map(e => ({
+      ...e,
+      avgMargin: e.sales > 0 ? ((e.sales - e.expense) / e.sales) * 100 : (e.expense > 0 ? -100 : 0),
+      status: e.lastMargin < 15 ? 'Critical' : e.lastMargin < 30 ? 'Warning' : 'Healthy'
+    }));
+  }, [kitchenIntel]);
+
   // ---------- Legacy BI KPIs & Logic ----------
   const totals = useMemo(() => {
     const sum = (k: keyof BusinessPerformanceRow) =>
@@ -224,6 +258,17 @@ const BusinessIntelligenceSuite = () => {
   // ---------- Trend Advice ----------
   const trendAdvice = useMemo(() => {
     const advice: string[] = [];
+
+    // New Kitchen Intelligence Advice
+    kitchenMetrics.forEach(m => {
+        if (m.status === 'Critical') {
+            advice.push(`Sahuji, ${m.category} ko margin ekdam low chha (${m.lastMargin.toFixed(1)}%). Portion control gara ki price badhau.`);
+        }
+        if (m.lastEfficiency < 1.5 && m.sales > 0) {
+            advice.push(`${m.category} ma kharchha dherai chha, sales kam. Waste rokna paryo.`);
+        }
+    });
+
     if (advBi.length >= 14) {
         const today = new Date();
         const last7DaysInterval = { start: subDays(today, 7), end: today };
@@ -334,6 +379,49 @@ const BusinessIntelligenceSuite = () => {
         })}
         <Kpi label="Energy Share" value={`${totals.energyShare.toFixed(1)}%`} icon={Flame} color="text-blue-600" />
       </div>
+
+      <Card className="border border-border lg:col-span-2 bg-slate-50/50">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base flex items-center gap-2 text-primary">
+            <Utensils className="h-4 w-4" /> Real Kitchen Profitability (Shared Ingredient Allocation)
+          </CardTitle>
+          <CardDescription>Matrices applied: Vegetables (40% meals, 35% snacks), Rice/Oil (60% meals, 25% snacks), etc.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="relative w-full overflow-auto">
+            <table className="w-full text-xs text-left">
+              <thead className="bg-muted text-muted-foreground font-medium sticky top-0">
+                <tr>
+                  <th className="p-2">Category</th>
+                  <th className="p-2 text-right">Expense (Allocated)</th>
+                  <th className="p-2 text-right">Sales</th>
+                  <th className="p-2 text-right">Real Margin %</th>
+                  <th className="p-2 text-right">Efficiency (S/E)</th>
+                  <th className="p-2">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                {kitchenMetrics.map((row) => (
+                  <tr key={row.category} className="hover:bg-muted/30">
+                    <td className="p-2 font-semibold">{row.category}</td>
+                    <td className="p-2 text-right">{fmt(row.expense)}</td>
+                    <td className="p-2 text-right">{fmt(row.sales)}</td>
+                    <td className={`p-2 text-right font-bold ${row.lastMargin < 20 ? "text-destructive" : "text-emerald-600"}`}>
+                      {row.lastMargin.toFixed(1)}%
+                    </td>
+                    <td className="p-2 text-right font-medium">{row.lastEfficiency}x</td>
+                    <td className="p-2">
+                      <Badge variant={row.status === 'Healthy' ? 'secondary' : row.status === 'Warning' ? 'outline' : 'destructive'} className="text-[10px]">
+                        {row.status}
+                      </Badge>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
 
       <Card className="border border-border">
         <CardHeader className="pb-2">

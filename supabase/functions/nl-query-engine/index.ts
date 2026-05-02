@@ -87,6 +87,11 @@ const SCHEMA: Record<string, TableSpec> = {
     dateColumn: "business_date",
     description: "Granular comparison of income vs expense for usage categories like Commission, Electricity, Fuel, etc.",
   },
+  nepali_kitchen_intelligence: {
+    columns: ["business_date", "category", "daily_expense", "daily_sales", "rolling_expense_7d", "rolling_sales_7d", "gross_margin_pct_7d", "efficiency_ratio"],
+    dateColumn: "business_date",
+    description: "Advanced kitchen profitability engine with weighted shared ingredient allocation (Vegetables, Meat, Eggs, Base Items) across Main Meals, Snacks, etc.",
+  },
 };
 
 const ALLOWED_AGGS = new Set(["sum", "avg", "count", "min", "max"]);
