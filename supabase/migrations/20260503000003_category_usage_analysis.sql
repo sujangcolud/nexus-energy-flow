@@ -1,4 +1,4 @@
--- Category Usage Analysis View
+-- Category Usage Analysis View - Final Refined version
 DROP VIEW IF EXISTS public.category_usage_analysis;
 
 CREATE OR REPLACE VIEW public.category_usage_analysis AS
@@ -22,6 +22,14 @@ inc AS (
   -- Vegetables Item
   SELECT order_date as business_date, 'Vegetables Item' as exp_category, SUM(total) as total_income
   FROM public.orders WHERE item_name IN ('Veg Thali', 'Veg khana', 'Sabji') GROUP BY 1, 2
+  UNION ALL
+  -- Others Restaurant Item (Grocery, Rice, Oil)
+  SELECT order_date as business_date, 'Others Restaurant Item' as exp_category, SUM(total) as total_income
+  FROM public.orders WHERE item_name IN ('Grocery', 'Rice', 'Oil') GROUP BY 1, 2
+  UNION ALL
+  -- Junk Food Item (Buff Mo:Mo and other generic snacks if they exist)
+  SELECT order_date as business_date, 'Junk Food Item' as exp_category, SUM(total) as total_income
+  FROM public.orders WHERE item_name ILIKE '%Mo:Mo%' AND item_name NOT ILIKE '%Chicken%' GROUP BY 1, 2
 ),
 categories AS (
   SELECT 'Beaverages' as cat
