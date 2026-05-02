@@ -72,6 +72,16 @@ const SCHEMA: Record<string, TableSpec> = {
     amountColumn: "total_with_vat",
     description: "VAT invoices.",
   },
+  advanced_business_intelligence: {
+    columns: ["business_date", "category_group", "daily_cost", "daily_sales", "rolling_cost_7d", "rolling_sales_7d", "gross_margin_pct_7d", "charging_revenue", "charging_count", "orders_revenue", "orders_count", "charging_to_food_conversion", "total_revenue", "expenses_total", "commission_total", "withdrawals_total", "deposits_total", "revenue_per_commission_rupee"],
+    dateColumn: "business_date",
+    description: "Advanced BI with REAL weighted cost allocation (Chicken, Mutton, Fish, Veg) and 7-day rolling margins.",
+  },
+  ai_audit_alerts: {
+    columns: ["business_date", "category_group", "alert_type", "alert_description"],
+    dateColumn: "business_date",
+    description: "Waste/leakage alerts detected by the AI Auditor.",
+  },
 };
 
 const ALLOWED_AGGS = new Set(["sum", "avg", "count", "min", "max"]);
@@ -112,8 +122,9 @@ function resolveDateShortcut(q: string): { date_from?: string; date_to?: string 
   return {};
 }
 
-function detectComposite(q: string): "profit" | "correlation" | "business_day" | null {
+function detectComposite(q: string): "profit" | "correlation" | "business_day" | "health" | null {
   const ql = q.toLowerCase();
+  if (/\b(business health|health dashboard|category profitability|leakage|waste|audit alerts|withdrawal|audit)\b/.test(ql)) return "health";
   if (/\b(correlation|correlate|relationship between|charging vs (sales|orders|food)|sales vs charging|revenue mix|hook day)\b/.test(ql)) return "correlation";
   if (/\b(commission burden|commission efficiency|business day|business-day|activity date)\b/.test(ql)) return "business_day";
   if (/\b(profit|net income|net earning|bottom line|margin)\b/.test(ql)) return "profit";
@@ -181,10 +192,29 @@ async function sumColumn(supabase: any, table: string, dateFrom?: string, dateTo
  */
 async function executeComposite(
   supabase: any,
-  kind: "profit" | "correlation" | "business_day",
+  kind: "profit" | "correlation" | "business_day" | "health",
   dateFrom?: string,
   dateTo?: string,
 ) {
+  if (kind === "health") {
+    let q = supabase.from("advanced_business_intelligence").select("*").order("business_date", { ascending: false }).limit(28);
+    if (dateFrom) q = q.gte("business_date", dateFrom);
+    if (dateTo) q = q.lte("business_date", dateTo);
+    const { data: biData, error: biError } = await q;
+    if (biError) throw new Error(biError.message);
+
+    let aq = supabase.from("ai_audit_alerts").select("*").order("business_date", { ascending: false }).limit(10);
+    if (dateFrom) aq = aq.gte("business_date", dateFrom);
+    if (dateTo) aq = aq.lte("business_date", dateTo);
+    const { data: alertsData, error: alertsError } = await aq;
+    if (alertsError) throw new Error(alertsError.message);
+
+    return {
+      rows: biData || [],
+      aggregated: (alertsData || []).map(a => ({ metric: "Alert", category: a.category_group, date: a.business_date, desc: a.alert_description })),
+    };
+  }
+
   if (kind === "profit") {
     const [orders, charging, expenses] = await Promise.all([
       sumColumn(supabase, "orders", dateFrom, dateTo),
@@ -434,7 +464,7 @@ async function summarize(
     body: JSON.stringify({
       model: "gemini-1.5-flash",
       messages: [
-        { role: "system", content: "You are a concise business analyst for a Nepal-based restaurant + EV charging business. Amounts are in NRs (Nepali Rupees). Summarize the data in 3–6 sentences with concrete numbers, then add 1–2 actionable insights. Use markdown. End with a short 'Try next:' bullet list of 2 follow-up questions." },
+        { role: "system", content: "You are an experienced Nepali restaurant owner (Sahuji). Amounts are in NRs. Speak practically and focus on real profit, waste, and 'mero business' strategy. Avoid tech talk. Summarize data in 3-5 sentences, give 1 blunt piece of advice. End with 'Try next:' bullet list." },
         { role: "user", content: `Question: ${question}\n${ctx}\nPre-computed insights: ${insights.join(" | ") || "none"}\nResult sample: ${JSON.stringify(sample)}\nTotal rows: ${result.rows.length}` },
       ],
     }),
@@ -488,7 +518,7 @@ serve(async (req) => {
     let chart: Plan["chart"] | null = null;
     let explanation = "";
 
-    if (composite === "profit" || composite === "correlation" || composite === "business_day") {
+    if (composite === "profit" || composite === "correlation" || composite === "business_day" || composite === "health") {
       const df = shortcut.date_from || raw?.date_from;
       const dt = shortcut.date_to || raw?.date_to;
       result = await executeComposite(userClient, composite, df, dt);
@@ -498,12 +528,15 @@ serve(async (req) => {
       } else if (composite === "business_day") {
         chart = { type: "bar", x: "business_date", y: "total_revenue" };
         explanation = `Business-day KPIs (Activity Date) including commission burden and energy share.`;
+      } else if (composite === "health") {
+        chart = { type: "line", x: "business_date", y: "gross_margin_pct_7d" };
+        explanation = `Business Health analysis including category margins and AI audit alerts.`;
       } else {
         chart = { type: "bar", x: "metric", y: "value" };
         explanation = `Profit = Orders revenue + Charging revenue − Expenses${df ? ` (from ${df} to ${dt || "today"})` : ""}.`;
       }
       plan = {
-        table: composite === "profit" ? "orders" : "charging_sessions",
+        table: composite === "health" ? "advanced_business_intelligence" : (composite === "profit" ? "orders" : "charging_sessions"),
         composite,
         date_from: df,
         date_to: dt,
