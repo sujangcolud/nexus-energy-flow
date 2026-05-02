@@ -171,7 +171,7 @@ withdrawal_audit AS (
       WHEN rolling_withdrawals_7d > rolling_expenses_7d * 1.05 THEN 'Cash Leakage (Weekly)'
       ELSE 'Flow Verified'
     END as alert_type,
-    'Past 7 Days: Withdrawn Rs ' || rolling_withdrawals_7d || ' vs recorded Expenses Rs ' || rolling_expenses_7d || '. Gap of Rs ' || (rolling_withdrawals_7d - rolling_expenses_7d) || '.' as alert_description,
+    '7d Gap: Rs ' || ROUND((rolling_withdrawals_7d - rolling_expenses_7d)::numeric, 2) || '. (Withdrawn: ' || ROUND(rolling_withdrawals_7d::numeric, 2) || ', Exp: ' || ROUND(rolling_expenses_7d::numeric, 2) || ')' as alert_description,
     CASE WHEN rolling_withdrawals_7d > 0 THEN ROUND(((rolling_expenses_7d - rolling_withdrawals_7d) / rolling_withdrawals_7d) * 100, 2) ELSE 0 END as margin
   FROM public.advanced_business_intelligence
 )
@@ -183,7 +183,7 @@ SELECT
   daily_cost,
   daily_sales,
   'Loss Streak' as alert_type,
-  'Cost exceeded sales for 3+ days. Purchased: Rs ' || daily_cost || ', Sold: Rs ' || daily_sales || '. Action: Check portion control.' as alert_description,
+  '3-day loss. Cost: Rs ' || ROUND(daily_cost::numeric, 2) || ', Sales: Rs ' || ROUND(daily_sales::numeric, 2) as alert_description,
   gross_margin_pct_7d as margin
 FROM streak_calc
 WHERE streak_count >= 3 AND is_leakage = 1
