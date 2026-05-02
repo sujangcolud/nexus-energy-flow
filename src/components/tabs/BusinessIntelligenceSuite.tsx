@@ -140,6 +140,19 @@ const BusinessIntelligenceSuite = () => {
     },
   });
 
+  const { data: kitchenIntel = [] } = useQuery({
+    queryKey: ["kitchen-intelligence", range.from, range.to],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('nepali_kitchen_intelligence')
+        .select('*')
+        .gte('business_date', range.from)
+        .lte('business_date', range.to);
+      if (error) throw error;
+      return data;
+    },
+  });
+
   // ---------- Advanced Aggregation ----------
   const aggregatedAdvData = useMemo(() => {
     const map = new Map<string, any>();
@@ -173,9 +186,9 @@ const BusinessIntelligenceSuite = () => {
 
   const usageTotals = useMemo(() => {
     const categories = [
-      'Beaverages', 'Commission', 'Electricity Restaurant', 'Fuel/Travel',
-      'Junk Food Item', 'Meat Item', 'Others', 'Others Restaurant Item',
-      'Recharge', 'Vegetables Item'
+      'Beverages', 'Commission', 'Electricity Restaurant', 'Fuel/Travel',
+      'Junk Food', 'Meat', 'Others', 'Grocery/Base',
+      'Recharge', 'Vegetables'
     ];
 
     const map = new Map<string, any>();
@@ -195,6 +208,27 @@ const BusinessIntelligenceSuite = () => {
       margin: e.income > 0 ? ((e.income - e.expense) / e.income) * 100 : (e.expense > 0 ? -100 : 0)
     }));
   }, [categoryUsage]);
+
+  const kitchenMetrics = useMemo(() => {
+    const map = new Map<string, any>();
+    kitchenIntel.forEach(row => {
+      if (!map.has(row.category)) {
+        map.set(row.category, { category: row.category, expense: 0, sales: 0, count: 0, lastMargin: 0, lastEfficiency: 0 });
+      }
+      const entry = map.get(row.category);
+      entry.expense += (row.daily_expense || 0);
+      entry.sales += (row.daily_sales || 0);
+      entry.count++;
+      // We take the latest rolling metrics for margin and efficiency
+      entry.lastMargin = row.gross_margin_pct_7d;
+      entry.lastEfficiency = row.efficiency_ratio;
+    });
+    return Array.from(map.values()).map(e => ({
+      ...e,
+      avgMargin: e.sales > 0 ? ((e.sales - e.expense) / e.sales) * 100 : (e.expense > 0 ? -100 : 0),
+      status: e.lastMargin < 15 ? 'Critical' : e.lastMargin < 30 ? 'Warning' : 'Healthy'
+    }));
+  }, [kitchenIntel]);
 
   // ---------- Legacy BI KPIs & Logic ----------
   const totals = useMemo(() => {
@@ -221,9 +255,27 @@ const BusinessIntelligenceSuite = () => {
   const flags = useMemo(() => balanceIntegrity(rows), [rows]);
   const anomalies = flags.filter((f) => f.status === "anomaly");
 
-  // ---------- Trend Advice ----------
-  const trendAdvice = useMemo(() => {
-    const advice: string[] = [];
+  // ---------- Sahuji Intelligence (Insights & Recommendations) ----------
+  const sahujiIntel = useMemo(() => {
+    const insights: string[] = [];
+    const recommendations: string[] = [];
+
+    // Kitchen Specifics
+    kitchenMetrics.forEach(m => {
+        if (m.status === 'Critical') {
+            insights.push(`${m.category} category ma loss hune darr chha, margin matra ${m.lastMargin.toFixed(1)}% chha.`);
+            recommendations.push(`${m.category} ko portion control milau ki menu ma price thorei badhau.`);
+        } else if (m.status === 'Warning') {
+            insights.push(`${m.category} ko profitability stable chhaina, dhyan dinu parla.`);
+        }
+
+        if (m.lastEfficiency < 1.3 && m.sales > 0) {
+            insights.push(`${m.category} ma Rs 1 kharchha garda Rs ${m.lastEfficiency} matra kamaichha. Efficiency low chha.`);
+            recommendations.push(`${m.category} item haru kitchen ma dherai waste bhairako huna sakchha, check gara.`);
+        }
+    });
+
+    // General Business
     if (advBi.length >= 14) {
         const today = new Date();
         const last7DaysInterval = { start: subDays(today, 7), end: today };
@@ -241,13 +293,13 @@ const BusinessIntelligenceSuite = () => {
             const costIncrease = ((currentCost - prevCost) / prevCost) * 100;
             const salesStable = prevSales > 0 ? Math.abs((currentSales - prevSales) / prevSales) < 0.05 : true;
             if (costIncrease > 10 && salesStable) {
-              advice.push(`${cat} costs are up ${costIncrease.toFixed(0)}% this week. Sahuji's advice: portion control milauchhu ki price badhauchu, socha!`);
+              insights.push(`${cat} costs are up ${costIncrease.toFixed(0)}% this week. Sahuji, portion control milauchhu ki price badhauchu, socha!`);
             }
           }
 
           const latest = currentWeekData.slice(-1)[0];
           if (latest && latest.gross_margin_pct_7d < 20) {
-              advice.push(`${cat} real margin ekdam low chha (${latest.gross_margin_pct_7d}%). Check for waste.`);
+              insights.push(`${cat} real margin ekdam low chha (${latest.gross_margin_pct_7d}%). Check for waste.`);
           }
         });
     }
@@ -255,7 +307,7 @@ const BusinessIntelligenceSuite = () => {
     // Legacy logic
     if (hookDays.length > 0) {
         const days = hookDays.map((h) => format(new Date(h.business_date), "EEE")).slice(0, 3).join(", ");
-        advice.push(`Charging acted as a "hook" on ${hookDays.length} day(s) (e.g. ${days}). Staff up kitchen on peak charging days.`);
+        recommendations.push(`Charging acted as a "hook" on ${hookDays.length} day(s) (e.g. ${days}). Staff up kitchen on peak charging days.`);
     }
     const peakCharge = rows.filter((r) => r.charging_revenue >= 5000);
     if (peakCharge.length > 0) {
@@ -263,18 +315,18 @@ const BusinessIntelligenceSuite = () => {
         const avgFoodAll = rows.length ? rows.reduce((s, r) => s + r.orders_revenue, 0) / rows.length : 0;
         const lift = avgFoodAll > 0 ? ((avgFoodPeak - avgFoodAll) / avgFoodAll) * 100 : 0;
         if (lift > 5) {
-            advice.push(`When Charging exceeds Rs. 5,000, Restaurant sales lift by ~${lift.toFixed(0)}%.`);
+            insights.push(`When Charging exceeds Rs. 5,000, Restaurant sales lift by ~${lift.toFixed(0)}%.`);
         }
     }
     if (burdenByDow.length > 0) {
         const worst = burdenByDow[0];
         if (worst.avg_burden_pct > 0) {
-            advice.push(`Commission efficiency is lowest on ${worst.day} (avg ${worst.avg_burden_pct.toFixed(1)}%).`);
+            insights.push(`Commission efficiency is lowest on ${worst.day} (avg ${worst.avg_burden_pct.toFixed(1)}%).`);
         }
     }
 
-    return advice;
-  }, [advBi, hookDays, rows, burdenByDow]);
+    return { insights, recommendations };
+  }, [advBi, kitchenMetrics, hookDays, rows, burdenByDow]);
 
   const mixData = rows.map((r) => ({
     date: format(new Date(r.business_date), "MMM d"),
@@ -335,35 +387,35 @@ const BusinessIntelligenceSuite = () => {
         <Kpi label="Energy Share" value={`${totals.energyShare.toFixed(1)}%`} icon={Flame} color="text-blue-600" />
       </div>
 
-      <Card className="border border-border">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base flex items-center gap-2">
-            <Utensils className="h-4 w-4" /> Restaurant Usage Category Comparison
+      <Card className="border border-border bg-slate-50/50 overflow-hidden shadow-sm">
+        <CardHeader className="pb-3 border-b bg-card">
+          <CardTitle className="text-base flex items-center gap-2 text-primary font-bold">
+            <Utensils className="h-4 w-4" /> Mero Category Profitability (Sales Income vs. Usage Expenses)
           </CardTitle>
-          <CardDescription>Income vs Expense breakdown for restaurant-specific usage categories (including beverages, meat, utilities).</CardDescription>
+          <CardDescription>Direct comparison of 10 critical usage categories including overheads like commission and fuel.</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           <div className="relative w-full overflow-auto">
-            <table className="w-full text-xs text-left">
-              <thead className="bg-muted text-muted-foreground font-medium sticky top-0">
+            <table className="w-full text-sm text-left">
+              <thead className="bg-muted/50 text-muted-foreground font-medium border-b">
                 <tr>
-                  <th className="p-2">Category</th>
-                  <th className="p-2 text-right">Total Income (Orders)</th>
-                  <th className="p-2 text-right">Total Expense</th>
-                  <th className="p-2 text-right">Net Profit/Loss</th>
-                  <th className="p-2 text-right">Margin %</th>
+                  <th className="px-4 py-3">Category</th>
+                  <th className="px-4 py-3 text-right">Income (Sales)</th>
+                  <th className="px-4 py-3 text-right">Expense (Usage)</th>
+                  <th className="px-4 py-3 text-right">Net Rs.</th>
+                  <th className="px-4 py-3 text-right">Margin %</th>
                 </tr>
               </thead>
-              <tbody className="divide-y">
+              <tbody className="divide-y divide-border">
                 {usageTotals.map((row) => (
-                  <tr key={row.category} className="hover:bg-muted/30">
-                    <td className="p-2 font-semibold text-foreground">{row.category}</td>
-                    <td className="p-2 text-right">{fmt(row.income)}</td>
-                    <td className="p-2 text-right">{fmt(row.expense)}</td>
-                    <td className={`p-2 text-right font-bold ${row.net < 0 ? "text-destructive" : "text-emerald-600"}`}>
+                  <tr key={row.category} className="hover:bg-muted/30 transition-colors">
+                    <td className="px-4 py-3 font-semibold text-foreground">{row.category}</td>
+                    <td className="px-4 py-3 text-right text-muted-foreground">{fmt(row.income)}</td>
+                    <td className="px-4 py-3 text-right text-muted-foreground">{fmt(row.expense)}</td>
+                    <td className={`px-4 py-3 text-right font-bold ${row.net < 0 ? "text-destructive" : "text-emerald-600"}`}>
                       {fmt(row.net)}
                     </td>
-                    <td className={`p-2 text-right font-bold ${row.margin < 0 ? "text-destructive" : "text-emerald-600"}`}>
+                    <td className={`px-4 py-3 text-right font-bold ${row.margin < 0 ? "text-destructive" : "text-emerald-600"}`}>
                       {row.margin.toFixed(1)}%
                     </td>
                   </tr>
@@ -373,6 +425,50 @@ const BusinessIntelligenceSuite = () => {
           </div>
         </CardContent>
       </Card>
+
+      <Card className="border border-border lg:col-span-2 bg-slate-50/50">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base flex items-center gap-2 text-primary">
+            <Utensils className="h-4 w-4" /> Real Kitchen Profitability (Shared Ingredient Allocation)
+          </CardTitle>
+          <CardDescription>Matrices applied: Vegetables (40% meals, 35% snacks), Rice/Oil (60% meals, 25% snacks), etc.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="relative w-full overflow-auto">
+            <table className="w-full text-xs text-left">
+              <thead className="bg-muted text-muted-foreground font-medium sticky top-0">
+                <tr>
+                  <th className="p-2">Category</th>
+                  <th className="p-2 text-right">Expense (Allocated)</th>
+                  <th className="p-2 text-right">Sales</th>
+                  <th className="p-2 text-right">Real Margin %</th>
+                  <th className="p-2 text-right">Efficiency (S/E)</th>
+                  <th className="p-2">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                {kitchenMetrics.map((row) => (
+                  <tr key={row.category} className="hover:bg-muted/30">
+                    <td className="p-2 font-semibold">{row.category}</td>
+                    <td className="p-2 text-right">{fmt(row.expense)}</td>
+                    <td className="p-2 text-right">{fmt(row.sales)}</td>
+                    <td className={`p-2 text-right font-bold ${row.lastMargin < 20 ? "text-destructive" : "text-emerald-600"}`}>
+                      {row.lastMargin.toFixed(1)}%
+                    </td>
+                    <td className="p-2 text-right font-medium">{row.lastEfficiency}x</td>
+                    <td className="p-2">
+                      <Badge variant={row.status === 'Healthy' ? 'secondary' : row.status === 'Warning' ? 'outline' : 'destructive'} className="text-[10px]">
+                        {row.status}
+                      </Badge>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+
 
       <Card className="border border-border">
         <CardHeader className="pb-2">
@@ -525,19 +621,39 @@ const BusinessIntelligenceSuite = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="border border-border">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base flex items-center gap-2">
-              <Lightbulb className="w-4 h-4 text-amber-500" /> Strategic Business Advice
+            <CardTitle className="text-base flex items-center gap-2 text-blue-600">
+              <Lightbulb className="w-4 h-4" /> Sahuji Insights
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <ScrollArea className="h-[200px]">
-                <div className="space-y-4">
-                {trendAdvice.map((a, i) => (
-                    <div key={i} className="flex gap-2 text-sm items-start">
-                    <TrendingUp className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
-                    <p>{a}</p>
+            <ScrollArea className="h-[180px]">
+                <div className="space-y-3">
+                {sahujiIntel.insights.length > 0 ? sahujiIntel.insights.map((a, i) => (
+                    <div key={i} className="flex gap-2 text-sm items-start p-2 rounded bg-blue-50/50">
+                      <Activity className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
+                      <p>{a}</p>
                     </div>
-                ))}
+                )) : <p className="text-sm text-muted-foreground italic">No major insights today, Sahuji.</p>}
+                </div>
+            </ScrollArea>
+          </CardContent>
+        </Card>
+
+        <Card className="border border-border">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base flex items-center gap-2 text-amber-600">
+              <Sparkles className="w-4 h-4" /> Sahuji Recommendations
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ScrollArea className="h-[180px]">
+                <div className="space-y-3">
+                {sahujiIntel.recommendations.length > 0 ? sahujiIntel.recommendations.map((a, i) => (
+                    <div key={i} className="flex gap-2 text-sm items-start p-2 rounded bg-amber-50/50">
+                      <TrendingUp className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                      <p className="font-medium">{a}</p>
+                    </div>
+                )) : <p className="text-sm text-muted-foreground italic">Everything looks good, keep it up!</p>}
                 </div>
             </ScrollArea>
           </CardContent>
@@ -552,10 +668,10 @@ const BusinessIntelligenceSuite = () => {
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={260}>
-              <BarChart data={advBi.filter(d => d.category_group === 'Chicken').slice(-14).map(d => ({
-                date: format(parseISO(d.business_date), 'MMM dd'),
-                withdrawals: d.rolling_withdrawals_7d,
-                expenses: d.rolling_expenses_7d
+            <BarChart data={aggregatedAdvData.slice(-14).map(d => ({
+              date: d.date,
+              withdrawals: d.withdrawals,
+              expenses: d.expenses
               }))}>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                 <XAxis dataKey="date" tick={{ fontSize: 11 }} />
