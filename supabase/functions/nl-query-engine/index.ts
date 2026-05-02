@@ -90,7 +90,7 @@ type Plan = {
   chart?: { type: "bar" | "line" | "pie"; x: string; y: string };
   explanation?: string;
   // New: multi-table composite intent (computed, not LLM-controlled)
-  composite?: "profit" | null;
+  composite?: "profit" | "correlation" | "business_day" | null;
 };
 
 // ---------- date range shortcuts (server-side safety net) ----------
@@ -112,8 +112,10 @@ function resolveDateShortcut(q: string): { date_from?: string; date_to?: string 
   return {};
 }
 
-function detectComposite(q: string): "profit" | null {
+function detectComposite(q: string): "profit" | "correlation" | "business_day" | null {
   const ql = q.toLowerCase();
+  if (/\b(correlation|correlate|relationship between|charging vs (sales|orders|food)|sales vs charging|revenue mix|hook day)\b/.test(ql)) return "correlation";
+  if (/\b(commission burden|commission efficiency|business day|business-day|activity date)\b/.test(ql)) return "business_day";
   if (/\b(profit|net income|net earning|bottom line|margin)\b/.test(ql)) return "profit";
   return null;
 }
@@ -179,7 +181,7 @@ async function sumColumn(supabase: any, table: string, dateFrom?: string, dateTo
  */
 async function executeComposite(
   supabase: any,
-  kind: "profit",
+  kind: "profit" | "correlation" | "business_day",
   dateFrom?: string,
   dateTo?: string,
 ) {
@@ -204,6 +206,53 @@ async function executeComposite(
       ],
     };
   }
+
+  if (kind === "correlation" || kind === "business_day") {
+    let q = supabase.from("daily_business_performance").select("*").order("business_date", { ascending: true }).limit(365);
+    if (dateFrom) q = q.gte("business_date", dateFrom);
+    if (dateTo) q = q.lte("business_date", dateTo);
+    const { data, error } = await q;
+    if (error) throw new Error(error.message);
+    const rows = (data || []) as any[];
+
+    if (kind === "correlation") {
+      // Pearson correlation between orders_revenue and charging_revenue
+      const xs = rows.map((r) => Number(r.orders_revenue || 0));
+      const ys = rows.map((r) => Number(r.charging_revenue || 0));
+      const n = xs.length;
+      const mean = (a: number[]) => a.reduce((s, v) => s + v, 0) / Math.max(a.length, 1);
+      const mx = mean(xs), my = mean(ys);
+      let num = 0, dx = 0, dy = 0;
+      for (let i = 0; i < n; i++) {
+        num += (xs[i] - mx) * (ys[i] - my);
+        dx += (xs[i] - mx) ** 2;
+        dy += (ys[i] - my) ** 2;
+      }
+      const r = dx > 0 && dy > 0 ? num / Math.sqrt(dx * dy) : 0;
+      return {
+        rows,
+        aggregated: [
+          { metric: "Days analysed", value: n },
+          { metric: "Avg restaurant revenue", value: Number(mx.toFixed(2)) },
+          { metric: "Avg charging revenue", value: Number(my.toFixed(2)) },
+          { metric: "Pearson correlation r", value: Number(r.toFixed(3)) },
+          { metric: "Strength", value: Math.abs(r) > 0.7 ? "Strong" : Math.abs(r) > 0.4 ? "Moderate" : "Weak" },
+        ],
+      };
+    }
+
+    // business_day: surface daily KPIs
+    return {
+      rows,
+      aggregated: rows.slice(-14).map((r) => ({
+        business_date: r.business_date,
+        total_revenue: Number(r.total_revenue || 0),
+        commission_burden_pct: Number(r.commission_burden_pct || 0),
+        energy_revenue_share_pct: Number(r.energy_revenue_share_pct || 0),
+      })),
+    };
+  }
+
   return { rows: [], aggregated: [] };
 }
 
@@ -439,15 +488,23 @@ serve(async (req) => {
     let chart: Plan["chart"] | null = null;
     let explanation = "";
 
-    if (composite === "profit") {
+    if (composite === "profit" || composite === "correlation" || composite === "business_day") {
       const df = shortcut.date_from || raw?.date_from;
       const dt = shortcut.date_to || raw?.date_to;
-      result = await executeComposite(userClient, "profit", df, dt);
-      chart = { type: "bar", x: "metric", y: "value" };
-      explanation = `Profit = Orders revenue + Charging revenue − Expenses${df ? ` (from ${df} to ${dt || "today"})` : ""}.`;
+      result = await executeComposite(userClient, composite, df, dt);
+      if (composite === "correlation") {
+        chart = { type: "line", x: "business_date", y: "total_revenue" };
+        explanation = `Correlation between Restaurant and Charging revenue per business date${df ? ` (${df} → ${dt || "today"})` : ""}.`;
+      } else if (composite === "business_day") {
+        chart = { type: "bar", x: "business_date", y: "total_revenue" };
+        explanation = `Business-day KPIs (Activity Date) including commission burden and energy share.`;
+      } else {
+        chart = { type: "bar", x: "metric", y: "value" };
+        explanation = `Profit = Orders revenue + Charging revenue − Expenses${df ? ` (from ${df} to ${dt || "today"})` : ""}.`;
+      }
       plan = {
-        table: "orders",
-        composite: "profit",
+        table: composite === "profit" ? "orders" : "charging_sessions",
+        composite,
         date_from: df,
         date_to: dt,
         chart,

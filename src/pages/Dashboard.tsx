@@ -321,6 +321,16 @@ const Dashboard = () => {
         bgColor: "bg-muted",
         description: "Auto-suggest stock-outs from sales",
       },
+      {
+        id: "bi_suite",
+        path: "bi-suite",
+        label: "BI & Correlation Suite",
+        icon: Activity,
+        roles: ["user", "data_entry", "reports_viewer", "super_admin"],
+        color: "bg-foreground",
+        bgColor: "bg-muted",
+        description: "Date-aligned correlations, audit & recommendations",
+      },
     ];
 
     if (!userRole) return [];

@@ -1,0 +1,1 @@
+ALTER VIEW public.daily_business_performance SET (security_invoker = true);

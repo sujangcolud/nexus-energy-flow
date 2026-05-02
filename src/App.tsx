@@ -44,6 +44,7 @@ import CommandCenterTab from "./components/tabs/CommandCenterTab";
 import DailyClosingWizardTab from "./components/tabs/DailyClosingWizardTab";
 import CustomReportBuilderTab from "./components/tabs/CustomReportBuilderTab";
 import InventoryBridgeTab from "./components/tabs/InventoryBridgeTab";
+import BusinessIntelligenceSuite from "./components/tabs/BusinessIntelligenceSuite";
 import { Outlet } from "react-router-dom"; // Needed for nested routes
 
 const queryClient = new QueryClient();
@@ -163,6 +164,7 @@ const App = () => {
                 <Route path="closing-wizard" element={<DailyClosingWizardTab />} />
                 <Route path="report-builder" element={<CustomReportBuilderTab />} />
                 <Route path="inventory-bridge" element={<InventoryBridgeTab />} />
+                <Route path="bi-suite" element={<BusinessIntelligenceSuite />} />
                 {/* It might be good to have an index route that explicitly shows the cards */}
                 {/* <Route index element={<DashboardPageWithCards />} /> */}
               </Route>
