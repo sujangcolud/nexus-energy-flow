@@ -82,6 +82,11 @@ const SCHEMA: Record<string, TableSpec> = {
     dateColumn: "business_date",
     description: "Waste/leakage alerts detected by the AI Auditor.",
   },
+  category_usage_analysis: {
+    columns: ["business_date", "category", "total_expense", "total_income", "net_profit", "margin_pct"],
+    dateColumn: "business_date",
+    description: "Granular comparison of income vs expense for usage categories like Commission, Electricity, Fuel, etc.",
+  },
 };
 
 const ALLOWED_AGGS = new Set(["sum", "avg", "count", "min", "max"]);

@@ -127,6 +127,19 @@ const BusinessIntelligenceSuite = () => {
     },
   });
 
+  const { data: categoryUsage = [] } = useQuery({
+    queryKey: ["category-usage", range.from, range.to],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('category_usage_analysis')
+        .select('*')
+        .gte('business_date', range.from)
+        .lte('business_date', range.to);
+      if (error) throw error;
+      return data;
+    },
+  });
+
   // ---------- Advanced Aggregation ----------
   const aggregatedAdvData = useMemo(() => {
     const map = new Map<string, any>();
@@ -157,6 +170,31 @@ const BusinessIntelligenceSuite = () => {
   }, [advBi]);
 
   const latestStats = aggregatedAdvData.length > 0 ? aggregatedAdvData[aggregatedAdvData.length - 1] : null;
+
+  const usageTotals = useMemo(() => {
+    const categories = [
+      'Beaverages', 'Commission', 'Electricity Restaurant', 'Fuel/Travel',
+      'Junk Food Item', 'Meat Item', 'Others', 'Others Restaurant Item',
+      'Recharge', 'Vegetables Item'
+    ];
+
+    const map = new Map<string, any>();
+    categories.forEach(cat => map.set(cat, { category: cat, income: 0, expense: 0 }));
+
+    categoryUsage.forEach(row => {
+      if (map.has(row.category)) {
+        const entry = map.get(row.category);
+        entry.income += (row.total_income || 0);
+        entry.expense += (row.total_expense || 0);
+      }
+    });
+
+    return Array.from(map.values()).map(e => ({
+      ...e,
+      net: e.income - e.expense,
+      margin: e.income > 0 ? ((e.income - e.expense) / e.income) * 100 : (e.expense > 0 ? -100 : 0)
+    }));
+  }, [categoryUsage]);
 
   // ---------- Legacy BI KPIs & Logic ----------
   const totals = useMemo(() => {
@@ -299,6 +337,45 @@ const BusinessIntelligenceSuite = () => {
 
       <Card className="border border-border">
         <CardHeader className="pb-2">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Utensils className="h-4 w-4" /> Restaurant Usage Category Comparison
+          </CardTitle>
+          <CardDescription>Income vs Expense breakdown for restaurant-specific usage categories (including beverages, meat, utilities).</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="relative w-full overflow-auto">
+            <table className="w-full text-xs text-left">
+              <thead className="bg-muted text-muted-foreground font-medium sticky top-0">
+                <tr>
+                  <th className="p-2">Category</th>
+                  <th className="p-2 text-right">Total Income (Orders)</th>
+                  <th className="p-2 text-right">Total Expense</th>
+                  <th className="p-2 text-right">Net Profit/Loss</th>
+                  <th className="p-2 text-right">Margin %</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                {usageTotals.map((row) => (
+                  <tr key={row.category} className="hover:bg-muted/30">
+                    <td className="p-2 font-semibold text-foreground">{row.category}</td>
+                    <td className="p-2 text-right">{fmt(row.income)}</td>
+                    <td className="p-2 text-right">{fmt(row.expense)}</td>
+                    <td className={`p-2 text-right font-bold ${row.net < 0 ? "text-destructive" : "text-emerald-600"}`}>
+                      {fmt(row.net)}
+                    </td>
+                    <td className={`p-2 text-right font-bold ${row.margin < 0 ? "text-destructive" : "text-emerald-600"}`}>
+                      {row.margin.toFixed(1)}%
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="border border-border">
+        <CardHeader className="pb-2">
           <CardTitle className="text-base">Daily Revenue & Cost Comparison</CardTitle>
           <CardDescription>Side-by-side per business date — Restaurant, Charging, Commission, Total Expenses.</CardDescription>
         </CardHeader>
@@ -344,35 +421,60 @@ const BusinessIntelligenceSuite = () => {
           </CardContent>
         </Card>
 
-        <Card className="border border-border">
+        <Card className="border border-border lg:col-span-2">
           <CardHeader className="pb-2">
             <CardTitle className="text-base flex items-center gap-2 text-red-600">
-              <AlertCircle className="w-4 h-4" /> AI Auditor & Anomaly Log
+              <AlertCircle className="w-4 h-4" /> Comprehensive AI Auditor & Anomaly Log
             </CardTitle>
-            <CardDescription>Leakage streaks (by item) and withdrawal mismatches</CardDescription>
+            <CardDescription>Detailed list of detected losses (3-day streaks) and weekly cash flow audits.</CardDescription>
           </CardHeader>
           <CardContent>
-            <ScrollArea className="h-[260px]">
+            <ScrollArea className="h-[350px]">
               {alerts.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-full text-muted-foreground opacity-50">
+                <div className="flex flex-col items-center justify-center h-48 text-muted-foreground opacity-50">
                   <Activity className="w-8 h-8 mb-2" />
-                  <p className="text-xs">No active anomalies</p>
+                  <p className="text-xs">No active anomalies detected in this range.</p>
                 </div>
               ) : (
-                <div className="space-y-3">
-                  {alerts.map((alert, i) => (
-                    <div key={i} className="p-3 rounded-lg bg-muted/50 border border-border text-xs">
-                      <div className="flex justify-between items-start mb-1">
-                        <Badge variant={alert.alert_type.includes('Alert') ? 'destructive' : 'secondary'} className="text-[10px]">
-                          {alert.alert_type}
-                        </Badge>
-                        <span className="text-muted-foreground">{alert.business_date}</span>
-                      </div>
-                      <p className="font-medium text-foreground">
-                        {alert.alert_type.includes('Leakage') ? alert.category_items : alert.category_group}: {alert.alert_description}
-                      </p>
-                    </div>
-                  ))}
+                <div className="relative w-full overflow-auto">
+                  <table className="w-full text-xs text-left">
+                    <thead className="bg-muted text-muted-foreground font-medium sticky top-0">
+                      <tr>
+                        <th className="p-2">Date</th>
+                        <th className="p-2">Category</th>
+                        <th className="p-2 text-right">Purchased</th>
+                        <th className="p-2 text-right">Sales</th>
+                        <th className="p-2 text-right">Margin/Loss</th>
+                        <th className="p-2">Type / Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y">
+                      {alerts.map((alert, i) => (
+                        <tr key={i} className="hover:bg-muted/30">
+                          <td className="p-2 whitespace-nowrap">{alert.business_date}</td>
+                          <td className="p-2">
+                            <div className="font-medium">{alert.category_group}</div>
+                            <div className="text-[10px] text-muted-foreground">{alert.category_items}</div>
+                          </td>
+                          <td className="p-2 text-right">{fmt(alert.daily_cost)}</td>
+                          <td className="p-2 text-right">{fmt(alert.daily_sales)}</td>
+                          <td className="p-2 text-right">
+                            <span className={alert.margin < 0 ? "text-destructive font-bold" : "text-amber-600"}>
+                              {alert.margin}%
+                            </span>
+                          </td>
+                          <td className="p-2">
+                            <Badge variant={alert.alert_type.includes('Leakage') ? 'destructive' : 'outline'} className="text-[10px]">
+                              {alert.alert_type}
+                            </Badge>
+                            <p className="mt-1 text-[10px] leading-tight text-muted-foreground italic">
+                              {alert.alert_description}
+                            </p>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               )}
             </ScrollArea>
@@ -444,25 +546,30 @@ const BusinessIntelligenceSuite = () => {
         <Card className="border border-border">
           <CardHeader className="pb-2">
             <CardTitle className="text-base flex items-center gap-2">
-              <Wallet className="w-4 h-4" /> Withdrawal vs. Expense Audit
+              <Wallet className="w-4 h-4" /> Weekly Withdrawal vs. Expense Audit
             </CardTitle>
-            <CardDescription>Daily verification of cash withdrawals against recorded spending</CardDescription>
+            <CardDescription>7-day rolling verification of cash withdrawals against recorded spending.</CardDescription>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={aggregatedAdvData.slice(-7)}>
+            <ResponsiveContainer width="100%" height={260}>
+              <BarChart data={advBi.filter(d => d.category_group === 'Chicken').slice(-14).map(d => ({
+                date: format(parseISO(d.business_date), 'MMM dd'),
+                withdrawals: d.rolling_withdrawals_7d,
+                expenses: d.rolling_expenses_7d
+              }))}>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                 <XAxis dataKey="date" tick={{ fontSize: 11 }} />
                 <YAxis tick={{ fontSize: 11 }} />
                 <Tooltip formatter={(v: number) => v.toLocaleString()} />
                 <Legend />
-                <Bar dataKey="withdrawals" fill="hsl(var(--destructive))" name="Withdrawals" />
-                <Bar dataKey="expenses" fill="hsl(var(--emerald-500))" name="Expenses" />
+                <Bar dataKey="withdrawals" fill="hsl(var(--destructive))" name="Rolling Withdrawals (7d)" />
+                <Bar dataKey="expenses" fill="hsl(var(--emerald-500))" name="Rolling Expenses (7d)" />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
       </div>
+
 
       <Card className="border border-border">
         <CardHeader className="pb-2">
