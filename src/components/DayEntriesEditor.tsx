@@ -49,14 +49,14 @@ const MODULES: ModuleConfig[] = [
     columns: [
       { key: "start_percentage", label: "From %", type: "number", editable: true },
       { key: "end_percentage", label: "To %", type: "number", editable: true },
-      { key: "per_unit_rate", label: "Rate", type: "number", editable: true },
+      { key: "per_percent_rate", label: "Rate / %", type: "number", editable: true },
       { key: "payment_mode", label: "Payment", type: "text", editable: true },
       { key: "total_amount", label: "Total", type: "number", editable: true },
     ],
     extraEditFields: [
       { key: "category", label: "Category", type: "text", editable: true },
       { key: "kcal", label: "kWh", type: "number", editable: true },
-      { key: "per_percent_rate", label: "Rate / %", type: "number", editable: true },
+      { key: "per_unit_rate", label: "Rate / unit", type: "number", editable: true },
       { key: "amount", label: "Amount", type: "number", editable: true },
     ],
   },
