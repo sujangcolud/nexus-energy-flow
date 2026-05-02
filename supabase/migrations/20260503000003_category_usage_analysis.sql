@@ -1,47 +1,54 @@
--- Category Usage Analysis View - Final Refined version
+-- Category Usage Analysis View - robust version
 DROP VIEW IF EXISTS public.category_usage_analysis;
 
 CREATE OR REPLACE VIEW public.category_usage_analysis AS
 WITH exp AS (
   SELECT
     (expense_date - INTERVAL '1 day')::date as business_date,
-    category as exp_category,
+    CASE
+        WHEN category = 'Beaverages' THEN 'Beverages'
+        WHEN category = 'Vegetables Item' THEN 'Vegetables'
+        WHEN category = 'Meat Item' THEN 'Meat'
+        WHEN category = 'Junk Food Item' THEN 'Junk Food'
+        WHEN category = 'Others Restaurant Item' THEN 'Grocery/Base'
+        ELSE category
+    END as exp_category,
     SUM(amount) as total_expense
   FROM public.expenses
   GROUP BY 1, 2
 ),
 inc AS (
   -- Beverages
-  SELECT order_date as business_date, 'Beaverages' as exp_category, SUM(total) as total_income
+  SELECT order_date as business_date, 'Beverages' as exp_category, SUM(total) as total_income
   FROM public.orders WHERE item_name IN ('Bottle Cold Drinks', 'Water', 'Tea') GROUP BY 1, 2
   UNION ALL
-  -- Meat Item
-  SELECT order_date as business_date, 'Meat Item' as exp_category, SUM(total) as total_income
-  FROM public.orders WHERE item_name IN ('Chicken Khana', 'Chicken Curry', 'Chicken Mo:Mo', 'Chicken Snacks', 'Mutton Khana', 'Mutton Curry', 'Fish Khana', 'Fish Fry', 'Khaja Set') GROUP BY 1, 2
+  -- Meat
+  SELECT order_date as business_date, 'Meat' as exp_category, SUM(total) as total_income
+  FROM public.orders WHERE item_name ILIKE '%Chicken%' OR item_name ILIKE '%Mutton%' OR item_name ILIKE '%Fish%' OR item_name ILIKE '%Buff%' GROUP BY 1, 2
   UNION ALL
-  -- Vegetables Item
-  SELECT order_date as business_date, 'Vegetables Item' as exp_category, SUM(total) as total_income
+  -- Vegetables
+  SELECT order_date as business_date, 'Vegetables' as exp_category, SUM(total) as total_income
   FROM public.orders WHERE item_name IN ('Veg Thali', 'Veg khana', 'Sabji') GROUP BY 1, 2
   UNION ALL
-  -- Others Restaurant Item (Grocery, Rice, Oil)
-  SELECT order_date as business_date, 'Others Restaurant Item' as exp_category, SUM(total) as total_income
-  FROM public.orders WHERE item_name IN ('Grocery', 'Rice', 'Oil') GROUP BY 1, 2
+  -- Grocery/Base
+  SELECT order_date as business_date, 'Grocery/Base' as exp_category, SUM(total) as total_income
+  FROM public.orders WHERE item_name IN ('Grocery', 'Rice', 'Oil', 'Dal') GROUP BY 1, 2
   UNION ALL
-  -- Junk Food Item (Buff Mo:Mo and other generic snacks if they exist)
-  SELECT order_date as business_date, 'Junk Food Item' as exp_category, SUM(total) as total_income
+  -- Junk Food
+  SELECT order_date as business_date, 'Junk Food' as exp_category, SUM(total) as total_income
   FROM public.orders WHERE item_name ILIKE '%Mo:Mo%' AND item_name NOT ILIKE '%Chicken%' GROUP BY 1, 2
 ),
 categories AS (
-  SELECT 'Beaverages' as cat
+  SELECT 'Beverages' as cat
   UNION SELECT 'Commission'
   UNION SELECT 'Electricity Restaurant'
   UNION SELECT 'Fuel/Travel'
-  UNION SELECT 'Junk Food Item'
-  UNION SELECT 'Meat Item'
+  UNION SELECT 'Junk Food'
+  UNION SELECT 'Meat'
   UNION SELECT 'Others'
-  UNION SELECT 'Others Restaurant Item'
+  UNION SELECT 'Grocery/Base'
   UNION SELECT 'Recharge'
-  UNION SELECT 'Vegetables Item'
+  UNION SELECT 'Vegetables'
 ),
 dates AS (
   SELECT DISTINCT (expense_date - INTERVAL '1 day')::date as business_date FROM public.expenses

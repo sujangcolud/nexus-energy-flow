@@ -1,4 +1,4 @@
--- Nepali Kitchen Intelligence View - Advanced Allocation Matrix
+-- Nepali Kitchen Intelligence View - Fixed Record Type Error
 DROP VIEW IF EXISTS public.nepali_kitchen_intelligence;
 
 CREATE OR REPLACE VIEW public.nepali_kitchen_intelligence AS
@@ -6,7 +6,6 @@ WITH dates AS (
   SELECT DISTINCT business_date FROM public.daily_business_performance
 ),
 expense_base AS (
-  -- Shift expenses by -1 day (recorded next day)
   SELECT
     (expense_date - INTERVAL '1 day')::date as business_date,
     category as exp_category,
@@ -14,16 +13,15 @@ expense_base AS (
     amount
   FROM public.expenses
 ),
--- Map expenses to specific cost types for matrix distribution
 expense_categorized AS (
   SELECT
     business_date,
     CASE
       WHEN exp_category = 'Vegetables Item' THEN 'Vegetables'
-      WHEN exp_category = 'Others Restaurant Item' THEN 'Base Items' -- Rice, Oil, Dal, Masala
+      WHEN exp_category = 'Others Restaurant Item' THEN 'Base Items'
       WHEN exp_category = 'Meat Item' AND (description ILIKE '%mutton%' OR description ILIKE '%khasi%') THEN 'Mutton'
       WHEN exp_category = 'Meat Item' AND (description ILIKE '%fish%' OR description ILIKE '%machha%') THEN 'Fish'
-      WHEN exp_category = 'Meat Item' THEN 'Chicken' -- Default protein
+      WHEN exp_category = 'Meat Item' THEN 'Chicken'
       WHEN exp_category ILIKE '%egg%' OR description ILIKE '%egg%' OR description ILIKE '%anda%' THEN 'Eggs'
       WHEN exp_category = 'Junk Food Item' THEN 'Junk Food'
       WHEN exp_category = 'Beaverages' THEN 'Beverages'
@@ -33,7 +31,6 @@ expense_categorized AS (
     amount
   FROM expense_base
 ),
--- Sales categorization based on heuristics
 sales_base AS (
   SELECT
     order_date as business_date,
@@ -53,51 +50,26 @@ sales_agg AS (
   FROM sales_base
   GROUP BY 1, 2
 ),
--- Distribution Matrix Application
-cost_distribution AS (
-  SELECT
-    business_date,
-    -- Map each cost type to sales categories based on the user's rules
-    CASE
-      -- Vegetables
-      WHEN cost_type = 'Vegetables' THEN
-        ARRAY[('Main Meals', 0.40), ('Snacks & Khaja', 0.35), ('Egg Items', 0.10), ('Others', 0.15)]::RECORD[]
-      -- Base Items (Rice, Dal, Oil, Masala)
-      WHEN cost_type = 'Base Items' THEN
-        ARRAY[('Main Meals', 0.60), ('Snacks & Khaja', 0.25), ('Egg Items', 0.10), ('Others', 0.05)]::RECORD[]
-      -- Chicken
-      WHEN cost_type = 'Chicken' THEN
-        ARRAY[('Main Meals', 0.70), ('Snacks & Khaja', 0.30)]::RECORD[]
-      -- Mutton
-      WHEN cost_type = 'Mutton' THEN
-        ARRAY[('Main Meals', 1.00)]::RECORD[]
-      -- Fish
-      WHEN cost_type = 'Fish' THEN
-        ARRAY[('Main Meals', 0.70), ('Snacks & Khaja', 0.30)]::RECORD[]
-      -- Eggs
-      WHEN cost_type = 'Eggs' THEN
-        ARRAY[('Egg Items', 0.70), ('Main Meals', 0.30)]::RECORD[]
-      -- Junk Food
-      WHEN cost_type = 'Junk Food' THEN
-        ARRAY[('Snacks & Khaja', 0.80), ('Egg Items', 0.10), ('Others', 0.10)]::RECORD[]
-      -- Beverages (Direct)
-      WHEN cost_type = 'Beverages' THEN
-        ARRAY[('Beverages', 1.00)]::RECORD[]
-      -- Bar (Direct)
-      WHEN cost_type = 'Bar' THEN
-        ARRAY[('Bar & Counter', 1.00)]::RECORD[]
-      ELSE ARRAY[]::RECORD[]
-    END as distribution,
-    amount
-  FROM expense_categorized
-  WHERE cost_type != 'Overhead'
-),
+-- Distribution logic using explicit mapping to avoid RECORD type issues
 flattened_costs AS (
   SELECT
-    business_date,
-    (d.v).f1::text as sale_category,
-    (d.v).f2::numeric * amount as allocated_cost
-  FROM (SELECT business_date, amount, unnest(distribution) as v FROM cost_distribution) d
+    e.business_date,
+    m.target_category as sale_category,
+    e.amount * m.weight as allocated_cost
+  FROM expense_categorized e
+  JOIN LATERAL (
+    VALUES
+      ('Vegetables', 'Main Meals', 0.40), ('Vegetables', 'Snacks & Khaja', 0.35), ('Vegetables', 'Egg Items', 0.10), ('Vegetables', 'Others', 0.15),
+      ('Base Items', 'Main Meals', 0.60), ('Base Items', 'Snacks & Khaja', 0.25), ('Base Items', 'Egg Items', 0.10), ('Base Items', 'Others', 0.05),
+      ('Chicken', 'Main Meals', 0.70), ('Chicken', 'Snacks & Khaja', 0.30),
+      ('Mutton', 'Main Meals', 1.00),
+      ('Fish', 'Main Meals', 0.70), ('Fish', 'Snacks & Khaja', 0.30),
+      ('Eggs', 'Egg Items', 0.70), ('Eggs', 'Main Meals', 0.30),
+      ('Junk Food', 'Snacks & Khaja', 0.80), ('Junk Food', 'Egg Items', 0.10), ('Junk Food', 'Others', 0.10),
+      ('Beverages', 'Beverages', 1.00),
+      ('Bar', 'Bar & Counter', 1.00)
+  ) AS m(cost_type, target_category, weight) ON e.cost_type = m.cost_type
+  WHERE e.cost_type != 'Overhead'
 ),
 cost_agg AS (
   SELECT business_date, sale_category, SUM(allocated_cost) as cost_amount
