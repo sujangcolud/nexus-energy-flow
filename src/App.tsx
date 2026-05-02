@@ -40,6 +40,7 @@ import Settings from "./pages/Settings";
 import Analytics from "./pages/Analytics";
 import DashboardStudioPage from "./pages/DashboardStudio";
 import DailySummaryReport from "./pages/DailySummaryReport";
+import BusinessHealthDashboard from "./pages/BusinessHealthDashboard";
 import CommandCenterTab from "./components/tabs/CommandCenterTab";
 import DailyClosingWizardTab from "./components/tabs/DailyClosingWizardTab";
 import CustomReportBuilderTab from "./components/tabs/CustomReportBuilderTab";
@@ -165,6 +166,7 @@ const App = () => {
                 <Route path="report-builder" element={<CustomReportBuilderTab />} />
                 <Route path="inventory-bridge" element={<InventoryBridgeTab />} />
                 <Route path="bi-suite" element={<BusinessIntelligenceSuite />} />
+                <Route path="health" element={<BusinessHealthDashboard />} />
                 {/* It might be good to have an index route that explicitly shows the cards */}
                 {/* <Route index element={<DashboardPageWithCards />} /> */}
               </Route>
