@@ -157,33 +157,6 @@ const BusinessIntelligenceSuite = () => {
 
   const latestStats = aggregatedAdvData.length > 0 ? aggregatedAdvData[aggregatedAdvData.length - 1] : null;
 
-  // ---------- Trend Advice ----------
-  const trendAdvice = useMemo(() => {
-    if (advBi.length < 14) return [];
-    const advice = [];
-    const today = new Date();
-    const last7DaysInterval = { start: subDays(today, 7), end: today };
-    const prev7DaysInterval = { start: subDays(today, 14), end: subDays(today, 7) };
-
-    ['Vegetables', 'Meat', 'Beverages', 'Others'].forEach(cat => {
-      const currentWeekData = advBi.filter(d => d.category_group === cat && isWithinInterval(parseISO(d.business_date), last7DaysInterval));
-      const prevWeekData = advBi.filter(d => d.category_group === cat && isWithinInterval(parseISO(d.business_date), prev7DaysInterval));
-      const currentCost = currentWeekData.reduce((sum, d) => sum + (d.daily_cost || 0), 0);
-      const prevCost = prevWeekData.reduce((sum, d) => sum + (d.daily_cost || 0), 0);
-      const currentSales = currentWeekData.reduce((sum, d) => sum + (d.daily_sales || 0), 0);
-      const prevSales = prevWeekData.reduce((sum, d) => sum + (d.daily_sales || 0), 0);
-
-      if (prevCost > 0) {
-        const costIncrease = ((currentCost - prevCost) / prevCost) * 100;
-        const salesStable = prevSales > 0 ? Math.abs((currentSales - prevSales) / prevSales) < 0.05 : true;
-        if (costIncrease > 10 && salesStable) {
-          advice.push(`${cat} costs are up ${costIncrease.toFixed(0)}% this week, but sales are stable. Review portion control.`);
-        }
-      }
-    });
-    return advice;
-  }, [advBi]);
-
   // ---------- Legacy BI KPIs & Logic ----------
   const totals = useMemo(() => {
     const sum = (k: keyof BusinessPerformanceRow) =>
@@ -205,8 +178,73 @@ const BusinessIntelligenceSuite = () => {
   }, [rows]);
 
   const hookDays = useMemo(() => detectHookDays(rows), [rows]);
+  const burdenByDow = useMemo(() => commissionBurdenByDow(rows), [rows]);
   const flags = useMemo(() => balanceIntegrity(rows), [rows]);
   const anomalies = flags.filter((f) => f.status === "anomaly");
+
+  // ---------- Trend Advice ----------
+  const trendAdvice = useMemo(() => {
+    const advice: string[] = [];
+    if (advBi.length >= 14) {
+        const today = new Date();
+        const last7DaysInterval = { start: subDays(today, 7), end: today };
+        const prev7DaysInterval = { start: subDays(today, 14), end: subDays(today, 7) };
+
+        ['Vegetables', 'Meat', 'Beverages', 'Others'].forEach(cat => {
+          const currentWeekData = advBi.filter(d => d.category_group === cat && isWithinInterval(parseISO(d.business_date), last7DaysInterval));
+          const prevWeekData = advBi.filter(d => d.category_group === cat && isWithinInterval(parseISO(d.business_date), prev7DaysInterval));
+          const currentCost = currentWeekData.reduce((sum, d) => sum + (d.daily_cost || 0), 0);
+          const prevCost = prevWeekData.reduce((sum, d) => sum + (d.daily_cost || 0), 0);
+          const currentSales = currentWeekData.reduce((sum, d) => sum + (d.daily_sales || 0), 0);
+          const prevSales = prevWeekData.reduce((sum, d) => sum + (d.daily_sales || 0), 0);
+
+          if (prevCost > 0) {
+            const costIncrease = ((currentCost - prevCost) / prevCost) * 100;
+            const salesStable = prevSales > 0 ? Math.abs((currentSales - prevSales) / prevSales) < 0.05 : true;
+            if (costIncrease > 10 && salesStable) {
+              advice.push(`${cat} costs are up ${costIncrease.toFixed(0)}% this week, but sales are stable. Review portion control.`);
+            }
+          }
+        });
+    }
+
+    // Legacy logic
+    if (hookDays.length > 0) {
+        const days = hookDays.map((h) => format(new Date(h.business_date), "EEE")).slice(0, 3).join(", ");
+        advice.push(`Charging acted as a "hook" on ${hookDays.length} day(s) (e.g. ${days}). Staff up kitchen on peak charging days.`);
+    }
+    const peakCharge = rows.filter((r) => r.charging_revenue >= 5000);
+    if (peakCharge.length > 0) {
+        const avgFoodPeak = peakCharge.reduce((s, r) => s + r.orders_revenue, 0) / peakCharge.length;
+        const avgFoodAll = rows.length ? rows.reduce((s, r) => s + r.orders_revenue, 0) / rows.length : 0;
+        const lift = avgFoodAll > 0 ? ((avgFoodPeak - avgFoodAll) / avgFoodAll) * 100 : 0;
+        if (lift > 5) {
+            advice.push(`When Charging exceeds Rs. 5,000, Restaurant sales lift by ~${lift.toFixed(0)}%.`);
+        }
+    }
+    if (burdenByDow.length > 0) {
+        const worst = burdenByDow[0];
+        if (worst.avg_burden_pct > 0) {
+            advice.push(`Commission efficiency is lowest on ${worst.day} (avg ${worst.avg_burden_pct.toFixed(1)}%).`);
+        }
+    }
+
+    return advice;
+  }, [advBi, hookDays, rows, burdenByDow]);
+
+  const mixData = rows.map((r) => ({
+    date: format(new Date(r.business_date), "MMM d"),
+    "Energy %": r.energy_revenue_share_pct,
+    "Commission %": r.commission_burden_pct,
+  }));
+
+  const compareData = rows.map((r) => ({
+    date: format(new Date(r.business_date), "MMM d"),
+    Restaurant: r.orders_revenue,
+    Charging: r.charging_revenue,
+    Commission: r.commission_total,
+    Expenses: r.expenses_total,
+  }));
 
   return (
     <div className="space-y-6 p-4 sm:p-6">
@@ -220,6 +258,11 @@ const BusinessIntelligenceSuite = () => {
           </p>
         </div>
         <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-md border bg-card">
+            <Label htmlFor="mode-toggle" className="text-xs text-muted-foreground">Activity Date</Label>
+            <Switch id="mode-toggle" checked={mode === "entry"} onCheckedChange={(v) => setMode(v ? "entry" : "activity")} />
+            <Label htmlFor="mode-toggle" className="text-xs text-muted-foreground">Entry Date</Label>
+          </div>
           <Select value={String(days)} onValueChange={(v) => setDays(Number(v))}>
             <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
             <SelectContent>
@@ -228,9 +271,7 @@ const BusinessIntelligenceSuite = () => {
               <SelectItem value="30">Last 30 days</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isLoading}>
-            Refresh
-          </Button>
+          <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isLoading}>Refresh</Button>
         </div>
       </div>
 
@@ -248,8 +289,30 @@ const BusinessIntelligenceSuite = () => {
           );
         })}
         <Kpi label="Commission Burden" value={`${totals.commissionBurden.toFixed(1)}%`} icon={AlertTriangle} color="text-amber-600" />
-        <Kpi label="Total Revenue" value={fmt(totals.total)} icon={TrendingUp} />
+        <Kpi label="Energy Share" value={`${totals.energyShare.toFixed(1)}%`} icon={Flame} color="text-blue-600" />
       </div>
+
+      <Card className="border border-border">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base">Daily Revenue & Cost Comparison</CardTitle>
+          <CardDescription>Side-by-side per business date — Restaurant, Charging, Commission, Total Expenses.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={320}>
+            <BarChart data={compareData}>
+              <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+              <XAxis dataKey="date" tick={{ fontSize: 11 }} />
+              <YAxis tick={{ fontSize: 11 }} />
+              <Tooltip contentStyle={{ backgroundColor: "hsl(var(--background))", border: "1px solid hsl(var(--border))" }} formatter={(v: number) => fmt(v)} />
+              <Legend />
+              <Bar dataKey="Restaurant" fill="hsl(var(--primary))" radius={[3, 3, 0, 0]} />
+              <Bar dataKey="Charging" fill="hsl(var(--chart-2, var(--primary)))" radius={[3, 3, 0, 0]} />
+              <Bar dataKey="Commission" fill="hsl(var(--destructive))" radius={[3, 3, 0, 0]} />
+              <Bar dataKey="Expenses" fill="hsl(var(--muted-foreground))" radius={[3, 3, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="border border-border">
@@ -281,7 +344,7 @@ const BusinessIntelligenceSuite = () => {
             <CardTitle className="text-base flex items-center gap-2 text-red-600">
               <AlertCircle className="w-4 h-4" /> AI Auditor & Anomaly Log
             </CardTitle>
-            <CardDescription>Leakage streaks and withdrawal mismatches</CardDescription>
+            <CardDescription>Leakage streaks (by item) and withdrawal mismatches</CardDescription>
           </CardHeader>
           <CardContent>
             <ScrollArea className="h-[260px]">
@@ -300,7 +363,9 @@ const BusinessIntelligenceSuite = () => {
                         </Badge>
                         <span className="text-muted-foreground">{alert.business_date}</span>
                       </div>
-                      <p className="font-medium text-foreground">{alert.category_group}: {alert.alert_description}</p>
+                      <p className="font-medium text-foreground">
+                        {alert.alert_type.includes('Leakage') ? alert.category_items : alert.category_group}: {alert.alert_description}
+                      </p>
                     </div>
                   ))}
                 </div>
@@ -313,31 +378,61 @@ const BusinessIntelligenceSuite = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="border border-border">
           <CardHeader className="pb-2">
+            <CardTitle className="text-base">Daily Revenue Mix & Commission Burden</CardTitle>
+            <CardDescription>Energy share of revenue vs commissions paid (%).</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={260}>
+              <LineChart data={mixData}>
+                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                <XAxis dataKey="date" tick={{ fontSize: 11 }} />
+                <YAxis tick={{ fontSize: 11 }} domain={[0, 100]} />
+                <Tooltip contentStyle={{ backgroundColor: "hsl(var(--background))", border: "1px solid hsl(var(--border))" }} formatter={(v: number) => `${Number(v).toFixed(1)}%`} />
+                <Legend />
+                <Line type="monotone" dataKey="Energy %" stroke="hsl(var(--primary))" dot={false} />
+                <Line type="monotone" dataKey="Commission %" stroke="hsl(var(--destructive))" dot={false} />
+              </LineChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        <Card className="border border-border">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Commission Burden by Day of Week</CardTitle>
+            <CardDescription>Average commission % of revenue, ranked.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={260}>
+              <BarChart data={burdenByDow}>
+                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                <XAxis dataKey="day" tick={{ fontSize: 11 }} />
+                <YAxis tick={{ fontSize: 11 }} />
+                <Tooltip contentStyle={{ backgroundColor: "hsl(var(--background))", border: "1px solid hsl(var(--border))" }} formatter={(v: number) => `${Number(v).toFixed(2)}%`} />
+                <Bar dataKey="avg_burden_pct" fill="hsl(var(--destructive))" radius={[3, 3, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="border border-border">
+          <CardHeader className="pb-2">
             <CardTitle className="text-base flex items-center gap-2">
               <Lightbulb className="w-4 h-4 text-amber-500" /> Strategic Business Advice
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {trendAdvice.map((a, i) => (
-                <div key={i} className="flex gap-2 text-sm items-start">
-                  <TrendingUp className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
-                  <p>{a}</p>
+            <ScrollArea className="h-[200px]">
+                <div className="space-y-4">
+                {trendAdvice.map((a, i) => (
+                    <div key={i} className="flex gap-2 text-sm items-start">
+                    <TrendingUp className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
+                    <p>{a}</p>
+                    </div>
+                ))}
                 </div>
-              ))}
-              {hookDays.length > 0 && (
-                <div className="flex gap-2 text-sm items-start">
-                  <Flame className="w-4 h-4 text-orange-500 shrink-0 mt-0.5" />
-                  <p>Charging acts as a hook. High traffic days correlate with +{((totals.orders / rows.length) / (totals.total / rows.length) * 100).toFixed(0)}% food lift.</p>
-                </div>
-              )}
-              {latestStats?.revenue_per_commission < 10 && (
-                <div className="flex gap-2 text-sm items-start">
-                  <AlertTriangle className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
-                  <p>Commission burden is high (NRs. {latestStats.revenue_per_commission} revenue/comm). Optimize direct sales.</p>
-                </div>
-              )}
-            </div>
+            </ScrollArea>
           </CardContent>
         </Card>
 
@@ -354,7 +449,7 @@ const BusinessIntelligenceSuite = () => {
                 <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                 <XAxis dataKey="date" tick={{ fontSize: 11 }} />
                 <YAxis tick={{ fontSize: 11 }} />
-                <Tooltip />
+                <Tooltip formatter={(v: number) => v.toLocaleString()} />
                 <Legend />
                 <Bar dataKey="withdrawals" fill="hsl(var(--destructive))" name="Withdrawals" />
                 <Bar dataKey="expenses" fill="hsl(var(--emerald-500))" name="Expenses" />

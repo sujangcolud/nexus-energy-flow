@@ -1,4 +1,7 @@
 -- Advanced Business Intelligence View
+DROP VIEW IF EXISTS public.ai_audit_alerts;
+DROP VIEW IF EXISTS public.advanced_business_intelligence;
+
 CREATE OR REPLACE VIEW public.advanced_business_intelligence AS
 WITH daily_category_stats AS (
   SELECT
@@ -99,6 +102,13 @@ WITH leakage_check AS (
     category_group,
     daily_cost,
     daily_sales,
+    CASE
+        WHEN category_group = 'Vegetables' THEN 'Veg Thali, Veg khana, Sabji'
+        WHEN category_group = 'Meat' THEN 'Chicken Thali, Chicken Mo:Mo, Mutton'
+        WHEN category_group = 'Beverages' THEN 'Bottle Cold Drinks, Water, Tea'
+        WHEN category_group = 'Others' THEN 'Grocery, Rice, Oil'
+        ELSE 'Unknown Items'
+    END as category_items,
     CASE WHEN daily_cost > daily_sales THEN 1 ELSE 0 END as is_leakage
   FROM public.advanced_business_intelligence
   WHERE category_group != 'Unmapped'
@@ -107,6 +117,7 @@ streak_calc AS (
   SELECT
     business_date,
     category_group,
+    category_items,
     is_leakage,
     SUM(is_leakage) OVER (PARTITION BY category_group ORDER BY business_date ROWS BETWEEN 2 PRECEDING AND CURRENT ROW) as streak_count
   FROM leakage_check
@@ -115,6 +126,7 @@ withdrawal_audit AS (
   SELECT
     business_date,
     'General' as category_group,
+    'Withdrawal Audit' as category_items,
     CASE
       WHEN withdrawals_total > 0 AND expenses_total = 0 THEN 'Unmatched Withdrawal'
       WHEN withdrawals_total > 0 AND expenses_total > 0 THEN 'Withdrawal with Expense'
@@ -130,6 +142,7 @@ withdrawal_audit AS (
 SELECT
   business_date,
   category_group,
+  category_items,
   'Potential Waste/Leakage Alert' as alert_type,
   'Cost exceeded revenue for 3+ consecutive days' as alert_description
 FROM streak_calc
@@ -140,6 +153,7 @@ UNION ALL
 SELECT
   business_date,
   category_group,
+  category_items,
   alert_type,
   alert_description
 FROM withdrawal_audit
