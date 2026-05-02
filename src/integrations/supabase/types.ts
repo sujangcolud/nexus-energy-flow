@@ -1366,7 +1366,25 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      daily_business_performance: {
+        Row: {
+          business_date: string | null
+          charging_count: number | null
+          charging_revenue: number | null
+          commission_burden_pct: number | null
+          commission_total: number | null
+          day_of_week: string | null
+          deposits_total: number | null
+          dow: number | null
+          energy_revenue_share_pct: number | null
+          expenses_total: number | null
+          orders_count: number | null
+          orders_revenue: number | null
+          total_revenue: number | null
+          withdrawals_total: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       calculate_daily_summary_fixed: {
@@ -1466,6 +1484,17 @@ export type Database = {
           id: string
           last_name: string
           role: string
+        }[]
+      }
+      get_balance_integrity: {
+        Args: { p_from: string; p_to: string }
+        Returns: {
+          business_date: string
+          deposits: number
+          expenses: number
+          net_change: number
+          revenue: number
+          withdrawals: number
         }[]
       }
       get_cooperative_savings_trend: {
