@@ -127,6 +127,19 @@ const BusinessIntelligenceSuite = () => {
     },
   });
 
+  const { data: categoryUsage = [] } = useQuery({
+    queryKey: ["category-usage", range.from, range.to],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('category_usage_analysis')
+        .select('*')
+        .gte('business_date', range.from)
+        .lte('business_date', range.to);
+      if (error) throw error;
+      return data;
+    },
+  });
+
   // ---------- Advanced Aggregation ----------
   const aggregatedAdvData = useMemo(() => {
     const map = new Map<string, any>();
@@ -157,6 +170,23 @@ const BusinessIntelligenceSuite = () => {
   }, [advBi]);
 
   const latestStats = aggregatedAdvData.length > 0 ? aggregatedAdvData[aggregatedAdvData.length - 1] : null;
+
+  const usageTotals = useMemo(() => {
+    const map = new Map<string, any>();
+    categoryUsage.forEach(row => {
+      if (!map.has(row.category)) {
+        map.set(row.category, { category: row.category, income: 0, expense: 0 });
+      }
+      const entry = map.get(row.category);
+      entry.income += (row.total_income || 0);
+      entry.expense += (row.total_expense || 0);
+    });
+    return Array.from(map.values()).map(e => ({
+      ...e,
+      net: e.income - e.expense,
+      margin: e.income > 0 ? ((e.income - e.expense) / e.income) * 100 : (e.expense > 0 ? -100 : 0)
+    }));
+  }, [categoryUsage]);
 
   // ---------- Legacy BI KPIs & Logic ----------
   const totals = useMemo(() => {
@@ -492,6 +522,45 @@ const BusinessIntelligenceSuite = () => {
           </CardContent>
         </Card>
       </div>
+
+      <Card className="border border-border">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Utensils className="h-4 w-4" /> Restaurant Usage Category Comparison
+          </CardTitle>
+          <CardDescription>Income vs Expense breakdown for restaurant-specific usage categories.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="relative w-full overflow-auto">
+            <table className="w-full text-xs text-left">
+              <thead className="bg-muted text-muted-foreground font-medium">
+                <tr>
+                  <th className="p-2">Category</th>
+                  <th className="p-2 text-right">Total Income</th>
+                  <th className="p-2 text-right">Total Expense</th>
+                  <th className="p-2 text-right">Net Profit/Loss</th>
+                  <th className="p-2 text-right">Margin %</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                {usageTotals.map((row) => (
+                  <tr key={row.category} className="hover:bg-muted/30">
+                    <td className="p-2 font-medium">{row.category}</td>
+                    <td className="p-2 text-right">{fmt(row.income)}</td>
+                    <td className="p-2 text-right">{fmt(row.expense)}</td>
+                    <td className={`p-2 text-right font-bold ${row.net < 0 ? "text-destructive" : "text-emerald-600"}`}>
+                      {fmt(row.net)}
+                    </td>
+                    <td className={`p-2 text-right font-bold ${row.margin < 0 ? "text-destructive" : "text-emerald-600"}`}>
+                      {row.margin.toFixed(1)}%
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
 
       <Card className="border border-border">
         <CardHeader className="pb-2">
