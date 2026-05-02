@@ -470,6 +470,59 @@ const BusinessIntelligenceSuite = () => {
       </Card>
 
 
+      <Card className="border border-border bg-slate-50/50 overflow-hidden shadow-sm">
+        <CardHeader className="pb-3 border-b bg-card">
+          <CardTitle className="text-base flex items-center gap-2 text-primary font-bold">
+            <Activity className="h-4 w-4" /> Daily Traffic & Revenue Analytics (Day-Wise Flow)
+          </CardTitle>
+          <CardDescription>Day-by-day breakdown of vehicle traffic, charging income, and restaurant performance.</CardDescription>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="relative w-full overflow-auto">
+            <table className="w-full text-sm text-left">
+              <thead className="bg-muted/50 text-muted-foreground font-medium border-b">
+                <tr>
+                  <th className="px-4 py-3">Business Date</th>
+                  <th className="px-4 py-3 text-right">Vehicles (Sessions)</th>
+                  <th className="px-4 py-3 text-right">Charging Income</th>
+                  <th className="px-4 py-3 text-right">Order Count</th>
+                  <th className="px-4 py-3 text-right">Restaurant Income</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {rows.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground italic">
+                      No traffic data found for this range.
+                    </td>
+                  </tr>
+                ) : (
+                  [...rows].reverse().map((row) => (
+                    <tr key={row.business_date} className="hover:bg-muted/30 transition-colors">
+                      <td className="px-4 py-3 font-mono text-[11px] font-medium text-foreground">
+                        {format(parseISO(row.business_date), "EEE, MMM dd")}
+                      </td>
+                      <td className="px-4 py-3 text-right text-muted-foreground font-semibold">
+                        {row.charging_count}
+                      </td>
+                      <td className="px-4 py-3 text-right text-blue-600 font-bold">
+                        {fmt(row.charging_revenue)}
+                      </td>
+                      <td className="px-4 py-3 text-right text-muted-foreground font-semibold">
+                        {row.orders_count}
+                      </td>
+                      <td className="px-4 py-3 text-right text-emerald-600 font-bold">
+                        {fmt(row.orders_revenue)}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+
       <Card className="border border-border">
         <CardHeader className="pb-2">
           <CardTitle className="text-base">Daily Revenue & Cost Comparison</CardTitle>
