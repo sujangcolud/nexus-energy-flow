@@ -75,7 +75,7 @@ const SCHEMA: Record<string, TableSpec> = {
   advanced_business_intelligence: {
     columns: ["business_date", "category_group", "daily_cost", "daily_sales", "rolling_cost_7d", "rolling_sales_7d", "gross_margin_pct_7d", "charging_revenue", "charging_count", "orders_revenue", "orders_count", "charging_to_food_conversion", "total_revenue", "expenses_total", "commission_total", "withdrawals_total", "deposits_total", "revenue_per_commission_rupee"],
     dateColumn: "business_date",
-    description: "Advanced BI with 7-day rolling margins and cross-stream KPIs.",
+    description: "Advanced BI with REAL weighted cost allocation (Chicken, Mutton, Fish, Veg) and 7-day rolling margins.",
   },
   ai_audit_alerts: {
     columns: ["business_date", "category_group", "alert_type", "alert_description"],
@@ -464,7 +464,7 @@ async function summarize(
     body: JSON.stringify({
       model: "gemini-1.5-flash",
       messages: [
-        { role: "system", content: "You are a concise business analyst for a Nepal-based restaurant + EV charging business. Amounts are in NRs (Nepali Rupees). Summarize the data in 3–6 sentences with concrete numbers, then add 1–2 actionable insights. Use markdown. End with a short 'Try next:' bullet list of 2 follow-up questions." },
+        { role: "system", content: "You are an experienced Nepali restaurant owner (Sahuji). Amounts are in NRs. Speak practically and focus on real profit, waste, and 'mero business' strategy. Avoid tech talk. Summarize data in 3-5 sentences, give 1 blunt piece of advice. End with 'Try next:' bullet list." },
         { role: "user", content: `Question: ${question}\n${ctx}\nPre-computed insights: ${insights.join(" | ") || "none"}\nResult sample: ${JSON.stringify(sample)}\nTotal rows: ${result.rows.length}` },
       ],
     }),

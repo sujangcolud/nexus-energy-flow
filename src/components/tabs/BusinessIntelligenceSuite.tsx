@@ -107,7 +107,8 @@ const BusinessIntelligenceSuite = () => {
         .from('advanced_business_intelligence')
         .select('*')
         .gte('business_date', range.from)
-        .lte('business_date', range.to);
+        .lte('business_date', range.to)
+        .order('business_date', { ascending: true });
       if (error) throw error;
       return data;
     },
@@ -190,7 +191,7 @@ const BusinessIntelligenceSuite = () => {
         const last7DaysInterval = { start: subDays(today, 7), end: today };
         const prev7DaysInterval = { start: subDays(today, 14), end: subDays(today, 7) };
 
-        ['Vegetables', 'Meat', 'Beverages', 'Others'].forEach(cat => {
+        ['Chicken', 'Mutton', 'Fish', 'Food (Veg/General)'].forEach(cat => {
           const currentWeekData = advBi.filter(d => d.category_group === cat && isWithinInterval(parseISO(d.business_date), last7DaysInterval));
           const prevWeekData = advBi.filter(d => d.category_group === cat && isWithinInterval(parseISO(d.business_date), prev7DaysInterval));
           const currentCost = currentWeekData.reduce((sum, d) => sum + (d.daily_cost || 0), 0);
@@ -202,8 +203,13 @@ const BusinessIntelligenceSuite = () => {
             const costIncrease = ((currentCost - prevCost) / prevCost) * 100;
             const salesStable = prevSales > 0 ? Math.abs((currentSales - prevSales) / prevSales) < 0.05 : true;
             if (costIncrease > 10 && salesStable) {
-              advice.push(`${cat} costs are up ${costIncrease.toFixed(0)}% this week, but sales are stable. Review portion control.`);
+              advice.push(`${cat} costs are up ${costIncrease.toFixed(0)}% this week. Sahuji's advice: portion control milauchhu ki price badhauchu, socha!`);
             }
+          }
+
+          const latest = currentWeekData.slice(-1)[0];
+          if (latest && latest.gross_margin_pct_7d < 20) {
+              advice.push(`${cat} real margin ekdam low chha (${latest.gross_margin_pct_7d}%). Check for waste.`);
           }
         });
     }
@@ -251,10 +257,10 @@ const BusinessIntelligenceSuite = () => {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-lg font-semibold text-foreground flex items-center gap-2">
-            <Sparkles className="h-4 w-4" /> Advanced Intelligence & BI Suite
+            <Sparkles className="h-4 w-4" /> Mero Business Intelligence Suite
           </h1>
           <p className="text-sm text-muted-foreground">
-            Unified correlation engine, strategic margins, and AI auditor.
+            Weighted cost allocation, REAL margins, and Sahuji Audit.
           </p>
         </div>
         <div className="flex items-center gap-3 flex-wrap">
@@ -276,19 +282,18 @@ const BusinessIntelligenceSuite = () => {
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-        {['Vegetables', 'Meat', 'Beverages', 'Others'].map(cat => {
+        {['Chicken', 'Mutton', 'Fish', 'Food (Veg/General)', 'Beverages'].map(cat => {
           const margin = advBi.filter(d => d.category_group === cat).slice(-1)[0]?.gross_margin_pct_7d || 0;
           return (
             <Kpi
               key={cat}
-              label={`${cat} Margin`}
+              label={`${cat} REAL Margin`}
               value={`${margin}%`}
               icon={Utensils}
-              color={margin > 30 ? "text-emerald-600" : margin > 15 ? "text-amber-600" : "text-destructive"}
+              color={margin > 35 ? "text-emerald-600" : margin > 20 ? "text-amber-600" : "text-destructive"}
             />
           );
         })}
-        <Kpi label="Commission Burden" value={`${totals.commissionBurden.toFixed(1)}%`} icon={AlertTriangle} color="text-amber-600" />
         <Kpi label="Energy Share" value={`${totals.energyShare.toFixed(1)}%`} icon={Flame} color="text-blue-600" />
       </div>
 
