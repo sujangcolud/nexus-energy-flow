@@ -546,26 +546,35 @@ const BusinessIntelligenceSuite = () => {
                     </thead>
                     <tbody className="divide-y">
                       {alerts.map((alert, i) => (
-                        <tr key={i} className="hover:bg-muted/30">
-                          <td className="p-2 whitespace-nowrap">{alert.business_date}</td>
-                          <td className="p-2">
-                            <div className="font-medium">{alert.category_group}</div>
-                            <div className="text-[10px] text-muted-foreground">{alert.category_items}</div>
+                        <tr key={i} className="hover:bg-muted/30 align-top">
+                          <td className="p-2 whitespace-nowrap font-mono text-[10px]">
+                            {format(parseISO(alert.business_date), 'MMM dd')}
                           </td>
-                          <td className="p-2 text-right">{fmt(alert.daily_cost)}</td>
-                          <td className="p-2 text-right">{fmt(alert.daily_sales)}</td>
+                          <td className="p-2">
+                            <div className="font-semibold text-foreground">{alert.category_group}</div>
+                            <div className="text-[9px] text-muted-foreground uppercase tracking-tighter">
+                              {alert.category_items !== alert.category_group ? alert.category_items : ''}
+                            </div>
+                          </td>
+                          <td className="p-2 text-right font-medium">{fmt(alert.daily_cost)}</td>
+                          <td className="p-2 text-right font-medium">{fmt(alert.daily_sales)}</td>
                           <td className="p-2 text-right">
-                            <span className={alert.margin < 0 ? "text-destructive font-bold" : "text-amber-600"}>
-                              {alert.margin}%
-                            </span>
+                            <Badge variant={alert.margin < 0 ? "destructive" : "outline"} className="text-[10px] px-1 h-5">
+                              {alert.margin.toFixed(1)}%
+                            </Badge>
                           </td>
                           <td className="p-2">
-                            <Badge variant={alert.alert_type.includes('Leakage') ? 'destructive' : 'outline'} className="text-[10px]">
-                              {alert.alert_type}
-                            </Badge>
-                            <p className="mt-1 text-[10px] leading-tight text-muted-foreground italic">
-                              {alert.alert_description}
-                            </p>
+                            <div className="flex flex-col gap-1">
+                              <Badge
+                                variant={alert.alert_type.includes('Leakage') ? 'destructive' : 'secondary'}
+                                className="text-[9px] w-fit font-bold uppercase"
+                              >
+                                {alert.alert_type}
+                              </Badge>
+                              <p className="text-[11px] leading-snug text-muted-foreground">
+                                {alert.alert_description}
+                              </p>
+                            </div>
                           </td>
                         </tr>
                       ))}
