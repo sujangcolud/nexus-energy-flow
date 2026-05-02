@@ -488,15 +488,23 @@ serve(async (req) => {
     let chart: Plan["chart"] | null = null;
     let explanation = "";
 
-    if (composite === "profit") {
+    if (composite === "profit" || composite === "correlation" || composite === "business_day") {
       const df = shortcut.date_from || raw?.date_from;
       const dt = shortcut.date_to || raw?.date_to;
-      result = await executeComposite(userClient, "profit", df, dt);
-      chart = { type: "bar", x: "metric", y: "value" };
-      explanation = `Profit = Orders revenue + Charging revenue − Expenses${df ? ` (from ${df} to ${dt || "today"})` : ""}.`;
+      result = await executeComposite(userClient, composite, df, dt);
+      if (composite === "correlation") {
+        chart = { type: "line", x: "business_date", y: "total_revenue" };
+        explanation = `Correlation between Restaurant and Charging revenue per business date${df ? ` (${df} → ${dt || "today"})` : ""}.`;
+      } else if (composite === "business_day") {
+        chart = { type: "bar", x: "business_date", y: "total_revenue" };
+        explanation = `Business-day KPIs (Activity Date) including commission burden and energy share.`;
+      } else {
+        chart = { type: "bar", x: "metric", y: "value" };
+        explanation = `Profit = Orders revenue + Charging revenue − Expenses${df ? ` (from ${df} to ${dt || "today"})` : ""}.`;
+      }
       plan = {
-        table: "orders",
-        composite: "profit",
+        table: composite === "profit" ? "orders" : "charging_sessions",
+        composite,
         date_from: df,
         date_to: dt,
         chart,
