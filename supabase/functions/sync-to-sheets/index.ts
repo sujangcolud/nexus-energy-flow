@@ -12,20 +12,41 @@ interface SyncRequest {
   endDate?: string;
 }
 
+const ALLOWED_SYNC_TABLES = new Set([
+  'orders',
+  'expenses',
+  'deposits',
+  'withdrawals',
+  'charging_sessions',
+  'cooperative_savings',
+  'share_investments',
+  'share_expenses',
+  'expense_bookings',
+  'inventory',
+  'inventory_transactions',
+  'static_expenses',
+  'vat_entries',
+]);
+
+const isValidDate = (value: unknown) =>
+  typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(Date.parse(`${value}T00:00:00Z`));
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
-
     const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
+    if (!authHeader?.startsWith('Bearer ')) {
       throw new Error('No authorization header');
     }
+
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
 
     const token = authHeader.replace('Bearer ', '');
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
@@ -34,7 +55,35 @@ serve(async (req) => {
       throw new Error('Unauthorized');
     }
 
+    const { data: roleRow, error: roleError } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .eq('role', 'super_admin')
+      .maybeSingle();
+
+    if (roleError || !roleRow) {
+      return new Response(
+        JSON.stringify({ error: 'Forbidden' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 403 }
+      );
+    }
+
     const { table, startDate, endDate }: SyncRequest = await req.json();
+
+    if (!ALLOWED_SYNC_TABLES.has(table)) {
+      return new Response(
+        JSON.stringify({ error: 'Table is not allowed for sync' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
+
+    if ((startDate && !isValidDate(startDate)) || (endDate && !isValidDate(endDate))) {
+      return new Response(
+        JSON.stringify({ error: 'Dates must use YYYY-MM-DD format' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
 
     let query = supabase.from(table).select('*', { count: 'exact' });
     
