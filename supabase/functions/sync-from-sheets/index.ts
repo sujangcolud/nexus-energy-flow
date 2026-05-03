@@ -13,6 +13,25 @@ interface SyncData {
   id?: string;
 }
 
+const ALLOWED_SYNC_TABLES = new Set([
+  'orders',
+  'expenses',
+  'deposits',
+  'withdrawals',
+  'charging_sessions',
+  'cooperative_savings',
+  'share_investments',
+  'share_expenses',
+  'expense_bookings',
+  'inventory',
+  'inventory_transactions',
+  'static_expenses',
+  'vat_entries',
+]);
+
+const isValidUuid = (value: unknown) =>
+  typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -24,7 +43,7 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
+    if (!authHeader?.startsWith('Bearer ')) {
       throw new Error('No authorization header');
     }
 
@@ -35,7 +54,49 @@ serve(async (req) => {
       throw new Error('Unauthorized');
     }
 
+    const { data: roleRow, error: roleError } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .eq('role', 'super_admin')
+      .maybeSingle();
+
+    if (roleError || !roleRow) {
+      return new Response(
+        JSON.stringify({ error: 'Forbidden' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 403 }
+      );
+    }
+
     const { table, operation, data, id }: SyncData = await req.json();
+
+    if (!ALLOWED_SYNC_TABLES.has(table)) {
+      return new Response(
+        JSON.stringify({ error: 'Table is not allowed for sync' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
+
+    if (!['insert', 'update', 'delete'].includes(operation)) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid operation' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
+
+    if ((operation === 'insert' || operation === 'update') && (!data || typeof data !== 'object' || Array.isArray(data))) {
+      return new Response(
+        JSON.stringify({ error: 'Valid row data is required' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
+
+    if ((operation === 'update' || operation === 'delete') && !isValidUuid(id)) {
+      return new Response(
+        JSON.stringify({ error: 'Valid row ID is required' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
 
     console.log(`Syncing ${operation} operation on ${table}`);
 
