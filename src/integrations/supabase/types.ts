@@ -1366,6 +1366,55 @@ export type Database = {
       }
     }
     Views: {
+      advanced_business_intelligence: {
+        Row: {
+          business_date: string | null
+          category_group: string | null
+          charging_count: number | null
+          charging_revenue: number | null
+          charging_to_food_conversion: number | null
+          commission_total: number | null
+          daily_cost: number | null
+          daily_sales: number | null
+          deposits_total: number | null
+          expenses_total: number | null
+          gross_margin_pct_7d: number | null
+          orders_count: number | null
+          orders_revenue: number | null
+          revenue_per_commission_rupee: number | null
+          rolling_cost_7d: number | null
+          rolling_expenses_7d: number | null
+          rolling_sales_7d: number | null
+          rolling_withdrawals_7d: number | null
+          total_revenue: number | null
+          withdrawals_total: number | null
+        }
+        Relationships: []
+      }
+      ai_audit_alerts: {
+        Row: {
+          alert_description: string | null
+          alert_type: string | null
+          business_date: string | null
+          category_group: string | null
+          category_items: string | null
+          daily_cost: number | null
+          daily_sales: number | null
+          margin: number | null
+        }
+        Relationships: []
+      }
+      category_usage_analysis: {
+        Row: {
+          business_date: string | null
+          category: string | null
+          margin_pct: number | null
+          net_profit: number | null
+          total_expense: number | null
+          total_income: number | null
+        }
+        Relationships: []
+      }
       daily_business_performance: {
         Row: {
           business_date: string | null
@@ -1382,6 +1431,19 @@ export type Database = {
           orders_revenue: number | null
           total_revenue: number | null
           withdrawals_total: number | null
+        }
+        Relationships: []
+      }
+      nepali_kitchen_intelligence: {
+        Row: {
+          business_date: string | null
+          category: string | null
+          daily_expense: number | null
+          daily_sales: number | null
+          efficiency_ratio: number | null
+          gross_margin_pct_7d: number | null
+          rolling_expense_7d: number | null
+          rolling_sales_7d: number | null
         }
         Relationships: []
       }
