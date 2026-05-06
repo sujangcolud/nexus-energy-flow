@@ -595,6 +595,7 @@ const DepositsTab = () => {
                   }
                 />
               </div>
+              <RecordAttachments recordType="deposit" recordId={selectedDeposit.id} />
             </div>
           )}
           <DialogFooter>
