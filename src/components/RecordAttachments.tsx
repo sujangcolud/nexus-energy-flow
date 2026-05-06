@@ -12,6 +12,7 @@ export type AttachmentRecordType =
   | "withdrawal"
   | "cooperative_saving"
   | "share_investment"
+  | "share_expense"
   | "expense"
   | "expense_booking";
 
