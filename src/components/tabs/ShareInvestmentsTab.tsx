@@ -538,6 +538,9 @@ const ShareInvestmentsTab = () => {
                         <TableCell>{format(new Date(investment.investment_date), "dd/MM/yyyy")}</TableCell>
                         <TableCell className="capitalize">{investment.payment_mode.replace("_", " ")}</TableCell>
                         <TableCell>
+                          <Button variant="ghost" size="sm" onClick={() => setAttachmentTarget({ type: "share_investment", id: investment.id, title: `Investment - ${investment.shareholder_name}` })}>
+                            <Paperclip className="h-4 w-4" />
+                          </Button>
                           <Button variant="ghost" size="sm" onClick={() => handleDeleteInvestment(investment.id)} className="text-destructive hover:text-destructive">
                             <Trash2 className="h-4 w-4" />
                           </Button>
