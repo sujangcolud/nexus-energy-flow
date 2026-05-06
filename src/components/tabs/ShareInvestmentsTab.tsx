@@ -22,8 +22,10 @@ import {
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Plus, TrendingUp, TrendingDown, DollarSign, Calendar, Trash2, ArrowUpDown, Minus } from "lucide-react";
+import { Plus, TrendingUp, TrendingDown, DollarSign, Calendar, Trash2, ArrowUpDown, Minus, Paperclip } from "lucide-react";
 import { format } from "date-fns";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import RecordAttachments, { type AttachmentRecordType } from "@/components/RecordAttachments";
 
 interface ShareInvestment {
   id: string;
