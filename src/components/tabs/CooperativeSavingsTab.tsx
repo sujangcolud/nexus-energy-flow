@@ -27,6 +27,7 @@ import { extractErrorMessage, logError } from "@/utils/errorHandling";
 import TransactionDatePicker from "@/components/ui/transaction-date-picker";
 import { format } from "date-fns";
 import AllTimeTotalDisplay from "@/components/AllTimeTotalDisplay";
+import RecordAttachments from "@/components/RecordAttachments";
 import {
   PiggyBank,
   Calendar as CalendarIcon,
