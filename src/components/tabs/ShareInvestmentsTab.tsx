@@ -85,6 +85,7 @@ const ShareInvestmentsTab = () => {
   const [isAddingExpense, setIsAddingExpense] = useState(false);
   const [isSettingBalance, setIsSettingBalance] = useState(false);
   const [activeTab, setActiveTab] = useState("investments");
+  const [attachmentTarget, setAttachmentTarget] = useState<{ type: AttachmentRecordType; id: string; title: string } | null>(null);
 
   const [newInvestment, setNewInvestment] = useState<NewInvestment>({
     shareholder_name: "",
