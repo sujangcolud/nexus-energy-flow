@@ -34,6 +34,7 @@ interface ShareInvestment {
   investment_date: string;
   payment_mode: string;
   created_at: string;
+  attachment_count?: number;
 }
 
 interface ShareExpense {
@@ -45,6 +46,7 @@ interface ShareExpense {
   category: string;
   remarks: string | null;
   created_at: string;
+  attachment_count?: number;
 }
 
 interface OpeningBalance {
@@ -127,7 +129,6 @@ const ShareInvestmentsTab = () => {
         .order("investment_date", { ascending: false });
 
       if (investmentsError) throw investmentsError;
-      setInvestments(investmentsData || []);
 
       // Fetch share expenses (visible to all authenticated users)
       const { data: expensesData, error: expensesError } = await supabase
@@ -136,7 +137,26 @@ const ShareInvestmentsTab = () => {
         .order("expense_date", { ascending: false });
 
       if (expensesError) throw expensesError;
-      setExpenses(expensesData || []);
+
+      // Fetch attachment counts
+      const invIds = (investmentsData || []).map(i => i.id);
+      const expIds = (expensesData || []).map(e => e.id);
+
+      const { data: attachments, error: attachError } = await supabase
+        .from("record_attachments")
+        .select("record_id, record_type")
+        .in("record_id", [...invIds, ...expIds])
+        .in("record_type", ["share_investment", "share_expense"]);
+
+      const counts: Record<string, number> = {};
+      if (!attachError && attachments) {
+        attachments.forEach((a: any) => {
+          counts[a.record_id] = (counts[a.record_id] || 0) + 1;
+        });
+      }
+
+      setInvestments((investmentsData || []).map(i => ({ ...i, attachment_count: counts[i.id] || 0 })));
+      setExpenses((expensesData || []).map(e => ({ ...e, attachment_count: counts[e.id] || 0 })));
 
       // Fetch opening balance
       const { data: balanceData, error: balanceError } = await supabase
@@ -533,7 +553,14 @@ const ShareInvestmentsTab = () => {
                   <TableBody>
                     {investments.map((investment) => (
                       <TableRow key={investment.id}>
-                        <TableCell className="font-medium">{investment.shareholder_name}</TableCell>
+                        <TableCell className="font-medium">
+                          <div className="flex items-center gap-1.5">
+                            {investment.attachment_count && investment.attachment_count > 0 ? (
+                              <Paperclip className="h-3.5 w-3.5 text-muted-foreground shrink-0" title={`${investment.attachment_count} attachment(s)`} />
+                            ) : null}
+                            {investment.shareholder_name}
+                          </div>
+                        </TableCell>
                         <TableCell className="text-chart-2 font-semibold">₹{investment.contribution_amount.toLocaleString()}</TableCell>
                         <TableCell>{format(new Date(investment.investment_date), "dd/MM/yyyy")}</TableCell>
                         <TableCell className="capitalize">{investment.payment_mode.replace("_", " ")}</TableCell>
@@ -683,7 +710,14 @@ const ShareInvestmentsTab = () => {
                   <TableBody>
                     {expenses.map((expense) => (
                       <TableRow key={expense.id}>
-                        <TableCell className="font-medium">{expense.description}</TableCell>
+                        <TableCell className="font-medium">
+                          <div className="flex items-center gap-1.5">
+                            {expense.attachment_count && expense.attachment_count > 0 ? (
+                              <Paperclip className="h-3.5 w-3.5 text-muted-foreground shrink-0" title={`${expense.attachment_count} attachment(s)`} />
+                            ) : null}
+                            {expense.description}
+                          </div>
+                        </TableCell>
                         <TableCell className="text-destructive font-semibold">₹{expense.amount.toLocaleString()}</TableCell>
                         <TableCell>{format(new Date(expense.expense_date), "dd/MM/yyyy")}</TableCell>
                         <TableCell className="capitalize">{expense.category}</TableCell>

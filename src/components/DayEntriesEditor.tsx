@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import {
   Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { Loader2, Pencil, Save, X, RefreshCw, Trash2, Plus } from "lucide-react";
+import { Loader2, Pencil, Save, X, RefreshCw, Trash2, Plus, Paperclip } from "lucide-react";
 import { toast } from "sonner";
 import { formatCurrency } from "@/utils/unifiedCalculations";
 import { useAuth } from "@/context/AuthContext";
@@ -157,6 +157,26 @@ const ModuleSection = ({ config, fromDate, toDate, editable }: ModuleSectionProp
       if (error) throw error;
       return data || [];
     },
+  });
+
+  const { data: attachmentCounts = {} } = useQuery({
+    queryKey: ["attachment-counts", config.attachmentType, (rows as any[]).map(r => r.id)],
+    enabled: !!config.attachmentType && rows.length > 0,
+    queryFn: async () => {
+      const ids = (rows as any[]).map(r => r.id);
+      const { data, error } = await supabase
+        .from("record_attachments")
+        .select("record_id")
+        .eq("record_type", config.attachmentType!)
+        .in("record_id", ids);
+      if (error) throw error;
+
+      const counts: Record<string, number> = {};
+      data.forEach((a: any) => {
+        counts[a.record_id] = (counts[a.record_id] || 0) + 1;
+      });
+      return counts;
+    }
   });
 
   const allEditFields: FieldDef[] = [
@@ -353,17 +373,22 @@ const ModuleSection = ({ config, fromDate, toDate, editable }: ModuleSectionProp
                       <TableCell className="text-xs whitespace-nowrap">
                         {row[config.dateColumn] || "—"}
                       </TableCell>
-                      {config.columns.map((c) => (
+                      {config.columns.map((c, idx) => (
                         <TableCell key={c.key} className="text-xs whitespace-nowrap">
-                          {c.type === "number" ? (
-                            <span className="tabular-nums">
-                              {row[c.key] === null || row[c.key] === undefined
-                                ? "—"
-                                : Number(row[c.key]).toFixed(2)}
-                            </span>
-                          ) : (
-                            String(row[c.key] ?? "—")
-                          )}
+                          <div className="flex items-center gap-1.5">
+                            {idx === 0 && attachmentCounts[row.id] > 0 && (
+                              <Paperclip className="h-3 w-3 text-muted-foreground shrink-0" title={`${attachmentCounts[row.id]} attachment(s)`} />
+                            )}
+                            {c.type === "number" ? (
+                              <span className="tabular-nums">
+                                {row[c.key] === null || row[c.key] === undefined
+                                  ? "—"
+                                  : Number(row[c.key]).toFixed(2)}
+                              </span>
+                            ) : (
+                              String(row[c.key] ?? "—")
+                            )}
+                          </div>
                         </TableCell>
                       ))}
                       {editable && (
