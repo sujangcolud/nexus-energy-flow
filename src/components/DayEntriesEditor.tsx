@@ -11,6 +11,7 @@ import { Loader2, Pencil, Save, X, RefreshCw, Trash2, Plus } from "lucide-react"
 import { toast } from "sonner";
 import { formatCurrency } from "@/utils/unifiedCalculations";
 import { useAuth } from "@/context/AuthContext";
+import RecordAttachments, { type AttachmentRecordType } from "@/components/RecordAttachments";
 
 type FieldDef = { key: string; label: string; type?: "text" | "number" | "date"; editable?: boolean };
 type ModuleConfig = {
