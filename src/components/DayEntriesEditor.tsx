@@ -24,6 +24,7 @@ type ModuleConfig = {
   columns: FieldDef[];
   // additional fields shown only in the expanded edit panel (not in the table)
   extraEditFields?: FieldDef[];
+  attachmentType?: AttachmentRecordType;
 };
 
 const MODULES: ModuleConfig[] = [
