@@ -417,6 +417,14 @@ const ModuleSection = ({ config, fromDate, toDate, editable }: ModuleSectionProp
                               </div>
                             ))}
                         </div>
+                        {config.attachmentType && (
+                          <div className="mt-3">
+                            <RecordAttachments
+                              recordType={config.attachmentType}
+                              recordId={row.id}
+                            />
+                          </div>
+                        )}
                         <div className="flex justify-end gap-2 mt-3">
                           <Button
                             size="sm"
