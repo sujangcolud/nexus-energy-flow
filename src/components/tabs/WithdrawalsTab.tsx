@@ -363,6 +363,7 @@ const WithdrawalsTab = () => {
                   }
                 />
               </div>
+              <RecordAttachments recordType="withdrawal" recordId={selectedWithdrawal.id} />
             </div>
           )}
           <DialogFooter>
