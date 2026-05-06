@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Trash2, BookMarked } from "lucide-react";
+import RecordAttachments from "@/components/RecordAttachments";
 import {
   Dialog,
   DialogContent,
