@@ -4,7 +4,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Paperclip, Trash2, ExternalLink, ImageIcon } from "lucide-react";
+import { Loader2, Paperclip, Trash2, ExternalLink, ImageIcon, FileText, File } from "lucide-react";
 import { toast } from "sonner";
 
 export type AttachmentRecordType =
@@ -36,7 +36,7 @@ interface Props {
 const BUCKET = "record-attachments";
 const MAX_BYTES = 10 * 1024 * 1024; // 10MB
 
-const RecordAttachments = ({ recordType, recordId, label = "Supporting documents (images)", disabled, compact }: Props) => {
+const RecordAttachments = ({ recordType, recordId, label = "Supporting documents", disabled, compact }: Props) => {
   const { user } = useAuth();
   const [rows, setRows] = useState<AttachmentRow[]>([]);
   const [loading, setLoading] = useState(false);
@@ -92,7 +92,7 @@ const RecordAttachments = ({ recordType, recordId, label = "Supporting documents
   const handleFiles = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
     if (!recordId) {
-      toast.error("Save the record first, then add images.");
+      toast.error("Save the record first, then add attachments.");
       return;
     }
     if (!user) {
@@ -102,8 +102,16 @@ const RecordAttachments = ({ recordType, recordId, label = "Supporting documents
     setUploading(true);
     try {
       const uploads = Array.from(files).filter((f) => {
-        if (!f.type.startsWith("image/")) {
-          toast.error(`${f.name} is not an image`);
+        const isImage = f.type.startsWith("image/");
+        const isPdf = f.type === "application/pdf";
+        const isDoc = [
+          "application/msword",
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "text/plain"
+        ].includes(f.type);
+
+        if (!isImage && !isPdf && !isDoc) {
+          toast.error(`${f.name} type not supported. Use images, PDFs, or documents.`);
           return false;
         }
         if (f.size > MAX_BYTES) {
@@ -178,7 +186,7 @@ const RecordAttachments = ({ recordType, recordId, label = "Supporting documents
           <Input
             ref={inputRef}
             type="file"
-            accept="image/*"
+            accept="image/*,.pdf,.doc,.docx,.txt"
             multiple
             disabled={disabled || uploading || !recordId}
             onChange={(e) => handleFiles(e.target.files)}
@@ -193,13 +201,13 @@ const RecordAttachments = ({ recordType, recordId, label = "Supporting documents
             onClick={() => inputRef.current?.click()}
           >
             {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Paperclip className="h-4 w-4" />}
-            <span className="ml-2">Add Images</span>
+            <span className="ml-2">Add Files</span>
           </Button>
         </div>
       </div>
 
       {!recordId && (
-        <p className="text-xs text-muted-foreground">Save this record first to attach images.</p>
+        <p className="text-xs text-muted-foreground">Save this record first to attach files.</p>
       )}
 
       {loading ? (
@@ -220,8 +228,10 @@ const RecordAttachments = ({ recordType, recordId, label = "Supporting documents
               >
                 {previews[r.id] ? (
                   <img src={previews[r.id]} alt={r.file_name} className="w-full h-full object-cover" />
+                ) : r.mime_type === "application/pdf" ? (
+                  <FileText className="h-8 w-8 text-muted-foreground" />
                 ) : (
-                  <ImageIcon className="h-6 w-6 text-muted-foreground" />
+                  <File className="h-8 w-8 text-muted-foreground" />
                 )}
               </button>
               <div className="p-1.5 flex items-center justify-between gap-1">
