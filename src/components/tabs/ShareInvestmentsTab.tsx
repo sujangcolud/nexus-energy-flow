@@ -689,6 +689,9 @@ const ShareInvestmentsTab = () => {
                         <TableCell className="capitalize">{expense.category}</TableCell>
                         <TableCell className="capitalize">{expense.payment_mode.replace("_", " ")}</TableCell>
                         <TableCell>
+                          <Button variant="ghost" size="sm" onClick={() => setAttachmentTarget({ type: "share_expense", id: expense.id, title: `Expense - ${expense.description}` })}>
+                            <Paperclip className="h-4 w-4" />
+                          </Button>
                           <Button variant="ghost" size="sm" onClick={() => handleDeleteExpense(expense.id)} className="text-destructive hover:text-destructive">
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -702,6 +705,17 @@ const ShareInvestmentsTab = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <Dialog open={!!attachmentTarget} onOpenChange={(o) => !o && setAttachmentTarget(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Supporting Documents — {attachmentTarget?.title}</DialogTitle>
+          </DialogHeader>
+          {attachmentTarget && (
+            <RecordAttachments recordType={attachmentTarget.type} recordId={attachmentTarget.id} compact />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
