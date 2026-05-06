@@ -400,6 +400,7 @@ const CooperativeSavingsTab = () => {
                   }
                 />
               </div>
+              <RecordAttachments recordType="cooperative_saving" recordId={selectedSaving.id} />
             </div>
           )}
           <DialogFooter>
