@@ -421,6 +421,7 @@ const ExpensesTab = () => {
                   }
                 />
               </div>
+              <RecordAttachments recordType="expense" recordId={selectedExpense.id} />
             </div>
           )}
           <DialogFooter>
