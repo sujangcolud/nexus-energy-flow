@@ -26,6 +26,7 @@ import { toast } from "sonner";
 import { extractErrorMessage, logError } from "@/utils/errorHandling";
 import TransactionDatePicker from "@/components/ui/transaction-date-picker";
 import AllTimeTotalDisplay from "@/components/AllTimeTotalDisplay";
+import RecordAttachments from "@/components/RecordAttachments";
 import {
   Receipt,
   Calendar as CalendarIcon,
@@ -420,6 +421,7 @@ const ExpensesTab = () => {
                   }
                 />
               </div>
+              <RecordAttachments recordType="expense" recordId={selectedExpense.id} />
             </div>
           )}
           <DialogFooter>

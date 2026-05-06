@@ -20,6 +20,7 @@ import TransactionDatePicker from "@/components/ui/transaction-date-picker";
 import { format } from "date-fns";
 import { logError, extractErrorMessage } from "@/utils/errorHandling";
 import AllTimeTotalDisplay from "@/components/AllTimeTotalDisplay";
+import RecordAttachments from "@/components/RecordAttachments";
 import {
   Select,
   SelectContent,
@@ -362,6 +363,7 @@ const WithdrawalsTab = () => {
                   }
                 />
               </div>
+              <RecordAttachments recordType="withdrawal" recordId={selectedWithdrawal.id} />
             </div>
           )}
           <DialogFooter>

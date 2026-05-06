@@ -986,6 +986,42 @@ export type Database = {
         }
         Relationships: []
       }
+      record_attachments: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_path: string
+          id: string
+          mime_type: string | null
+          record_id: string
+          record_type: string
+          size_bytes: number | null
+          uploaded_by: string
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          file_path: string
+          id?: string
+          mime_type?: string | null
+          record_id: string
+          record_type: string
+          size_bytes?: number | null
+          uploaded_by: string
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_path?: string
+          id?: string
+          mime_type?: string | null
+          record_id?: string
+          record_type?: string
+          size_bytes?: number | null
+          uploaded_by?: string
+        }
+        Relationships: []
+      }
       reports: {
         Row: {
           created_at: string | null

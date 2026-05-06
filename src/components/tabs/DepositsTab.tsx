@@ -26,6 +26,7 @@ import { toast } from "sonner";
 import { extractErrorMessage, logError } from "@/utils/errorHandling";
 import TransactionDatePicker from "@/components/ui/transaction-date-picker";
 import AllTimeTotalDisplay from "@/components/AllTimeTotalDisplay";
+import RecordAttachments from "@/components/RecordAttachments";
 import {
   TrendingUp,
   Calendar as CalendarIcon,
@@ -595,6 +596,7 @@ const DepositsTab = () => {
                   }
                 />
               </div>
+              <RecordAttachments recordType="deposit" recordId={selectedDeposit.id} />
             </div>
           )}
           <DialogFooter>

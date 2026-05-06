@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Trash2, BookMarked } from "lucide-react";
+import RecordAttachments from "@/components/RecordAttachments";
 import {
   Dialog,
   DialogContent,
@@ -177,6 +178,7 @@ const ExpenseBookingsTab = () => {
               </div>
               <div><Label>Payment Mode *</Label><Select value={expenseFormData.paymentMode} onValueChange={(v) => setExpenseFormData({ ...expenseFormData, paymentMode: v })}><SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger><SelectContent><SelectItem value="Cash">Cash</SelectItem><SelectItem value="Esewa">Esewa</SelectItem><SelectItem value="Fonepay">Fonepay</SelectItem><SelectItem value="Bank">Bank</SelectItem></SelectContent></Select></div>
               <div><Label>Remarks</Label><Textarea value={expenseFormData.remarks} onChange={(e) => setExpenseFormData({ ...expenseFormData, remarks: e.target.value })} /></div>
+              <RecordAttachments recordType="expense_booking" recordId={selectedBooking.id} />
               <DialogFooter><Button type="submit">Submit</Button></DialogFooter>
             </form>
           )}

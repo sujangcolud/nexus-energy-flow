@@ -11,6 +11,7 @@ import { Loader2, Pencil, Save, X, RefreshCw, Trash2, Plus } from "lucide-react"
 import { toast } from "sonner";
 import { formatCurrency } from "@/utils/unifiedCalculations";
 import { useAuth } from "@/context/AuthContext";
+import RecordAttachments, { type AttachmentRecordType } from "@/components/RecordAttachments";
 
 type FieldDef = { key: string; label: string; type?: "text" | "number" | "date"; editable?: boolean };
 type ModuleConfig = {
@@ -23,6 +24,7 @@ type ModuleConfig = {
   columns: FieldDef[];
   // additional fields shown only in the expanded edit panel (not in the table)
   extraEditFields?: FieldDef[];
+  attachmentType?: AttachmentRecordType;
 };
 
 const MODULES: ModuleConfig[] = [
@@ -66,6 +68,7 @@ const MODULES: ModuleConfig[] = [
     table: "expenses",
     dateColumn: "expense_date",
     amountColumn: "amount",
+    attachmentType: "expense",
     columns: [
       { key: "description", label: "Description", type: "text", editable: true },
       { key: "category", label: "Category", type: "text", editable: true },
@@ -80,6 +83,7 @@ const MODULES: ModuleConfig[] = [
     table: "deposits",
     dateColumn: "deposit_date",
     amountColumn: "amount",
+    attachmentType: "deposit",
     columns: [
       { key: "deposited_by", label: "Deposited By", type: "text", editable: true },
       { key: "deposited_to", label: "To Wallet", type: "text", editable: true },
@@ -94,6 +98,7 @@ const MODULES: ModuleConfig[] = [
     table: "withdrawals",
     dateColumn: "withdrawal_date",
     amountColumn: "amount",
+    attachmentType: "withdrawal",
     columns: [
       { key: "purpose", label: "Purpose", type: "text", editable: true },
       { key: "withdrawal_from", label: "From", type: "text", editable: true },
@@ -108,6 +113,7 @@ const MODULES: ModuleConfig[] = [
     table: "cooperative_savings",
     dateColumn: "contribution_date",
     amountColumn: "contribution_amount",
+    attachmentType: "cooperative_saving",
     columns: [
       { key: "member_id", label: "Member", type: "text", editable: true },
       { key: "cycle_period", label: "Cycle", type: "text", editable: true },
@@ -411,6 +417,14 @@ const ModuleSection = ({ config, fromDate, toDate, editable }: ModuleSectionProp
                               </div>
                             ))}
                         </div>
+                        {config.attachmentType && (
+                          <div className="mt-3">
+                            <RecordAttachments
+                              recordType={config.attachmentType}
+                              recordId={row.id}
+                            />
+                          </div>
+                        )}
                         <div className="flex justify-end gap-2 mt-3">
                           <Button
                             size="sm"
