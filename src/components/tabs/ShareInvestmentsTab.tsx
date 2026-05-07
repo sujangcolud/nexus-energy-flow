@@ -556,7 +556,7 @@ const ShareInvestmentsTab = () => {
                         <TableCell className="font-medium">
                           <div className="flex items-center gap-1.5">
                             {investment.attachment_count && investment.attachment_count > 0 ? (
-                              <Paperclip className="h-3.5 w-3.5 text-muted-foreground shrink-0" title={`${investment.attachment_count} attachment(s)`} />
+                              <span title={`${investment.attachment_count} attachment(s)`}><Paperclip className="h-3.5 w-3.5 text-muted-foreground shrink-0" /></span>
                             ) : null}
                             {investment.shareholder_name}
                           </div>
@@ -713,7 +713,7 @@ const ShareInvestmentsTab = () => {
                         <TableCell className="font-medium">
                           <div className="flex items-center gap-1.5">
                             {expense.attachment_count && expense.attachment_count > 0 ? (
-                              <Paperclip className="h-3.5 w-3.5 text-muted-foreground shrink-0" title={`${expense.attachment_count} attachment(s)`} />
+                              <span title={`${expense.attachment_count} attachment(s)`}><Paperclip className="h-3.5 w-3.5 text-muted-foreground shrink-0" /></span>
                             ) : null}
                             {expense.description}
                           </div>

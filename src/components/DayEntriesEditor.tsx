@@ -377,7 +377,7 @@ const ModuleSection = ({ config, fromDate, toDate, editable }: ModuleSectionProp
                         <TableCell key={c.key} className="text-xs whitespace-nowrap">
                           <div className="flex items-center gap-1.5">
                             {idx === 0 && attachmentCounts[row.id] > 0 && (
-                              <Paperclip className="h-3 w-3 text-muted-foreground shrink-0" title={`${attachmentCounts[row.id]} attachment(s)`} />
+                              <span title={`${attachmentCounts[row.id]} attachment(s)`}><Paperclip className="h-3 w-3 text-muted-foreground shrink-0" /></span>
                             )}
                             {c.type === "number" ? (
                               <span className="tabular-nums">
