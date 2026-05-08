@@ -20,7 +20,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ChefHat, Plus, Trash2, Save, CheckCircle2 } from "lucide-react";
+import { ChefHat, Plus, Trash2, Save, CheckCircle2, Copy } from "lucide-react";
 import { extractErrorMessage, logError } from "@/utils/errorHandling";
 import { Badge } from "@/components/ui/badge";
 
@@ -52,6 +52,7 @@ const RecipeManagementTab = () => {
   const [menu, setMenu] = useState<MenuItem[]>([]);
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [selectedMenuId, setSelectedMenuId] = useState<string>("");
+  const [copySourceId, setCopySourceId] = useState<string>("");
   const [rows, setRows] = useState<RecipeRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -140,6 +141,36 @@ const RecipeManagementTab = () => {
   const selectedMenu = menu.find((m) => m.id === selectedMenuId);
   const profit = selectedMenu ? selectedMenu.price - totalCost : 0;
 
+  const handleCopyRecipe = async () => {
+    if (!copySourceId) return;
+    try {
+      const { data, error } = await supabase
+        .from("recipe_items" as any)
+        .select("inventory_item_id,quantity_used,unit_type,waste_percentage")
+        .eq("menu_item_id", copySourceId);
+      if (error) throw error;
+
+      const newRows = ((data as any) || []).map((r: any) => ({
+        inventory_item_id: r.inventory_item_id,
+        quantity_used: Number(r.quantity_used),
+        unit_type: r.unit_type,
+        waste_percentage: Number(r.waste_percentage),
+      }));
+
+      if (newRows.length === 0) {
+        toast.info("Source item has no recipe to copy");
+        return;
+      }
+
+      setRows(newRows);
+      toast.success("Recipe copied! Don't forget to save.");
+      setCopySourceId("");
+    } catch (e) {
+      logError("recipe copy", e);
+      toast.error(extractErrorMessage(e));
+    }
+  };
+
   const save = async () => {
     if (!selectedMenuId) return;
     for (const r of rows) {
@@ -218,9 +249,30 @@ const RecipeManagementTab = () => {
         <div className="lg:col-span-2">
           {selectedMenuId && (
             <Card>
-              <CardHeader className="pb-3 flex flex-row items-center justify-between">
+              <CardHeader className="pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <CardTitle className="text-base">Ingredients</CardTitle>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <div className="flex items-center gap-2 mr-2">
+                    <Select value={copySourceId} onValueChange={setCopySourceId}>
+                      <SelectTrigger className="w-[180px] h-8 text-xs">
+                        <SelectValue placeholder="Copy recipe from..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {menu.filter(m => m.hasRecipe && m.id !== selectedMenuId).map((m) => (
+                          <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      className="h-8"
+                      onClick={handleCopyRecipe}
+                      disabled={!copySourceId}
+                    >
+                      <Copy className="h-3 w-3 mr-1" /> Copy
+                    </Button>
+                  </div>
                   <Button size="sm" variant="outline" onClick={addRow}><Plus className="h-4 w-4 mr-1" />Add</Button>
                   <Button size="sm" onClick={save} disabled={saving}><Save className="h-4 w-4 mr-1" />{saving ? "Saving…" : "Save"}</Button>
                 </div>
