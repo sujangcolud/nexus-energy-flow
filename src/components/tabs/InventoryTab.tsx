@@ -33,6 +33,7 @@ import { extractErrorMessage, logError } from "@/utils/errorHandling";
 import { Package, Plus, Minus, AlertTriangle, CheckCircle, Edit } from "lucide-react";
 import { format } from "date-fns";
 import MultiInventoryEntry from "../MultiInventoryEntry";
+import TransactionDatePicker from "@/components/ui/transaction-date-picker";
 
 interface Category {
   id: string;
@@ -45,6 +46,7 @@ interface InventoryItem {
   description: string | null;
   category: string | null;
   quantity: number;
+  base_unit: string;
   unit_cost: number | null;
   total_cost: number | null;
   supplier: string | null;
@@ -55,6 +57,8 @@ interface InventoryItem {
   is_active: boolean;
   created_at: string;
 }
+
+const UNIT_OPTIONS = ["g", "kg", "ml", "l", "pcs", "packet", "box", "bottle"];
 
 const InventoryTab = () => {
   const { user } = useAuth();
@@ -67,12 +71,14 @@ const InventoryTab = () => {
   const [manualAddDialogOpen, setManualAddDialogOpen] = useState(false);
   const [manualItemForm, setManualItemForm] = useState({
     item_name: "", description: "", category: "", quantity: "",
-    unit_cost: "", supplier: "", location: "", minimum_stock: "", expiry_date: "",
+    base_unit: "pcs", unit_cost: "", supplier: "", location: "",
+    minimum_stock: "", expiry_date: "",
   });
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editForm, setEditForm] = useState({
     id: "", item_name: "", description: "", category: "", quantity: "",
-    unit_cost: "", supplier: "", location: "", minimum_stock: "", expiry_date: "",
+    base_unit: "", unit_cost: "", supplier: "", location: "",
+    minimum_stock: "", expiry_date: "",
   });
 
   useEffect(() => {
@@ -133,7 +139,7 @@ const InventoryTab = () => {
   };
 
   const updateItem = async () => {
-    if (!editForm.item_name || editForm.quantity === "") {
+    if (!editForm.item_name || editForm.quantity === "" || !editForm.base_unit) {
       toast.error("Please fill required fields");
       return;
     }
@@ -147,6 +153,7 @@ const InventoryTab = () => {
           description: editForm.description || null,
           category: editForm.category || null,
           quantity,
+          base_unit: editForm.base_unit,
           unit_cost: unitCost,
           total_cost: quantity * unitCost,
           supplier: editForm.supplier || null,
@@ -167,7 +174,7 @@ const InventoryTab = () => {
   };
 
   const addManualItem = async () => {
-    if (!manualItemForm.item_name || !manualItemForm.quantity) {
+    if (!manualItemForm.item_name || !manualItemForm.quantity || !manualItemForm.base_unit) {
       toast.error("Please fill required fields");
       return;
     }
@@ -176,7 +183,9 @@ const InventoryTab = () => {
       const unitCost = parseFloat(manualItemForm.unit_cost) || 0;
       const { data: inventoryData, error: inventoryError } = await supabase.from("inventory").insert({
         user_id: user!.id, item_name: manualItemForm.item_name, description: manualItemForm.description || null,
-        category: manualItemForm.category || null, quantity, unit_cost: unitCost, total_cost: quantity * unitCost,
+        category: manualItemForm.category || null, quantity,
+        base_unit: manualItemForm.base_unit,
+        unit_cost: unitCost, total_cost: quantity * unitCost,
         supplier: manualItemForm.supplier || null, location: manualItemForm.location || null,
         minimum_stock: parseFloat(manualItemForm.minimum_stock) || 0, purchase_date: new Date().toISOString().split("T")[0],
         expiry_date: manualItemForm.expiry_date || null,
@@ -189,7 +198,7 @@ const InventoryTab = () => {
       });
       toast.success("Item added!");
       setManualAddDialogOpen(false);
-      setManualItemForm({ item_name: "", description: "", category: "", quantity: "", unit_cost: "", supplier: "", location: "", minimum_stock: "", expiry_date: "" });
+      setManualItemForm({ item_name: "", description: "", category: "", quantity: "", base_unit: "pcs", unit_cost: "", supplier: "", location: "", minimum_stock: "", expiry_date: "" });
       fetchInventory();
     } catch (error) {
       logError("adding item", error);
@@ -247,11 +256,37 @@ const InventoryTab = () => {
               </Select>
             </div>
             <div><Label>Quantity *</Label><Input type="number" value={editForm.quantity} onChange={(e) => setEditForm({ ...editForm, quantity: e.target.value })} /></div>
+            <div>
+              <Label>Base Unit *</Label>
+              <Select
+                value={editForm.base_unit}
+                onValueChange={(value) => setEditForm({ ...editForm, base_unit: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select unit" />
+                </SelectTrigger>
+                <SelectContent>
+                  {UNIT_OPTIONS.map((unit) => (
+                    <SelectItem key={unit} value={unit}>
+                      {unit}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <div><Label>Unit Cost</Label><Input type="number" value={editForm.unit_cost} onChange={(e) => setEditForm({ ...editForm, unit_cost: e.target.value })} /></div>
             <div><Label>Supplier</Label><Input value={editForm.supplier} onChange={(e) => setEditForm({ ...editForm, supplier: e.target.value })} /></div>
             <div><Label>Location</Label><Input value={editForm.location} onChange={(e) => setEditForm({ ...editForm, location: e.target.value })} /></div>
             <div><Label>Min Stock</Label><Input type="number" value={editForm.minimum_stock} onChange={(e) => setEditForm({ ...editForm, minimum_stock: e.target.value })} /></div>
-            <div><Label>Expiry Date</Label><Input type="date" value={editForm.expiry_date} onChange={(e) => setEditForm({ ...editForm, expiry_date: e.target.value })} /></div>
+            <div>
+              <TransactionDatePicker
+                label="Expiry Date"
+                selectedDate={editForm.expiry_date}
+                onDateChange={(d) => setEditForm({ ...editForm, expiry_date: d })}
+                allowFutureDates={true}
+                showBackdateWarning={false}
+              />
+            </div>
             <div className="col-span-2"><Label>Description</Label><Input value={editForm.description} onChange={(e) => setEditForm({ ...editForm, description: e.target.value })} /></div>
           </div>
           <DialogFooter><Button onClick={updateItem}>Update Item</Button></DialogFooter>
@@ -282,11 +317,37 @@ const InventoryTab = () => {
               </Select>
             </div>
             <div><Label>Quantity *</Label><Input type="number" value={manualItemForm.quantity} onChange={(e) => setManualItemForm({ ...manualItemForm, quantity: e.target.value })} /></div>
+            <div>
+              <Label>Base Unit *</Label>
+              <Select
+                value={manualItemForm.base_unit}
+                onValueChange={(value) => setManualItemForm({ ...manualItemForm, base_unit: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select unit" />
+                </SelectTrigger>
+                <SelectContent>
+                  {UNIT_OPTIONS.map((unit) => (
+                    <SelectItem key={unit} value={unit}>
+                      {unit}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <div><Label>Unit Cost</Label><Input type="number" value={manualItemForm.unit_cost} onChange={(e) => setManualItemForm({ ...manualItemForm, unit_cost: e.target.value })} /></div>
             <div><Label>Supplier</Label><Input value={manualItemForm.supplier} onChange={(e) => setManualItemForm({ ...manualItemForm, supplier: e.target.value })} /></div>
             <div><Label>Location</Label><Input value={manualItemForm.location} onChange={(e) => setManualItemForm({ ...manualItemForm, location: e.target.value })} /></div>
             <div><Label>Min Stock</Label><Input type="number" value={manualItemForm.minimum_stock} onChange={(e) => setManualItemForm({ ...manualItemForm, minimum_stock: e.target.value })} /></div>
-            <div><Label>Expiry Date</Label><Input type="date" value={manualItemForm.expiry_date} onChange={(e) => setManualItemForm({ ...manualItemForm, expiry_date: e.target.value })} /></div>
+            <div>
+              <TransactionDatePicker
+                label="Expiry Date"
+                selectedDate={manualItemForm.expiry_date}
+                onDateChange={(d) => setManualItemForm({ ...manualItemForm, expiry_date: d })}
+                allowFutureDates={true}
+                showBackdateWarning={false}
+              />
+            </div>
           </div>
           <DialogFooter><Button onClick={addManualItem}>Add Item</Button></DialogFooter>
         </DialogContent>
@@ -327,6 +388,7 @@ const InventoryTab = () => {
                   <TableHead>Item</TableHead>
                   <TableHead>Category</TableHead>
                   <TableHead>Quantity</TableHead>
+                  <TableHead>Unit</TableHead>
                   <TableHead>Unit Cost</TableHead>
                   <TableHead>Total</TableHead>
                   <TableHead>Status</TableHead>
@@ -341,6 +403,7 @@ const InventoryTab = () => {
                       <TableCell className="font-medium">{item.item_name}</TableCell>
                       <TableCell>{item.category || "-"}</TableCell>
                       <TableCell>{item.quantity}</TableCell>
+                      <TableCell>{item.base_unit}</TableCell>
                       <TableCell>NPR {(item.unit_cost || 0).toFixed(2)}</TableCell>
                       <TableCell>NPR {(item.total_cost || 0).toFixed(2)}</TableCell>
                       <TableCell><Badge variant={status.status === "in-stock" ? "default" : "secondary"}>{status.status}</Badge></TableCell>
@@ -353,6 +416,7 @@ const InventoryTab = () => {
                               description: item.description || "",
                               category: item.category || "",
                               quantity: item.quantity.toString(),
+                              base_unit: item.base_unit || "",
                               unit_cost: (item.unit_cost || 0).toString(),
                               supplier: item.supplier || "",
                               location: item.location || "",
