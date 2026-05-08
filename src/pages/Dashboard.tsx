@@ -77,6 +77,7 @@ import ShareInvestmentsTab from "@/components/tabs/ShareInvestmentsTab";
 import ExpenseBookingsTab from "@/components/tabs/ExpenseBookingsTab";
 import VATEntryTab from "@/components/tabs/VATEntryTab";
 import InventoryTab from "@/components/tabs/InventoryTab";
+import RecipeManagementTab from "@/components/tabs/RecipeManagementTab";
 import FileUploadTab from "@/components/tabs/FileUploadTab";
 
 const Dashboard = () => {
