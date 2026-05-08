@@ -30,6 +30,7 @@ interface MenuItem {
   price: number;
   category: string;
   hasRecipe?: boolean;
+  recipe_yield?: number;
 }
 interface InventoryItem {
   id: string;
@@ -61,7 +62,7 @@ const RecipeManagementTab = () => {
     setLoading(true);
     try {
       const [m, i, r] = await Promise.all([
-        supabase.from("menu_items").select("id,name,price,category").order("name"),
+        supabase.from("menu_items").select("id,name,price,category,recipe_yield").order("name"),
         supabase.from("inventory").select("id,item_name,base_unit,unit_cost,quantity").eq("is_active", true).order("item_name"),
         supabase.from("recipe_items" as any).select("menu_item_id")
       ]);
@@ -139,7 +140,9 @@ const RecipeManagementTab = () => {
   }, [rows, invMap]);
 
   const selectedMenu = menu.find((m) => m.id === selectedMenuId);
-  const profit = selectedMenu ? selectedMenu.price - totalCost : 0;
+  const currentYield = selectedMenu?.recipe_yield || 1;
+  const unitCostVal = totalCost / currentYield;
+  const profit = selectedMenu ? selectedMenu.price - unitCostVal : 0;
 
   const handleCopyRecipe = async () => {
     if (!copySourceId) return;
@@ -169,6 +172,18 @@ const RecipeManagementTab = () => {
       logError("recipe copy", e);
       toast.error(extractErrorMessage(e));
     }
+  };
+
+  const handleYieldChange = async (val: string) => {
+    const num = parseFloat(val) || 1;
+    if (num <= 0) return;
+
+    // Update local state
+    setMenu(prev => prev.map(m => m.id === selectedMenuId ? { ...m, recipe_yield: num } : m));
+
+    // Persist to DB
+    const { error } = await supabase.from("menu_items").update({ recipe_yield: num }).eq("id", selectedMenuId);
+    if (error) toast.error("Failed to update yield");
   };
 
   const save = async () => {
@@ -217,7 +232,7 @@ const RecipeManagementTab = () => {
       <Card className="mb-6">
         <CardHeader className="pb-3"><CardTitle className="text-base">Select menu item</CardTitle></CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid sm:grid-cols-3 gap-3">
+          <div className="grid sm:grid-cols-4 gap-3">
             <div className="sm:col-span-2">
               <Label>Menu item</Label>
               <Select value={selectedMenuId} onValueChange={setSelectedMenuId}>
@@ -234,11 +249,25 @@ const RecipeManagementTab = () => {
                 </SelectContent>
               </Select>
             </div>
+            <div>
+              <Label>Recipe Yield</Label>
+              <Input
+                type="number"
+                step="1"
+                min="1"
+                value={selectedMenu?.recipe_yield || 1}
+                onChange={(e) => handleYieldChange(e.target.value)}
+                placeholder="Servings per batch"
+                disabled={!selectedMenuId}
+              />
+              <p className="text-[10px] text-muted-foreground mt-1">Number of servings this recipe produces</p>
+            </div>
             {selectedMenu && (
-              <div className="grid grid-cols-3 gap-2 text-xs">
-                <div className="rounded border p-2"><div className="text-muted-foreground">Sell</div><div className="font-semibold">NRs. {selectedMenu.price.toFixed(2)}</div></div>
-                <div className="rounded border p-2"><div className="text-muted-foreground">Cost</div><div className="font-semibold">NRs. {totalCost.toFixed(2)}</div></div>
-                <div className="rounded border p-2"><div className="text-muted-foreground">Profit</div><div className="font-semibold">NRs. {profit.toFixed(2)}</div></div>
+              <div className="grid grid-cols-4 gap-2 text-[10px]">
+                <div className="rounded border p-2"><div className="text-muted-foreground">Sell Price</div><div className="font-semibold">NRs. {selectedMenu.price.toFixed(2)}</div></div>
+                <div className="rounded border p-2"><div className="text-muted-foreground text-amber-600">Batch Cost</div><div className="font-semibold">NRs. {totalCost.toFixed(2)}</div></div>
+                <div className="rounded border p-2"><div className="text-muted-foreground text-blue-600">Unit Cost</div><div className="font-semibold">NRs. {unitCostVal.toFixed(2)}</div></div>
+                <div className="rounded border p-2"><div className="text-muted-foreground text-green-600">Unit Profit</div><div className="font-semibold">NRs. {profit.toFixed(2)}</div></div>
               </div>
             )}
           </div>
