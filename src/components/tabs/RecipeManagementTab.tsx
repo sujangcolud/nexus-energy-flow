@@ -1,0 +1,263 @@
+import { useEffect, useMemo, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { ChefHat, Plus, Trash2, Save } from "lucide-react";
+import { extractErrorMessage, logError } from "@/utils/errorHandling";
+
+interface MenuItem {
+  id: string;
+  name: string;
+  price: number;
+  category: string;
+}
+interface InventoryItem {
+  id: string;
+  item_name: string;
+  base_unit: string;
+  unit_cost: number | null;
+  quantity: number;
+}
+interface RecipeRow {
+  id?: string;
+  inventory_item_id: string;
+  quantity_used: number;
+  unit_type: string;
+  waste_percentage: number;
+}
+
+const UNIT_OPTIONS = ["gm", "kg", "ml", "l", "pcs"];
+
+const RecipeManagementTab = () => {
+  const [menu, setMenu] = useState<MenuItem[]>([]);
+  const [inventory, setInventory] = useState<InventoryItem[]>([]);
+  const [selectedMenuId, setSelectedMenuId] = useState<string>("");
+  const [rows, setRows] = useState<RecipeRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const [m, i] = await Promise.all([
+          supabase.from("menu_items").select("id,name,price,category").order("name"),
+          supabase.from("inventory").select("id,item_name,base_unit,unit_cost,quantity").eq("is_active", true).order("item_name"),
+        ]);
+        if (m.error) throw m.error;
+        if (i.error) throw i.error;
+        setMenu((m.data as MenuItem[]) || []);
+        setInventory((i.data as any) || []);
+      } catch (e) {
+        logError("recipe load", e);
+        toast.error(extractErrorMessage(e));
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
+
+  useEffect(() => {
+    if (!selectedMenuId) { setRows([]); return; }
+    (async () => {
+      const { data, error } = await supabase
+        .from("recipe_items" as any)
+        .select("id,inventory_item_id,quantity_used,unit_type,waste_percentage")
+        .eq("menu_item_id", selectedMenuId);
+      if (error) { toast.error(extractErrorMessage(error)); return; }
+      setRows(((data as any) || []).map((r: any) => ({
+        id: r.id,
+        inventory_item_id: r.inventory_item_id,
+        quantity_used: Number(r.quantity_used),
+        unit_type: r.unit_type,
+        waste_percentage: Number(r.waste_percentage),
+      })));
+    })();
+  }, [selectedMenuId]);
+
+  const invMap = useMemo(() => {
+    const m: Record<string, InventoryItem> = {};
+    inventory.forEach((x) => (m[x.id] = x));
+    return m;
+  }, [inventory]);
+
+  const addRow = () =>
+    setRows((r) => [...r, { inventory_item_id: "", quantity_used: 0, unit_type: "gm", waste_percentage: 0 }]);
+
+  const updateRow = (idx: number, patch: Partial<RecipeRow>) =>
+    setRows((r) => r.map((row, i) => (i === idx ? { ...row, ...patch } : row)));
+
+  const removeRow = (idx: number) =>
+    setRows((r) => r.filter((_, i) => i !== idx));
+
+  const totalCost = useMemo(() => {
+    return rows.reduce((sum, r) => {
+      const inv = invMap[r.inventory_item_id];
+      if (!inv?.unit_cost) return sum;
+      // approx: convert to base_unit for cost; assume unit_cost is per base_unit
+      let qty = r.quantity_used * (1 + r.waste_percentage / 100);
+      if (r.unit_type !== inv.base_unit) {
+        if (r.unit_type === "kg" && inv.base_unit === "gm") qty *= 1000;
+        else if (r.unit_type === "gm" && inv.base_unit === "kg") qty /= 1000;
+        else if (r.unit_type === "l" && inv.base_unit === "ml") qty *= 1000;
+        else if (r.unit_type === "ml" && inv.base_unit === "l") qty /= 1000;
+      }
+      return sum + qty * Number(inv.unit_cost);
+    }, 0);
+  }, [rows, invMap]);
+
+  const selectedMenu = menu.find((m) => m.id === selectedMenuId);
+  const profit = selectedMenu ? selectedMenu.price - totalCost : 0;
+
+  const save = async () => {
+    if (!selectedMenuId) return;
+    for (const r of rows) {
+      if (!r.inventory_item_id || r.quantity_used <= 0) {
+        toast.error("Each ingredient needs an item and quantity > 0");
+        return;
+      }
+    }
+    setSaving(true);
+    try {
+      // Replace strategy: delete existing then insert
+      const del = await supabase.from("recipe_items" as any).delete().eq("menu_item_id", selectedMenuId);
+      if (del.error) throw del.error;
+      if (rows.length > 0) {
+        const payload = rows.map((r) => ({
+          menu_item_id: selectedMenuId,
+          inventory_item_id: r.inventory_item_id,
+          quantity_used: r.quantity_used,
+          unit_type: r.unit_type,
+          waste_percentage: r.waste_percentage,
+        }));
+        const ins = await supabase.from("recipe_items" as any).insert(payload);
+        if (ins.error) throw ins.error;
+      }
+      toast.success("Recipe saved");
+    } catch (e) {
+      logError("recipe save", e);
+      toast.error(extractErrorMessage(e));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) return <div className="p-6">Loading…</div>;
+
+  return (
+    <div className="min-h-screen bg-background p-4 sm:p-6">
+      <div className="flex items-center gap-2 mb-6">
+        <ChefHat className="h-5 w-5 text-muted-foreground" />
+        <h1 className="text-lg font-semibold">Recipe Management</h1>
+      </div>
+
+      <Card className="mb-6">
+        <CardHeader className="pb-3"><CardTitle className="text-base">Select menu item</CardTitle></CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid sm:grid-cols-3 gap-3">
+            <div className="sm:col-span-2">
+              <Label>Menu item</Label>
+              <Select value={selectedMenuId} onValueChange={setSelectedMenuId}>
+                <SelectTrigger><SelectValue placeholder="Pick menu item to edit recipe" /></SelectTrigger>
+                <SelectContent>
+                  {menu.map((m) => (
+                    <SelectItem key={m.id} value={m.id}>{m.name} — NRs. {m.price}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {selectedMenu && (
+              <div className="grid grid-cols-3 gap-2 text-xs">
+                <div className="rounded border p-2"><div className="text-muted-foreground">Sell</div><div className="font-semibold">NRs. {selectedMenu.price.toFixed(2)}</div></div>
+                <div className="rounded border p-2"><div className="text-muted-foreground">Cost</div><div className="font-semibold">NRs. {totalCost.toFixed(2)}</div></div>
+                <div className="rounded border p-2"><div className="text-muted-foreground">Profit</div><div className="font-semibold">NRs. {profit.toFixed(2)}</div></div>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {selectedMenuId && (
+        <Card>
+          <CardHeader className="pb-3 flex flex-row items-center justify-between">
+            <CardTitle className="text-base">Ingredients</CardTitle>
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline" onClick={addRow}><Plus className="h-4 w-4 mr-1" />Add</Button>
+              <Button size="sm" onClick={save} disabled={saving}><Save className="h-4 w-4 mr-1" />{saving ? "Saving…" : "Save"}</Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Inventory item</TableHead>
+                  <TableHead className="w-28">Quantity</TableHead>
+                  <TableHead className="w-28">Unit</TableHead>
+                  <TableHead className="w-24">Waste %</TableHead>
+                  <TableHead>Stock</TableHead>
+                  <TableHead className="w-12"></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {rows.length === 0 && (
+                  <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-6">No ingredients yet — click Add</TableCell></TableRow>
+                )}
+                {rows.map((r, idx) => {
+                  const inv = invMap[r.inventory_item_id];
+                  return (
+                    <TableRow key={idx}>
+                      <TableCell>
+                        <Select value={r.inventory_item_id} onValueChange={(v) => {
+                          const inv = invMap[v];
+                          updateRow(idx, { inventory_item_id: v, unit_type: inv?.base_unit || r.unit_type });
+                        }}>
+                          <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                          <SelectContent>
+                            {inventory.map((i) => (
+                              <SelectItem key={i.id} value={i.id}>{i.item_name} ({i.base_unit})</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+                      <TableCell><Input type="number" step="0.01" value={r.quantity_used} onChange={(e) => updateRow(idx, { quantity_used: parseFloat(e.target.value) || 0 })} /></TableCell>
+                      <TableCell>
+                        <Select value={r.unit_type} onValueChange={(v) => updateRow(idx, { unit_type: v })}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {UNIT_OPTIONS.map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+                      <TableCell><Input type="number" step="0.1" value={r.waste_percentage} onChange={(e) => updateRow(idx, { waste_percentage: parseFloat(e.target.value) || 0 })} /></TableCell>
+                      <TableCell className="text-xs text-muted-foreground">{inv ? `${inv.quantity} ${inv.base_unit}` : "-"}</TableCell>
+                      <TableCell><Button size="icon" variant="ghost" onClick={() => removeRow(idx)}><Trash2 className="h-4 w-4" /></Button></TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+};
+
+export default RecipeManagementTab;

@@ -51,6 +51,7 @@ import {
   Lock,
   FileSpreadsheet,
   Boxes,
+  ChefHat,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -77,6 +78,7 @@ import ShareInvestmentsTab from "@/components/tabs/ShareInvestmentsTab";
 import ExpenseBookingsTab from "@/components/tabs/ExpenseBookingsTab";
 import VATEntryTab from "@/components/tabs/VATEntryTab";
 import InventoryTab from "@/components/tabs/InventoryTab";
+import RecipeManagementTab from "@/components/tabs/RecipeManagementTab";
 import FileUploadTab from "@/components/tabs/FileUploadTab";
 
 const Dashboard = () => {
@@ -227,6 +229,17 @@ const Dashboard = () => {
         color: "bg-foreground",
         bgColor: "bg-muted",
         description: "Manage menu items",
+      },
+      {
+        id: "recipes",
+        path: "recipes",
+        label: "Recipes",
+        icon: ChefHat,
+        component: RecipeManagementTab,
+        roles: ["super_admin"],
+        color: "bg-foreground",
+        bgColor: "bg-muted",
+        description: "Link menu items to inventory ingredients",
       },
       {
         id: "user_management",

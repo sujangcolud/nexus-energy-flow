@@ -28,6 +28,7 @@ import ShareInvestmentsTab from "./components/tabs/ShareInvestmentsTab";
 import ExpenseBookingsTab from "./components/tabs/ExpenseBookingsTab";
 import VATEntryTab from "./components/tabs/VATEntryTab";
 import InventoryTab from "./components/tabs/InventoryTab";
+import RecipeManagementTab from "./components/tabs/RecipeManagementTab";
 import FileUploadTab from "./components/tabs/FileUploadTab";
 
 import UnifiedInsightsTab from "./components/tabs/UnifiedInsightsTab";
@@ -139,6 +140,7 @@ const App = () => {
                 <Route path="inventory" element={<InventoryTab />} />
                 {/* TODO: Add role-based protection for menu if needed at route level, or handle in MenuManagementTab */}
                 <Route path="menu" element={<MenuManagementTab />} />
+                <Route path="recipes" element={<RecipeManagementTab />} />
 
                 <Route path="bulk-import" element={<UnifiedBulkImportTab />} />
                 <Route path="user-management" element={<UserManagementTab />} />
