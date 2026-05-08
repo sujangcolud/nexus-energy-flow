@@ -32,6 +32,7 @@ import { toast } from "sonner";
 import { extractErrorMessage, logError } from "@/utils/errorHandling";
 import { Package, Plus, Minus, AlertTriangle, CheckCircle } from "lucide-react";
 import { format } from "date-fns";
+import MultiInventoryEntry from "../MultiInventoryEntry";
 
 interface Category {
   id: string;
@@ -218,12 +219,22 @@ const InventoryTab = () => {
       </Dialog>
 
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <Package className="h-5 w-5 text-muted-foreground" />
             <h1 className="text-lg font-semibold text-foreground">Inventory</h1>
           </div>
-          <Button onClick={() => setManualAddDialogOpen(true)}><Plus className="h-4 w-4 mr-2" />Add Item</Button>
+          <div className="flex items-center gap-2">
+            <MultiInventoryEntry
+              inventory={inventory}
+              categories={categories}
+              onComplete={fetchInventory}
+            />
+            <Button onClick={() => setManualAddDialogOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Item
+            </Button>
+          </div>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
