@@ -38,6 +38,10 @@ import {
   AlertCircle,
   PlusCircle,
   Trash2,
+  Package,
+  ShoppingCart,
+  Hash,
+  Scale,
 } from "lucide-react";
 import { DateRange } from "react-day-picker";
 import {
@@ -68,6 +72,7 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import useTableControls from "@/hooks/useTableControls";
 import MultiExpenseEntry from "@/components/MultiExpenseEntry";
+import { Switch } from "@/components/ui/switch";
 
 interface Expense {
   id: string;
@@ -77,6 +82,20 @@ interface Expense {
   payment_mode: string;
   remarks: string | null;
   expense_date: string;
+  is_inventory_purchase?: boolean;
+  inventory_item_id?: string | null;
+  quantity?: number | null;
+  unit?: string | null;
+  cost_per_unit?: number | null;
+  supplier?: string | null;
+  invoice_number?: string | null;
+}
+
+interface InventoryItem {
+  id: string;
+  item_name: string;
+  quantity: number;
+  category: string | null;
 }
 
 interface Category {
@@ -88,6 +107,7 @@ interface Category {
 const ExpensesTab = () => {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
     description: "",
@@ -95,6 +115,13 @@ const ExpensesTab = () => {
     paymentMode: "",
     category: "",
     remarks: "",
+    isInventoryPurchase: false,
+    inventoryItemId: "",
+    quantity: "",
+    unit: "",
+    costPerUnit: "",
+    supplier: "",
+    invoiceNumber: "",
   });
   const [newCategory, setNewCategory] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -135,6 +162,7 @@ const ExpensesTab = () => {
   useEffect(() => {
     fetchExpenses();
     fetchCategories();
+    fetchInventoryItems();
     // Default to true if no setting exists
     const canEdit = localStorage.getItem("canEditTransactions");
     setCanEditTransactions(canEdit === null ? true : JSON.parse(canEdit));
@@ -154,6 +182,20 @@ const ExpensesTab = () => {
     } catch (error) {
       logError("fetching categories", error);
       toast.error(`Failed to load categories: ${extractErrorMessage(error)}`);
+    }
+  };
+
+  const fetchInventoryItems = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("inventory")
+        .select("id, item_name, quantity, category")
+        .eq("is_active", true)
+        .order("item_name");
+      if (error) throw error;
+      setInventoryItems(data || []);
+    } catch (error) {
+      logError("fetching inventory items", error);
     }
   };
 
@@ -205,34 +247,56 @@ const ExpensesTab = () => {
       return;
     }
 
+    if (formData.isInventoryPurchase) {
+      if (!formData.inventoryItemId || !formData.quantity) {
+        toast.error("Please provide inventory item and quantity");
+        return;
+      }
+    }
+
     setIsSubmitting(true);
     try {
-      const { error } = await supabase.from("expenses").insert([
-        {
-          user_id: user.id,
-          description: formData.description,
-          amount: parseFloat(formData.amount),
-          category: formData.category,
-          payment_mode: formData.paymentMode,
-          remarks: formData.remarks || null,
-          expense_date: transactionDate,
-        },
-      ]);
+      const { data, error } = await supabase.rpc("process_inventory_expense", {
+        p_user_id: user.id,
+        p_description: formData.description,
+        p_amount: parseFloat(formData.amount),
+        p_category: formData.category,
+        p_payment_mode: formData.paymentMode,
+        p_remarks: formData.remarks || null,
+        p_expense_date: transactionDate,
+        p_is_inventory_purchase: formData.isInventoryPurchase,
+        p_inventory_item_id: formData.inventoryItemId || null,
+        p_quantity: formData.quantity ? parseFloat(formData.quantity) : null,
+        p_unit: formData.unit || null,
+        p_cost_per_unit: formData.costPerUnit ? parseFloat(formData.costPerUnit) : null,
+        p_supplier: formData.supplier || null,
+        p_invoice_number: formData.invoiceNumber || null,
+      });
 
       if (error) {
         console.error("Expense submission failed:", error);
         throw error;
       }
 
-      toast.success("Expense added successfully!");
+      toast.success(formData.isInventoryPurchase ? "Inventory purchase recorded!" : "Expense added successfully!");
       setFormData({
         description: "",
         amount: "",
         paymentMode: "",
         category: "",
         remarks: "",
+        isInventoryPurchase: false,
+        inventoryItemId: "",
+        quantity: "",
+        unit: "",
+        costPerUnit: "",
+        supplier: "",
+        invoiceNumber: "",
       });
       fetchExpenses();
+      if (formData.isInventoryPurchase) {
+        fetchInventoryItems();
+      }
     } catch (error) {
       console.error("Error adding expense:", JSON.stringify(error, null, 2));
       console.error("Error details:", error);
@@ -421,6 +485,69 @@ const ExpensesTab = () => {
                   }
                 />
               </div>
+
+              {selectedExpense.is_inventory_purchase && (
+                <div className="space-y-4 p-4 bg-amber-50 rounded-lg border border-amber-100">
+                  <p className="text-sm font-medium text-amber-800 flex items-center gap-2">
+                    <Package className="h-4 w-4" />
+                    Inventory Purchase Details
+                  </p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>Quantity</Label>
+                      <Input
+                        type="number"
+                        value={selectedExpense.quantity || ""}
+                        onChange={(e) =>
+                          setSelectedExpense({
+                            ...selectedExpense,
+                            quantity: parseFloat(e.target.value),
+                          })
+                        }
+                      />
+                    </div>
+                    <div>
+                      <Label>Unit</Label>
+                      <Input
+                        value={selectedExpense.unit || ""}
+                        onChange={(e) =>
+                          setSelectedExpense({
+                            ...selectedExpense,
+                            unit: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+                    <div>
+                      <Label>Supplier</Label>
+                      <Input
+                        value={selectedExpense.supplier || ""}
+                        onChange={(e) =>
+                          setSelectedExpense({
+                            ...selectedExpense,
+                            supplier: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+                    <div>
+                      <Label>Invoice #</Label>
+                      <Input
+                        value={selectedExpense.invoice_number || ""}
+                        onChange={(e) =>
+                          setSelectedExpense({
+                            ...selectedExpense,
+                            invoice_number: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+                  </div>
+                  <p className="text-xs text-amber-600">
+                    Note: Updating quantity here will NOT automatically update inventory stock to avoid double-counting. Please use the Inventory module for manual stock adjustments.
+                  </p>
+                </div>
+              )}
               <RecordAttachments recordType="expense" recordId={selectedExpense.id} />
             </div>
           )}
@@ -637,6 +764,137 @@ const ExpensesTab = () => {
                     </Select>
                   </div>
                 </div>
+
+                <div className="flex items-center space-x-2 py-2">
+                  <Switch
+                    id="inventory-purchase"
+                    checked={formData.isInventoryPurchase}
+                    onCheckedChange={(checked) =>
+                      setFormData({ ...formData, isInventoryPurchase: checked })
+                    }
+                  />
+                  <Label htmlFor="inventory-purchase" className="text-sm font-medium flex items-center gap-2">
+                    <Package className="h-4 w-4 text-amber-600" />
+                    Inventory Purchase?
+                  </Label>
+                </div>
+
+                {formData.isInventoryPurchase && (
+                  <div className="space-y-4 p-4 bg-amber-50/50 rounded-lg border border-amber-100 animate-in fade-in slide-in-from-top-2">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="inventoryItemId" className="text-sm font-medium flex items-center gap-2">
+                          <ShoppingCart className="h-4 w-4 text-amber-600" />
+                          Inventory Item *
+                        </Label>
+                        <Select
+                          value={formData.inventoryItemId}
+                          onValueChange={(value) => {
+                            const item = inventoryItems.find(i => i.id === value);
+                            setFormData({
+                              ...formData,
+                              inventoryItemId: value,
+                              description: item ? `Purchase: ${item.item_name}` : formData.description,
+                              category: item?.category || formData.category
+                            });
+                          }}
+                        >
+                          <SelectTrigger className="border-amber-200 bg-white">
+                            <SelectValue placeholder="Select item" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {inventoryItems.map((item) => (
+                              <SelectItem key={item.id} value={item.id}>
+                                {item.item_name} ({item.quantity} in stock)
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="quantity" className="text-sm font-medium flex items-center gap-2">
+                          <Scale className="h-4 w-4 text-amber-600" />
+                          Quantity *
+                        </Label>
+                        <Input
+                          id="quantity"
+                          type="number"
+                          value={formData.quantity}
+                          onChange={(e) => {
+                            const qty = e.target.value;
+                            const cpu = formData.costPerUnit;
+                            const calcAmount = (parseFloat(qty || "0") * parseFloat(cpu || "0")).toFixed(2);
+                            setFormData({
+                              ...formData,
+                              quantity: qty,
+                              amount: parseFloat(calcAmount) > 0 ? calcAmount : formData.amount
+                            });
+                          }}
+                          placeholder="0.00"
+                          className="border-amber-200 bg-white"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="unit" className="text-sm font-medium">Unit (kg, ltr, pcs, etc.)</Label>
+                        <Input
+                          id="unit"
+                          value={formData.unit}
+                          onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
+                          placeholder="e.g. kg"
+                          className="border-amber-200 bg-white"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="costPerUnit" className="text-sm font-medium">Cost per Unit</Label>
+                        <Input
+                          id="costPerUnit"
+                          type="number"
+                          value={formData.costPerUnit}
+                          onChange={(e) => {
+                            const cpu = e.target.value;
+                            const qty = formData.quantity;
+                            const calcAmount = (parseFloat(qty || "0") * parseFloat(cpu || "0")).toFixed(2);
+                            setFormData({
+                              ...formData,
+                              costPerUnit: cpu,
+                              amount: parseFloat(calcAmount) > 0 ? calcAmount : formData.amount
+                            });
+                          }}
+                          placeholder="0.00"
+                          className="border-amber-200 bg-white"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="supplier" className="text-sm font-medium">Supplier</Label>
+                        <Input
+                          id="supplier"
+                          value={formData.supplier}
+                          onChange={(e) => setFormData({ ...formData, supplier: e.target.value })}
+                          placeholder="Supplier name"
+                          className="border-amber-200 bg-white"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="invoiceNumber" className="text-sm font-medium flex items-center gap-2">
+                          <Hash className="h-4 w-4 text-amber-600" />
+                          Invoice Number
+                        </Label>
+                        <Input
+                          id="invoiceNumber"
+                          value={formData.invoiceNumber}
+                          onChange={(e) => setFormData({ ...formData, invoiceNumber: e.target.value })}
+                          placeholder="Invoice #"
+                          className="border-amber-200 bg-white"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 <div className="space-y-2">
                   <Label
@@ -913,9 +1171,12 @@ const ExpensesTab = () => {
                         </TableCell>
                         <TableCell className="max-w-xs">
                           <div
-                            className="font-medium text-gray-800 truncate"
+                            className="font-medium text-gray-800 truncate flex items-center gap-2"
                             title={expense.description}
                           >
+                            {expense.is_inventory_purchase && (
+                              <Package className="h-3 w-3 text-amber-600 shrink-0" />
+                            )}
                             {expense.description}
                           </div>
                         </TableCell>
