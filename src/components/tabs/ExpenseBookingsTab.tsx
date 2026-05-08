@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Trash2, BookMarked, Edit, PlusCircle, CheckCircle2, Calendar as CalendarIcon } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import RecordAttachments from "@/components/RecordAttachments";
 import {
   Dialog,

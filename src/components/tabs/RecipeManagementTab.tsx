@@ -46,7 +46,7 @@ interface RecipeRow {
   waste_percentage: number;
 }
 
-const UNIT_OPTIONS = ["gm", "kg", "ml", "l", "pcs"];
+const UNIT_OPTIONS = ["g", "gm", "kg", "ml", "l", "pcs", "packet", "box", "bottle"];
 
 const RecipeManagementTab = () => {
   const [menu, setMenu] = useState<MenuItem[]>([]);
