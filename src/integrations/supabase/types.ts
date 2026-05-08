@@ -686,6 +686,7 @@ export type Database = {
       }
       inventory: {
         Row: {
+          base_unit: string
           category: string | null
           created_at: string | null
           description: string | null
@@ -705,6 +706,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          base_unit?: string
           category?: string | null
           created_at?: string | null
           description?: string | null
@@ -724,6 +726,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          base_unit?: string
           category?: string | null
           created_at?: string | null
           description?: string | null
@@ -985,6 +988,51 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      recipe_items: {
+        Row: {
+          created_at: string
+          id: string
+          inventory_item_id: string
+          menu_item_id: string
+          quantity_used: number
+          unit_type: string
+          waste_percentage: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          inventory_item_id: string
+          menu_item_id: string
+          quantity_used: number
+          unit_type?: string
+          waste_percentage?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          inventory_item_id?: string
+          menu_item_id?: string
+          quantity_used?: number
+          unit_type?: string
+          waste_percentage?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recipe_items_inventory_item_id_fkey"
+            columns: ["inventory_item_id"]
+            isOneToOne: false
+            referencedRelation: "inventory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recipe_items_menu_item_id_fkey"
+            columns: ["menu_item_id"]
+            isOneToOne: false
+            referencedRelation: "menu_items"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       record_attachments: {
         Row: {
@@ -1564,6 +1612,10 @@ export type Database = {
           total_withdrawals_cooperative_fonepay: number
         }[]
       }
+      convert_unit: {
+        Args: { p_from: string; p_qty: number; p_to: string }
+        Returns: number
+      }
       daily_closing: {
         Args: { p_closing_date: string; p_user_id: string }
         Returns: Json
@@ -1818,6 +1870,10 @@ export type Database = {
         Returns: Json
       }
       nexus_reconcile: { Args: { p_check_date?: string }; Returns: Json }
+      process_pos_order: {
+        Args: { p_items: Json; p_order_date: string; p_payment_mode: string }
+        Returns: Json
+      }
       recalculate_historical_daily_summaries: {
         Args: { target_user_id: string }
         Returns: number
