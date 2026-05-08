@@ -1,4 +1,4 @@
--- Consolidated Migration for Expenses & Inventory Integration
+-- Consolidated Migration for Expenses & Inventory Integration - Synchronized Version
 
 -- 1. Extend expenses table
 DO $$
@@ -83,9 +83,9 @@ AS $$
 DECLARE
   v_expense_id uuid;
 BEGIN
+  -- Insert into expenses
   INSERT INTO public.expenses (
     user_id,
-    item_name,
     description,
     amount,
     category,
@@ -104,7 +104,6 @@ BEGIN
   VALUES (
     p_user_id,
     p_description,
-    p_description,
     p_amount,
     p_category,
     p_payment_mode,
@@ -121,13 +120,18 @@ BEGIN
   )
   RETURNING id INTO v_expense_id;
 
+  -- Update inventory if it's a purchase
   IF p_is_inventory_purchase AND p_inventory_item_id IS NOT NULL THEN
     UPDATE public.inventory
     SET
       quantity = quantity + COALESCE(p_quantity, 0),
+      unit_cost = COALESCE(p_cost_per_unit, unit_cost),
+      total_cost = (quantity + COALESCE(p_quantity, 0)) * COALESCE(p_cost_per_unit, unit_cost),
+      supplier = COALESCE(p_supplier, supplier),
       updated_at = now()
     WHERE id = p_inventory_item_id;
 
+    -- Log transaction
     INSERT INTO public.inventory_transactions (
       user_id,
       inventory_id,
@@ -163,7 +167,7 @@ DROP VIEW IF EXISTS public.inventory_purchase_history;
 CREATE OR REPLACE VIEW public.inventory_purchase_history AS
 SELECT
     e.expense_date,
-    e.item_name as expense_description,
+    e.description as expense_description,
     i.item_name as inventory_item_name,
     e.quantity,
     e.unit,
@@ -192,7 +196,7 @@ SELECT
     SUM(amount) as total_spent,
     MIN(expense_date) as first_purchase,
     MAX(expense_date) as last_purchase,
-    jsonb_agg(DISTINCT item_name) as items_purchased
+    jsonb_agg(DISTINCT description) as items_purchased
 FROM
     public.expenses
 WHERE

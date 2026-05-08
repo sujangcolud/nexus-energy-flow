@@ -76,7 +76,6 @@ import { Switch } from "@/components/ui/switch";
 
 interface Expense {
   id: string;
-  item_name: string;
   description: string;
   amount: number;
   category: string;
@@ -1173,12 +1172,12 @@ const ExpensesTab = () => {
                         <TableCell className="max-w-xs">
                           <div
                             className="font-medium text-gray-800 truncate flex items-center gap-2"
-                            title={expense.item_name || expense.description}
+                            title={expense.description}
                           >
                             {expense.is_inventory_purchase && (
                               <Package className="h-3 w-3 text-amber-600 shrink-0" />
                             )}
-                            {expense.item_name || expense.description}
+                            {expense.description}
                           </div>
                         </TableCell>
                         <TableCell>
