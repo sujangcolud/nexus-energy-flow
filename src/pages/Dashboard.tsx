@@ -51,6 +51,7 @@ import {
   Lock,
   FileSpreadsheet,
   Boxes,
+  ChefHat,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
