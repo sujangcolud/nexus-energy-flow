@@ -272,77 +272,19 @@ const OrdersTab = () => {
 
     setSubmitting(true);
     try {
-      console.log("Submitting orders for user:", user.id);
-      console.log("Current session user:", session.user.id);
-      console.log("Full user object:", user);
-      console.log("Full session object:", session);
-      console.log("Cart items:", cart);
-      console.log("Payment mode:", paymentMode);
-
-      const orderPromises = cart.map(async (item) => {
-        const currentDate = transactionDate;
-
-        // Try direct insert first (most reliable)
-        const directOrderData = {
-          user_id: user.id,
-          item_name: String(item.name),
+      const payload = {
+        p_items: cart.map((item) => ({
+          menu_item_id: item.id,
+          item_name: item.name,
           quantity: Number(item.quantity),
           rate: Number(item.price),
-          total: Number(item.price * item.quantity),
-          payment_mode: String(paymentMode),
-          order_date: currentDate,
-        };
+        })),
+        p_payment_mode: String(paymentMode),
+        p_order_date: transactionDate,
+      };
 
-        console.log("Attempting direct insert with data:", directOrderData);
-
-        try {
-          // Try without 'date' field first
-          const result = await supabase.from("orders").insert(directOrderData);
-
-          if (result.error && result.error.code === "PGRST204") {
-            console.log("PGRST204 detected, trying with both date fields");
-            // If PGRST204, try with both date fields
-            const dataWithBothDates = {
-              ...directOrderData,
-              date: currentDate,
-            };
-            return await supabase.from("orders").insert(dataWithBothDates);
-          }
-
-          return result;
-        } catch (error) {
-          console.error("Direct insert failed, trying RPC fallback:", error);
-
-          // Fallback to RPC if available
-          const orderParams = {
-            p_user_id: user.id,
-            p_item_name: String(item.name),
-            p_quantity: Number(item.quantity),
-            p_rate: Number(item.price),
-            p_total: Number(item.price * item.quantity),
-            p_payment_mode: String(paymentMode),
-            p_order_date: currentDate,
-          };
-
-          return await supabase.rpc("insert_order_safe", orderParams);
-        }
-      });
-
-      const results = await Promise.all(orderPromises);
-
-      // Check if any RPC call failed
-      const failed = results.find((result) => result.error);
-      if (failed) {
-        console.error(
-          "Order submission failed:",
-          JSON.stringify(failed.error, null, 2),
-        );
-        console.error("Failed result:", JSON.stringify(failed, null, 2));
-        throw failed.error;
-      }
-
-      // Log successful results
-      console.log("All orders inserted successfully:", results);
+      const { error } = await supabase.rpc("process_pos_order" as any, payload as any);
+      if (error) throw error;
 
       toast.success("Order placed successfully! 🎉");
       clearCart();
