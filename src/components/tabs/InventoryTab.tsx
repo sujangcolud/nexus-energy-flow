@@ -30,7 +30,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { extractErrorMessage, logError } from "@/utils/errorHandling";
-import { Package, Plus, Minus, AlertTriangle, CheckCircle } from "lucide-react";
+import { Package, Plus, Minus, AlertTriangle, CheckCircle, Edit } from "lucide-react";
 import { format } from "date-fns";
 import MultiInventoryEntry from "../MultiInventoryEntry";
 
@@ -67,6 +67,11 @@ const InventoryTab = () => {
   const [manualAddDialogOpen, setManualAddDialogOpen] = useState(false);
   const [manualItemForm, setManualItemForm] = useState({
     item_name: "", description: "", category: "", quantity: "",
+    unit_cost: "", supplier: "", location: "", minimum_stock: "", expiry_date: "",
+  });
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
+    id: "", item_name: "", description: "", category: "", quantity: "",
     unit_cost: "", supplier: "", location: "", minimum_stock: "", expiry_date: "",
   });
 
@@ -127,6 +132,40 @@ const InventoryTab = () => {
     }
   };
 
+  const updateItem = async () => {
+    if (!editForm.item_name || editForm.quantity === "") {
+      toast.error("Please fill required fields");
+      return;
+    }
+    try {
+      const quantity = parseFloat(editForm.quantity);
+      const unitCost = parseFloat(editForm.unit_cost) || 0;
+      const { error } = await supabase
+        .from("inventory")
+        .update({
+          item_name: editForm.item_name,
+          description: editForm.description || null,
+          category: editForm.category || null,
+          quantity,
+          unit_cost: unitCost,
+          total_cost: quantity * unitCost,
+          supplier: editForm.supplier || null,
+          location: editForm.location || null,
+          minimum_stock: parseFloat(editForm.minimum_stock) || 0,
+          expiry_date: editForm.expiry_date || null,
+        })
+        .eq("id", editForm.id);
+
+      if (error) throw error;
+      toast.success("Item updated!");
+      setIsEditDialogOpen(false);
+      fetchInventory();
+    } catch (error) {
+      logError("updating item", error);
+      toast.error(`Error: ${extractErrorMessage(error)}`);
+    }
+  };
+
   const addManualItem = async () => {
     if (!manualItemForm.item_name || !manualItemForm.quantity) {
       toast.error("Please fill required fields");
@@ -181,6 +220,41 @@ const InventoryTab = () => {
             <div><Label>Notes</Label><Input value={stockOutForm.notes} onChange={(e) => setStockOutForm({ ...stockOutForm, notes: e.target.value })} /></div>
           </div>
           <DialogFooter><Button onClick={stockOut}>Record Stock Out</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader><DialogTitle>Edit Inventory Item</DialogTitle></DialogHeader>
+          <div className="grid grid-cols-2 gap-4">
+            <div><Label>Item Name *</Label><Input value={editForm.item_name} onChange={(e) => setEditForm({ ...editForm, item_name: e.target.value })} /></div>
+            <div>
+              <Label>Category</Label>
+              <Select
+                value={editForm.category || ""}
+                onValueChange={(value) => setEditForm({ ...editForm, category: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((cat) => (
+                    <SelectItem key={cat.id} value={cat.name}>
+                      {cat.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div><Label>Quantity *</Label><Input type="number" value={editForm.quantity} onChange={(e) => setEditForm({ ...editForm, quantity: e.target.value })} /></div>
+            <div><Label>Unit Cost</Label><Input type="number" value={editForm.unit_cost} onChange={(e) => setEditForm({ ...editForm, unit_cost: e.target.value })} /></div>
+            <div><Label>Supplier</Label><Input value={editForm.supplier} onChange={(e) => setEditForm({ ...editForm, supplier: e.target.value })} /></div>
+            <div><Label>Location</Label><Input value={editForm.location} onChange={(e) => setEditForm({ ...editForm, location: e.target.value })} /></div>
+            <div><Label>Min Stock</Label><Input type="number" value={editForm.minimum_stock} onChange={(e) => setEditForm({ ...editForm, minimum_stock: e.target.value })} /></div>
+            <div><Label>Expiry Date</Label><Input type="date" value={editForm.expiry_date} onChange={(e) => setEditForm({ ...editForm, expiry_date: e.target.value })} /></div>
+            <div className="col-span-2"><Label>Description</Label><Input value={editForm.description} onChange={(e) => setEditForm({ ...editForm, description: e.target.value })} /></div>
+          </div>
+          <DialogFooter><Button onClick={updateItem}>Update Item</Button></DialogFooter>
         </DialogContent>
       </Dialog>
 
@@ -271,9 +345,28 @@ const InventoryTab = () => {
                       <TableCell>NPR {(item.total_cost || 0).toFixed(2)}</TableCell>
                       <TableCell><Badge variant={status.status === "in-stock" ? "default" : "secondary"}>{status.status}</Badge></TableCell>
                       <TableCell>
-                        <Button variant="outline" size="sm" onClick={() => { setSelectedItem(item); setStockOutDialogOpen(true); }}>
-                          <Minus className="h-3 w-3 mr-1" />Stock Out
-                        </Button>
+                        <div className="flex gap-2">
+                          <Button variant="outline" size="sm" onClick={() => {
+                            setEditForm({
+                              id: item.id,
+                              item_name: item.item_name,
+                              description: item.description || "",
+                              category: item.category || "",
+                              quantity: item.quantity.toString(),
+                              unit_cost: (item.unit_cost || 0).toString(),
+                              supplier: item.supplier || "",
+                              location: item.location || "",
+                              minimum_stock: item.minimum_stock.toString(),
+                              expiry_date: item.expiry_date || "",
+                            });
+                            setIsEditDialogOpen(true);
+                          }}>
+                            <Edit className="h-3 w-3 mr-1" />Edit
+                          </Button>
+                          <Button variant="outline" size="sm" onClick={() => { setSelectedItem(item); setStockOutDialogOpen(true); }}>
+                            <Minus className="h-3 w-3 mr-1" />Stock Out
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   );
