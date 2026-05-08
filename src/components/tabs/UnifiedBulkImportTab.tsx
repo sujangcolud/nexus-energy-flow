@@ -294,12 +294,29 @@ const UnifiedBulkImportTab = () => {
   };
 
   const insertRows = async (type: DataType, rows: any[]) => {
-    const batchSize = 50;
+    const batchSize = 25; // Smaller batch size for inventory if using RPC
     const total = Math.ceil(rows.length / batchSize);
+
     for (let i = 0; i < total; i++) {
       const batch = rows.slice(i * batchSize, (i + 1) * batchSize);
-      const { error } = await (supabase.from(type as any) as any).insert(batch);
-      if (error) throw error;
+
+      if (type === 'inventory') {
+        // For inventory, we might want to use the RPC to sync with expenses,
+        // but for bulk import it's often initial setup or stock-only.
+        // If we want to create expenses for each row:
+        for (const row of batch) {
+          // If we have quantity and unit_cost, we can try to use process_inventory_expense
+          // But first we need an existing inventory_item_id or we create one.
+          // For simplicity in "Bulk Import", we'll do direct insert into inventory
+          // but we'll try to use the same logic as the RPC if possible or just direct insert.
+          const { error } = await supabase.from('inventory').insert(row);
+          if (error) throw error;
+        }
+      } else {
+        const { error } = await (supabase.from(type as any) as any).insert(batch);
+        if (error) throw error;
+      }
+
       setProgress(((i + 1) / total) * 100);
     }
   };
