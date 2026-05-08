@@ -230,6 +230,17 @@ const Dashboard = () => {
         description: "Manage menu items",
       },
       {
+        id: "recipes",
+        path: "recipes",
+        label: "Recipes",
+        icon: ChefHat,
+        component: RecipeManagementTab,
+        roles: ["super_admin"],
+        color: "bg-foreground",
+        bgColor: "bg-muted",
+        description: "Link menu items to inventory ingredients",
+      },
+      {
         id: "user_management",
         path: "user-management",
         label: "User Control",
