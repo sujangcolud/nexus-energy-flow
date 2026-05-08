@@ -140,6 +140,7 @@ const App = () => {
                 <Route path="inventory" element={<InventoryTab />} />
                 {/* TODO: Add role-based protection for menu if needed at route level, or handle in MenuManagementTab */}
                 <Route path="menu" element={<MenuManagementTab />} />
+                <Route path="recipes" element={<RecipeManagementTab />} />
 
                 <Route path="bulk-import" element={<UnifiedBulkImportTab />} />
                 <Route path="user-management" element={<UserManagementTab />} />
