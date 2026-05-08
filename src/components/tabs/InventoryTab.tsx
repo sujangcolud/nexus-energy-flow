@@ -33,6 +33,7 @@ import { extractErrorMessage, logError } from "@/utils/errorHandling";
 import { Package, Plus, Minus, AlertTriangle, CheckCircle, Edit } from "lucide-react";
 import { format } from "date-fns";
 import MultiInventoryEntry from "../MultiInventoryEntry";
+import TransactionDatePicker from "@/components/ui/transaction-date-picker";
 
 interface Category {
   id: string;
@@ -251,7 +252,15 @@ const InventoryTab = () => {
             <div><Label>Supplier</Label><Input value={editForm.supplier} onChange={(e) => setEditForm({ ...editForm, supplier: e.target.value })} /></div>
             <div><Label>Location</Label><Input value={editForm.location} onChange={(e) => setEditForm({ ...editForm, location: e.target.value })} /></div>
             <div><Label>Min Stock</Label><Input type="number" value={editForm.minimum_stock} onChange={(e) => setEditForm({ ...editForm, minimum_stock: e.target.value })} /></div>
-            <div><Label>Expiry Date</Label><Input type="date" value={editForm.expiry_date} onChange={(e) => setEditForm({ ...editForm, expiry_date: e.target.value })} /></div>
+            <div>
+              <TransactionDatePicker
+                label="Expiry Date"
+                selectedDate={editForm.expiry_date}
+                onDateChange={(d) => setEditForm({ ...editForm, expiry_date: d })}
+                allowFutureDates={true}
+                showBackdateWarning={false}
+              />
+            </div>
             <div className="col-span-2"><Label>Description</Label><Input value={editForm.description} onChange={(e) => setEditForm({ ...editForm, description: e.target.value })} /></div>
           </div>
           <DialogFooter><Button onClick={updateItem}>Update Item</Button></DialogFooter>
@@ -286,7 +295,15 @@ const InventoryTab = () => {
             <div><Label>Supplier</Label><Input value={manualItemForm.supplier} onChange={(e) => setManualItemForm({ ...manualItemForm, supplier: e.target.value })} /></div>
             <div><Label>Location</Label><Input value={manualItemForm.location} onChange={(e) => setManualItemForm({ ...manualItemForm, location: e.target.value })} /></div>
             <div><Label>Min Stock</Label><Input type="number" value={manualItemForm.minimum_stock} onChange={(e) => setManualItemForm({ ...manualItemForm, minimum_stock: e.target.value })} /></div>
-            <div><Label>Expiry Date</Label><Input type="date" value={manualItemForm.expiry_date} onChange={(e) => setManualItemForm({ ...manualItemForm, expiry_date: e.target.value })} /></div>
+            <div>
+              <TransactionDatePicker
+                label="Expiry Date"
+                selectedDate={manualItemForm.expiry_date}
+                onDateChange={(d) => setManualItemForm({ ...manualItemForm, expiry_date: d })}
+                allowFutureDates={true}
+                showBackdateWarning={false}
+              />
+            </div>
           </div>
           <DialogFooter><Button onClick={addManualItem}>Add Item</Button></DialogFooter>
         </DialogContent>
