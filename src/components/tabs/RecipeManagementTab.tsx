@@ -250,17 +250,18 @@ const RecipeManagementTab = () => {
               </Select>
             </div>
             <div>
-              <Label>Recipe Yield</Label>
+              <Label className="text-amber-600 font-bold">Servings per Batch</Label>
               <Input
                 type="number"
                 step="1"
                 min="1"
+                className="border-amber-200 focus:ring-amber-500"
                 value={selectedMenu?.recipe_yield || 1}
                 onChange={(e) => handleYieldChange(e.target.value)}
-                placeholder="Servings per batch"
+                placeholder="e.g. 10"
                 disabled={!selectedMenuId}
               />
-              <p className="text-[10px] text-muted-foreground mt-1">Number of servings this recipe produces</p>
+              <p className="text-[10px] text-muted-foreground mt-1">Define how many plates/servings the ingredients below produce in total.</p>
             </div>
             {selectedMenu && (
               <div className="grid grid-cols-4 gap-2 text-[10px]">
@@ -311,7 +312,7 @@ const RecipeManagementTab = () => {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Inventory item</TableHead>
-                      <TableHead className="w-28">Quantity</TableHead>
+                  <TableHead className="w-28">Batch Qty</TableHead>
                       <TableHead className="w-28">Unit</TableHead>
                       <TableHead className="w-24">Waste %</TableHead>
                       <TableHead>Stock</TableHead>
