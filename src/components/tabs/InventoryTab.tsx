@@ -21,10 +21,22 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
 import { extractErrorMessage, logError } from "@/utils/errorHandling";
 import { Package, Plus, Minus, AlertTriangle, CheckCircle } from "lucide-react";
 import { format } from "date-fns";
+
+interface Category {
+  id: string;
+  name: string;
+}
 
 interface InventoryItem {
   id: string;
@@ -46,6 +58,7 @@ interface InventoryItem {
 const InventoryTab = () => {
   const { user } = useAuth();
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [stockOutDialogOpen, setStockOutDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
@@ -57,8 +70,24 @@ const InventoryTab = () => {
   });
 
   useEffect(() => {
-    if (user) fetchInventory();
+    if (user) {
+      fetchInventory();
+      fetchCategories();
+    }
   }, [user]);
+
+  const fetchCategories = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("expense_categories")
+        .select("*")
+        .order("name", { ascending: true });
+      if (error) throw error;
+      setCategories(data || []);
+    } catch (error) {
+      logError("fetching categories", error);
+    }
+  };
 
   const fetchInventory = async () => {
     if (!user) return;
@@ -159,7 +188,24 @@ const InventoryTab = () => {
           <DialogHeader><DialogTitle>Add Inventory Item</DialogTitle></DialogHeader>
           <div className="grid grid-cols-2 gap-4">
             <div><Label>Item Name *</Label><Input value={manualItemForm.item_name} onChange={(e) => setManualItemForm({ ...manualItemForm, item_name: e.target.value })} /></div>
-            <div><Label>Category</Label><Input value={manualItemForm.category} onChange={(e) => setManualItemForm({ ...manualItemForm, category: e.target.value })} /></div>
+            <div>
+              <Label>Category</Label>
+              <Select
+                value={manualItemForm.category}
+                onValueChange={(value) => setManualItemForm({ ...manualItemForm, category: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((cat) => (
+                    <SelectItem key={cat.id} value={cat.name}>
+                      {cat.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <div><Label>Quantity *</Label><Input type="number" value={manualItemForm.quantity} onChange={(e) => setManualItemForm({ ...manualItemForm, quantity: e.target.value })} /></div>
             <div><Label>Unit Cost</Label><Input type="number" value={manualItemForm.unit_cost} onChange={(e) => setManualItemForm({ ...manualItemForm, unit_cost: e.target.value })} /></div>
             <div><Label>Supplier</Label><Input value={manualItemForm.supplier} onChange={(e) => setManualItemForm({ ...manualItemForm, supplier: e.target.value })} /></div>
