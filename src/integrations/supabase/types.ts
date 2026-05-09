@@ -604,6 +604,7 @@ export type Database = {
           created_at: string | null
           id: string
           party_name: string
+          payment_date: string | null
           remarks: string | null
           user_id: string | null
         }
@@ -613,6 +614,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           party_name: string
+          payment_date?: string | null
           remarks?: string | null
           user_id?: string | null
         }
@@ -622,6 +624,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           party_name?: string
+          payment_date?: string | null
           remarks?: string | null
           user_id?: string | null
         }
@@ -649,40 +652,69 @@ export type Database = {
         Row: {
           amount: number
           category: string
+          cost_per_unit: number | null
           created_at: string | null
           date: string | null
           description: string
           expense_date: string | null
           id: string
+          inventory_item_id: string | null
+          invoice_number: string | null
+          is_inventory_purchase: boolean | null
           payment_mode: string
+          quantity: number | null
           remarks: string | null
+          supplier: string | null
+          unit: string | null
           user_id: string
         }
         Insert: {
           amount: number
           category: string
+          cost_per_unit?: number | null
           created_at?: string | null
           date?: string | null
           description: string
           expense_date?: string | null
           id?: string
+          inventory_item_id?: string | null
+          invoice_number?: string | null
+          is_inventory_purchase?: boolean | null
           payment_mode: string
+          quantity?: number | null
           remarks?: string | null
+          supplier?: string | null
+          unit?: string | null
           user_id: string
         }
         Update: {
           amount?: number
           category?: string
+          cost_per_unit?: number | null
           created_at?: string | null
           date?: string | null
           description?: string
           expense_date?: string | null
           id?: string
+          inventory_item_id?: string | null
+          invoice_number?: string | null
+          is_inventory_purchase?: boolean | null
           payment_mode?: string
+          quantity?: number | null
           remarks?: string | null
+          supplier?: string | null
+          unit?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "expenses_inventory_item_id_fkey"
+            columns: ["inventory_item_id"]
+            isOneToOne: false
+            referencedRelation: "inventory"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       inventory: {
         Row: {
@@ -831,6 +863,7 @@ export type Database = {
           is_available: boolean | null
           name: string
           price: number
+          recipe_yield: number | null
           updated_at: string | null
         }
         Insert: {
@@ -841,6 +874,7 @@ export type Database = {
           is_available?: boolean | null
           name: string
           price: number
+          recipe_yield?: number | null
           updated_at?: string | null
         }
         Update: {
@@ -851,6 +885,7 @@ export type Database = {
           is_available?: boolean | null
           name?: string
           price?: number
+          recipe_yield?: number | null
           updated_at?: string | null
         }
         Relationships: []
@@ -1518,6 +1553,23 @@ export type Database = {
         }
         Relationships: []
       }
+      inventory_purchase_history: {
+        Row: {
+          cost_per_unit: number | null
+          expense_date: string | null
+          expense_description: string | null
+          expense_id: string | null
+          inventory_item_name: string | null
+          invoice_number: string | null
+          payment_mode: string | null
+          quantity: number | null
+          supplier: string | null
+          total_cost: number | null
+          unit: string | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
       nepali_kitchen_intelligence: {
         Row: {
           business_date: string | null
@@ -1528,6 +1580,17 @@ export type Database = {
           gross_margin_pct_7d: number | null
           rolling_expense_7d: number | null
           rolling_sales_7d: number | null
+        }
+        Relationships: []
+      }
+      supplier_purchase_analytics: {
+        Row: {
+          first_purchase: string | null
+          items_purchased: Json | null
+          last_purchase: string | null
+          supplier: string | null
+          total_purchases: number | null
+          total_spent: number | null
         }
         Relationships: []
       }
@@ -1870,6 +1933,25 @@ export type Database = {
         Returns: Json
       }
       nexus_reconcile: { Args: { p_check_date?: string }; Returns: Json }
+      process_inventory_expense: {
+        Args: {
+          p_amount: number
+          p_category: string
+          p_cost_per_unit?: number
+          p_description: string
+          p_expense_date: string
+          p_inventory_item_id?: string
+          p_invoice_number?: string
+          p_is_inventory_purchase?: boolean
+          p_payment_mode: string
+          p_quantity?: number
+          p_remarks: string
+          p_supplier?: string
+          p_unit?: string
+          p_user_id: string
+        }
+        Returns: string
+      }
       process_pos_order: {
         Args: { p_items: Json; p_order_date: string; p_payment_mode: string }
         Returns: Json
