@@ -96,6 +96,8 @@ interface InventoryItem {
   item_name: string;
   quantity: number;
   category: string | null;
+  unit_cost: number | null;
+  base_unit: string | null;
 }
 
 interface Category {
@@ -189,7 +191,7 @@ const ExpensesTab = () => {
     try {
       const { data, error } = await supabase
         .from("inventory")
-        .select("id, item_name, quantity, category")
+        .select("id, item_name, quantity, category, unit_cost, base_unit")
         .eq("is_active", true)
         .order("item_name");
       if (error) throw error;
@@ -573,7 +575,11 @@ const ExpensesTab = () => {
               Track and manage your business expenses with detailed categorization
             </p>
           </div>
-          <MultiExpenseEntry categories={categories} onComplete={fetchExpenses} />
+          <MultiExpenseEntry
+            categories={categories}
+            inventory={inventoryItems}
+            onComplete={fetchExpenses}
+          />
         </div>
 
         {/* All-Time Total Display */}
@@ -661,25 +667,167 @@ const ExpensesTab = () => {
             </CardHeader>
             <CardContent className="p-6">
               <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="description"
-                    className="text-sm font-medium text-gray-700 flex items-center gap-2"
-                  >
-                    <FileText className="h-4 w-4 text-red-600" />
-                    Description *
-                  </Label>
-                  <Input
-                    id="description"
-                    value={formData.description}
-                    onChange={(e) =>
-                      setFormData({ ...formData, description: e.target.value })
+                <div className="flex items-center space-x-2 py-2 bg-muted/30 p-3 rounded-lg border border-dashed border-primary/20">
+                  <Switch
+                    id="inventory-purchase"
+                    checked={formData.isInventoryPurchase}
+                    onCheckedChange={(checked) =>
+                      setFormData({ ...formData, isInventoryPurchase: checked })
                     }
-                    placeholder="Enter expense description"
-                    required
-                    className="border-red-200 focus:border-red-500 focus:ring-red-500"
                   />
+                  <Label htmlFor="inventory-purchase" className="text-sm font-semibold flex items-center gap-2 cursor-pointer">
+                    <Package className={cn("h-4 w-4", formData.isInventoryPurchase ? "text-amber-600" : "text-muted-foreground")} />
+                    Update Inventory?
+                  </Label>
                 </div>
+
+                {formData.isInventoryPurchase ? (
+                  <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="inventoryItemId" className="text-sm font-medium flex items-center gap-2">
+                        <ShoppingCart className="h-4 w-4 text-amber-600" />
+                        Select Inventory Item *
+                      </Label>
+                      <Select
+                        value={formData.inventoryItemId}
+                        onValueChange={(value) => {
+                          const item = inventoryItems.find(i => i.id === value);
+                          if (item) {
+                            const qty = parseFloat(formData.quantity || "0");
+                            const cpu = item.unit_cost || 0;
+                            const calcAmount = (qty * cpu).toFixed(2);
+                            setFormData({
+                              ...formData,
+                              inventoryItemId: value,
+                              description: `Purchase: ${item.item_name}`,
+                              category: item.category || formData.category,
+                              unit: item.base_unit || "",
+                              costPerUnit: cpu.toString(),
+                              amount: parseFloat(calcAmount) > 0 ? calcAmount : formData.amount
+                            });
+                          }
+                        }}
+                      >
+                        <SelectTrigger className="border-amber-200 focus:ring-amber-500">
+                          <SelectValue placeholder="Select inventory item" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {inventoryItems.map((item) => (
+                            <SelectItem key={item.id} value={item.id}>
+                              {item.item_name} ({item.quantity} {item.base_unit} in stock)
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="quantity" className="text-sm font-medium flex items-center gap-2">
+                          <Scale className="h-4 w-4 text-amber-600" />
+                          Quantity *
+                        </Label>
+                        <Input
+                          id="quantity"
+                          type="number"
+                          step="0.01"
+                          value={formData.quantity}
+                          onChange={(e) => {
+                            const qty = e.target.value;
+                            const cpu = formData.costPerUnit;
+                            const calcAmount = (parseFloat(qty || "0") * parseFloat(cpu || "0")).toFixed(2);
+                            setFormData({
+                              ...formData,
+                              quantity: qty,
+                              amount: parseFloat(calcAmount) > 0 ? calcAmount : formData.amount
+                            });
+                          }}
+                          placeholder="0.00"
+                          className="border-amber-100"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="costPerUnit" className="text-sm font-medium">Rate (Unit Cost)</Label>
+                        <Input
+                          id="costPerUnit"
+                          type="number"
+                          step="0.01"
+                          value={formData.costPerUnit}
+                          onChange={(e) => {
+                            const cpu = e.target.value;
+                            const qty = formData.quantity;
+                            const calcAmount = (parseFloat(qty || "0") * parseFloat(cpu || "0")).toFixed(2);
+                            setFormData({
+                              ...formData,
+                              costPerUnit: cpu,
+                              amount: parseFloat(calcAmount) > 0 ? calcAmount : formData.amount
+                            });
+                          }}
+                          placeholder="0.00"
+                          className="border-amber-100"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="unit" className="text-sm font-medium">Unit</Label>
+                        <Input
+                          id="unit"
+                          value={formData.unit}
+                          onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
+                          placeholder="e.g. kg, pcs"
+                          className="border-amber-100"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="invoiceNumber" className="text-sm font-medium flex items-center gap-2">
+                          <Hash className="h-4 w-4 text-amber-600" />
+                          Invoice #
+                        </Label>
+                        <Input
+                          id="invoiceNumber"
+                          value={formData.invoiceNumber}
+                          onChange={(e) => setFormData({ ...formData, invoiceNumber: e.target.value })}
+                          placeholder="Optional"
+                          className="border-amber-100"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="supplier" className="text-sm font-medium">Supplier</Label>
+                      <Input
+                        id="supplier"
+                        value={formData.supplier}
+                        onChange={(e) => setFormData({ ...formData, supplier: e.target.value })}
+                        placeholder="Supplier name"
+                        className="border-amber-100"
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
+                    <Label
+                      htmlFor="description"
+                      className="text-sm font-medium text-gray-700 flex items-center gap-2"
+                    >
+                      <FileText className="h-4 w-4 text-red-600" />
+                      Description *
+                    </Label>
+                    <Input
+                      id="description"
+                      value={formData.description}
+                      onChange={(e) =>
+                        setFormData({ ...formData, description: e.target.value })
+                      }
+                      placeholder="e.g. Office supplies, Electricity bill"
+                      required
+                      className="border-red-200 focus:border-red-500"
+                    />
+                  </div>
+                )}
 
                 <div className="space-y-2">
                   <Label
@@ -687,7 +835,7 @@ const ExpensesTab = () => {
                     className="text-sm font-medium text-gray-700 flex items-center gap-2"
                   >
                     <DollarSign className="h-4 w-4 text-green-600" />
-                    Amount (NRs.) *
+                    Total Amount (NRs.) *
                   </Label>
                   <Input
                     id="amount"
@@ -699,7 +847,10 @@ const ExpensesTab = () => {
                     }
                     placeholder="0.00"
                     required
-                    className="border-green-200 focus:border-green-500 focus:ring-green-500"
+                    className={cn(
+                      "text-lg font-bold border-green-200 focus:border-green-500",
+                      formData.isInventoryPurchase && "bg-green-50/50"
+                    )}
                   />
                 </div>
 
@@ -719,7 +870,7 @@ const ExpensesTab = () => {
                       }
                       required
                     >
-                      <SelectTrigger className="border-blue-200 focus:border-blue-500 focus:ring-blue-500">
+                      <SelectTrigger className="border-blue-200 focus:border-blue-500">
                         <SelectValue placeholder="Select category" />
                       </SelectTrigger>
                       <SelectContent>
@@ -727,7 +878,7 @@ const ExpensesTab = () => {
                           <SelectItem key={category.id} value={category.name}>
                             <div className="flex items-center gap-2">
                               <div
-                                className={`w-3 h-3 rounded-full bg-gradient-to-r ${categoryColors[category.name as keyof typeof categoryColors]}`}
+                                className={`w-3 h-3 rounded-full bg-gradient-to-r ${categoryColors[category.name as keyof typeof categoryColors] || "from-gray-400 to-gray-500"}`}
                               ></div>
                               {category.name}
                             </div>
@@ -751,8 +902,8 @@ const ExpensesTab = () => {
                       }
                       required
                     >
-                      <SelectTrigger className="border-purple-200 focus:border-purple-500 focus:ring-purple-500">
-                        <SelectValue placeholder="Select payment mode" />
+                      <SelectTrigger className="border-purple-200 focus:border-purple-500">
+                        <SelectValue placeholder="Select" />
                       </SelectTrigger>
                       <SelectContent>
                         {paymentModes.map((mode) => (
@@ -764,137 +915,6 @@ const ExpensesTab = () => {
                     </Select>
                   </div>
                 </div>
-
-                <div className="flex items-center space-x-2 py-2">
-                  <Switch
-                    id="inventory-purchase"
-                    checked={formData.isInventoryPurchase}
-                    onCheckedChange={(checked) =>
-                      setFormData({ ...formData, isInventoryPurchase: checked })
-                    }
-                  />
-                  <Label htmlFor="inventory-purchase" className="text-sm font-medium flex items-center gap-2">
-                    <Package className="h-4 w-4 text-amber-600" />
-                    Inventory Purchase?
-                  </Label>
-                </div>
-
-                {formData.isInventoryPurchase && (
-                  <div className="space-y-4 p-4 bg-amber-50/50 rounded-lg border border-amber-100 animate-in fade-in slide-in-from-top-2">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="inventoryItemId" className="text-sm font-medium flex items-center gap-2">
-                          <ShoppingCart className="h-4 w-4 text-amber-600" />
-                          Inventory Item *
-                        </Label>
-                        <Select
-                          value={formData.inventoryItemId}
-                          onValueChange={(value) => {
-                            const item = inventoryItems.find(i => i.id === value);
-                            setFormData({
-                              ...formData,
-                              inventoryItemId: value,
-                              description: item ? `Purchase: ${item.item_name}` : formData.description,
-                              category: item?.category || formData.category
-                            });
-                          }}
-                        >
-                          <SelectTrigger className="border-amber-200 bg-white">
-                            <SelectValue placeholder="Select item" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {inventoryItems.map((item) => (
-                              <SelectItem key={item.id} value={item.id}>
-                                {item.item_name} ({item.quantity} in stock)
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="quantity" className="text-sm font-medium flex items-center gap-2">
-                          <Scale className="h-4 w-4 text-amber-600" />
-                          Quantity *
-                        </Label>
-                        <Input
-                          id="quantity"
-                          type="number"
-                          value={formData.quantity}
-                          onChange={(e) => {
-                            const qty = e.target.value;
-                            const cpu = formData.costPerUnit;
-                            const calcAmount = (parseFloat(qty || "0") * parseFloat(cpu || "0")).toFixed(2);
-                            setFormData({
-                              ...formData,
-                              quantity: qty,
-                              amount: parseFloat(calcAmount) > 0 ? calcAmount : formData.amount
-                            });
-                          }}
-                          placeholder="0.00"
-                          className="border-amber-200 bg-white"
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="unit" className="text-sm font-medium">Unit (kg, ltr, pcs, etc.)</Label>
-                        <Input
-                          id="unit"
-                          value={formData.unit}
-                          onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
-                          placeholder="e.g. kg"
-                          className="border-amber-200 bg-white"
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="costPerUnit" className="text-sm font-medium">Cost per Unit</Label>
-                        <Input
-                          id="costPerUnit"
-                          type="number"
-                          value={formData.costPerUnit}
-                          onChange={(e) => {
-                            const cpu = e.target.value;
-                            const qty = formData.quantity;
-                            const calcAmount = (parseFloat(qty || "0") * parseFloat(cpu || "0")).toFixed(2);
-                            setFormData({
-                              ...formData,
-                              costPerUnit: cpu,
-                              amount: parseFloat(calcAmount) > 0 ? calcAmount : formData.amount
-                            });
-                          }}
-                          placeholder="0.00"
-                          className="border-amber-200 bg-white"
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="supplier" className="text-sm font-medium">Supplier</Label>
-                        <Input
-                          id="supplier"
-                          value={formData.supplier}
-                          onChange={(e) => setFormData({ ...formData, supplier: e.target.value })}
-                          placeholder="Supplier name"
-                          className="border-amber-200 bg-white"
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="invoiceNumber" className="text-sm font-medium flex items-center gap-2">
-                          <Hash className="h-4 w-4 text-amber-600" />
-                          Invoice Number
-                        </Label>
-                        <Input
-                          id="invoiceNumber"
-                          value={formData.invoiceNumber}
-                          onChange={(e) => setFormData({ ...formData, invoiceNumber: e.target.value })}
-                          placeholder="Invoice #"
-                          className="border-amber-200 bg-white"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                )}
 
                 <div className="space-y-2">
                   <Label
