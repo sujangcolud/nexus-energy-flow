@@ -8,8 +8,6 @@ import { Badge } from "@/components/ui/badge";
 import { extractErrorMessage, logError } from "@/utils/errorHandling";
 import { DailyClosingSystem } from "@/components/DailyClosingSystem";
 import BatchDailyClosingSystem from "@/components/BatchDailyClosingSystem";
-import FinancialSummaryWidget from "@/components/FinancialSummaryWidget";
-import AllTimeSummaryWidget from "@/components/AllTimeSummaryWidget";
 import {
   Sheet,
   SheetContent,
@@ -554,33 +552,6 @@ const MobileDashboard = () => {
     </div>
   );
 
-  // Quick action buttons for mobile
-  const QuickActions = () => (
-    <div className="px-4 pb-4">
-      <div className="bg-white rounded-2xl shadow-lg p-4">
-        <h3 className="font-semibold text-gray-800 mb-3">Quick Actions</h3>
-        <div className="grid grid-cols-2 gap-3">
-          <Button
-            variant="outline"
-            onClick={() => navigate("orders")}
-            className="h-12 flex flex-col gap-1 border-2"
-          >
-            <ShoppingCart className="h-4 w-4" />
-            <span className="text-xs">New Order</span>
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => navigate("expenses")}
-            className="h-12 flex flex-col gap-1 border-2"
-          >
-            <Receipt className="h-4 w-4" />
-            <span className="text-xs">Add Expense</span>
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
-
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Mobile Header */}
@@ -612,43 +583,11 @@ const MobileDashboard = () => {
                   </div>
                 </div>
 
-                {/* Quick Stats */}
-                <div className="grid grid-cols-3 gap-4 mt-6">
-                  <div className="text-center">
-                    <p className="text-2xl font-bold text-blue-600">
-                      {navItems.length}
-                    </p>
-                    <p className="text-xs text-gray-600">Modules</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-2xl font-bold text-green-600">Online</p>
-                    <p className="text-xs text-gray-600">Status</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-2xl font-bold text-purple-600 capitalize">
-                      {userRole?.split("_")[0]}
-                    </p>
-                    <p className="text-xs text-gray-600">Role</p>
-                  </div>
-                </div>
               </div>
             </div>
 
-            {/* Financial Summary */}
-            <div className="px-4">
-              <FinancialSummaryWidget />
-            </div>
-
-            {/* Quick Actions */}
-            <QuickActions />
-
             {/* App Grid */}
             <MobileAppGrid />
-
-            {/* All Time Summary */}
-            <div className="px-4 pb-8">
-              <AllTimeSummaryWidget />
-            </div>
           </div>
         ) : (
           <div className="bg-white min-h-screen">
