@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { extractErrorMessage, logError } from "@/utils/errorHandling";
 import { DailyClosingSystem } from "@/components/DailyClosingSystem";
 import BatchDailyClosingSystem from "@/components/BatchDailyClosingSystem";
+import FinancialSummaryWidget from "@/components/FinancialSummaryWidget";
+import AllTimeSummaryWidget from "@/components/AllTimeSummaryWidget";
 import {
   Sheet,
   SheetContent,
@@ -56,6 +58,7 @@ import {
   Lock,
   FileSpreadsheet,
   Boxes,
+  ChefHat,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -219,6 +222,17 @@ const MobileDashboard = () => {
         category: "management",
       },
       {
+        id: "recipes",
+        path: "recipes",
+        label: "Recipes",
+        icon: ChefHat,
+        roles: ["super_admin"],
+        color: "from-orange-500 to-orange-600",
+        bgColor: "bg-orange-50",
+        description: "Link menu items to inventory ingredients",
+        category: "management",
+      },
+      {
         id: "user_management",
         path: "user-management",
         label: "Users",
@@ -305,6 +319,17 @@ const MobileDashboard = () => {
         bgColor: "bg-violet-50",
         description: "Auto stock-out from sales",
         category: "management",
+      },
+      {
+        id: "bi_suite",
+        path: "bi-suite",
+        label: "BI & Correlation Suite",
+        icon: Activity,
+        roles: ["user", "data_entry", "reports_viewer", "super_admin"],
+        color: "from-indigo-500 to-indigo-600",
+        bgColor: "bg-indigo-50",
+        description: "Date-aligned correlations, audit & recommendations",
+        category: "analytics",
       },
     ];
 
@@ -609,11 +634,21 @@ const MobileDashboard = () => {
               </div>
             </div>
 
+            {/* Financial Summary */}
+            <div className="px-4">
+              <FinancialSummaryWidget />
+            </div>
+
             {/* Quick Actions */}
             <QuickActions />
 
             {/* App Grid */}
             <MobileAppGrid />
+
+            {/* All Time Summary */}
+            <div className="px-4 pb-8">
+              <AllTimeSummaryWidget />
+            </div>
           </div>
         ) : (
           <div className="bg-white min-h-screen">
