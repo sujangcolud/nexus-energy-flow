@@ -711,6 +711,13 @@ export type Database = {
             foreignKeyName: "expenses_inventory_item_id_fkey"
             columns: ["inventory_item_id"]
             isOneToOne: false
+            referencedRelation: "current_inventory_levels"
+            referencedColumns: ["inventory_item_id"]
+          },
+          {
+            foreignKeyName: "expenses_inventory_item_id_fkey"
+            columns: ["inventory_item_id"]
+            isOneToOne: false
             referencedRelation: "inventory"
             referencedColumns: ["id"]
           },
@@ -719,6 +726,7 @@ export type Database = {
       inventory: {
         Row: {
           base_unit: string
+          base_unit_id: string | null
           category: string | null
           created_at: string | null
           description: string | null
@@ -739,6 +747,7 @@ export type Database = {
         }
         Insert: {
           base_unit?: string
+          base_unit_id?: string | null
           category?: string | null
           created_at?: string | null
           description?: string | null
@@ -759,6 +768,7 @@ export type Database = {
         }
         Update: {
           base_unit?: string
+          base_unit_id?: string | null
           category?: string | null
           created_at?: string | null
           description?: string | null
@@ -777,7 +787,88 @@ export type Database = {
           updated_at?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "inventory_base_unit_id_fkey"
+            columns: ["base_unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventory_stock_ledger: {
+        Row: {
+          created_at: string
+          id: string
+          inventory_item_id: string
+          notes: string | null
+          quantity_change: number
+          reference_id: string | null
+          reference_type: string | null
+          source_qty: number | null
+          source_unit_id: string | null
+          total_cost: number | null
+          transaction_timestamp: string
+          transaction_type: string
+          unit_cost_base: number | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          inventory_item_id: string
+          notes?: string | null
+          quantity_change: number
+          reference_id?: string | null
+          reference_type?: string | null
+          source_qty?: number | null
+          source_unit_id?: string | null
+          total_cost?: number | null
+          transaction_timestamp?: string
+          transaction_type: string
+          unit_cost_base?: number | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          inventory_item_id?: string
+          notes?: string | null
+          quantity_change?: number
+          reference_id?: string | null
+          reference_type?: string | null
+          source_qty?: number | null
+          source_unit_id?: string | null
+          total_cost?: number | null
+          transaction_timestamp?: string
+          transaction_type?: string
+          unit_cost_base?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_stock_ledger_inventory_item_id_fkey"
+            columns: ["inventory_item_id"]
+            isOneToOne: false
+            referencedRelation: "current_inventory_levels"
+            referencedColumns: ["inventory_item_id"]
+          },
+          {
+            foreignKeyName: "inventory_stock_ledger_inventory_item_id_fkey"
+            columns: ["inventory_item_id"]
+            isOneToOne: false
+            referencedRelation: "inventory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_stock_ledger_source_unit_id_fkey"
+            columns: ["source_unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       inventory_transactions: {
         Row: {
@@ -1057,6 +1148,13 @@ export type Database = {
             foreignKeyName: "recipe_items_inventory_item_id_fkey"
             columns: ["inventory_item_id"]
             isOneToOne: false
+            referencedRelation: "current_inventory_levels"
+            referencedColumns: ["inventory_item_id"]
+          },
+          {
+            foreignKeyName: "recipe_items_inventory_item_id_fkey"
+            columns: ["inventory_item_id"]
+            isOneToOne: false
             referencedRelation: "inventory"
             referencedColumns: ["id"]
           },
@@ -1249,6 +1347,72 @@ export type Database = {
           is_recurring?: boolean
           name?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      unit_conversions: {
+        Row: {
+          created_at: string
+          factor: number
+          from_unit_id: string
+          id: string
+          to_unit_id: string
+        }
+        Insert: {
+          created_at?: string
+          factor: number
+          from_unit_id: string
+          id?: string
+          to_unit_id: string
+        }
+        Update: {
+          created_at?: string
+          factor?: number
+          from_unit_id?: string
+          id?: string
+          to_unit_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "unit_conversions_from_unit_id_fkey"
+            columns: ["from_unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "unit_conversions_to_unit_id_fkey"
+            columns: ["to_unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      units: {
+        Row: {
+          created_at: string
+          id: string
+          is_base_unit: boolean
+          name: string
+          symbol: string
+          unit_type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_base_unit?: boolean
+          name: string
+          symbol: string
+          unit_type: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_base_unit?: boolean
+          name?: string
+          symbol?: string
+          unit_type?: string
         }
         Relationships: []
       }
@@ -1534,6 +1698,26 @@ export type Database = {
         }
         Relationships: []
       }
+      current_inventory_levels: {
+        Row: {
+          base_unit_id: string | null
+          base_unit_symbol: string | null
+          inventory_item_id: string | null
+          item_name: string | null
+          quantity_on_hand: number | null
+          stock_value: number | null
+          weighted_avg_cost_per_base_unit: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_base_unit_id_fkey"
+            columns: ["base_unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       daily_business_performance: {
         Row: {
           business_date: string | null
@@ -1677,6 +1861,10 @@ export type Database = {
       }
       convert_unit: {
         Args: { p_from: string; p_qty: number; p_to: string }
+        Returns: number
+      }
+      convert_unit_v2: {
+        Args: { p_from_unit: string; p_qty: number; p_to_unit: string }
         Returns: number
       }
       daily_closing: {
