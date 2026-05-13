@@ -79,6 +79,7 @@ interface Withdrawal {
   reference_number: string | null;
   remarks: string | null;
   withdrawal_date: string;
+  source_cooperative?: string | null;
 }
 
 const WithdrawalsTab = () => {
@@ -90,6 +91,7 @@ const WithdrawalsTab = () => {
     recipient: "",
     referenceNumber: "",
     remarks: "",
+    sourceCooperative: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [transactionDate, setTransactionDate] = useState(
@@ -191,6 +193,7 @@ const WithdrawalsTab = () => {
         reference_number: formData.referenceNumber || null,
         remarks: formData.remarks || null,
         withdrawal_date: transactionDate,
+        source_cooperative: formData.sourceCooperative || null,
       };
 
       console.log("Attempting to insert withdrawal data:", withdrawalData);
@@ -210,6 +213,7 @@ const WithdrawalsTab = () => {
         recipient: "",
         referenceNumber: "",
         remarks: "",
+        sourceCooperative: "",
       });
       fetchWithdrawals();
     } catch (error) {
@@ -346,6 +350,19 @@ const WithdrawalsTab = () => {
                     setSelectedWithdrawal({
                       ...selectedWithdrawal,
                       reference_number: e.target.value,
+                    })
+                  }
+                />
+              </div>
+              <div>
+                <Label htmlFor="editSourceCooperative">Source/Cooperative</Label>
+                <Input
+                  id="editSourceCooperative"
+                  value={selectedWithdrawal.source_cooperative || ""}
+                  onChange={(e) =>
+                    setSelectedWithdrawal({
+                      ...selectedWithdrawal,
+                      source_cooperative: e.target.value,
                     })
                   }
                 />
@@ -591,6 +608,28 @@ const WithdrawalsTab = () => {
 
                 <div className="space-y-2">
                   <Label
+                    htmlFor="sourceCooperative"
+                    className="text-sm font-medium text-gray-700 flex items-center gap-2"
+                  >
+                    <Landmark className="h-4 w-4 text-indigo-600" />
+                    Source/Cooperative (Optional)
+                  </Label>
+                  <Input
+                    id="sourceCooperative"
+                    value={formData.sourceCooperative}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        sourceCooperative: e.target.value,
+                      })
+                    }
+                    placeholder="Identify withdraw from where/which cooperative"
+                    className="border-indigo-200 focus:border-indigo-500 focus:ring-indigo-500 h-12"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label
                     htmlFor="remarks"
                     className="text-sm font-medium text-gray-700 flex items-center gap-2"
                   >
@@ -781,6 +820,9 @@ const WithdrawalsTab = () => {
                         Purpose
                       </TableHead>
                       <TableHead className="font-semibold text-gray-700">
+                        Source/Coop
+                      </TableHead>
+                      <TableHead className="font-semibold text-gray-700">
                         Recipient
                       </TableHead>
                       <TableHead className="font-semibold text-gray-700">
@@ -828,6 +870,16 @@ const WithdrawalsTab = () => {
                           </Badge>
                         </TableCell>
                         <TableCell className="font-medium text-gray-800">
+                          {withdrawal.source_cooperative ? (
+                            <div className="flex items-center gap-2">
+                              <Landmark className="h-4 w-4 text-indigo-500" />
+                              {withdrawal.source_cooperative}
+                            </div>
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="font-medium text-gray-800">
                           {withdrawal.recipient ? (
                             <div className="flex items-center gap-2">
                               <User className="h-4 w-4 text-gray-500" />
@@ -859,6 +911,16 @@ const WithdrawalsTab = () => {
                         </TableCell>
                         <TableCell>
                           <div className="flex gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedWithdrawal(withdrawal);
+                                setIsEditDialogOpen(true);
+                              }}
+                            >
+                              <Paperclip className="h-4 w-4" />
+                            </Button>
                             <Button
                               variant="outline"
                               size="sm"
