@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Plus, TrendingUp, TrendingDown, DollarSign, Calendar, Trash2, ArrowUpDown, Minus, Paperclip } from "lucide-react";
+import { Plus, TrendingUp, TrendingDown, DollarSign, Trash2, ArrowUpDown, Minus, Paperclip } from "lucide-react";
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import RecordAttachments, { type AttachmentRecordType } from "@/components/RecordAttachments";
@@ -33,6 +33,7 @@ interface ShareInvestment {
   contribution_amount: number;
   investment_date: string;
   payment_mode: string;
+  remarks: string | null;
   created_at: string;
   attachment_count?: number;
 }
@@ -61,6 +62,7 @@ interface NewInvestment {
   contribution_amount: string;
   investment_date: string;
   payment_mode: string;
+  remarks: string;
 }
 
 interface NewExpense {
@@ -94,6 +96,7 @@ const ShareInvestmentsTab = () => {
     contribution_amount: "",
     investment_date: new Date().toISOString().split("T")[0],
     payment_mode: "cash",
+    remarks: "",
   });
 
   const [newExpense, setNewExpense] = useState<NewExpense>({
@@ -194,6 +197,7 @@ const ShareInvestmentsTab = () => {
         contribution_amount: parseFloat(newInvestment.contribution_amount),
         investment_date: newInvestment.investment_date,
         payment_mode: newInvestment.payment_mode,
+        remarks: newInvestment.remarks || null,
       });
 
       if (error) throw error;
@@ -204,6 +208,7 @@ const ShareInvestmentsTab = () => {
         contribution_amount: "",
         investment_date: new Date().toISOString().split("T")[0],
         payment_mode: "cash",
+        remarks: "",
       });
       fetchData();
     } catch (error: any) {
@@ -519,6 +524,16 @@ const ShareInvestmentsTab = () => {
                     </Select>
                   </div>
                 </div>
+                <div className="space-y-2">
+                  <Label htmlFor="investment_remarks">Remarks (Optional)</Label>
+                  <Input
+                    id="investment_remarks"
+                    type="text"
+                    placeholder="Enter remarks (optional)"
+                    value={newInvestment.remarks}
+                    onChange={(e) => setNewInvestment((prev) => ({ ...prev, remarks: e.target.value }))}
+                  />
+                </div>
                 <Button type="submit" disabled={isAddingInvestment} className="w-full">
                   <Plus className="h-4 w-4 mr-2" />
                   {isAddingInvestment ? "Adding..." : "Add Investment"}
@@ -558,19 +573,28 @@ const ShareInvestmentsTab = () => {
                             {investment.attachment_count && investment.attachment_count > 0 ? (
                               <span title={`${investment.attachment_count} attachment(s)`}><Paperclip className="h-3.5 w-3.5 text-muted-foreground shrink-0" /></span>
                             ) : null}
-                            {investment.shareholder_name}
+                            <div>
+                              <div>{investment.shareholder_name}</div>
+                              {investment.remarks && (
+                                <div className="text-xs text-muted-foreground font-normal italic mt-0.5">
+                                  {investment.remarks}
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </TableCell>
                         <TableCell className="text-chart-2 font-semibold">₹{investment.contribution_amount.toLocaleString()}</TableCell>
                         <TableCell>{format(new Date(investment.investment_date), "dd/MM/yyyy")}</TableCell>
                         <TableCell className="capitalize">{investment.payment_mode.replace("_", " ")}</TableCell>
                         <TableCell>
-                          <Button variant="ghost" size="sm" onClick={() => setAttachmentTarget({ type: "share_investment", id: investment.id, title: `Investment - ${investment.shareholder_name}` })}>
-                            <Paperclip className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="sm" onClick={() => handleDeleteInvestment(investment.id)} className="text-destructive hover:text-destructive">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                          <div className="flex items-center gap-1">
+                            <Button variant="ghost" size="sm" onClick={() => setAttachmentTarget({ type: "share_investment", id: investment.id, title: `Investment - ${investment.shareholder_name}` })}>
+                              <Paperclip className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="sm" onClick={() => handleDeleteInvestment(investment.id)} className="text-destructive hover:text-destructive">
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -670,7 +694,7 @@ const ShareInvestmentsTab = () => {
                   <Input
                     id="expense_remarks"
                     type="text"
-                    placeholder="Additional notes"
+                    placeholder="Enter remarks (optional)"
                     value={newExpense.remarks}
                     onChange={(e) => setNewExpense((prev) => ({ ...prev, remarks: e.target.value }))}
                   />
@@ -715,7 +739,14 @@ const ShareInvestmentsTab = () => {
                             {expense.attachment_count && expense.attachment_count > 0 ? (
                               <span title={`${expense.attachment_count} attachment(s)`}><Paperclip className="h-3.5 w-3.5 text-muted-foreground shrink-0" /></span>
                             ) : null}
-                            {expense.description}
+                            <div>
+                              <div>{expense.description}</div>
+                              {expense.remarks && (
+                                <div className="text-xs text-muted-foreground font-normal italic mt-0.5">
+                                  {expense.remarks}
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </TableCell>
                         <TableCell className="text-destructive font-semibold">₹{expense.amount.toLocaleString()}</TableCell>
@@ -723,12 +754,14 @@ const ShareInvestmentsTab = () => {
                         <TableCell className="capitalize">{expense.category}</TableCell>
                         <TableCell className="capitalize">{expense.payment_mode.replace("_", " ")}</TableCell>
                         <TableCell>
-                          <Button variant="ghost" size="sm" onClick={() => setAttachmentTarget({ type: "share_expense", id: expense.id, title: `Expense - ${expense.description}` })}>
-                            <Paperclip className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="sm" onClick={() => handleDeleteExpense(expense.id)} className="text-destructive hover:text-destructive">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                          <div className="flex items-center gap-1">
+                            <Button variant="ghost" size="sm" onClick={() => setAttachmentTarget({ type: "share_expense", id: expense.id, title: `Expense - ${expense.description}` })}>
+                              <Paperclip className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="sm" onClick={() => handleDeleteExpense(expense.id)} className="text-destructive hover:text-destructive">
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
