@@ -28,6 +28,7 @@ interface Row {
   inventory_item_id: string;
   quantity: number;
   unit: string;
+  factor: number;
   unit_cost: number;
   category: string;
   payment_mode: string;
@@ -75,6 +76,7 @@ const blankRow = (): Row => ({
   inventory_item_id: "",
   quantity: 0,
   unit: "",
+  factor: 1,
   unit_cost: 0,
   category: "",
   payment_mode: "Cash",
@@ -98,6 +100,19 @@ const MultiInventoryEntry = ({ inventory, categories, onComplete }: Props) => {
         if (item) {
           if (item.category) newRows[i].category = item.category;
           newRows[i].unit = item.base_unit;
+          newRows[i].factor = 1;
+        }
+      }
+
+      if (patch.unit) {
+        const item = inventory.find(it => it.id === newRows[i].inventory_item_id);
+        if (item) {
+          if (patch.unit === item.base_unit) {
+            newRows[i].factor = 1;
+          } else {
+            const conv = item.unit_conversions?.find(c => c.unit_name === patch.unit);
+            if (conv) newRows[i].factor = conv.conversion_to_base;
+          }
         }
       }
 
@@ -152,7 +167,8 @@ const MultiInventoryEntry = ({ inventory, categories, onComplete }: Props) => {
           p_unit: row.unit,
           p_cost_per_unit: row.unit_cost,
           p_supplier: row.supplier || null,
-          p_invoice_number: null
+          p_invoice_number: null,
+          p_manual_conversion_factor: row.factor
         });
 
         if (error) {
@@ -206,6 +222,7 @@ const MultiInventoryEntry = ({ inventory, categories, onComplete }: Props) => {
             <div className="col-span-2">Item</div>
             <div className="col-span-1">Qty</div>
             <div className="col-span-1">Unit</div>
+            <div className="col-span-1">Factor</div>
             <div className="col-span-1">Unit Cost</div>
             <div className="col-span-1 text-right pr-2">Total</div>
             <div className="col-span-1">Category</div>
@@ -250,6 +267,17 @@ const MultiInventoryEntry = ({ inventory, categories, onComplete }: Props) => {
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+
+              <div className="md:col-span-1">
+                <Label className="text-[10px] md:hidden">Factor</Label>
+                <Input
+                  type="number"
+                  placeholder="Factor"
+                  value={r.factor}
+                  onChange={(e) => updateRow(i, { factor: parseFloat(e.target.value) || 1 })}
+                  className="h-9"
+                />
               </div>
 
               <div className="md:col-span-1">

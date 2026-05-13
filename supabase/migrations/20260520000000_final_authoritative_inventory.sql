@@ -207,7 +207,8 @@ CREATE OR REPLACE FUNCTION public.process_inventory_expense(
   p_unit text DEFAULT NULL,
   p_cost_per_unit numeric DEFAULT NULL,
   p_supplier text DEFAULT NULL,
-  p_invoice_number text DEFAULT NULL
+  p_invoice_number text DEFAULT NULL,
+  p_manual_conversion_factor numeric DEFAULT NULL
 )
 RETURNS uuid
 LANGUAGE plpgsql
@@ -220,7 +221,12 @@ DECLARE
   v_unit_cost_base numeric;
 BEGIN
   IF p_is_inventory_purchase AND p_inventory_item_id IS NOT NULL THEN
-    v_base_qty := public.calculate_base_quantity(p_inventory_item_id, p_unit, p_quantity);
+    IF p_manual_conversion_factor IS NOT NULL THEN
+        v_base_qty := p_quantity * p_manual_conversion_factor;
+    ELSE
+        v_base_qty := public.calculate_base_quantity(p_inventory_item_id, p_unit, p_quantity);
+    END IF;
+
     IF v_base_qty > 0 THEN v_unit_cost_base := p_amount / v_base_qty; ELSE v_unit_cost_base := 0; END IF;
   ELSE
     v_base_qty := NULL; v_unit_cost_base := NULL;
