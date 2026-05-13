@@ -164,6 +164,17 @@ const MobileDashboard = () => {
         category: "financial",
       },
       {
+        id: "loans",
+        path: "loans",
+        label: "Loans",
+        icon: Landmark,
+        roles: ["user", "data_entry", "reports_viewer", "super_admin"],
+        color: "from-indigo-500 to-indigo-600",
+        bgColor: "bg-indigo-50",
+        description: "Loans & Repayments",
+        category: "financial",
+      },
+      {
         id: "share_investments",
         path: "share-investments",
         label: "Investments",
