@@ -201,6 +201,7 @@ const ExpensesTab = () => {
         .from("inventory")
         .select(`
           id, item_name, quantity, category, unit_cost, base_unit,
+          current_stock_base, average_cost_per_base_unit,
           unit_conversions:inventory_unit_conversions(*)
         `)
         .eq("is_active", true)
@@ -809,7 +810,10 @@ const ExpensesTab = () => {
                             {(() => {
                               const selectedItem = inventoryItems.find(i => i.id === formData.inventoryItemId);
                               if (!selectedItem) return null;
-                              const units = [selectedItem.base_unit, ...(selectedItem.unit_conversions?.map(u => u.unit_name) || [])];
+                              // Deduplicate and filter units
+                              const units = Array.from(new Set(
+                                [selectedItem.base_unit, ...(selectedItem.unit_conversions?.map(u => u.unit_name) || [])]
+                              )).filter(Boolean);
                               return units.map(u => (
                                 <SelectItem key={u} value={u}>{u}</SelectItem>
                               ));

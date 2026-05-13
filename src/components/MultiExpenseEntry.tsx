@@ -201,7 +201,10 @@ const MultiExpenseEntry = ({ categories, inventory, onComplete }: Props) => {
 
           {rows.map((r, i) => {
             const item = inventory.find(it => it.id === r.inventory_item_id);
-            const units = item ? [item.base_unit, ...(item.unit_conversions?.map(u => u.unit_name) || [])] : [];
+            // Deduplicate and filter units
+            const units = Array.from(new Set(
+              item ? [item.base_unit, ...(item.unit_conversions?.map(u => u.unit_name) || [])] : []
+            )).filter(Boolean);
 
             return (
               <div

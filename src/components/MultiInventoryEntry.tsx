@@ -223,17 +223,20 @@ const MultiInventoryEntry = ({ inventory, categories, onComplete }: Props) => {
             <div className="col-span-1">Qty</div>
             <div className="col-span-1">Unit</div>
             <div className="col-span-1">Factor</div>
-            <div className="col-span-1">Unit Cost</div>
-            <div className="col-span-1 text-right pr-2">Total</div>
+            <div className="col-span-1">Rate</div>
+            <div className="col-span-1 text-right pr-1">Total</div>
             <div className="col-span-1">Category</div>
             <div className="col-span-1">Payment</div>
-            <div className="col-span-2">Supplier</div>
+            <div className="col-span-1">Supplier</div>
             <div className="col-span-1"></div>
           </div>
 
           {rows.map((r, i) => {
             const item = inventory.find(it => it.id === r.inventory_item_id);
-            const units = item ? [item.base_unit, ...(item.unit_conversions?.map(u => u.unit_name) || [])] : [];
+            // Deduplicate and filter units
+            const units = Array.from(new Set(
+              item ? [item.base_unit, ...(item.unit_conversions?.map(u => u.unit_name) || [])] : []
+            )).filter(Boolean);
 
             return (
             <div
@@ -322,7 +325,7 @@ const MultiInventoryEntry = ({ inventory, categories, onComplete }: Props) => {
                 />
               </div>
 
-              <div className="md:col-span-1 text-right pr-2 font-medium text-sm hidden md:block">
+              <div className="md:col-span-1 text-right pr-1 font-medium text-sm hidden md:block">
                 {total(r).toLocaleString()}
               </div>
 
@@ -364,7 +367,7 @@ const MultiInventoryEntry = ({ inventory, categories, onComplete }: Props) => {
                 </Select>
               </div>
 
-              <div className="md:col-span-2">
+              <div className="md:col-span-1">
                 <Label className="text-[10px] md:hidden">Supplier</Label>
                 <Input
                   placeholder="Supplier"
