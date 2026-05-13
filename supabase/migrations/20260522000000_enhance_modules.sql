@@ -264,7 +264,10 @@ END;
 $$;
 
 -- 6. Correct update_daily_summary to correctly map deposits to balances
-CREATE OR REPLACE FUNCTION update_daily_summary(summary_date date)
+-- DROP first to avoid parameter name mismatch errors
+DROP FUNCTION IF EXISTS public.update_daily_summary(date) CASCADE;
+
+CREATE OR REPLACE FUNCTION public.update_daily_summary(summary_date date)
 RETURNS void
 LANGUAGE plpgsql
 AS $$

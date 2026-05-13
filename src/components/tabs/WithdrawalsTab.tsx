@@ -40,6 +40,8 @@ import {
   Target,
   Hash,
   Trash2,
+  Landmark,
+  Paperclip,
 } from "lucide-react";
 import { DateRange } from "react-day-picker";
 import {

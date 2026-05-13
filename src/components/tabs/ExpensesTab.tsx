@@ -42,6 +42,7 @@ import {
   ShoppingCart,
   Hash,
   Scale,
+  CreditCard,
 } from "lucide-react";
 import { DateRange } from "react-day-picker";
 import {
