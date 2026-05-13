@@ -39,6 +39,7 @@ import {
   UserCog,
   Upload,
   LayoutDashboard,
+  Landmark,
   Settings as SettingsIcon,
   Settings,
   Bell,
@@ -80,6 +81,7 @@ import VATEntryTab from "@/components/tabs/VATEntryTab";
 import InventoryTab from "@/components/tabs/InventoryTab";
 import RecipeManagementTab from "@/components/tabs/RecipeManagementTab";
 import FileUploadTab from "@/components/tabs/FileUploadTab";
+import LoansTab from "@/components/tabs/LoansTab";
 
 const Dashboard = () => {
   const { user, signOut, userRole } = useAuth();
@@ -183,6 +185,17 @@ const Dashboard = () => {
         color: "bg-foreground",
         bgColor: "bg-muted",
         description: "Manage savings and withdrawals",
+      },
+      {
+        id: "loans",
+        path: "loans",
+        label: "Loans & Liabilities",
+        icon: Landmark,
+        component: LoansTab,
+        roles: ["user", "data_entry", "reports_viewer", "super_admin"],
+        color: "bg-foreground",
+        bgColor: "bg-muted",
+        description: "Manage loans and repayments",
       },
       {
         id: "share_investments",

@@ -155,3 +155,45 @@ export interface Balance {
   created_at: string;
   updated_at: string;
 }
+
+export type LoanType = 'banking' | 'cooperative' | 'local';
+export type RepaymentFrequency = 'daily' | 'weekly' | 'monthly';
+export type LoanStatus = 'active' | 'closed' | 'defaulted';
+
+export interface Loan {
+  id: string;
+  user_id: string;
+  loan_name: string;
+  lender_name: string;
+  loan_type: LoanType;
+  principal_amount: number;
+  interest_rate: number;
+  repayment_frequency: RepaymentFrequency;
+  loan_date: string;
+  maturity_date?: string;
+  status: LoanStatus;
+  description?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface LoanRepayment {
+  id: string;
+  loan_id: string;
+  user_id: string;
+  amount_paid: number;
+  principal_paid: number;
+  interest_paid: number;
+  repayment_date: string;
+  payment_mode: string;
+  remarks?: string;
+  created_at: string;
+}
+
+export interface LoanSummary extends Loan {
+  total_paid: number;
+  principal_paid: number;
+  interest_paid: number;
+  outstanding_principal: number;
+  last_repayment_date?: string;
+}
