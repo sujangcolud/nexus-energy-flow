@@ -91,13 +91,20 @@ interface Expense {
   invoice_number?: string | null;
 }
 
+interface UnitConversion {
+  id: string;
+  unit_name: string;
+  conversion_to_base: number;
+}
+
 interface InventoryItem {
   id: string;
   item_name: string;
   quantity: number;
   category: string | null;
   unit_cost: number | null;
-  base_unit: string | null;
+  base_unit: string;
+  unit_conversions?: UnitConversion[];
 }
 
 interface Category {
@@ -191,7 +198,10 @@ const ExpensesTab = () => {
     try {
       const { data, error } = await supabase
         .from("inventory")
-        .select("id, item_name, quantity, category, unit_cost, base_unit")
+        .select(`
+          id, item_name, quantity, category, unit_cost, base_unit,
+          unit_conversions:inventory_unit_conversions(*)
+        `)
         .eq("is_active", true)
         .order("item_name");
       if (error) throw error;
@@ -773,13 +783,24 @@ const ExpensesTab = () => {
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="unit" className="text-sm font-medium">Unit</Label>
-                        <Input
-                          id="unit"
+                        <Select
                           value={formData.unit}
-                          onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
-                          placeholder="e.g. kg, pcs"
-                          className="border-amber-100"
-                        />
+                          onValueChange={(value) => setFormData({ ...formData, unit: value })}
+                        >
+                          <SelectTrigger className="border-amber-100">
+                            <SelectValue placeholder="Select unit" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {(() => {
+                              const selectedItem = inventoryItems.find(i => i.id === formData.inventoryItemId);
+                              if (!selectedItem) return null;
+                              const units = [selectedItem.base_unit, ...(selectedItem.unit_conversions?.map(u => u.unit_name) || [])];
+                              return units.map(u => (
+                                <SelectItem key={u} value={u}>{u}</SelectItem>
+                              ));
+                            })()}
+                          </SelectContent>
+                        </Select>
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="invoiceNumber" className="text-sm font-medium flex items-center gap-2">
