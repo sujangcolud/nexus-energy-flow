@@ -32,12 +32,21 @@ interface MenuItem {
   hasRecipe?: boolean;
   recipe_yield?: number;
 }
+interface UnitConversion {
+  id: string;
+  unit_name: string;
+  conversion_to_base: number;
+}
+
 interface InventoryItem {
   id: string;
   item_name: string;
   base_unit: string;
+  current_stock_base: number;
   unit_cost: number | null;
+  average_cost_per_base_unit: number | null;
   quantity: number;
+  unit_conversions?: UnitConversion[];
 }
 interface RecipeRow {
   id?: string;
@@ -47,7 +56,7 @@ interface RecipeRow {
   waste_percentage: number;
 }
 
-const UNIT_OPTIONS = ["g", "gm", "kg", "ml", "l", "pcs", "packet", "box", "bottle"];
+const BASE_UNITS = ["gm", "ml", "pcs"];
 
 const RecipeManagementTab = () => {
   const [menu, setMenu] = useState<MenuItem[]>([]);
@@ -63,7 +72,10 @@ const RecipeManagementTab = () => {
     try {
       const [m, i, r] = await Promise.all([
         supabase.from("menu_items").select("id,name,price,category,recipe_yield").order("name"),
-        supabase.from("inventory").select("id,item_name,base_unit,unit_cost,quantity").eq("is_active", true).order("item_name"),
+        supabase.from("inventory").select(`
+          id,item_name,base_unit,unit_cost,quantity,current_stock_base,
+          unit_conversions:inventory_unit_conversions(*)
+        `).eq("is_active", true).order("item_name"),
         supabase.from("recipe_items" as any).select("menu_item_id")
       ]);
       if (m.error) throw m.error;
@@ -126,16 +138,25 @@ const RecipeManagementTab = () => {
   const totalCost = useMemo(() => {
     return rows.reduce((sum, r) => {
       const inv = invMap[r.inventory_item_id];
-      if (!inv?.unit_cost) return sum;
-      // approx: convert to base_unit for cost; assume unit_cost is per base_unit
+      const unitCost = inv?.average_cost_per_base_unit ?? inv?.unit_cost;
+      if (!unitCost) return sum;
+
       let qty = r.quantity_used * (1 + r.waste_percentage / 100);
+
+      // Handle conversion to base unit for cost calculation
       if (r.unit_type !== inv.base_unit) {
-        if (r.unit_type === "kg" && inv.base_unit === "gm") qty *= 1000;
-        else if (r.unit_type === "gm" && inv.base_unit === "kg") qty /= 1000;
-        else if (r.unit_type === "l" && inv.base_unit === "ml") qty *= 1000;
-        else if (r.unit_type === "ml" && inv.base_unit === "l") qty /= 1000;
+        const conv = inv.unit_conversions?.find(c => c.unit_name.toLowerCase() === r.unit_type.toLowerCase());
+        if (conv) {
+          qty *= conv.conversion_to_base;
+        } else {
+          // Fallback to basic conversions
+          if ((r.unit_type === "kg" || r.unit_type === "kilogram") && inv.base_unit === "gm") qty *= 1000;
+          else if (r.unit_type === "gm" && (inv.base_unit === "kg" || inv.base_unit === "kilogram")) qty /= 1000;
+          else if (r.unit_type === "l" && inv.base_unit === "ml") qty *= 1000;
+          else if (r.unit_type === "ml" && inv.base_unit === "l") qty /= 1000;
+        }
       }
-      return sum + qty * Number(inv.unit_cost);
+      return sum + qty * Number(unitCost);
     }, 0);
   }, [rows, invMap]);
 
@@ -345,12 +366,14 @@ const RecipeManagementTab = () => {
                             <Select value={r.unit_type} onValueChange={(v) => updateRow(idx, { unit_type: v })}>
                               <SelectTrigger><SelectValue /></SelectTrigger>
                               <SelectContent>
-                                {UNIT_OPTIONS.map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}
+                                {BASE_UNITS.map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}
+                                {inv?.unit_conversions?.map((u) => <SelectItem key={u.unit_name} value={u.unit_name}>{u.unit_name}</SelectItem>)}
+                                {inv && !BASE_UNITS.includes(inv.base_unit) && <SelectItem value={inv.base_unit}>{inv.base_unit}</SelectItem>}
                               </SelectContent>
                             </Select>
                           </TableCell>
                           <TableCell><Input type="number" step="0.1" value={r.waste_percentage} onChange={(e) => updateRow(idx, { waste_percentage: parseFloat(e.target.value) || 0 })} /></TableCell>
-                          <TableCell className="text-xs text-muted-foreground">{inv ? `${inv.quantity} ${inv.base_unit}` : "-"}</TableCell>
+                          <TableCell className="text-xs text-muted-foreground">{inv ? `${(inv.current_stock_base ?? inv.quantity).toFixed(2)} ${inv.base_unit}` : "-"}</TableCell>
                           <TableCell><Button size="icon" variant="ghost" onClick={() => removeRow(idx)}><Trash2 className="h-4 w-4" /></Button></TableCell>
                         </TableRow>
                       );

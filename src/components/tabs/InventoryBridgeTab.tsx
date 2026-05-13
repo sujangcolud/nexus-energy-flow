@@ -108,7 +108,7 @@ const InventoryBridgeTab = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("inventory")
-        .select("id,item_name,quantity,base_unit,unit_cost,minimum_stock,is_active")
+        .select("id,item_name,quantity,current_stock_base,base_unit,unit_cost,average_cost_per_base_unit,minimum_stock,is_active")
         .eq("is_active", true)
         .limit(5000);
       if (error) throw error;
@@ -116,30 +116,30 @@ const InventoryBridgeTab = () => {
     },
   });
 
-  const { data: transactions = [] } = useQuery({
-    queryKey: ["bridge-tx", startStr, endStr],
+  const { data: movements = [] } = useQuery({
+    queryKey: ["bridge-movements", startStr, endStr],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("inventory_transactions")
+        .from("inventory_movements")
         .select(
-          "id,inventory_id,transaction_type,quantity,unit_cost,total_cost,transaction_date,notes,reference_type"
+          "id,inventory_item_id,movement_type,quantity_base,unit_cost_base,created_at,reference_type"
         )
-        .gte("transaction_date", startStr)
-        .lte("transaction_date", endStr)
+        .gte("created_at", startStr)
+        .lte("created_at", endStr + "T23:59:59")
         .limit(10000);
       if (error) throw error;
       return data || [];
     },
   });
 
-  // Opening stock = before start date (sum of all tx prior)
-  const { data: openingTx = [] } = useQuery({
-    queryKey: ["bridge-opening", startStr],
+  // Opening stock = before start date
+  const { data: openingMovements = [] } = useQuery({
+    queryKey: ["bridge-opening-movements", startStr],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("inventory_transactions")
-        .select("inventory_id,quantity")
-        .lt("transaction_date", startStr)
+        .from("inventory_movements")
+        .select("inventory_item_id,quantity_base,unit_cost_base")
+        .lt("created_at", startStr)
         .limit(50000);
       if (error) throw error;
       return data || [];
@@ -199,10 +199,10 @@ const InventoryBridgeTab = () => {
   // Per-item: opening, purchased, consumed, current
   const perItem = useMemo(() => {
     const opening = new Map<string, number>();
-    openingTx.forEach((t: any) => {
+    openingMovements.forEach((t: any) => {
       opening.set(
-        t.inventory_id,
-        (opening.get(t.inventory_id) || 0) + Number(t.quantity || 0)
+        t.inventory_item_id,
+        (opening.get(t.inventory_item_id) || 0) + Number(t.quantity_base || 0)
       );
     });
 
@@ -211,21 +211,15 @@ const InventoryBridgeTab = () => {
     const purchasedCost = new Map<string, number>();
     const consumedCost = new Map<string, number>();
 
-    transactions.forEach((t: any) => {
-      const q = Number(t.quantity || 0);
-      const c = Number(t.total_cost || 0);
+    movements.forEach((t: any) => {
+      const q = Number(t.quantity_base || 0);
+      const cost = Math.abs(q) * (t.unit_cost_base || 0);
       if (q > 0) {
-        purchased.set(t.inventory_id, (purchased.get(t.inventory_id) || 0) + q);
-        purchasedCost.set(
-          t.inventory_id,
-          (purchasedCost.get(t.inventory_id) || 0) + c
-        );
+        purchased.set(t.inventory_item_id, (purchased.get(t.inventory_item_id) || 0) + q);
+        purchasedCost.set(t.inventory_item_id, (purchasedCost.get(t.inventory_item_id) || 0) + cost);
       } else if (q < 0) {
-        consumed.set(t.inventory_id, (consumed.get(t.inventory_id) || 0) + -q);
-        consumedCost.set(
-          t.inventory_id,
-          (consumedCost.get(t.inventory_id) || 0) + Math.abs(c)
-        );
+        consumed.set(t.inventory_item_id, (consumed.get(t.inventory_item_id) || 0) + -q);
+        consumedCost.set(t.inventory_item_id, (consumedCost.get(t.inventory_item_id) || 0) + cost);
       }
     });
 
@@ -233,7 +227,8 @@ const InventoryBridgeTab = () => {
       const op = opening.get(it.id) || 0;
       const pu = purchased.get(it.id) || 0;
       const co = consumed.get(it.id) || 0;
-      const cur = Number(it.quantity || 0);
+      const cur = Number(it.current_stock_base ?? 0);
+      const unitCost = Number(it.average_cost_per_base_unit ?? it.unit_cost ?? 0);
       return {
         id: it.id,
         item_name: it.item_name,
@@ -246,12 +241,12 @@ const InventoryBridgeTab = () => {
         variance: cur - (op + pu - co),
         purchase_cost: purchasedCost.get(it.id) || 0,
         consumed_cost: consumedCost.get(it.id) || 0,
-        unit_cost: Number(it.unit_cost || 0),
+        unit_cost: unitCost,
         below_min:
           Number(it.minimum_stock || 0) > 0 && cur < Number(it.minimum_stock),
       };
     });
-  }, [inventory, openingTx, transactions]);
+  }, [inventory, openingMovements, movements]);
 
   // Totals
   const totals = useMemo(() => {
@@ -293,7 +288,7 @@ const InventoryBridgeTab = () => {
           const perServing =
             (Number(r.quantity_used) * (1 + Number(r.waste_percentage || 0) / 100)) /
             yieldQty;
-          return sum + perServing * Number(inv.unit_cost || 0);
+          return sum + perServing * Number(inv.average_cost_per_base_unit ?? inv.unit_cost ?? 0);
         }, 0);
         const sold = soldByName.get(String(m.name).toLowerCase().trim()) || 0;
         const margin = Number(m.price || 0) - cost;
@@ -345,29 +340,21 @@ const InventoryBridgeTab = () => {
       toast.error("Quantity must be > 0");
       return;
     }
-    const { error: txErr } = await supabase
-      .from("inventory_transactions")
+    const { error: moveErr } = await supabase
+      .from("inventory_movements")
       .insert({
         user_id: user.id,
-        inventory_id: s.inventory_id,
-        quantity: -Math.abs(qty),
-        transaction_type: "sale",
-        reference_type: "orders",
-        transaction_date: format(new Date(), "yyyy-MM-dd"),
-        notes: `Manual stock-out from sales bridge (${format(
-          start,
-          "MMM d"
-        )}–${format(end, "MMM d")})`,
+        inventory_item_id: s.inventory_id,
+        quantity_base: -Math.abs(qty),
+        movement_type: "wastage",
+        reference_type: "manual",
+        created_at: new Date().toISOString(),
       });
-    if (txErr) return toast.error(txErr.message);
-    const { error: invErr } = await supabase
-      .from("inventory")
-      .update({ quantity: Math.max(0, s.current_qty - qty) })
-      .eq("id", s.inventory_id);
-    if (invErr) return toast.error(invErr.message);
+    if (moveErr) return toast.error(moveErr.message);
+
     toast.success(`Stocked out ${qty} × ${s.item_name}`);
     qc.invalidateQueries({ queryKey: ["bridge-inventory"] });
-    qc.invalidateQueries({ queryKey: ["bridge-tx"] });
+    qc.invalidateQueries({ queryKey: ["bridge-movements"] });
   };
 
   // Daily movement series
@@ -376,25 +363,25 @@ const InventoryBridgeTab = () => {
       string,
       { date: string; in: number; out: number; in_value: number; out_value: number }
     >();
-    transactions.forEach((t: any) => {
-      const d = t.transaction_date;
+    movements.forEach((t: any) => {
+      const d = format(new Date(t.created_at), "yyyy-MM-dd");
       if (!map.has(d))
         map.set(d, { date: d, in: 0, out: 0, in_value: 0, out_value: 0 });
       const row = map.get(d)!;
-      const q = Number(t.quantity || 0);
-      const c = Number(t.total_cost || 0);
+      const q = Number(t.quantity_base || 0);
+      const c = Math.abs(q) * (t.unit_cost_base || 0);
       if (q > 0) {
         row.in += q;
         row.in_value += c;
       } else {
         row.out += -q;
-        row.out_value += Math.abs(c);
+        row.out_value += c;
       }
     });
     return Array.from(map.values()).sort((a, b) =>
       a.date < b.date ? 1 : -1
     );
-  }, [transactions]);
+  }, [movements, invMap]);
 
   // ---------- Render ----------
   return (

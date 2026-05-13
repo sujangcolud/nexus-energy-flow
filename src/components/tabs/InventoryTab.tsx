@@ -30,7 +30,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { extractErrorMessage, logError } from "@/utils/errorHandling";
-import { Package, Plus, Minus, AlertTriangle, CheckCircle, Edit } from "lucide-react";
+import { Package, Plus, Minus, AlertTriangle, CheckCircle, Edit, Trash2, Layers } from "lucide-react";
 import { format } from "date-fns";
 import MultiInventoryEntry from "../MultiInventoryEntry";
 import TransactionDatePicker from "@/components/ui/transaction-date-picker";
@@ -40,13 +40,22 @@ interface Category {
   name: string;
 }
 
+interface UnitConversion {
+  id: string;
+  unit_name: string;
+  conversion_to_base: number;
+}
+
 interface InventoryItem {
   id: string;
   item_name: string;
   description: string | null;
   category: string | null;
   quantity: number;
+  current_stock_base: number;
   base_unit: string;
+  unit_category: "weight" | "volume" | "count" | null;
+  average_cost_per_base_unit: number | null;
   unit_cost: number | null;
   total_cost: number | null;
   supplier: string | null;
@@ -56,6 +65,7 @@ interface InventoryItem {
   minimum_stock: number;
   is_active: boolean;
   created_at: string;
+  unit_conversions?: UnitConversion[];
 }
 
 const UNIT_OPTIONS = ["g", "kg", "ml", "l", "pcs", "packet", "box", "bottle"];
@@ -77,9 +87,11 @@ const InventoryTab = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editForm, setEditForm] = useState({
     id: "", item_name: "", description: "", category: "", quantity: "",
-    base_unit: "", unit_cost: "", supplier: "", location: "",
+    base_unit: "", unit_category: "count" as any, unit_cost: "", supplier: "", location: "",
     minimum_stock: "", expiry_date: "",
   });
+  const [conversionDialogOpen, setConversionDialogOpen] = useState(false);
+  const [newConversion, setNewConversion] = useState({ unit_name: "", conversion_to_base: "" });
 
   useEffect(() => {
     if (user) {
@@ -104,7 +116,14 @@ const InventoryTab = () => {
   const fetchInventory = async () => {
     if (!user) return;
     try {
-      const { data, error } = await supabase.from("inventory").select("*").eq("is_active", true).order("item_name");
+      const { data, error } = await supabase
+        .from("inventory")
+        .select(`
+          *,
+          unit_conversions:inventory_unit_conversions(*)
+        `)
+        .eq("is_active", true)
+        .order("item_name");
       if (error) throw error;
       setInventory(data || []);
     } catch (error) {
@@ -112,6 +131,36 @@ const InventoryTab = () => {
       toast.error(`Error: ${extractErrorMessage(error)}`);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const addConversion = async () => {
+    if (!selectedItem || !newConversion.unit_name || !newConversion.conversion_to_base) return;
+    try {
+      const { error } = await supabase.from("inventory_unit_conversions").insert({
+        inventory_item_id: selectedItem.id,
+        unit_name: newConversion.unit_name,
+        conversion_to_base: parseFloat(newConversion.conversion_to_base),
+      });
+      if (error) throw error;
+      toast.success("Conversion added!");
+      setNewConversion({ unit_name: "", conversion_to_base: "" });
+      fetchInventory();
+    } catch (error) {
+      logError("adding conversion", error);
+      toast.error(`Error: ${extractErrorMessage(error)}`);
+    }
+  };
+
+  const deleteConversion = async (id: string) => {
+    try {
+      const { error } = await supabase.from("inventory_unit_conversions").delete().eq("id", id);
+      if (error) throw error;
+      toast.success("Conversion deleted!");
+      fetchInventory();
+    } catch (error) {
+      logError("deleting conversion", error);
+      toast.error(`Error: ${extractErrorMessage(error)}`);
     }
   };
 
@@ -139,12 +188,11 @@ const InventoryTab = () => {
   };
 
   const updateItem = async () => {
-    if (!editForm.item_name || editForm.quantity === "" || !editForm.base_unit) {
+    if (!editForm.item_name || !editForm.base_unit) {
       toast.error("Please fill required fields");
       return;
     }
     try {
-      const quantity = parseFloat(editForm.quantity);
       const unitCost = parseFloat(editForm.unit_cost) || 0;
       const { error } = await supabase
         .from("inventory")
@@ -152,10 +200,9 @@ const InventoryTab = () => {
           item_name: editForm.item_name,
           description: editForm.description || null,
           category: editForm.category || null,
-          quantity,
           base_unit: editForm.base_unit,
+          unit_category: editForm.unit_category,
           unit_cost: unitCost,
-          total_cost: quantity * unitCost,
           supplier: editForm.supplier || null,
           location: editForm.location || null,
           minimum_stock: parseFloat(editForm.minimum_stock) || 0,
@@ -207,13 +254,14 @@ const InventoryTab = () => {
   };
 
   const getStockStatus = (item: InventoryItem) => {
-    if (item.quantity <= 0) return { status: "out-of-stock", color: "text-destructive", icon: AlertTriangle };
-    if (item.quantity <= item.minimum_stock) return { status: "low-stock", color: "text-muted-foreground", icon: AlertTriangle };
+    const qty = item.current_stock_base ?? item.quantity;
+    if (qty <= 0) return { status: "out-of-stock", color: "text-destructive", icon: AlertTriangle };
+    if (qty <= item.minimum_stock) return { status: "low-stock", color: "text-muted-foreground", icon: AlertTriangle };
     return { status: "in-stock", color: "text-foreground", icon: CheckCircle };
   };
 
-  const totalValue = inventory.reduce((sum, item) => sum + (item.total_cost || 0), 0);
-  const lowStock = inventory.filter((item) => item.quantity <= item.minimum_stock);
+  const totalValue = inventory.reduce((sum, item) => sum + ((item.current_stock_base ?? 0) * (item.average_cost_per_base_unit ?? item.unit_cost ?? 0)), 0);
+  const lowStock = inventory.filter((item) => (item.current_stock_base ?? item.quantity) <= item.minimum_stock);
 
   if (loading) {
     return <div className="p-6 animate-pulse"><div className="h-8 bg-muted rounded w-1/4 mb-4"></div><div className="h-64 bg-muted rounded"></div></div>;
@@ -225,10 +273,46 @@ const InventoryTab = () => {
         <DialogContent>
           <DialogHeader><DialogTitle>Stock Out - {selectedItem?.item_name}</DialogTitle></DialogHeader>
           <div className="space-y-4">
-            <div><Label>Quantity (Max: {selectedItem?.quantity})</Label><Input type="number" value={stockOutForm.quantity} onChange={(e) => setStockOutForm({ ...stockOutForm, quantity: e.target.value })} /></div>
+            <div><Label>Quantity (in {selectedItem?.base_unit}) (Max: {selectedItem?.current_stock_base ?? selectedItem?.quantity})</Label><Input type="number" value={stockOutForm.quantity} onChange={(e) => setStockOutForm({ ...stockOutForm, quantity: e.target.value })} /></div>
             <div><Label>Notes</Label><Input value={stockOutForm.notes} onChange={(e) => setStockOutForm({ ...stockOutForm, notes: e.target.value })} /></div>
           </div>
           <DialogFooter><Button onClick={stockOut}>Record Stock Out</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={conversionDialogOpen} onOpenChange={setConversionDialogOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Unit Conversions - {selectedItem?.item_name}</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            <div className="text-sm text-muted-foreground">
+              Base Unit: <strong>{selectedItem?.base_unit}</strong>
+            </div>
+            <div className="space-y-2">
+              <Label>Existing Conversions</Label>
+              <div className="border rounded-md divide-y">
+                {selectedItem?.unit_conversions?.map((conv) => (
+                  <div key={conv.id} className="p-2 flex justify-between items-center text-sm">
+                    <span>1 {conv.unit_name} = {conv.conversion_to_base} {selectedItem?.base_unit}</span>
+                    <Button variant="ghost" size="sm" onClick={() => deleteConversion(conv.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                  </div>
+                ))}
+                {(!selectedItem?.unit_conversions || selectedItem.unit_conversions.length === 0) && (
+                  <div className="p-4 text-center text-muted-foreground text-xs">No custom conversions defined</div>
+                )}
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <Label>Unit Name</Label>
+                <Input placeholder="e.g. Box" value={newConversion.unit_name} onChange={(e) => setNewConversion({ ...newConversion, unit_name: e.target.value })} />
+              </div>
+              <div>
+                <Label>Factor to {selectedItem?.base_unit}</Label>
+                <Input type="number" placeholder="e.g. 1000" value={newConversion.conversion_to_base} onChange={(e) => setNewConversion({ ...newConversion, conversion_to_base: e.target.value })} />
+              </div>
+            </div>
+            <Button className="w-full" onClick={addConversion}><Plus className="h-4 w-4 mr-2" /> Add Conversion</Button>
+          </div>
         </DialogContent>
       </Dialog>
 
@@ -255,7 +339,20 @@ const InventoryTab = () => {
                 </SelectContent>
               </Select>
             </div>
-            <div><Label>Quantity *</Label><Input type="number" value={editForm.quantity} onChange={(e) => setEditForm({ ...editForm, quantity: e.target.value })} /></div>
+            <div>
+              <Label>Unit Category</Label>
+              <Select
+                value={editForm.unit_category || ""}
+                onValueChange={(value: any) => setEditForm({ ...editForm, unit_category: value })}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="weight">Weight (gm, kg)</SelectItem>
+                  <SelectItem value="volume">Volume (ml, l)</SelectItem>
+                  <SelectItem value="count">Count (pcs)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             <div>
               <Label>Base Unit *</Label>
               <Select
@@ -387,10 +484,10 @@ const InventoryTab = () => {
                 <TableRow>
                   <TableHead>Item</TableHead>
                   <TableHead>Category</TableHead>
-                  <TableHead>Quantity</TableHead>
-                  <TableHead>Unit</TableHead>
-                  <TableHead>Unit Cost</TableHead>
-                  <TableHead>Total</TableHead>
+                  <TableHead className="text-right">Stock (Base)</TableHead>
+                  <TableHead>Base Unit</TableHead>
+                  <TableHead className="text-right">Avg Cost/Base</TableHead>
+                  <TableHead className="text-right">Valuation</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
@@ -402,21 +499,25 @@ const InventoryTab = () => {
                     <TableRow key={item.id}>
                       <TableCell className="font-medium">{item.item_name}</TableCell>
                       <TableCell>{item.category || "-"}</TableCell>
-                      <TableCell>{item.quantity}</TableCell>
+                      <TableCell className="font-bold text-right">{(item.current_stock_base ?? 0).toFixed(2)}</TableCell>
                       <TableCell>{item.base_unit}</TableCell>
-                      <TableCell>NPR {(item.unit_cost || 0).toFixed(2)}</TableCell>
-                      <TableCell>NPR {(item.total_cost || 0).toFixed(2)}</TableCell>
+                      <TableCell className="text-right">NPR {(item.average_cost_per_base_unit ?? item.unit_cost ?? 0).toFixed(2)}</TableCell>
+                      <TableCell className="text-right font-semibold">NPR {((item.current_stock_base ?? 0) * (item.average_cost_per_base_unit ?? item.unit_cost ?? 0)).toFixed(2)}</TableCell>
                       <TableCell><Badge variant={status.status === "in-stock" ? "default" : "secondary"}>{status.status}</Badge></TableCell>
                       <TableCell>
                         <div className="flex gap-2">
+                          <Button variant="outline" size="sm" title="Unit Conversions" onClick={() => { setSelectedItem(item); setConversionDialogOpen(true); }}>
+                             <Layers className="h-3 w-3" />
+                          </Button>
                           <Button variant="outline" size="sm" onClick={() => {
                             setEditForm({
                               id: item.id,
                               item_name: item.item_name,
                               description: item.description || "",
                               category: item.category || "",
-                              quantity: item.quantity.toString(),
+                              quantity: (item.current_stock_base ?? 0).toString(),
                               base_unit: item.base_unit || "",
+                              unit_category: item.unit_category || "count",
                               unit_cost: (item.unit_cost || 0).toString(),
                               supplier: item.supplier || "",
                               location: item.location || "",

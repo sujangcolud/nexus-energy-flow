@@ -33,16 +33,26 @@ interface Row {
   is_inventory_purchase: boolean;
   inventory_item_id: string;
   quantity: number;
+  unit: string;
   unit_cost: number;
+}
+
+interface UnitConversion {
+  id: string;
+  unit_name: string;
+  conversion_to_base: number;
 }
 
 interface InventoryItem {
   id: string;
   item_name: string;
   quantity: number;
+  current_stock_base: number;
   category: string | null;
   unit_cost: number | null;
-  base_unit: string | null;
+  average_cost_per_base_unit: number | null;
+  base_unit: string;
+  unit_conversions?: UnitConversion[];
 }
 
 interface Props {
@@ -71,6 +81,7 @@ const blankRow = (): Row => ({
   is_inventory_purchase: false,
   inventory_item_id: "",
   quantity: 0,
+  unit: "",
   unit_cost: 0,
 });
 
@@ -119,7 +130,7 @@ const MultiExpenseEntry = ({ categories, inventory, onComplete }: Props) => {
           p_is_inventory_purchase: r.is_inventory_purchase,
           p_inventory_item_id: r.inventory_item_id || null,
           p_quantity: r.is_inventory_purchase ? Number(r.quantity) : null,
-          p_unit: r.is_inventory_purchase ? (inventory.find(it => it.id === r.inventory_item_id)?.base_unit || null) : null,
+          p_unit: r.is_inventory_purchase ? r.unit : null,
           p_cost_per_unit: r.is_inventory_purchase ? Number(r.unit_cost) : null,
           p_supplier: null,
           p_invoice_number: null,
@@ -162,7 +173,7 @@ const MultiExpenseEntry = ({ categories, inventory, onComplete }: Props) => {
           Bulk Add
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-5xl max-h-[85vh] overflow-y-auto">
+      <DialogContent className="max-w-7xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Add Multiple Expenses</DialogTitle>
           <p className="text-sm text-muted-foreground">
@@ -174,8 +185,9 @@ const MultiExpenseEntry = ({ categories, inventory, onComplete }: Props) => {
           <div className="hidden lg:grid grid-cols-12 gap-2 px-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
             <div className="col-span-1">Date</div>
             <div className="col-span-1">Inv?</div>
-            <div className="col-span-3">Item / Description</div>
+            <div className="col-span-2">Item / Description</div>
             <div className="col-span-1">Qty</div>
+            <div className="col-span-1">Unit</div>
             <div className="col-span-1">Rate</div>
             <div className="col-span-1">Amount</div>
             <div className="col-span-2">Category</div>
@@ -183,174 +195,200 @@ const MultiExpenseEntry = ({ categories, inventory, onComplete }: Props) => {
             <div className="col-span-1"></div>
           </div>
 
-          {rows.map((r, i) => (
-            <div
-              key={i}
-              className="grid grid-cols-1 lg:grid-cols-12 gap-2 items-end p-3 border rounded-md bg-muted/30 relative"
-            >
-              <div className="lg:col-span-1">
-                <Label className="text-[10px] lg:hidden">Date</Label>
-                <Input
-                  type="date"
-                  value={r.expense_date}
-                  onChange={(e) => updateRow(i, { expense_date: e.target.value })}
-                  className="h-9 text-xs"
-                />
-              </div>
+          {rows.map((r, i) => {
+            const item = inventory.find(it => it.id === r.inventory_item_id);
+            const units = item ? [item.base_unit, ...(item.unit_conversions?.map(u => u.unit_name) || [])] : [];
 
-              <div className="lg:col-span-1 flex items-center justify-center h-9">
-                <div className="flex flex-col items-center">
-                  <Label className="text-[10px] lg:hidden mb-1">Inv?</Label>
-                  <input
-                    type="checkbox"
-                    checked={r.is_inventory_purchase}
-                    onChange={(e) => updateRow(i, { is_inventory_purchase: e.target.checked })}
-                    className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+            return (
+              <div
+                key={i}
+                className="grid grid-cols-1 lg:grid-cols-12 gap-2 items-end p-3 border rounded-md bg-muted/30 relative"
+              >
+                <div className="lg:col-span-1">
+                  <Label className="text-[10px] lg:hidden">Date</Label>
+                  <Input
+                    type="date"
+                    value={r.expense_date}
+                    onChange={(e) => updateRow(i, { expense_date: e.target.value })}
+                    className="h-9 text-xs"
                   />
                 </div>
-              </div>
 
-              <div className="lg:col-span-3">
-                <Label className="text-[10px] lg:hidden">
-                  {r.is_inventory_purchase ? "Inventory Item" : "Description"}
-                </Label>
-                {r.is_inventory_purchase ? (
-                  <Select
-                    value={r.inventory_item_id}
-                    onValueChange={(v) => {
-                      const item = inventory.find(it => it.id === v);
-                      if (item) {
-                        const amount = (r.quantity * (item.unit_cost || 0)).toFixed(2);
-                        updateRow(i, {
-                          inventory_item_id: v,
-                          description: `Purchase: ${item.item_name}`,
-                          category: item.category || r.category,
-                          unit_cost: item.unit_cost || 0,
-                          amount: parseFloat(amount) > 0 ? parseFloat(amount) : r.amount
-                        });
-                      }
+                <div className="lg:col-span-1 flex items-center justify-center h-9">
+                  <div className="flex flex-col items-center">
+                    <Label className="text-[10px] lg:hidden mb-1">Inv?</Label>
+                    <input
+                      type="checkbox"
+                      checked={r.is_inventory_purchase}
+                      onChange={(e) => updateRow(i, { is_inventory_purchase: e.target.checked })}
+                      className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                    />
+                  </div>
+                </div>
+
+                <div className="lg:col-span-2">
+                  <Label className="text-[10px] lg:hidden">
+                    {r.is_inventory_purchase ? "Inventory Item" : "Description"}
+                  </Label>
+                  {r.is_inventory_purchase ? (
+                    <Select
+                      value={r.inventory_item_id}
+                      onValueChange={(v) => {
+                        const item = inventory.find(it => it.id === v);
+                        if (item) {
+                          const amount = (r.quantity * (item.unit_cost || 0)).toFixed(2);
+                          updateRow(i, {
+                            inventory_item_id: v,
+                            description: `Purchase: ${item.item_name}`,
+                            category: item.category || r.category,
+                            unit_cost: item.unit_cost || 0,
+                            unit: item.base_unit,
+                            amount: parseFloat(amount) > 0 ? parseFloat(amount) : r.amount
+                          });
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="h-9 text-xs">
+                        <SelectValue placeholder="Select item" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {inventory.map((item) => (
+                          <SelectItem key={item.id} value={item.id}>
+                              {item.item_name} ({(item.current_stock_base ?? 0).toFixed(2)} {item.base_unit} in stock)
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Input
+                      value={r.description}
+                      onChange={(e) => updateRow(i, { description: e.target.value })}
+                      placeholder="Description"
+                      className="h-9 text-xs"
+                    />
+                  )}
+                </div>
+
+                <div className="lg:col-span-1">
+                  <Label className="text-[10px] lg:hidden">Qty</Label>
+                  <Input
+                    type="number"
+                    disabled={!r.is_inventory_purchase}
+                    value={r.quantity || ""}
+                    onChange={(e) => {
+                      const q = parseFloat(e.target.value) || 0;
+                      const amount = (q * r.unit_cost).toFixed(2);
+                      updateRow(i, {
+                        quantity: q,
+                        amount: parseFloat(amount) > 0 ? parseFloat(amount) : r.amount
+                      });
                     }}
+                    placeholder="0"
+                    className="h-9 text-xs"
+                  />
+                </div>
+
+                <div className="lg:col-span-1">
+                  <Label className="text-[10px] lg:hidden">Unit</Label>
+                  <Select
+                    value={r.unit}
+                    onValueChange={(v) => updateRow(i, { unit: v })}
+                    disabled={!r.is_inventory_purchase || !r.inventory_item_id}
                   >
                     <SelectTrigger className="h-9 text-xs">
-                      <SelectValue placeholder="Select item" />
+                      <SelectValue placeholder="Unit" />
                     </SelectTrigger>
                     <SelectContent>
-                      {inventory.map((item) => (
-                        <SelectItem key={item.id} value={item.id}>
-                          {item.item_name}
+                      {units.map((u) => (
+                        <SelectItem key={u} value={u}>
+                          {u}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
-                ) : (
+                </div>
+
+                <div className="lg:col-span-1">
+                  <Label className="text-[10px] lg:hidden">Rate</Label>
                   <Input
-                    value={r.description}
-                    onChange={(e) => updateRow(i, { description: e.target.value })}
-                    placeholder="Description"
+                    type="number"
+                    disabled={!r.is_inventory_purchase}
+                    value={r.unit_cost || ""}
+                    onChange={(e) => {
+                      const rate = parseFloat(e.target.value) || 0;
+                      const amount = (r.quantity * rate).toFixed(2);
+                      updateRow(i, {
+                        unit_cost: rate,
+                        amount: parseFloat(amount) > 0 ? parseFloat(amount) : r.amount
+                      });
+                    }}
+                    placeholder="0"
                     className="h-9 text-xs"
                   />
-                )}
-              </div>
+                </div>
 
-              <div className="lg:col-span-1">
-                <Label className="text-[10px] lg:hidden">Qty</Label>
-                <Input
-                  type="number"
-                  disabled={!r.is_inventory_purchase}
-                  value={r.quantity || ""}
-                  onChange={(e) => {
-                    const q = parseFloat(e.target.value) || 0;
-                    const amount = (q * r.unit_cost).toFixed(2);
-                    updateRow(i, {
-                      quantity: q,
-                      amount: parseFloat(amount) > 0 ? parseFloat(amount) : r.amount
-                    });
-                  }}
-                  placeholder="0"
-                  className="h-9 text-xs"
-                />
-              </div>
+                <div className="lg:col-span-1">
+                  <Label className="text-[10px] lg:hidden">Amount</Label>
+                  <Input
+                    type="number"
+                    value={r.amount || ""}
+                    onChange={(e) => updateRow(i, { amount: parseFloat(e.target.value) || 0 })}
+                    className={r.is_inventory_purchase ? "h-9 text-xs bg-muted/50 font-bold" : "h-9 text-xs"}
+                  />
+                </div>
 
-              <div className="lg:col-span-1">
-                <Label className="text-[10px] lg:hidden">Rate</Label>
-                <Input
-                  type="number"
-                  disabled={!r.is_inventory_purchase}
-                  value={r.unit_cost || ""}
-                  onChange={(e) => {
-                    const rate = parseFloat(e.target.value) || 0;
-                    const amount = (r.quantity * rate).toFixed(2);
-                    updateRow(i, {
-                      unit_cost: rate,
-                      amount: parseFloat(amount) > 0 ? parseFloat(amount) : r.amount
-                    });
-                  }}
-                  placeholder="0"
-                  className="h-9 text-xs"
-                />
-              </div>
+                <div className="lg:col-span-2">
+                  <Label className="text-[10px] lg:hidden">Category</Label>
+                  <Select
+                    value={r.category}
+                    onValueChange={(v) => updateRow(i, { category: v })}
+                  >
+                    <SelectTrigger className="h-9 text-xs">
+                      <SelectValue placeholder="Category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map((c) => (
+                        <SelectItem key={c.id} value={c.name}>
+                          {c.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-              <div className="lg:col-span-1">
-                <Label className="text-[10px] lg:hidden">Amount</Label>
-                <Input
-                  type="number"
-                  value={r.amount || ""}
-                  onChange={(e) => updateRow(i, { amount: parseFloat(e.target.value) || 0 })}
-                  className={r.is_inventory_purchase ? "h-9 text-xs bg-muted/50 font-bold" : "h-9 text-xs"}
-                />
-              </div>
+                <div className="lg:col-span-1">
+                  <Label className="text-[10px] lg:hidden">Payment</Label>
+                  <Select
+                    value={r.payment_mode}
+                    onValueChange={(v) => updateRow(i, { payment_mode: v })}
+                  >
+                    <SelectTrigger className="h-9 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {paymentModes.map((p) => (
+                        <SelectItem key={p} value={p}>
+                          {p}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-              <div className="lg:col-span-2">
-                <Label className="text-[10px] lg:hidden">Category</Label>
-                <Select
-                  value={r.category}
-                  onValueChange={(v) => updateRow(i, { category: v })}
-                >
-                  <SelectTrigger className="h-9 text-xs">
-                    <SelectValue placeholder="Category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.map((c) => (
-                      <SelectItem key={c.id} value={c.name}>
-                        {c.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="absolute top-2 right-2 lg:static lg:col-span-1 flex justify-end">
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => removeRow(i)}
+                    disabled={rows.length === 1}
+                    className="h-9 w-9 text-destructive hover:text-destructive hover:bg-destructive/10"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
-
-              <div className="lg:col-span-1">
-                <Label className="text-[10px] lg:hidden">Payment</Label>
-                <Select
-                  value={r.payment_mode}
-                  onValueChange={(v) => updateRow(i, { payment_mode: v })}
-                >
-                  <SelectTrigger className="h-9 text-xs">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {paymentModes.map((p) => (
-                      <SelectItem key={p} value={p}>
-                        {p}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="absolute top-2 right-2 lg:static lg:col-span-1 flex justify-end">
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  onClick={() => removeRow(i)}
-                  disabled={rows.length === 1}
-                  className="h-9 w-9 text-destructive hover:text-destructive hover:bg-destructive/10"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          ))}
+            );
+          })}
 
           <Button variant="outline" size="sm" onClick={addRow} className="gap-2">
             <Plus className="h-4 w-4" />
@@ -358,7 +396,7 @@ const MultiExpenseEntry = ({ categories, inventory, onComplete }: Props) => {
           </Button>
         </div>
 
-        <DialogFooter className="flex items-center justify-between sm:justify-between">
+        <DialogFooter className="flex items-center justify-between sm:justify-between pt-4 border-t mt-4">
           <div className="text-sm">
             <span className="text-muted-foreground">Total: </span>
             <span className="font-semibold">NRs. {grandTotal.toFixed(2)}</span>

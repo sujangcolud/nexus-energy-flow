@@ -27,6 +27,7 @@ interface Row {
   date: string;
   inventory_item_id: string;
   quantity: number;
+  unit: string;
   unit_cost: number;
   category: string;
   payment_mode: string;
@@ -34,10 +35,18 @@ interface Row {
   remarks: string;
 }
 
+interface UnitConversion {
+  id: string;
+  unit_name: string;
+  conversion_to_base: number;
+}
+
 interface InventoryItem {
   id: string;
   item_name: string;
   category: string | null;
+  base_unit: string;
+  unit_conversions?: UnitConversion[];
 }
 
 interface Category {
@@ -65,6 +74,7 @@ const blankRow = (): Row => ({
   date: format(new Date(), "yyyy-MM-dd"),
   inventory_item_id: "",
   quantity: 0,
+  unit: "",
   unit_cost: 0,
   category: "",
   payment_mode: "Cash",
@@ -82,11 +92,12 @@ const MultiInventoryEntry = ({ inventory, categories, onComplete }: Props) => {
     setRows((r) => {
       const newRows = r.map((row, idx) => (idx === i ? { ...row, ...patch } : row));
 
-      // If inventory_item_id changed, try to auto-fill category
+      // If inventory_item_id changed, try to auto-fill category and unit
       if (patch.inventory_item_id) {
         const item = inventory.find(it => it.id === patch.inventory_item_id);
-        if (item && item.category) {
-          newRows[i].category = item.category;
+        if (item) {
+          if (item.category) newRows[i].category = item.category;
+          newRows[i].unit = item.base_unit;
         }
       }
 
@@ -138,7 +149,7 @@ const MultiInventoryEntry = ({ inventory, categories, onComplete }: Props) => {
           p_is_inventory_purchase: true,
           p_inventory_item_id: row.inventory_item_id,
           p_quantity: row.quantity,
-          p_unit: null,
+          p_unit: row.unit,
           p_cost_per_unit: row.unit_cost,
           p_supplier: row.supplier || null,
           p_invoice_number: null
@@ -191,23 +202,28 @@ const MultiInventoryEntry = ({ inventory, categories, onComplete }: Props) => {
 
         <div className="space-y-4 my-4">
           <div className="hidden md:grid grid-cols-12 gap-2 px-3 text-xs font-medium text-muted-foreground">
-            <div className="col-span-2">Date</div>
+            <div className="col-span-1">Date</div>
             <div className="col-span-2">Item</div>
             <div className="col-span-1">Qty</div>
+            <div className="col-span-1">Unit</div>
             <div className="col-span-1">Unit Cost</div>
             <div className="col-span-1 text-right pr-2">Total</div>
-            <div className="col-span-2">Category</div>
+            <div className="col-span-1">Category</div>
             <div className="col-span-1">Payment</div>
-            <div className="col-span-1">Supplier</div>
+            <div className="col-span-2">Supplier</div>
             <div className="col-span-1"></div>
           </div>
 
-          {rows.map((r, i) => (
+          {rows.map((r, i) => {
+            const item = inventory.find(it => it.id === r.inventory_item_id);
+            const units = item ? [item.base_unit, ...(item.unit_conversions?.map(u => u.unit_name) || [])] : [];
+
+            return (
             <div
               key={i}
               className="grid grid-cols-1 md:grid-cols-12 gap-2 items-start md:items-center p-3 border rounded-md bg-muted/20 relative"
             >
-              <div className="md:col-span-2">
+              <div className="md:col-span-1">
                 <Label className="text-[10px] md:hidden">Date</Label>
                 <Input
                   type="date"
@@ -230,6 +246,26 @@ const MultiInventoryEntry = ({ inventory, categories, onComplete }: Props) => {
                     {inventory.map((item) => (
                       <SelectItem key={item.id} value={item.id}>
                         {item.item_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="md:col-span-1">
+                <Label className="text-[10px] md:hidden">Unit</Label>
+                <Select
+                  value={r.unit}
+                  onValueChange={(v) => updateRow(i, { unit: v })}
+                  disabled={!r.inventory_item_id}
+                >
+                  <SelectTrigger className="h-9">
+                    <SelectValue placeholder="Unit" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {units.map((u) => (
+                      <SelectItem key={u} value={u}>
+                        {u}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -262,7 +298,7 @@ const MultiInventoryEntry = ({ inventory, categories, onComplete }: Props) => {
                 {total(r).toLocaleString()}
               </div>
 
-              <div className="md:col-span-2">
+              <div className="md:col-span-1">
                 <Label className="text-[10px] md:hidden">Category</Label>
                 <Select
                   value={r.category}
@@ -300,7 +336,7 @@ const MultiInventoryEntry = ({ inventory, categories, onComplete }: Props) => {
                 </Select>
               </div>
 
-              <div className="md:col-span-1">
+              <div className="md:col-span-2">
                 <Label className="text-[10px] md:hidden">Supplier</Label>
                 <Input
                   placeholder="Supplier"
@@ -327,7 +363,8 @@ const MultiInventoryEntry = ({ inventory, categories, onComplete }: Props) => {
                 <span className="font-bold">NRs. {total(r).toLocaleString()}</span>
               </div>
             </div>
-          ))}
+            );
+          })}
 
           <Button variant="outline" size="sm" onClick={addRow} className="gap-2 w-full md:w-auto">
             <Plus className="h-4 w-4" />
