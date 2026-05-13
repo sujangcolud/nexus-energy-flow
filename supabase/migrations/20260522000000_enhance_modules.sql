@@ -1,4 +1,5 @@
--- Corrected migration to enhance various modules as per user request and review feedback
+-- Enhanced migration to support updating expenses and expense bookings via the same RPC
+-- Handles balance reversal and re-calculation correctly.
 
 -- 1. Withdrawals: Add source_cooperative
 DO $$
@@ -40,25 +41,21 @@ BEGIN
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='expense_bookings' AND column_name='invoice_number') THEN
         ALTER TABLE public.expense_bookings ADD COLUMN invoice_number TEXT;
     END IF;
-    -- Ensure party_name exists (some migrations used expense_name)
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='expense_bookings' AND column_name='party_name') THEN
         ALTER TABLE public.expense_bookings ADD COLUMN party_name TEXT;
-        -- Copy from expense_name if it exists
         IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='expense_bookings' AND column_name='expense_name') THEN
             UPDATE public.expense_bookings SET party_name = expense_name;
         END IF;
     END IF;
-    -- Add remarks if not exists
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='expense_bookings' AND column_name='remarks') THEN
         ALTER TABLE public.expense_bookings ADD COLUMN remarks TEXT;
-        -- Copy from notes if it exists
         IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='expense_bookings' AND column_name='notes') THEN
             UPDATE public.expense_bookings SET remarks = notes;
         END IF;
     END IF;
 END $$;
 
--- 4. Update process_new_loan to include Income from loan
+-- 4. process_new_loan
 CREATE OR REPLACE FUNCTION public.process_new_loan(
     p_user_id UUID,
     p_loan_name TEXT,
@@ -81,34 +78,16 @@ DECLARE
     v_column_name TEXT;
     v_deposit_mode TEXT;
 BEGIN
-    -- Insert the loan record
     INSERT INTO public.loans (
-        user_id,
-        loan_name,
-        lender_name,
-        loan_type,
-        principal_amount,
-        interest_rate,
-        repayment_frequency,
-        loan_date,
-        maturity_date,
-        payment_mode,
-        description
+        user_id, loan_name, lender_name, loan_type, principal_amount,
+        interest_rate, repayment_frequency, loan_date, maturity_date,
+        payment_mode, description
     ) VALUES (
-        p_user_id,
-        p_loan_name,
-        p_lender_name,
-        p_loan_type,
-        p_principal_amount,
-        p_interest_rate,
-        p_repayment_frequency,
-        p_loan_date,
-        p_maturity_date,
-        p_payment_mode,
-        p_description
+        p_user_id, p_loan_name, p_lender_name, p_loan_type, p_principal_amount,
+        p_interest_rate, p_repayment_frequency, p_loan_date, p_maturity_date,
+        p_payment_mode, p_description
     ) RETURNING id INTO v_loan_id;
 
-    -- Map payment mode to balance column
     v_column_name := CASE LOWER(p_payment_mode)
         WHEN 'cash' THEN 'cash_in_hand'
         WHEN 'bank transfer' THEN 'bank_balance'
@@ -128,40 +107,27 @@ BEGIN
         ELSE 'cash'
     END;
 
-    -- Update user balances (increase balance because it's a loan inflow)
     EXECUTE format('UPDATE public.balances SET %I = COALESCE(%I, 0) + $1, updated_at = NOW() WHERE user_id = $2', v_column_name, v_column_name)
     USING p_principal_amount, p_user_id;
 
-    -- Record as Income (Deposit) as requested: "income from loan"
     INSERT INTO public.deposits (
-        user_id,
-        amount,
-        mode,
-        description,
-        deposit_date,
-        date
+        user_id, amount, mode, description, deposit_date, date
     ) VALUES (
-        p_user_id,
-        p_principal_amount,
-        v_deposit_mode,
+        p_user_id, p_principal_amount, v_deposit_mode,
         'Income from loan: ' || p_loan_name || COALESCE('. ' || p_description, ''),
-        p_loan_date,
-        p_loan_date
+        p_loan_date, p_loan_date
     );
 
-    -- Log the action
     INSERT INTO public.logs (user_id, action, table_name, record_id, details)
     VALUES (p_user_id, 'new_loan', 'loans', v_loan_id, jsonb_build_object(
-        'loan_name', p_loan_name,
-        'amount', p_principal_amount,
-        'payment_mode', p_payment_mode
+        'loan_name', p_loan_name, 'amount', p_principal_amount, 'payment_mode', p_payment_mode
     ));
 
     RETURN v_loan_id;
 END;
 $$;
 
--- 5. Update process_inventory_expense to support Credit and deduct from balances
+-- 5. Enhanced process_inventory_expense with Update support
 CREATE OR REPLACE FUNCTION public.process_inventory_expense(
   p_user_id uuid,
   p_description text,
@@ -178,7 +144,8 @@ CREATE OR REPLACE FUNCTION public.process_inventory_expense(
   p_supplier text DEFAULT NULL,
   p_invoice_number text DEFAULT NULL,
   p_manual_conversion_factor numeric DEFAULT NULL,
-  p_is_credit boolean DEFAULT false
+  p_is_credit boolean DEFAULT false,
+  p_id uuid DEFAULT NULL  -- New parameter for updates
 )
 RETURNS uuid
 LANGUAGE plpgsql
@@ -190,7 +157,51 @@ DECLARE
   v_base_qty numeric;
   v_unit_cost_base numeric;
   v_column_name text;
+  v_old_amount numeric;
+  v_old_payment_mode text;
+  v_old_was_credit boolean;
+  v_old_was_inventory boolean;
 BEGIN
+  -- 1. IF UPDATING: Handle Reversal
+  IF p_id IS NOT NULL THEN
+    -- Try to find in expenses first
+    SELECT amount, payment_mode, is_credit, is_inventory_purchase
+    INTO v_old_amount, v_old_payment_mode, v_old_was_credit, v_old_was_inventory
+    FROM public.expenses WHERE id = p_id;
+
+    IF NOT FOUND THEN
+        -- Check expense_bookings
+        SELECT amount, payment_mode, true, is_inventory_purchase
+        INTO v_old_amount, v_old_payment_mode, v_old_was_credit, v_old_was_inventory
+        FROM public.expense_bookings WHERE id = p_id;
+
+        IF FOUND THEN
+            DELETE FROM public.expense_bookings WHERE id = p_id;
+        END IF;
+    ELSE
+        DELETE FROM public.expenses WHERE id = p_id;
+
+        -- Reverse balance only if it wasn't credit
+        IF NOT COALESCE(v_old_was_credit, false) THEN
+            v_column_name := CASE LOWER(v_old_payment_mode)
+                WHEN 'cash' THEN 'cash_in_hand'
+                WHEN 'bank transfer' THEN 'bank_balance'
+                WHEN 'bank' THEN 'bank_balance'
+                WHEN 'esewa' THEN 'esewa_balance'
+                WHEN 'fonepay' THEN 'fonepay_balance'
+                WHEN 'cooperative' THEN 'cooperative_balance'
+                ELSE 'cash_in_hand'
+            END;
+            EXECUTE format('UPDATE public.balances SET %I = COALESCE(%I, 0) + $1, updated_at = NOW() WHERE user_id = $2', v_column_name, v_column_name)
+            USING v_old_amount, p_user_id;
+        END IF;
+    END IF;
+
+    -- Clear related inventory movements (they are auto-deleted if referenced but good to be explicit or ensure trigger handles it)
+    DELETE FROM public.inventory_movements WHERE (reference_type = 'expense' OR reference_type = 'expense_booking') AND reference_id = p_id;
+  END IF;
+
+  -- 2. Calculate Inventory Fields
   IF p_is_inventory_purchase AND p_inventory_item_id IS NOT NULL THEN
     IF p_manual_conversion_factor IS NOT NULL THEN
         v_base_qty := p_quantity * p_manual_conversion_factor;
@@ -203,34 +214,32 @@ BEGIN
     v_base_qty := NULL; v_unit_cost_base := NULL;
   END IF;
 
+  -- 3. Insert New/Updated Record
   IF p_is_credit THEN
-    -- Insert into expense_bookings instead
     INSERT INTO public.expense_bookings (
-      user_id, party_name, amount, category, payment_mode, remarks, booking_date, payment_date,
+      id, user_id, party_name, amount, category, payment_mode, remarks, booking_date, payment_date,
       is_inventory_purchase, inventory_item_id, quantity, unit, cost_per_unit, supplier, invoice_number,
       status
     )
     VALUES (
-      p_user_id, COALESCE(p_supplier, p_description), p_amount, p_category, p_payment_mode, p_remarks, p_expense_date, p_expense_date,
+      COALESCE(p_id, gen_random_uuid()), p_user_id, COALESCE(p_supplier, p_description), p_amount, p_category, p_payment_mode, p_remarks, p_expense_date, p_expense_date,
       p_is_inventory_purchase, p_inventory_item_id, p_quantity, p_unit, p_cost_per_unit, p_supplier, p_invoice_number,
       'pending'
     )
     RETURNING id INTO v_record_id;
   ELSE
-    -- Normal expense
     INSERT INTO public.expenses (
-      user_id, description, amount, category, payment_mode, remarks, expense_date, date,
+      id, user_id, description, amount, category, payment_mode, remarks, expense_date, date,
       is_inventory_purchase, inventory_item_id, quantity, unit, purchase_unit,
       converted_base_quantity, cost_per_unit, supplier, invoice_number, is_credit
     )
     VALUES (
-      p_user_id, p_description, p_amount, p_category, p_payment_mode, p_remarks, p_expense_date, p_expense_date,
+      COALESCE(p_id, gen_random_uuid()), p_user_id, p_description, p_amount, p_category, p_payment_mode, p_remarks, p_expense_date, p_expense_date,
       p_is_inventory_purchase, p_inventory_item_id, p_quantity, p_unit, p_unit,
       v_base_qty, p_cost_per_unit, p_supplier, p_invoice_number, false
     )
     RETURNING id INTO v_record_id;
 
-    -- Update balances ONLY for non-credit expenses
     v_column_name := CASE LOWER(p_payment_mode)
         WHEN 'cash' THEN 'cash_in_hand'
         WHEN 'bank transfer' THEN 'bank_balance'
@@ -245,7 +254,7 @@ BEGIN
     USING p_amount, p_user_id;
   END IF;
 
-  -- Inventory updates should still happen if it's an inventory purchase, even on credit
+  -- 4. Update Inventory
   IF p_is_inventory_purchase AND p_inventory_item_id IS NOT NULL THEN
     INSERT INTO public.inventory_movements (
       user_id, inventory_item_id, movement_type, reference_type, reference_id,
@@ -263,8 +272,7 @@ BEGIN
 END;
 $$;
 
--- 6. Correct update_daily_summary to correctly map deposits to balances
--- DROP first to avoid parameter name mismatch errors
+-- 6. update_daily_summary
 DROP FUNCTION IF EXISTS public.update_daily_summary(date) CASCADE;
 
 CREATE OR REPLACE FUNCTION public.update_daily_summary(summary_date date)
@@ -276,134 +284,87 @@ DECLARE
     orders_cash numeric := 0;
     orders_fonepay numeric := 0;
     orders_esewa numeric := 0;
-
     charging_total numeric := 0;
     charging_cash numeric := 0;
     charging_fonepay numeric := 0;
     charging_esewa numeric := 0;
-
     expenses_total numeric := 0;
     expenses_cash numeric := 0;
     expenses_fonepay numeric := 0;
     expenses_esewa numeric := 0;
-
     deposits_total numeric := 0;
     deposits_cash numeric := 0;
     deposits_fonepay numeric := 0;
     deposits_esewa numeric := 0;
-
     withdrawals_total numeric := 0;
     withdrawals_cash numeric := 0;
-
     cooperative_total numeric := 0;
 BEGIN
-    -- Calculate orders totals
     SELECT
         COALESCE(SUM(total), 0),
         COALESCE(SUM(CASE WHEN LOWER(payment_mode) = 'cash' THEN total ELSE 0 END), 0),
         COALESCE(SUM(CASE WHEN LOWER(payment_mode) = 'fonepay' THEN total ELSE 0 END), 0),
         COALESCE(SUM(CASE WHEN LOWER(payment_mode) = 'esewa' THEN total ELSE 0 END), 0)
     INTO orders_total, orders_cash, orders_fonepay, orders_esewa
-    FROM orders
-    WHERE order_date = summary_date;
+    FROM orders WHERE order_date = summary_date;
 
-    -- Calculate charging totals
     SELECT
         COALESCE(SUM(total_amount), 0),
         COALESCE(SUM(CASE WHEN LOWER(payment_mode) = 'cash' THEN total_amount ELSE 0 END), 0),
         COALESCE(SUM(CASE WHEN LOWER(payment_mode) = 'fonepay' THEN total_amount ELSE 0 END), 0),
         COALESCE(SUM(CASE WHEN LOWER(payment_mode) = 'esewa' THEN total_amount ELSE 0 END), 0)
     INTO charging_total, charging_cash, charging_fonepay, charging_esewa
-    FROM charging_sessions
-    WHERE session_date = summary_date;
+    FROM charging_sessions WHERE session_date = summary_date;
 
-    -- Calculate expenses totals
     SELECT
         COALESCE(SUM(amount), 0),
         COALESCE(SUM(CASE WHEN LOWER(payment_mode) = 'cash' THEN amount ELSE 0 END), 0),
         COALESCE(SUM(CASE WHEN LOWER(payment_mode) = 'fonepay' THEN amount ELSE 0 END), 0),
         COALESCE(SUM(CASE WHEN LOWER(payment_mode) = 'esewa' THEN amount ELSE 0 END), 0)
     INTO expenses_total, expenses_cash, expenses_fonepay, expenses_esewa
-    FROM expenses
-    WHERE expense_date = summary_date;
+    FROM expenses WHERE expense_date = summary_date;
 
-    -- Calculate deposits by specific modes to avoid double-counting
     SELECT
         COALESCE(SUM(amount), 0),
         COALESCE(SUM(CASE WHEN LOWER(mode) = 'cash' THEN amount ELSE 0 END), 0),
         COALESCE(SUM(CASE WHEN LOWER(mode) = 'fonepay' THEN amount ELSE 0 END), 0),
         COALESCE(SUM(CASE WHEN LOWER(mode) = 'esewa' THEN amount ELSE 0 END), 0)
     INTO deposits_total, deposits_cash, deposits_fonepay, deposits_esewa
-    FROM deposits
-    WHERE deposit_date = summary_date;
+    FROM deposits WHERE deposit_date = summary_date;
 
-    -- Calculate withdrawals
     SELECT COALESCE(SUM(amount), 0), COALESCE(SUM(CASE WHEN LOWER(payment_mode) = 'cash' THEN amount ELSE 0 END), 0)
     INTO withdrawals_total, withdrawals_cash
-    FROM withdrawals
-    WHERE withdrawal_date = summary_date;
+    FROM withdrawals WHERE withdrawal_date = summary_date;
 
-    -- Calculate cooperative savings
     SELECT COALESCE(SUM(contribution_amount), 0)
     INTO cooperative_total
-    FROM cooperative_savings
-    WHERE contribution_date = summary_date;
+    FROM cooperative_savings WHERE contribution_date = summary_date;
 
-    -- Insert or update daily summary in balances table
     INSERT INTO balances (
-        date,
-        cash_balance,
-        fonepay_balance,
-        esewa_balance,
-        bank_balance,
-        cooperative_balance,
-        total_income,
-        total_expenses,
-        net_balance,
-        orders_total,
-        charging_total,
-        expenses_total,
-        deposits_total,
-        withdrawals_total,
-        cooperative_total,
-        created_at,
-        updated_at
+        date, cash_balance, fonepay_balance, esewa_balance, bank_balance, cooperative_balance,
+        total_income, total_expenses, net_balance, orders_total, charging_total, expenses_total,
+        deposits_total, withdrawals_total, cooperative_total, created_at, updated_at
     ) VALUES (
         summary_date,
         (orders_cash + charging_cash - expenses_cash + deposits_cash + withdrawals_cash),
         (orders_fonepay + charging_fonepay - expenses_fonepay + deposits_fonepay),
         (orders_esewa + charging_esewa - expenses_esewa + deposits_esewa),
-        (deposits_total - withdrawals_total), -- simplified bank_balance
+        (deposits_total - withdrawals_total),
         cooperative_total,
         (orders_total + charging_total + deposits_total),
         expenses_total,
         (orders_total + charging_total + deposits_total - expenses_total),
-        orders_total,
-        charging_total,
-        expenses_total,
-        deposits_total,
-        withdrawals_total,
-        cooperative_total,
-        NOW(),
-        NOW()
+        orders_total, charging_total, expenses_total, deposits_total, withdrawals_total, cooperative_total,
+        NOW(), NOW()
     )
-    ON CONFLICT (date)
-    DO UPDATE SET
-        cash_balance = (orders_cash + charging_cash - expenses_cash + deposits_cash + withdrawals_cash),
-        fonepay_balance = (orders_fonepay + charging_fonepay - expenses_fonepay + deposits_fonepay),
-        esewa_balance = (orders_esewa + charging_esewa - expenses_esewa + deposits_esewa),
-        bank_balance = (deposits_total - withdrawals_total),
-        cooperative_balance = cooperative_total,
-        total_income = (orders_total + charging_total + deposits_total),
-        total_expenses = expenses_total,
-        net_balance = (orders_total + charging_total + deposits_total - expenses_total),
-        orders_total = orders_total,
-        charging_total = charging_total,
-        expenses_total = expenses_total,
-        deposits_total = deposits_total,
-        withdrawals_total = withdrawals_total,
-        cooperative_total = cooperative_total,
+    ON CONFLICT (date) DO UPDATE SET
+        cash_balance = EXCLUDED.cash_balance, fonepay_balance = EXCLUDED.fonepay_balance,
+        esewa_balance = EXCLUDED.esewa_balance, bank_balance = EXCLUDED.bank_balance,
+        cooperative_balance = EXCLUDED.cooperative_balance, total_income = EXCLUDED.total_income,
+        total_expenses = EXCLUDED.total_expenses, net_balance = EXCLUDED.net_balance,
+        orders_total = EXCLUDED.orders_total, charging_total = EXCLUDED.charging_total,
+        expenses_total = EXCLUDED.expenses_total, deposits_total = EXCLUDED.deposits_total,
+        withdrawals_total = EXCLUDED.withdrawals_total, cooperative_total = EXCLUDED.cooperative_total,
         updated_at = NOW();
-
 END;
 $$;

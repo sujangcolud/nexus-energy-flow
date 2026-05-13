@@ -76,6 +76,40 @@ const MODULES: ModuleConfig[] = [
       { key: "remarks", label: "Remarks", type: "text", editable: true },
       { key: "amount", label: "Amount", type: "number", editable: true },
     ],
+    extraEditFields: [
+      { key: "is_inventory_purchase", label: "Inventory Purchase", type: "text", editable: true },
+      { key: "is_credit", label: "On Credit", type: "text", editable: true },
+      { key: "inventory_item_id", label: "Inventory Item ID", type: "text", editable: true },
+      { key: "quantity", label: "Quantity", type: "number", editable: true },
+      { key: "unit", label: "Unit", type: "text", editable: true },
+      { key: "cost_per_unit", label: "Rate", type: "number", editable: true },
+      { key: "supplier", label: "Supplier", type: "text", editable: true },
+      { key: "invoice_number", label: "Invoice #", type: "text", editable: true },
+    ],
+  },
+  {
+    key: "expense_bookings",
+    title: "Expense Bookings",
+    table: "expense_bookings",
+    dateColumn: "booking_date",
+    amountColumn: "amount",
+    attachmentType: "expense_booking",
+    columns: [
+      { key: "party_name", label: "Party", type: "text", editable: true },
+      { key: "category", label: "Category", type: "text", editable: true },
+      { key: "payment_mode", label: "Payment", type: "text", editable: true },
+      { key: "remarks", label: "Remarks", type: "text", editable: true },
+      { key: "amount", label: "Amount", type: "number", editable: true },
+    ],
+    extraEditFields: [
+      { key: "is_inventory_purchase", label: "Inventory Purchase", type: "text", editable: true },
+      { key: "inventory_item_id", label: "Inventory Item ID", type: "text", editable: true },
+      { key: "quantity", label: "Quantity", type: "number", editable: true },
+      { key: "unit", label: "Unit", type: "text", editable: true },
+      { key: "cost_per_unit", label: "Rate", type: "number", editable: true },
+      { key: "supplier", label: "Supplier", type: "text", editable: true },
+      { key: "invoice_number", label: "Invoice #", type: "text", editable: true },
+    ],
   },
   {
     key: "deposits",
@@ -186,15 +220,37 @@ const ModuleSection = ({ config, fromDate, toDate, editable }: ModuleSectionProp
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, patch }: { id: string; patch: any }) => {
-      const cleaned: any = {};
-      for (const col of allEditFields) {
-        if (!col.editable) continue;
-        const v = patch[col.key];
-        if (v === undefined) continue;
-        cleaned[col.key] = col.type === "number" ? (v === "" || v === null ? null : Number(v)) : v;
+      if (config.table === "expenses" || config.table === "expense_bookings") {
+        const { error } = await supabase.rpc("process_inventory_expense", {
+          p_user_id: user?.id,
+          p_description: patch.description || patch.party_name,
+          p_amount: Number(patch.amount),
+          p_category: patch.category,
+          p_payment_mode: patch.payment_mode,
+          p_remarks: patch.remarks || null,
+          p_expense_date: patch.expense_date || patch.booking_date,
+          p_is_inventory_purchase: patch.is_inventory_purchase === "true" || patch.is_inventory_purchase === true,
+          p_inventory_item_id: patch.inventory_item_id || null,
+          p_quantity: patch.quantity ? Number(patch.quantity) : null,
+          p_unit: patch.unit || null,
+          p_cost_per_unit: patch.cost_per_unit ? Number(patch.cost_per_unit) : null,
+          p_supplier: patch.supplier || null,
+          p_invoice_number: patch.invoice_number || null,
+          p_is_credit: config.table === "expense_bookings" || patch.is_credit === "true" || patch.is_credit === true,
+          p_id: id
+        });
+        if (error) throw error;
+      } else {
+        const cleaned: any = {};
+        for (const col of allEditFields) {
+          if (!col.editable) continue;
+          const v = patch[col.key];
+          if (v === undefined) continue;
+          cleaned[col.key] = col.type === "number" ? (v === "" || v === null ? null : Number(v)) : v;
+        }
+        const { error } = await (supabase as any).from(config.table).update(cleaned).eq("id", id);
+        if (error) throw error;
       }
-      const { error } = await (supabase as any).from(config.table).update(cleaned).eq("id", id);
-      if (error) throw error;
     },
     onSuccess: async () => {
       toast.success(`${config.title.slice(0, -1)} updated`);
