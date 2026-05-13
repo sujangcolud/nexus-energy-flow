@@ -208,7 +208,8 @@ END;
 $$;
 
 -- Create View for Loan Summaries
-CREATE OR REPLACE VIEW loan_summaries AS
+DROP VIEW IF EXISTS loan_summaries;
+CREATE VIEW loan_summaries AS
 SELECT
     l.id,
     l.user_id,
@@ -220,6 +221,7 @@ SELECT
     l.repayment_frequency,
     l.loan_date,
     l.maturity_date,
+    l.payment_mode,
     l.status,
     l.description,
     l.created_at,
@@ -231,7 +233,7 @@ SELECT
     MAX(lr.repayment_date) as last_repayment_date
 FROM public.loans l
 LEFT JOIN public.loan_repayments lr ON l.id = lr.loan_id
-GROUP BY l.id;
+GROUP BY l.id, l.user_id, l.loan_name, l.lender_name, l.loan_type, l.principal_amount, l.interest_rate, l.repayment_frequency, l.loan_date, l.maturity_date, l.payment_mode, l.status, l.description, l.created_at, l.updated_at;
 
 -- Apply permissions to the new view
 GRANT SELECT ON loan_summaries TO authenticated;
