@@ -29,6 +29,7 @@ import { format, addDays, addWeeks, addMonths, isBefore, startOfDay } from "date
 import {
   Landmark,
   Plus,
+  Edit,
   History,
   DollarSign,
   Calendar,
@@ -59,11 +60,13 @@ const LoansTab = () => {
   const [loans, setLoans] = useState<LoanSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAddLoanOpen, setIsAddLoanOpen] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editingLoanId, setEditLoanId] = useState<string | null>(null);
   const [isRepayOpen, setIsRepayOpen] = useState(false);
   const [selectedLoan, setSelectedLoan] = useState<LoanSummary | null>(null);
 
   // New Loan Form State
-  const [newLoan, setNewLoan] = useState({
+  const [loanForm, setLoanForm] = useState({
     loan_name: "",
     lender_name: "",
     loan_type: "banking" as LoanType,
@@ -109,46 +112,90 @@ const LoansTab = () => {
     }
   };
 
-  const handleAddLoan = async (e: React.FormEvent) => {
+  const handleSaveLoan = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
 
     try {
-      const { data, error } = await supabase.rpc("process_new_loan", {
-        p_user_id: user.id,
-        p_loan_name: newLoan.loan_name,
-        p_lender_name: newLoan.lender_name,
-        p_loan_type: newLoan.loan_type,
-        p_principal_amount: parseFloat(newLoan.principal_amount) || 0,
-        p_interest_rate: parseFloat(newLoan.interest_rate) || 0,
-        p_repayment_frequency: newLoan.repayment_frequency,
-        p_loan_date: newLoan.loan_date,
-        p_maturity_date: newLoan.maturity_date || null,
-        p_payment_mode: newLoan.payment_mode,
-        p_description: newLoan.description,
-      });
+      if (isEditMode && editingLoanId) {
+        // Simple update for editing (metadata only recommended for consistency)
+        const { error } = await supabase
+          .from("loans")
+          .update({
+            loan_name: loanForm.loan_name,
+            lender_name: loanForm.lender_name,
+            loan_type: loanForm.loan_type,
+            interest_rate: parseFloat(loanForm.interest_rate) || 0,
+            repayment_frequency: loanForm.repayment_frequency,
+            loan_date: loanForm.loan_date,
+            maturity_date: loanForm.maturity_date || null,
+            description: loanForm.description,
+          })
+          .eq("id", editingLoanId);
 
-      if (error) throw error;
+        if (error) throw error;
+        toast.success("Loan details updated successfully!");
+      } else {
+        const { error } = await supabase.rpc("process_new_loan", {
+          p_user_id: user.id,
+          p_loan_name: loanForm.loan_name,
+          p_lender_name: loanForm.lender_name,
+          p_loan_type: loanForm.loan_type,
+          p_principal_amount: parseFloat(loanForm.principal_amount) || 0,
+          p_interest_rate: parseFloat(loanForm.interest_rate) || 0,
+          p_repayment_frequency: loanForm.repayment_frequency,
+          p_loan_date: loanForm.loan_date,
+          p_maturity_date: loanForm.maturity_date || null,
+          p_payment_mode: loanForm.payment_mode,
+          p_description: loanForm.description,
+        });
 
-      toast.success("Loan added successfully and balance updated!");
+        if (error) throw error;
+        toast.success("Loan added successfully and balance updated!");
+      }
+
       setIsAddLoanOpen(false);
-      setNewLoan({
-        loan_name: "",
-        lender_name: "",
-        loan_type: "banking",
-        principal_amount: "",
-        interest_rate: "",
-        repayment_frequency: "monthly",
-        loan_date: format(new Date(), "yyyy-MM-dd"),
-        maturity_date: "",
-        payment_mode: "Cash",
-        description: "",
-      });
+      resetForm();
       fetchLoans();
     } catch (error) {
-      logError("adding loan", error);
-      toast.error(`Error adding loan: ${extractErrorMessage(error)}`);
+      logError(isEditMode ? "updating loan" : "adding loan", error);
+      toast.error(`Error: ${extractErrorMessage(error)}`);
     }
+  };
+
+  const resetForm = () => {
+    setIsEditMode(false);
+    setEditLoanId(null);
+    setLoanForm({
+      loan_name: "",
+      lender_name: "",
+      loan_type: "banking",
+      principal_amount: "",
+      interest_rate: "",
+      repayment_frequency: "monthly",
+      loan_date: format(new Date(), "yyyy-MM-dd"),
+      maturity_date: "",
+      payment_mode: "Cash",
+      description: "",
+    });
+  };
+
+  const openEditModal = (loan: LoanSummary) => {
+    setIsEditMode(true);
+    setEditLoanId(loan.id);
+    setLoanForm({
+      loan_name: loan.loan_name,
+      lender_name: loan.lender_name,
+      loan_type: loan.loan_type,
+      principal_amount: loan.principal_amount.toString(),
+      interest_rate: loan.interest_rate.toString(),
+      repayment_frequency: loan.repayment_frequency,
+      loan_date: loan.loan_date,
+      maturity_date: loan.maturity_date || "",
+      payment_mode: loan.payment_mode || "Cash",
+      description: loan.description || "",
+    });
+    setIsAddLoanOpen(true);
   };
 
   const handleRepayment = async (e: React.FormEvent) => {
@@ -218,29 +265,38 @@ const LoansTab = () => {
             Track your liabilities, repayments, and outstanding balances.
           </p>
         </div>
-        <Dialog open={isAddLoanOpen} onOpenChange={setIsAddLoanOpen}>
+        <Dialog
+          open={isAddLoanOpen}
+          onOpenChange={(open) => {
+            setIsAddLoanOpen(open);
+            if (!open) resetForm();
+          }}
+        >
           <DialogTrigger asChild>
             <Button className="gap-2">
               <Plus className="h-4 w-4" />
               Add New Loan
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-md">
+          <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Add New Loan</DialogTitle>
+              <DialogTitle>{isEditMode ? "Edit Loan" : "Add New Loan"}</DialogTitle>
               <DialogDescription>
-                Enter the details of your new loan agreement here.
+                {isEditMode
+                  ? "Update your loan details below. Note: Changing amounts won't re-adjust previous balances."
+                  : "Enter the details of your new loan agreement here."
+                }
               </DialogDescription>
             </DialogHeader>
-            <form onSubmit={handleAddLoan} className="space-y-4">
+            <form onSubmit={handleSaveLoan} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Loan Name</Label>
                   <Input
                     required
-                    value={newLoan.loan_name}
+                    value={loanForm.loan_name}
                     onChange={(e) =>
-                      setNewLoan({ ...newLoan, loan_name: e.target.value })
+                      setLoanForm({ ...loanForm, loan_name: e.target.value })
                     }
                     placeholder="e.g., Business Expansion"
                   />
@@ -249,9 +305,9 @@ const LoansTab = () => {
                   <Label>Lender Name</Label>
                   <Input
                     required
-                    value={newLoan.lender_name}
+                    value={loanForm.lender_name}
                     onChange={(e) =>
-                      setNewLoan({ ...newLoan, lender_name: e.target.value })
+                      setLoanForm({ ...loanForm, lender_name: e.target.value })
                     }
                     placeholder="e.g., Global Bank"
                   />
@@ -262,9 +318,9 @@ const LoansTab = () => {
                 <div className="space-y-2">
                   <Label>Loan Type</Label>
                   <Select
-                    value={newLoan.loan_type}
+                    value={loanForm.loan_type}
                     onValueChange={(val: LoanType) =>
-                      setNewLoan({ ...newLoan, loan_type: val })
+                      setLoanForm({ ...loanForm, loan_type: val })
                     }
                   >
                     <SelectTrigger>
@@ -280,9 +336,9 @@ const LoansTab = () => {
                 <div className="space-y-2">
                   <Label>Frequency</Label>
                   <Select
-                    value={newLoan.repayment_frequency}
+                    value={loanForm.repayment_frequency}
                     onValueChange={(val: RepaymentFrequency) =>
-                      setNewLoan({ ...newLoan, repayment_frequency: val })
+                      setLoanForm({ ...loanForm, repayment_frequency: val })
                     }
                   >
                     <SelectTrigger>
@@ -303,10 +359,11 @@ const LoansTab = () => {
                   <Input
                     type="number"
                     required
-                    value={newLoan.principal_amount}
+                    disabled={isEditMode}
+                    value={loanForm.principal_amount}
                     onChange={(e) =>
-                      setNewLoan({
-                        ...newLoan,
+                      setLoanForm({
+                        ...loanForm,
                         principal_amount: e.target.value,
                       })
                     }
@@ -318,9 +375,9 @@ const LoansTab = () => {
                     type="number"
                     step="0.01"
                     required
-                    value={newLoan.interest_rate}
+                    value={loanForm.interest_rate}
                     onChange={(e) =>
-                      setNewLoan({ ...newLoan, interest_rate: e.target.value })
+                      setLoanForm({ ...loanForm, interest_rate: e.target.value })
                     }
                   />
                 </div>
@@ -329,49 +386,51 @@ const LoansTab = () => {
               <div className="grid grid-cols-2 gap-4">
                 <TransactionDatePicker
                   label="Loan Date"
-                  selectedDate={newLoan.loan_date}
+                  selectedDate={loanForm.loan_date}
                   onDateChange={(date) =>
-                    setNewLoan({ ...newLoan, loan_date: date })
+                    setLoanForm({ ...loanForm, loan_date: date })
                   }
                 />
                 <div className="space-y-2">
                   <Label>Maturity Date (Optional)</Label>
                   <Input
                     type="date"
-                    value={newLoan.maturity_date}
+                    value={loanForm.maturity_date}
                     onChange={(e) =>
-                      setNewLoan({ ...newLoan, maturity_date: e.target.value })
+                      setLoanForm({ ...loanForm, maturity_date: e.target.value })
                     }
                   />
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label>Deposit Inflow To</Label>
-                <Select
-                  value={newLoan.payment_mode}
-                  onValueChange={(val) =>
-                    setNewLoan({ ...newLoan, payment_mode: val })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Cash">Cash in Hand</SelectItem>
-                    <SelectItem value="Bank Transfer">Bank Account</SelectItem>
-                    <SelectItem value="eSewa">eSewa Balance</SelectItem>
-                    <SelectItem value="Fonepay">Fonepay Balance</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              {!isEditMode && (
+                <div className="space-y-2">
+                  <Label>Deposit Inflow To</Label>
+                  <Select
+                    value={loanForm.payment_mode}
+                    onValueChange={(val) =>
+                      setLoanForm({ ...loanForm, payment_mode: val })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Cash">Cash in Hand</SelectItem>
+                      <SelectItem value="Bank Transfer">Bank Account</SelectItem>
+                      <SelectItem value="eSewa">eSewa Balance</SelectItem>
+                      <SelectItem value="Fonepay">Fonepay Balance</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
 
               <div className="space-y-2">
                 <Label>Description</Label>
                 <Textarea
-                  value={newLoan.description}
+                  value={loanForm.description}
                   onChange={(e) =>
-                    setNewLoan({ ...newLoan, description: e.target.value })
+                    setLoanForm({ ...loanForm, description: e.target.value })
                   }
                   placeholder="Additional details..."
                 />
@@ -379,7 +438,7 @@ const LoansTab = () => {
 
               <DialogFooter>
                 <Button type="submit" className="w-full">
-                  Create Loan
+                  {isEditMode ? "Update Loan" : "Create Loan"}
                 </Button>
               </DialogFooter>
             </form>
@@ -515,17 +574,26 @@ const LoansTab = () => {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          disabled={loan.status !== "active"}
-                          onClick={() => {
-                            setSelectedLoan(loan);
-                            setIsRepayOpen(true);
-                          }}
-                        >
-                          Repay
-                        </Button>
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => openEditModal(loan)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={loan.status !== "active"}
+                            onClick={() => {
+                              setSelectedLoan(loan);
+                              setIsRepayOpen(true);
+                            }}
+                          >
+                            Repay
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))
@@ -537,7 +605,7 @@ const LoansTab = () => {
       </Card>
 
       <Dialog open={isRepayOpen} onOpenChange={setIsRepayOpen}>
-        <DialogContent>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Record Loan Repayment</DialogTitle>
             <DialogDescription>
