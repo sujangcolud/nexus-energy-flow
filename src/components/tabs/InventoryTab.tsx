@@ -81,7 +81,7 @@ const InventoryTab = () => {
   const [manualAddDialogOpen, setManualAddDialogOpen] = useState(false);
   const [manualItemForm, setManualItemForm] = useState({
     item_name: "", description: "", category: "", quantity: "",
-    base_unit: "pcs", unit_cost: "", supplier: "", location: "",
+    base_unit: "pcs", unit_category: "count" as any, unit_cost: "", supplier: "", location: "",
     minimum_stock: "", expiry_date: "",
   });
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -230,22 +230,31 @@ const InventoryTab = () => {
       const unitCost = parseFloat(manualItemForm.unit_cost) || 0;
       const { data: inventoryData, error: inventoryError } = await supabase.from("inventory").insert({
         user_id: user!.id, item_name: manualItemForm.item_name, description: manualItemForm.description || null,
-        category: manualItemForm.category || null, quantity,
+        category: manualItemForm.category || null,
         base_unit: manualItemForm.base_unit,
-        unit_cost: unitCost, total_cost: quantity * unitCost,
+        unit_category: manualItemForm.unit_category,
+        unit_cost: unitCost,
         supplier: manualItemForm.supplier || null, location: manualItemForm.location || null,
         minimum_stock: parseFloat(manualItemForm.minimum_stock) || 0, purchase_date: new Date().toISOString().split("T")[0],
         expiry_date: manualItemForm.expiry_date || null,
       }).select().single();
+
       if (inventoryError) throw inventoryError;
-      await supabase.from("inventory_transactions").insert({
-        user_id: user!.id, inventory_id: inventoryData.id, transaction_type: "stock_in",
-        quantity, unit_cost: unitCost, total_cost: quantity * unitCost, reference_type: "manual",
-        notes: "Manual stock addition", transaction_date: new Date().toISOString().split("T")[0],
+
+      // Log authoritative movement
+      await supabase.from("inventory_movements").insert({
+        user_id: user!.id,
+        inventory_item_id: inventoryData.id,
+        movement_type: "opening_stock",
+        quantity_base: quantity,
+        unit_cost_base: unitCost,
+        reference_type: "manual",
+        created_at: new Date().toISOString(),
       });
+
       toast.success("Item added!");
       setManualAddDialogOpen(false);
-      setManualItemForm({ item_name: "", description: "", category: "", quantity: "", base_unit: "pcs", unit_cost: "", supplier: "", location: "", minimum_stock: "", expiry_date: "" });
+      setManualItemForm({ item_name: "", description: "", category: "", quantity: "", base_unit: "pcs", unit_category: "count", unit_cost: "", supplier: "", location: "", minimum_stock: "", expiry_date: "" });
       fetchInventory();
     } catch (error) {
       logError("adding item", error);
@@ -413,7 +422,21 @@ const InventoryTab = () => {
                 </SelectContent>
               </Select>
             </div>
-            <div><Label>Quantity *</Label><Input type="number" value={manualItemForm.quantity} onChange={(e) => setManualItemForm({ ...manualItemForm, quantity: e.target.value })} /></div>
+            <div><Label>Opening Stock (Base) *</Label><Input type="number" value={manualItemForm.quantity} onChange={(e) => setManualItemForm({ ...manualItemForm, quantity: e.target.value })} /></div>
+            <div>
+              <Label>Unit Category</Label>
+              <Select
+                value={manualItemForm.unit_category || ""}
+                onValueChange={(value: any) => setManualItemForm({ ...manualItemForm, unit_category: value })}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="weight">Weight (gm, kg)</SelectItem>
+                  <SelectItem value="volume">Volume (ml, l)</SelectItem>
+                  <SelectItem value="count">Count (pcs)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             <div>
               <Label>Base Unit *</Label>
               <Select

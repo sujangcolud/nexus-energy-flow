@@ -128,6 +128,7 @@ const ExpensesTab = () => {
     inventoryItemId: "",
     quantity: "",
     unit: "",
+    factor: 1,
     costPerUnit: "",
     supplier: "",
     invoiceNumber: "",
@@ -200,6 +201,7 @@ const ExpensesTab = () => {
         .from("inventory")
         .select(`
           id, item_name, quantity, category, unit_cost, base_unit,
+          current_stock_base, average_cost_per_base_unit,
           unit_conversions:inventory_unit_conversions(*)
         `)
         .eq("is_active", true)
@@ -283,6 +285,7 @@ const ExpensesTab = () => {
         p_cost_per_unit: formData.costPerUnit ? parseFloat(formData.costPerUnit) : null,
         p_supplier: formData.supplier || null,
         p_invoice_number: formData.invoiceNumber || null,
+        p_manual_conversion_factor: formData.isInventoryPurchase ? formData.factor : null
       });
 
       if (error) {
@@ -301,6 +304,7 @@ const ExpensesTab = () => {
         inventoryItemId: "",
         quantity: "",
         unit: "",
+        factor: 1,
         costPerUnit: "",
         supplier: "",
         invoiceNumber: "",
@@ -712,6 +716,7 @@ const ExpensesTab = () => {
                               description: `Purchase: ${item.item_name}`,
                               category: item.category || formData.category,
                               unit: item.base_unit || "",
+                              factor: 1,
                               costPerUnit: cpu.toString(),
                               amount: parseFloat(calcAmount) > 0 ? calcAmount : formData.amount
                             });
@@ -780,12 +785,23 @@ const ExpensesTab = () => {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-3 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="unit" className="text-sm font-medium">Unit</Label>
                         <Select
                           value={formData.unit}
-                          onValueChange={(value) => setFormData({ ...formData, unit: value })}
+                          onValueChange={(value) => {
+                            const selectedItem = inventoryItems.find(i => i.id === formData.inventoryItemId);
+                            let f = 1;
+                            if (selectedItem) {
+                              if (value === selectedItem.base_unit) f = 1;
+                              else {
+                                const c = selectedItem.unit_conversions?.find(cv => cv.unit_name === value);
+                                if (c) f = c.conversion_to_base;
+                              }
+                            }
+                            setFormData({ ...formData, unit: value, factor: f });
+                          }}
                         >
                           <SelectTrigger className="border-amber-100">
                             <SelectValue placeholder="Select unit" />
@@ -794,13 +810,26 @@ const ExpensesTab = () => {
                             {(() => {
                               const selectedItem = inventoryItems.find(i => i.id === formData.inventoryItemId);
                               if (!selectedItem) return null;
-                              const units = [selectedItem.base_unit, ...(selectedItem.unit_conversions?.map(u => u.unit_name) || [])];
+                              // Deduplicate and filter units
+                              const units = Array.from(new Set(
+                                [selectedItem.base_unit, ...(selectedItem.unit_conversions?.map(u => u.unit_name) || [])]
+                              )).filter(Boolean);
                               return units.map(u => (
                                 <SelectItem key={u} value={u}>{u}</SelectItem>
                               ));
                             })()}
                           </SelectContent>
                         </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="factor" className="text-sm font-medium">Factor</Label>
+                        <Input
+                          id="factor"
+                          type="number"
+                          value={formData.factor}
+                          onChange={(e) => setFormData({ ...formData, factor: parseFloat(e.target.value) || 1 })}
+                          className="border-amber-100"
+                        />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="invoiceNumber" className="text-sm font-medium flex items-center gap-2">

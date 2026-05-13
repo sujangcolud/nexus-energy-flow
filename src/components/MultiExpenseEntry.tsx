@@ -34,6 +34,7 @@ interface Row {
   inventory_item_id: string;
   quantity: number;
   unit: string;
+  factor: number;
   unit_cost: number;
 }
 
@@ -82,6 +83,7 @@ const blankRow = (): Row => ({
   inventory_item_id: "",
   quantity: 0,
   unit: "",
+  factor: 1,
   unit_cost: 0,
 });
 
@@ -134,6 +136,7 @@ const MultiExpenseEntry = ({ categories, inventory, onComplete }: Props) => {
           p_cost_per_unit: r.is_inventory_purchase ? Number(r.unit_cost) : null,
           p_supplier: null,
           p_invoice_number: null,
+          p_manual_conversion_factor: r.is_inventory_purchase ? r.factor : null
         });
 
         if (error) {
@@ -188,16 +191,20 @@ const MultiExpenseEntry = ({ categories, inventory, onComplete }: Props) => {
             <div className="col-span-2">Item / Description</div>
             <div className="col-span-1">Qty</div>
             <div className="col-span-1">Unit</div>
+            <div className="col-span-1">Factor</div>
             <div className="col-span-1">Rate</div>
             <div className="col-span-1">Amount</div>
-            <div className="col-span-2">Category</div>
+            <div className="col-span-1">Category</div>
             <div className="col-span-1">Payment</div>
             <div className="col-span-1"></div>
           </div>
 
           {rows.map((r, i) => {
             const item = inventory.find(it => it.id === r.inventory_item_id);
-            const units = item ? [item.base_unit, ...(item.unit_conversions?.map(u => u.unit_name) || [])] : [];
+            // Deduplicate and filter units
+            const units = Array.from(new Set(
+              item ? [item.base_unit, ...(item.unit_conversions?.map(u => u.unit_name) || [])] : []
+            )).filter(Boolean);
 
             return (
               <div
@@ -243,6 +250,7 @@ const MultiExpenseEntry = ({ categories, inventory, onComplete }: Props) => {
                             category: item.category || r.category,
                             unit_cost: item.unit_cost || 0,
                             unit: item.base_unit,
+                            factor: 1,
                             amount: parseFloat(amount) > 0 ? parseFloat(amount) : r.amount
                           });
                         }
@@ -292,7 +300,17 @@ const MultiExpenseEntry = ({ categories, inventory, onComplete }: Props) => {
                   <Label className="text-[10px] lg:hidden">Unit</Label>
                   <Select
                     value={r.unit}
-                    onValueChange={(v) => updateRow(i, { unit: v })}
+                    onValueChange={(v) => {
+                      let f = 1;
+                      if (item) {
+                        if (v === item.base_unit) f = 1;
+                        else {
+                          const c = item.unit_conversions?.find(cv => cv.unit_name === v);
+                          if (c) f = c.conversion_to_base;
+                        }
+                      }
+                      updateRow(i, { unit: v, factor: f });
+                    }}
                     disabled={!r.is_inventory_purchase || !r.inventory_item_id}
                   >
                     <SelectTrigger className="h-9 text-xs">
@@ -306,6 +324,17 @@ const MultiExpenseEntry = ({ categories, inventory, onComplete }: Props) => {
                       ))}
                     </SelectContent>
                   </Select>
+                </div>
+
+                <div className="lg:col-span-1">
+                  <Label className="text-[10px] lg:hidden">Factor</Label>
+                  <Input
+                    type="number"
+                    disabled={!r.is_inventory_purchase}
+                    value={r.factor}
+                    onChange={(e) => updateRow(i, { factor: parseFloat(e.target.value) || 1 })}
+                    className="h-9 text-xs"
+                  />
                 </div>
 
                 <div className="lg:col-span-1">
@@ -337,7 +366,7 @@ const MultiExpenseEntry = ({ categories, inventory, onComplete }: Props) => {
                   />
                 </div>
 
-                <div className="lg:col-span-2">
+                <div className="lg:col-span-1">
                   <Label className="text-[10px] lg:hidden">Category</Label>
                   <Select
                     value={r.category}
