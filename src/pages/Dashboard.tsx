@@ -39,6 +39,7 @@ import {
   UserCog,
   Upload,
   LayoutDashboard,
+  Landmark,
   Settings as SettingsIcon,
   Settings,
   Bell,

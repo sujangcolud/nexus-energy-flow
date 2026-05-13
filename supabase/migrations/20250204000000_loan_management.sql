@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS public.loans (
     repayment_frequency repayment_frequency NOT NULL,
     loan_date DATE DEFAULT CURRENT_DATE,
     maturity_date DATE,
+    payment_mode TEXT,
     status loan_status DEFAULT 'active',
     description TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -164,6 +165,7 @@ BEGIN
         repayment_frequency,
         loan_date,
         maturity_date,
+        payment_mode,
         description
     ) VALUES (
         p_user_id,
@@ -175,6 +177,7 @@ BEGIN
         p_repayment_frequency,
         p_loan_date,
         p_maturity_date,
+        p_payment_mode,
         p_description
     ) RETURNING id INTO v_loan_id;
 
@@ -218,6 +221,9 @@ SELECT
     l.loan_date,
     l.maturity_date,
     l.status,
+    l.description,
+    l.created_at,
+    l.updated_at,
     COALESCE(SUM(lr.amount_paid), 0) as total_paid,
     COALESCE(SUM(lr.principal_paid), 0) as principal_paid,
     COALESCE(SUM(lr.interest_paid), 0) as interest_paid,

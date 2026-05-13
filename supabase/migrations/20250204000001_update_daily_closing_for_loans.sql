@@ -44,7 +44,9 @@ DECLARE
 
     -- Loan variables
     loans_inflow numeric := 0;
+    loans_inflow_cash numeric := 0;
     loans_repayment_total numeric := 0;
+    loans_repayment_cash numeric := 0;
     loans_repayment_principal numeric := 0;
     loans_repayment_interest numeric := 0;
 
@@ -132,17 +134,20 @@ BEGIN
     WHERE user_id = p_user_id AND contribution_date = p_closing_date;
 
     -- Calculate Loan Inflows
-    SELECT COALESCE(SUM(principal_amount), 0)
-    INTO loans_inflow
+    SELECT
+        COALESCE(SUM(principal_amount), 0),
+        COALESCE(SUM(CASE WHEN LOWER(payment_mode) = 'cash' THEN principal_amount ELSE 0 END), 0)
+    INTO loans_inflow, loans_inflow_cash
     FROM loans
     WHERE user_id = p_user_id AND loan_date = p_closing_date;
 
     -- Calculate Loan Repayments
     SELECT
         COALESCE(SUM(amount_paid), 0),
+        COALESCE(SUM(CASE WHEN LOWER(payment_mode) = 'cash' THEN amount_paid ELSE 0 END), 0),
         COALESCE(SUM(principal_paid), 0),
         COALESCE(SUM(interest_paid), 0)
-    INTO loans_repayment_total, loans_repayment_principal, loans_repayment_interest
+    INTO loans_repayment_total, loans_repayment_cash, loans_repayment_principal, loans_repayment_interest
     FROM loan_repayments
     WHERE user_id = p_user_id AND repayment_date = p_closing_date;
 
@@ -153,13 +158,11 @@ BEGIN
 
     -- Calculate net balances (income - expenses + deposits - withdrawals - savings + loans_in - loans_out)
     -- We assume loan transactions impact bank/cash according to their recorded payment mode.
-    -- For simplicity in daily summary, we'll just add/subtract the totals to the overall net.
-    -- (The individual account balances are already updated by the RPC functions)
 
-    net_cash_balance := total_cash_income - expenses_cash + withdrawals_cash - cooperative_total;
+    net_cash_balance := total_cash_income - expenses_cash + withdrawals_cash - cooperative_total + loans_inflow_cash - loans_repayment_cash;
     net_fonepay_balance := orders_fonepay + charging_fonepay + deposits_fonepay;
     net_esewa_balance := orders_esewa + charging_esewa + deposits_esewa;
-    net_bank_balance := orders_bank + charging_bank + orders_cheque + charging_cheque + deposits_bank - expenses_bank - withdrawals_total + withdrawals_cash;
+    net_bank_balance := orders_bank + charging_bank + orders_cheque + charging_cheque + deposits_bank - expenses_bank - withdrawals_total + withdrawals_cash + (loans_inflow - loans_inflow_cash) - (loans_repayment_total - loans_repayment_cash);
     net_cooperative_balance := cooperative_total;
 
     total_net_balance := net_cash_balance + net_fonepay_balance + net_esewa_balance + net_bank_balance + net_cooperative_balance;
