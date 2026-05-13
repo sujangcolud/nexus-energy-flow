@@ -102,7 +102,7 @@ const MultiOrderEntry = ({ onComplete }: Props) => {
           Bulk Add
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-5xl max-h-[85vh] overflow-y-auto">
+      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Add Multiple Orders</DialogTitle>
           <p className="text-sm text-muted-foreground">

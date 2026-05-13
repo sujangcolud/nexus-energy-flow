@@ -176,7 +176,7 @@ const MultiExpenseEntry = ({ categories, inventory, onComplete }: Props) => {
           Bulk Add
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-7xl max-h-[85vh] overflow-y-auto">
+      <DialogContent className="max-w-7xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Add Multiple Expenses</DialogTitle>
           <p className="text-sm text-muted-foreground">

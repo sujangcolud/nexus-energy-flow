@@ -788,7 +788,7 @@ const ShareInvestmentsTab = () => {
       </Tabs>
 
       <Dialog open={!!attachmentTarget} onOpenChange={(o) => !o && setAttachmentTarget(null)}>
-        <DialogContent>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Supporting Documents — {attachmentTarget?.title}</DialogTitle>
           </DialogHeader>
