@@ -47,6 +47,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogTrigger,
   DialogFooter,
 } from "@/components/ui/dialog";
@@ -227,6 +228,9 @@ const LoansTab = () => {
           <DialogContent className="max-w-md">
             <DialogHeader>
               <DialogTitle>Add New Loan</DialogTitle>
+              <DialogDescription>
+                Enter the details of your new loan agreement here.
+              </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleAddLoan} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
@@ -536,6 +540,9 @@ const LoansTab = () => {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Record Loan Repayment</DialogTitle>
+            <DialogDescription>
+              Submit a payment against your outstanding loan balance.
+            </DialogDescription>
           </DialogHeader>
           {selectedLoan && (
             <form onSubmit={handleRepayment} className="space-y-4">

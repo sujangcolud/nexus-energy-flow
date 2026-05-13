@@ -1,4 +1,4 @@
--- Update daily closing and financial summaries to include loans
+-- Update daily closing and financial summaries to include loans with proper mode mapping
 
 CREATE OR REPLACE FUNCTION public.daily_closing(
   p_user_id uuid,
@@ -43,10 +43,17 @@ DECLARE
     cooperative_total numeric := 0;
 
     -- Loan variables
-    loans_inflow numeric := 0;
+    loans_inflow_total numeric := 0;
     loans_inflow_cash numeric := 0;
+    loans_inflow_esewa numeric := 0;
+    loans_inflow_fonepay numeric := 0;
+    loans_inflow_bank numeric := 0;
+
     loans_repayment_total numeric := 0;
     loans_repayment_cash numeric := 0;
+    loans_repayment_esewa numeric := 0;
+    loans_repayment_fonepay numeric := 0;
+    loans_repayment_bank numeric := 0;
     loans_repayment_principal numeric := 0;
     loans_repayment_interest numeric := 0;
 
@@ -133,21 +140,27 @@ BEGIN
     FROM cooperative_savings
     WHERE user_id = p_user_id AND contribution_date = p_closing_date;
 
-    -- Calculate Loan Inflows
+    -- Calculate Loan Inflows with proper mode mapping
     SELECT
         COALESCE(SUM(principal_amount), 0),
-        COALESCE(SUM(CASE WHEN LOWER(payment_mode) = 'cash' THEN principal_amount ELSE 0 END), 0)
-    INTO loans_inflow, loans_inflow_cash
+        COALESCE(SUM(CASE WHEN LOWER(payment_mode) = 'cash' THEN principal_amount ELSE 0 END), 0),
+        COALESCE(SUM(CASE WHEN LOWER(payment_mode) = 'esewa' THEN principal_amount ELSE 0 END), 0),
+        COALESCE(SUM(CASE WHEN LOWER(payment_mode) = 'fonepay' THEN principal_amount ELSE 0 END), 0),
+        COALESCE(SUM(CASE WHEN LOWER(payment_mode) IN ('bank transfer', 'bank') THEN principal_amount ELSE 0 END), 0)
+    INTO loans_inflow_total, loans_inflow_cash, loans_inflow_esewa, loans_inflow_fonepay, loans_inflow_bank
     FROM loans
     WHERE user_id = p_user_id AND loan_date = p_closing_date;
 
-    -- Calculate Loan Repayments
+    -- Calculate Loan Repayments with proper mode mapping
     SELECT
         COALESCE(SUM(amount_paid), 0),
         COALESCE(SUM(CASE WHEN LOWER(payment_mode) = 'cash' THEN amount_paid ELSE 0 END), 0),
+        COALESCE(SUM(CASE WHEN LOWER(payment_mode) = 'esewa' THEN amount_paid ELSE 0 END), 0),
+        COALESCE(SUM(CASE WHEN LOWER(payment_mode) = 'fonepay' THEN amount_paid ELSE 0 END), 0),
+        COALESCE(SUM(CASE WHEN LOWER(payment_mode) IN ('bank transfer', 'bank') THEN amount_paid ELSE 0 END), 0),
         COALESCE(SUM(principal_paid), 0),
         COALESCE(SUM(interest_paid), 0)
-    INTO loans_repayment_total, loans_repayment_cash, loans_repayment_principal, loans_repayment_interest
+    INTO loans_repayment_total, loans_repayment_cash, loans_repayment_esewa, loans_repayment_fonepay, loans_repayment_bank, loans_repayment_principal, loans_repayment_interest
     FROM loan_repayments
     WHERE user_id = p_user_id AND repayment_date = p_closing_date;
 
@@ -157,12 +170,10 @@ BEGIN
     total_digital_income := total_income - total_cash_income;
 
     -- Calculate net balances (income - expenses + deposits - withdrawals - savings + loans_in - loans_out)
-    -- We assume loan transactions impact bank/cash according to their recorded payment mode.
-
     net_cash_balance := total_cash_income - expenses_cash + withdrawals_cash - cooperative_total + loans_inflow_cash - loans_repayment_cash;
-    net_fonepay_balance := orders_fonepay + charging_fonepay + deposits_fonepay;
-    net_esewa_balance := orders_esewa + charging_esewa + deposits_esewa;
-    net_bank_balance := orders_bank + charging_bank + orders_cheque + charging_cheque + deposits_bank - expenses_bank - withdrawals_total + withdrawals_cash + (loans_inflow - loans_inflow_cash) - (loans_repayment_total - loans_repayment_cash);
+    net_fonepay_balance := orders_fonepay + charging_fonepay + deposits_fonepay + loans_inflow_fonepay - loans_repayment_fonepay;
+    net_esewa_balance := orders_esewa + charging_esewa + deposits_esewa + loans_inflow_esewa - loans_repayment_esewa;
+    net_bank_balance := orders_bank + charging_bank + orders_cheque + charging_cheque + deposits_bank - expenses_bank - withdrawals_total + withdrawals_cash + loans_inflow_bank - loans_repayment_bank;
     net_cooperative_balance := cooperative_total;
 
     total_net_balance := net_cash_balance + net_fonepay_balance + net_esewa_balance + net_bank_balance + net_cooperative_balance;
@@ -212,7 +223,7 @@ BEGIN
             ),
             'cooperative_savings', cooperative_total,
             'loans', jsonb_build_object(
-                'inflow', loans_inflow,
+                'inflow', loans_inflow_total,
                 'repayment_total', loans_repayment_total,
                 'repayment_principal', loans_repayment_principal,
                 'repayment_interest', loans_repayment_interest

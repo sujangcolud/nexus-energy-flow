@@ -209,7 +209,7 @@ $$;
 
 -- Create View for Loan Summaries
 DROP VIEW IF EXISTS loan_summaries;
-CREATE VIEW loan_summaries AS
+CREATE VIEW loan_summaries WITH (security_invoker = true) AS
 SELECT
     l.id,
     l.user_id,
