@@ -30,7 +30,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { extractErrorMessage, logError } from "@/utils/errorHandling";
-import { Package, Plus, Minus, AlertTriangle, CheckCircle, Edit } from "lucide-react";
+import { Package, Plus, Minus, AlertTriangle, CheckCircle, Edit, Trash2, Layers } from "lucide-react";
 import { format } from "date-fns";
 import MultiInventoryEntry from "../MultiInventoryEntry";
 import TransactionDatePicker from "@/components/ui/transaction-date-picker";
