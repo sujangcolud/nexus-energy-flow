@@ -271,7 +271,7 @@ const SavingsWithdrawalsTab = () => {
   return (
     <div className="min-h-screen bg-background p-4 sm:p-6">
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-h-[90vh] overflow-y-auto" aria-describedby={undefined}>
           <DialogHeader>
             <DialogTitle>Edit {editType === "saving" ? "Saving" : "Withdrawal"}</DialogTitle>
           </DialogHeader>

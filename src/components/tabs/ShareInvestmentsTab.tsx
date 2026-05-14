@@ -191,18 +191,18 @@ const ShareInvestmentsTab = () => {
     setIsAddingInvestment(true);
 
     try {
-      const { error } = await supabase.from("share_investments").insert({
+      const { data, error } = await supabase.from("share_investments").insert({
         user_id: user?.id,
         shareholder_name: newInvestment.shareholder_name,
         contribution_amount: parseFloat(newInvestment.contribution_amount),
         investment_date: newInvestment.investment_date,
         payment_mode: newInvestment.payment_mode,
         remarks: newInvestment.remarks || null,
-      });
+      }).select().single();
 
       if (error) throw error;
 
-      toast.success("Share investment added successfully.");
+      toast.success("Share investment added! You can now add attachments.");
       setNewInvestment({
         shareholder_name: "",
         contribution_amount: "",
@@ -211,6 +211,13 @@ const ShareInvestmentsTab = () => {
         remarks: "",
       });
       fetchData();
+      if (data) {
+        setAttachmentTarget({
+          type: "share_investment",
+          id: data.id,
+          title: `Investment - ${data.shareholder_name}`
+        });
+      }
     } catch (error: any) {
       console.error("Error adding investment:", error);
       toast.error("Failed to add investment.");
@@ -230,7 +237,7 @@ const ShareInvestmentsTab = () => {
     setIsAddingExpense(true);
 
     try {
-      const { error } = await supabase.from("share_expenses").insert({
+      const { data, error } = await supabase.from("share_expenses").insert({
         user_id: user?.id,
         description: newExpense.description,
         amount: parseFloat(newExpense.amount),
@@ -238,11 +245,11 @@ const ShareInvestmentsTab = () => {
         payment_mode: newExpense.payment_mode,
         category: newExpense.category,
         remarks: newExpense.remarks || null,
-      });
+      }).select().single();
 
       if (error) throw error;
 
-      toast.success("Share expense added successfully.");
+      toast.success("Share expense added! You can now add attachments.");
       setNewExpense({
         description: "",
         amount: "",
@@ -252,6 +259,13 @@ const ShareInvestmentsTab = () => {
         remarks: "",
       });
       fetchData();
+      if (data) {
+        setAttachmentTarget({
+          type: "share_expense",
+          id: data.id,
+          title: `Expense - ${data.description}`
+        });
+      }
     } catch (error: any) {
       console.error("Error adding expense:", error);
       toast.error("Failed to add expense.");
@@ -774,7 +788,7 @@ const ShareInvestmentsTab = () => {
       </Tabs>
 
       <Dialog open={!!attachmentTarget} onOpenChange={(o) => !o && setAttachmentTarget(null)}>
-        <DialogContent>
+        <DialogContent className="max-h-[90vh] overflow-y-auto" aria-describedby={undefined}>
           <DialogHeader>
             <DialogTitle>Supporting Documents — {attachmentTarget?.title}</DialogTitle>
           </DialogHeader>

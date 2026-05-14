@@ -368,7 +368,7 @@ const ChargingTab = () => {
   return (
     <div className="min-h-screen bg-background">
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-h-[90vh] overflow-y-auto" aria-describedby={undefined}>
           <DialogHeader>
             <DialogTitle>Edit Charging Session</DialogTitle>
           </DialogHeader>

@@ -278,7 +278,7 @@ const LoansTab = () => {
               Add New Loan
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto" aria-describedby={undefined}>
             <DialogHeader>
               <DialogTitle>{isEditMode ? "Edit Loan" : "Add New Loan"}</DialogTitle>
               <DialogDescription>
@@ -605,7 +605,7 @@ const LoansTab = () => {
       </Card>
 
       <Dialog open={isRepayOpen} onOpenChange={setIsRepayOpen}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-h-[90vh] overflow-y-auto" aria-describedby={undefined}>
           <DialogHeader>
             <DialogTitle>Record Loan Repayment</DialogTitle>
             <DialogDescription>

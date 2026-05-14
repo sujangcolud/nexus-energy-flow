@@ -22,7 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Trash2, BookMarked, Edit, PlusCircle, CheckCircle2, Calendar as CalendarIcon } from "lucide-react";
+import { Trash2, BookMarked, Edit, PlusCircle, CheckCircle2, Calendar as CalendarIcon, Info, ChevronDown, ChevronRight, Package, Paperclip } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import RecordAttachments from "@/components/RecordAttachments";
 import {
@@ -32,6 +32,11 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -53,6 +58,13 @@ interface ExpenseBooking {
   category: string;
   remarks: string | null;
   payment_date: string | null;
+  is_inventory_purchase?: boolean;
+  inventory_item_id?: string | null;
+  quantity?: number | null;
+  unit?: string | null;
+  cost_per_unit?: number | null;
+  supplier?: string | null;
+  invoice_number?: string | null;
 }
 
 interface Category {
@@ -78,6 +90,7 @@ const ExpenseBookingsTab = () => {
   const [isPaidDialogOpen, setIsPaidDialogOpen] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<ExpenseBooking | null>(null);
   const [expenseFormData, setExpenseFormData] = useState({ paymentMode: "", remarks: "", paymentDate: "" });
+  const [expandedParties, setExpandedParties] = useState<Record<string, boolean>>({});
 
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingBooking, setEditingBooking] = useState<ExpenseBooking | null>(null);
@@ -245,20 +258,32 @@ const ExpenseBookingsTab = () => {
     e.preventDefault();
     if (!user || !selectedBooking) return;
     try {
-      const { error } = await supabase.from("expenses").insert([{
-        user_id: user.id,
-        description: selectedBooking.party_name,
-        amount: selectedBooking.amount,
-        category: selectedBooking.category,
-        payment_mode: expenseFormData.paymentMode,
-        remarks: expenseFormData.remarks,
-        expense_date: expenseFormData.paymentDate,
-      }]);
+      const { data, error } = await supabase.rpc("process_inventory_expense", {
+        p_user_id: user.id,
+        p_description: selectedBooking.party_name,
+        p_amount: selectedBooking.amount,
+        p_category: selectedBooking.category,
+        p_payment_mode: expenseFormData.paymentMode,
+        p_remarks: expenseFormData.remarks || null,
+        p_expense_date: expenseFormData.paymentDate,
+        p_is_inventory_purchase: selectedBooking.is_inventory_purchase || false,
+        p_inventory_item_id: selectedBooking.inventory_item_id || null,
+        p_quantity: selectedBooking.quantity || null,
+        p_unit: selectedBooking.unit || null,
+        p_cost_per_unit: selectedBooking.cost_per_unit || null,
+        p_supplier: selectedBooking.supplier || null,
+        p_invoice_number: selectedBooking.invoice_number || null,
+        p_is_credit: false // Now it's being paid
+      });
+
       if (error) throw error;
+
       await supabase.from("expense_bookings").delete().eq("id", selectedBooking.id);
-      toast.success("Expense recorded!");
-      setIsPaidDialogOpen(false);
-      fetchBookings();
+      toast.success("Expense recorded and balance updated!");
+      setTimeout(() => {
+        setIsPaidDialogOpen(false);
+        fetchBookings();
+      }, 0);
     } catch (error) {
       console.error("Error:", error);
       toast.error("Failed to process");
@@ -267,10 +292,20 @@ const ExpenseBookingsTab = () => {
 
   const totalBookings = bookings.reduce((sum, b) => sum + b.amount, 0);
 
+  const groupedBookings = bookings.reduce((acc, b) => {
+    if (!acc[b.party_name]) acc[b.party_name] = [];
+    acc[b.party_name].push(b);
+    return acc;
+  }, {} as Record<string, ExpenseBooking[]>);
+
+  const toggleParty = (party: string) => {
+    setExpandedParties(prev => ({ ...prev, [party]: !prev[party] }));
+  };
+
   return (
     <div className="min-h-screen bg-background p-4 sm:p-6">
       <Dialog open={isPaidDialogOpen} onOpenChange={setIsPaidDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-h-[90vh] overflow-y-auto" aria-describedby={undefined}>
           <DialogHeader><DialogTitle>Mark as Paid</DialogTitle></DialogHeader>
           {selectedBooking && (
             <form onSubmit={handleExpenseSubmit} className="space-y-4">
@@ -296,7 +331,7 @@ const ExpenseBookingsTab = () => {
       </Dialog>
 
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-h-[90vh] overflow-y-auto" aria-describedby={undefined}>
           <DialogHeader><DialogTitle>Edit Booking</DialogTitle></DialogHeader>
           <form onSubmit={handleUpdate} className="space-y-4">
             <div><Label>Party Name *</Label><Input value={editFormData.partyName} onChange={(e) => setEditFormData({ ...editFormData, partyName: e.target.value })} required /></div>
@@ -335,64 +370,122 @@ const ExpenseBookingsTab = () => {
             <Card className="bg-card border">
               <CardHeader className="pb-3"><CardTitle className="text-base">Active Liabilities</CardTitle></CardHeader>
               <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Party</TableHead>
-                      <TableHead>Amount</TableHead>
-                      <TableHead>Category</TableHead>
-                      <TableHead>Expected Date</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {bookings.length === 0 && (
-                      <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">No pending expense bookings found.</TableCell></TableRow>
-                    )}
-                    {bookings.map((b) => (
-                      <TableRow key={b.id}>
-                        <TableCell>
-                          <div className="font-medium">{b.party_name}</div>
-                          {b.remarks && <div className="text-[10px] text-muted-foreground truncate max-w-[150px]">{b.remarks}</div>}
-                        </TableCell>
-                        <TableCell className="font-semibold">NRs. {b.amount.toFixed(2)}</TableCell>
-                        <TableCell><Badge variant="outline">{b.category}</Badge></TableCell>
-                        <TableCell className="text-xs">
-                          {b.payment_date ? (
-                            <div className="flex items-center gap-1"><CalendarIcon className="h-3 w-3" /> {format(new Date(b.payment_date), "MMM dd, yyyy")}</div>
-                          ) : "-"}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-1">
-                            <Button size="icon" variant="ghost" className="h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-50" onClick={() => handlePaid(b)} title="Mark as Paid">
-                              <CheckCircle2 className="h-4 w-4" />
-                            </Button>
-                            <Button size="icon" variant="ghost" className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50" onClick={() => handleEdit(b)} title="Edit">
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive hover:bg-destructive/10" title="Delete">
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>Delete Booking?</AlertDialogTitle>
-                                  <AlertDialogDescription>This will permanently remove the booking for {b.party_name}.</AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction onClick={() => handleDelete(b.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Delete</AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
+                <div className="space-y-4">
+                  {bookings.length === 0 && (
+                    <div className="text-center py-8 text-muted-foreground">No pending expense bookings found.</div>
+                  )}
+                  {Object.entries(groupedBookings).map(([party, partyBookings]) => {
+                    const partyTotal = partyBookings.reduce((sum, b) => sum + b.amount, 0);
+                    const isExpanded = expandedParties[party];
+
+                    return (
+                      <div key={party} className="border rounded-lg overflow-hidden">
+                        <div
+                          className="bg-muted/50 p-4 flex items-center justify-between cursor-pointer hover:bg-muted/80 transition-colors"
+                          onClick={() => toggleParty(party)}
+                        >
+                          <div className="flex items-center gap-3">
+                            {isExpanded ? <ChevronDown className="h-5 w-5 text-muted-foreground" /> : <ChevronRight className="h-5 w-5 text-muted-foreground" />}
+                            <div>
+                              <div className="font-bold text-lg">{party}</div>
+                              <div className="text-xs text-muted-foreground">{partyBookings.length} booking(s)</div>
+                            </div>
                           </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                          <div className="flex items-center gap-4">
+                            <div className="text-right">
+                              <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Total Pending</div>
+                              <div className="text-xl font-black text-primary">NRs. {partyTotal.toFixed(2)}</div>
+                            </div>
+                            <Button size="sm" variant="outline" className="hidden sm:flex items-center gap-2">
+                              <Info className="h-4 w-4" />
+                              {isExpanded ? "Hide Details" : "Show Details"}
+                            </Button>
+                          </div>
+                        </div>
+
+                        {isExpanded && (
+                          <div className="border-t p-4 bg-background/50">
+                            <Table>
+                              <TableHeader>
+                                <TableRow className="bg-muted/20">
+                                  <TableHead className="w-1/3">Description/Details</TableHead>
+                                  <TableHead>Amount</TableHead>
+                                  <TableHead>Category</TableHead>
+                                  <TableHead>Expected Date</TableHead>
+                                  <TableHead className="text-right">Actions</TableHead>
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {partyBookings.map((b) => (
+                                  <TableRow key={b.id} className="hover:bg-muted/10">
+                                    <TableCell>
+                                      <div className="flex items-center gap-2">
+                                        {b.is_inventory_purchase && <Package className="h-3 w-3 text-amber-600" />}
+                                        <div className="font-medium">{b.remarks || "No remarks"}</div>
+                                      </div>
+                                      {b.is_inventory_purchase && (
+                                        <div className="text-[10px] text-muted-foreground mt-1">
+                                          Qty: {b.quantity} {b.unit} @ {b.cost_per_unit}
+                                        </div>
+                                      )}
+                                    </TableCell>
+                                    <TableCell className="font-semibold text-lg">NRs. {b.amount.toFixed(2)}</TableCell>
+                                    <TableCell><Badge variant="outline" className="bg-background">{b.category}</Badge></TableCell>
+                                    <TableCell className="text-xs">
+                                      {b.payment_date ? (
+                                        <div className="flex items-center gap-1 font-medium text-orange-600">
+                                          <CalendarIcon className="h-3 w-3" />
+                                          {format(new Date(b.payment_date), "MMM dd, yyyy")}
+                                        </div>
+                                      ) : "-"}
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                      <div className="flex justify-end gap-1">
+                                        <Popover>
+                                          <PopoverTrigger asChild>
+                                            <Button size="icon" variant="ghost" className="h-9 w-9 text-muted-foreground">
+                                              <Paperclip className="h-4 w-4" />
+                                            </Button>
+                                          </PopoverTrigger>
+                                          <PopoverContent className="w-80">
+                                            <RecordAttachments recordType="expense_booking" recordId={b.id} compact />
+                                          </PopoverContent>
+                                        </Popover>
+                                        <Button size="icon" variant="ghost" className="h-9 w-9 text-green-600 hover:text-green-700 hover:bg-green-50 border border-transparent hover:border-green-200" onClick={() => handlePaid(b)} title="Mark as Paid">
+                                          <CheckCircle2 className="h-5 w-5" />
+                                        </Button>
+                                        <Button size="icon" variant="ghost" className="h-9 w-9 text-blue-600 hover:text-blue-700 hover:bg-blue-50" onClick={() => handleEdit(b)} title="Edit">
+                                          <Edit className="h-4 w-4" />
+                                        </Button>
+                                        <AlertDialog>
+                                          <AlertDialogTrigger asChild>
+                                            <Button size="icon" variant="ghost" className="h-9 w-9 text-destructive hover:bg-destructive/10" title="Delete">
+                                              <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                          </AlertDialogTrigger>
+                                          <AlertDialogContent>
+                                            <AlertDialogHeader>
+                                              <AlertDialogTitle>Delete Booking?</AlertDialogTitle>
+                                              <AlertDialogDescription>This will permanently remove this booking record.</AlertDialogDescription>
+                                            </AlertDialogHeader>
+                                            <AlertDialogFooter>
+                                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                              <AlertDialogAction onClick={() => handleDelete(b.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Delete</AlertDialogAction>
+                                            </AlertDialogFooter>
+                                          </AlertDialogContent>
+                                        </AlertDialog>
+                                      </div>
+                                    </TableCell>
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
               </CardContent>
             </Card>
           </div>

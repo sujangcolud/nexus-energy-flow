@@ -279,7 +279,7 @@ const InventoryTab = () => {
   return (
     <div className="min-h-screen bg-background p-4 sm:p-6">
       <Dialog open={stockOutDialogOpen} onOpenChange={setStockOutDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-h-[90vh] overflow-y-auto" aria-describedby={undefined}>
           <DialogHeader><DialogTitle>Stock Out - {selectedItem?.item_name}</DialogTitle></DialogHeader>
           <div className="space-y-4">
             <div><Label>Quantity (in {selectedItem?.base_unit}) (Max: {selectedItem?.current_stock_base ?? selectedItem?.quantity})</Label><Input type="number" value={stockOutForm.quantity} onChange={(e) => setStockOutForm({ ...stockOutForm, quantity: e.target.value })} /></div>
@@ -290,7 +290,7 @@ const InventoryTab = () => {
       </Dialog>
 
       <Dialog open={conversionDialogOpen} onOpenChange={setConversionDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-h-[90vh] overflow-y-auto" aria-describedby={undefined}>
           <DialogHeader><DialogTitle>Unit Conversions - {selectedItem?.item_name}</DialogTitle></DialogHeader>
           <div className="space-y-4">
             <div className="text-sm text-muted-foreground">
@@ -326,7 +326,7 @@ const InventoryTab = () => {
       </Dialog>
 
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" aria-describedby={undefined}>
           <DialogHeader><DialogTitle>Edit Inventory Item</DialogTitle></DialogHeader>
           <div className="grid grid-cols-2 gap-4">
             <div><Label>Item Name *</Label><Input value={editForm.item_name} onChange={(e) => setEditForm({ ...editForm, item_name: e.target.value })} /></div>
@@ -400,7 +400,7 @@ const InventoryTab = () => {
       </Dialog>
 
       <Dialog open={manualAddDialogOpen} onOpenChange={setManualAddDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" aria-describedby={undefined}>
           <DialogHeader><DialogTitle>Add Inventory Item</DialogTitle></DialogHeader>
           <div className="grid grid-cols-2 gap-4">
             <div><Label>Item Name *</Label><Input value={manualItemForm.item_name} onChange={(e) => setManualItemForm({ ...manualItemForm, item_name: e.target.value })} /></div>

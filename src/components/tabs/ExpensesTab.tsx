@@ -42,6 +42,7 @@ import {
   ShoppingCart,
   Hash,
   Scale,
+  CreditCard,
 } from "lucide-react";
 import { DateRange } from "react-day-picker";
 import {
@@ -83,6 +84,7 @@ interface Expense {
   remarks: string | null;
   expense_date: string;
   is_inventory_purchase?: boolean;
+  is_credit?: boolean;
   inventory_item_id?: string | null;
   quantity?: number | null;
   unit?: string | null;
@@ -125,6 +127,7 @@ const ExpensesTab = () => {
     category: "",
     remarks: "",
     isInventoryPurchase: false,
+    isCredit: false,
     inventoryItemId: "",
     quantity: "",
     unit: "",
@@ -285,7 +288,8 @@ const ExpensesTab = () => {
         p_cost_per_unit: formData.costPerUnit ? parseFloat(formData.costPerUnit) : null,
         p_supplier: formData.supplier || null,
         p_invoice_number: formData.invoiceNumber || null,
-        p_manual_conversion_factor: formData.isInventoryPurchase ? formData.factor : null
+        p_manual_conversion_factor: formData.isInventoryPurchase ? formData.factor : null,
+        p_is_credit: formData.isCredit
       });
 
       if (error) {
@@ -293,7 +297,11 @@ const ExpensesTab = () => {
         throw error;
       }
 
-      toast.success(formData.isInventoryPurchase ? "Inventory purchase recorded!" : "Expense added successfully!");
+      toast.success(
+        formData.isCredit
+          ? "Added to Expense Bookings (Credit)!"
+          : (formData.isInventoryPurchase ? "Inventory purchase recorded!" : "Expense added successfully!")
+      );
       setFormData({
         description: "",
         amount: "",
@@ -301,6 +309,7 @@ const ExpensesTab = () => {
         category: "",
         remarks: "",
         isInventoryPurchase: false,
+        isCredit: false,
         inventoryItemId: "",
         quantity: "",
         unit: "",
@@ -367,13 +376,27 @@ const ExpensesTab = () => {
   };
 
   const handleUpdate = async () => {
-    if (!selectedExpense) return;
+    if (!selectedExpense || !user) return;
 
     try {
-      const { error } = await supabase
-        .from("expenses")
-        .update(selectedExpense)
-        .eq("id", selectedExpense.id);
+      const { data, error } = await supabase.rpc("process_inventory_expense", {
+        p_user_id: user.id,
+        p_description: selectedExpense.description,
+        p_amount: selectedExpense.amount,
+        p_category: selectedExpense.category,
+        p_payment_mode: selectedExpense.payment_mode,
+        p_remarks: selectedExpense.remarks || null,
+        p_expense_date: selectedExpense.expense_date,
+        p_is_inventory_purchase: selectedExpense.is_inventory_purchase || false,
+        p_inventory_item_id: selectedExpense.inventory_item_id || null,
+        p_quantity: selectedExpense.quantity || null,
+        p_unit: selectedExpense.unit || null,
+        p_cost_per_unit: selectedExpense.cost_per_unit || null,
+        p_supplier: selectedExpense.supplier || null,
+        p_invoice_number: selectedExpense.invoice_number || null,
+        p_is_credit: selectedExpense.is_credit || false,
+        p_id: selectedExpense.id
+      });
 
       if (error) throw error;
 
@@ -429,7 +452,7 @@ const ExpensesTab = () => {
   return (
     <div className="min-h-screen bg-background">
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-h-[90vh] overflow-y-auto" aria-describedby={undefined}>
           <DialogHeader>
             <DialogTitle>Edit Expense</DialogTitle>
           </DialogHeader>
@@ -502,6 +525,35 @@ const ExpensesTab = () => {
                 />
               </div>
 
+              <div className="flex items-center justify-between py-2 bg-muted/30 p-3 rounded-lg border border-dashed border-primary/20">
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="edit-inventory-purchase"
+                    checked={selectedExpense.is_inventory_purchase || false}
+                    onCheckedChange={(checked) =>
+                      setSelectedExpense({ ...selectedExpense, is_inventory_purchase: checked })
+                    }
+                  />
+                  <Label htmlFor="edit-inventory-purchase" className="text-sm font-semibold flex items-center gap-2 cursor-pointer">
+                    <Package className={cn("h-4 w-4", selectedExpense.is_inventory_purchase ? "text-amber-600" : "text-muted-foreground")} />
+                    Update Inventory?
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2 border-l pl-4">
+                  <Switch
+                    id="edit-is-credit"
+                    checked={selectedExpense.is_credit || false}
+                    onCheckedChange={(checked) =>
+                      setSelectedExpense({ ...selectedExpense, is_credit: checked })
+                    }
+                  />
+                  <Label htmlFor="edit-is-credit" className="text-sm font-semibold flex items-center gap-2 cursor-pointer">
+                    <CreditCard className={cn("h-4 w-4", selectedExpense.is_credit ? "text-blue-600" : "text-muted-foreground")} />
+                    On Credit?
+                  </Label>
+                </div>
+              </div>
+
               {selectedExpense.is_inventory_purchase && (
                 <div className="space-y-4 p-4 bg-amber-50 rounded-lg border border-amber-100">
                   <p className="text-sm font-medium text-amber-800 flex items-center gap-2">
@@ -558,10 +610,20 @@ const ExpensesTab = () => {
                         }
                       />
                     </div>
+                    <div className="col-span-2">
+                      <Label>Inventory Item ID (UUID)</Label>
+                      <Input
+                        value={selectedExpense.inventory_item_id || ""}
+                        onChange={(e) =>
+                          setSelectedExpense({
+                            ...selectedExpense,
+                            inventory_item_id: e.target.value,
+                          })
+                        }
+                        placeholder="Required for stock update"
+                      />
+                    </div>
                   </div>
-                  <p className="text-xs text-amber-600">
-                    Note: Updating quantity here will NOT automatically update inventory stock to avoid double-counting. Please use the Inventory module for manual stock adjustments.
-                  </p>
                 </div>
               )}
               <RecordAttachments recordType="expense" recordId={selectedExpense.id} />
@@ -681,18 +743,33 @@ const ExpensesTab = () => {
             </CardHeader>
             <CardContent className="p-6">
               <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="flex items-center space-x-2 py-2 bg-muted/30 p-3 rounded-lg border border-dashed border-primary/20">
-                  <Switch
-                    id="inventory-purchase"
-                    checked={formData.isInventoryPurchase}
-                    onCheckedChange={(checked) =>
-                      setFormData({ ...formData, isInventoryPurchase: checked })
-                    }
-                  />
-                  <Label htmlFor="inventory-purchase" className="text-sm font-semibold flex items-center gap-2 cursor-pointer">
-                    <Package className={cn("h-4 w-4", formData.isInventoryPurchase ? "text-amber-600" : "text-muted-foreground")} />
-                    Update Inventory?
-                  </Label>
+                <div className="flex items-center justify-between py-2 bg-muted/30 p-3 rounded-lg border border-dashed border-primary/20">
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="inventory-purchase"
+                      checked={formData.isInventoryPurchase}
+                      onCheckedChange={(checked) =>
+                        setFormData({ ...formData, isInventoryPurchase: checked })
+                      }
+                    />
+                    <Label htmlFor="inventory-purchase" className="text-sm font-semibold flex items-center gap-2 cursor-pointer">
+                      <Package className={cn("h-4 w-4", formData.isInventoryPurchase ? "text-amber-600" : "text-muted-foreground")} />
+                      Update Inventory?
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2 border-l pl-4">
+                    <Switch
+                      id="is-credit"
+                      checked={formData.isCredit}
+                      onCheckedChange={(checked) =>
+                        setFormData({ ...formData, isCredit: checked })
+                      }
+                    />
+                    <Label htmlFor="is-credit" className="text-sm font-semibold flex items-center gap-2 cursor-pointer">
+                      <CreditCard className={cn("h-4 w-4", formData.isCredit ? "text-blue-600" : "text-muted-foreground")} />
+                      On Credit?
+                    </Label>
+                  </div>
                 </div>
 
                 {formData.isInventoryPurchase ? (

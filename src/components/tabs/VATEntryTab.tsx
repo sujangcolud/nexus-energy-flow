@@ -167,7 +167,7 @@ const VATEntryTab = () => {
   return (
     <div className="min-h-screen bg-background p-4 sm:p-6">
       <Dialog open={vatDialogOpen} onOpenChange={setVatDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-h-[90vh] overflow-y-auto" aria-describedby={undefined}>
           <DialogHeader><DialogTitle>Create VAT Entry</DialogTitle></DialogHeader>
           {selectedEntry && (
             <div className="space-y-4">
@@ -181,7 +181,7 @@ const VATEntryTab = () => {
       </Dialog>
 
       <Dialog open={billDialogOpen} onOpenChange={setBillDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-h-[90vh] overflow-y-auto" aria-describedby={undefined}>
           <DialogHeader><DialogTitle>Generate VAT Bill</DialogTitle></DialogHeader>
           <div className="space-y-4">
             <div><Label>Customer Name *</Label><Input value={billForm.customer_name} onChange={(e) => setBillForm({ ...billForm, customer_name: e.target.value })} /></div>

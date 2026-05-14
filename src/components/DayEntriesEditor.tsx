@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import {
   Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { Loader2, Pencil, Save, X, RefreshCw, Trash2, Plus, Paperclip } from "lucide-react";
+import { Loader2, Pencil, Save, X, RefreshCw, Trash2, Plus, Paperclip, Layers } from "lucide-react";
 import { toast } from "sonner";
 import { formatCurrency } from "@/utils/unifiedCalculations";
 import { useAuth } from "@/context/AuthContext";
@@ -25,6 +25,7 @@ type ModuleConfig = {
   // additional fields shown only in the expanded edit panel (not in the table)
   extraEditFields?: FieldDef[];
   attachmentType?: AttachmentRecordType;
+  updateRpc?: string;
 };
 
 const MODULES: ModuleConfig[] = [
@@ -69,12 +70,48 @@ const MODULES: ModuleConfig[] = [
     dateColumn: "expense_date",
     amountColumn: "amount",
     attachmentType: "expense",
+    updateRpc: "process_inventory_expense",
     columns: [
       { key: "description", label: "Description", type: "text", editable: true },
       { key: "category", label: "Category", type: "text", editable: true },
       { key: "payment_mode", label: "Payment", type: "text", editable: true },
       { key: "remarks", label: "Remarks", type: "text", editable: true },
       { key: "amount", label: "Amount", type: "number", editable: true },
+    ],
+    extraEditFields: [
+      { key: "is_inventory_purchase", label: "Inventory Purchase", type: "text", editable: true },
+      { key: "is_credit", label: "On Credit", type: "text", editable: true },
+      { key: "inventory_item_id", label: "Inventory Item ID", type: "text", editable: true },
+      { key: "quantity", label: "Quantity", type: "number", editable: true },
+      { key: "unit", label: "Unit", type: "text", editable: true },
+      { key: "cost_per_unit", label: "Rate", type: "number", editable: true },
+      { key: "supplier", label: "Supplier", type: "text", editable: true },
+      { key: "invoice_number", label: "Invoice #", type: "text", editable: true },
+    ],
+  },
+  {
+    key: "expense_bookings",
+    title: "Expense Bookings",
+    table: "expense_bookings",
+    dateColumn: "booking_date",
+    amountColumn: "amount",
+    attachmentType: "expense_booking",
+    updateRpc: "process_inventory_expense",
+    columns: [
+      { key: "party_name", label: "Party", type: "text", editable: true },
+      { key: "category", label: "Category", type: "text", editable: true },
+      { key: "payment_mode", label: "Payment", type: "text", editable: true },
+      { key: "remarks", label: "Remarks", type: "text", editable: true },
+      { key: "amount", label: "Amount", type: "number", editable: true },
+    ],
+    extraEditFields: [
+      { key: "is_inventory_purchase", label: "Inventory Purchase", type: "text", editable: true },
+      { key: "inventory_item_id", label: "Inventory Item ID", type: "text", editable: true },
+      { key: "quantity", label: "Quantity", type: "number", editable: true },
+      { key: "unit", label: "Unit", type: "text", editable: true },
+      { key: "cost_per_unit", label: "Rate", type: "number", editable: true },
+      { key: "supplier", label: "Supplier", type: "text", editable: true },
+      { key: "invoice_number", label: "Invoice #", type: "text", editable: true },
     ],
   },
   {
@@ -140,6 +177,9 @@ const ModuleSection = ({ config, fromDate, toDate, editable }: ModuleSectionProp
   const [draft, setDraft] = useState<any>({});
   const [adding, setAdding] = useState(false);
   const [newDraft, setNewDraft] = useState<any>({});
+  const [bulkEdit, setBulkEdit] = useState(false);
+  const [bulkDrafts, setBulkDrafts] = useState<Record<string, any>>({});
+  const [isBulkSaving, setIsBulkSaving] = useState(false);
 
   const queryKey = ["day-entries", config.table, fromDate, toDate];
 
@@ -186,15 +226,37 @@ const ModuleSection = ({ config, fromDate, toDate, editable }: ModuleSectionProp
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, patch }: { id: string; patch: any }) => {
-      const cleaned: any = {};
-      for (const col of allEditFields) {
-        if (!col.editable) continue;
-        const v = patch[col.key];
-        if (v === undefined) continue;
-        cleaned[col.key] = col.type === "number" ? (v === "" || v === null ? null : Number(v)) : v;
+      if (config.table === "expenses" || config.table === "expense_bookings") {
+        const { error } = await supabase.rpc("process_inventory_expense", {
+          p_user_id: user?.id,
+          p_description: patch.description || patch.party_name,
+          p_amount: Number(patch.amount),
+          p_category: patch.category,
+          p_payment_mode: patch.payment_mode,
+          p_remarks: patch.remarks || null,
+          p_expense_date: patch.expense_date || patch.booking_date,
+          p_is_inventory_purchase: patch.is_inventory_purchase === "true" || patch.is_inventory_purchase === true,
+          p_inventory_item_id: patch.inventory_item_id || null,
+          p_quantity: patch.quantity ? Number(patch.quantity) : null,
+          p_unit: patch.unit || null,
+          p_cost_per_unit: patch.cost_per_unit ? Number(patch.cost_per_unit) : null,
+          p_supplier: patch.supplier || null,
+          p_invoice_number: patch.invoice_number || null,
+          p_is_credit: config.table === "expense_bookings" || patch.is_credit === "true" || patch.is_credit === true,
+          p_id: id
+        });
+        if (error) throw error;
+      } else {
+        const cleaned: any = {};
+        for (const col of allEditFields) {
+          if (!col.editable) continue;
+          const v = patch[col.key];
+          if (v === undefined) continue;
+          cleaned[col.key] = col.type === "number" ? (v === "" || v === null ? null : Number(v)) : v;
+        }
+        const { error } = await (supabase as any).from(config.table).update(cleaned).eq("id", id);
+        if (error) throw error;
       }
-      const { error } = await (supabase as any).from(config.table).update(cleaned).eq("id", id);
-      if (error) throw error;
     },
     onSuccess: async () => {
       toast.success(`${config.title.slice(0, -1)} updated`);
@@ -253,6 +315,40 @@ const ModuleSection = ({ config, fromDate, toDate, editable }: ModuleSectionProp
     setDraft(d);
   };
 
+  const handleBulkUpdate = (id: string, key: string, value: any) => {
+    setBulkDrafts(prev => ({
+      ...prev,
+      [id]: {
+        ...(prev[id] || (rows as any[]).find(r => r.id === id) || {}),
+        [key]: value
+      }
+    }));
+  };
+
+  const saveBulk = async () => {
+    const ids = Object.keys(bulkDrafts);
+    if (ids.length === 0) {
+      setBulkEdit(false);
+      return;
+    }
+
+    setIsBulkSaving(true);
+    let success = 0;
+    try {
+      for (const id of ids) {
+        await updateMutation.mutateAsync({ id, patch: bulkDrafts[id] });
+        success++;
+      }
+      toast.success(`Bulk updated ${success} records`);
+      setBulkDrafts({});
+      setBulkEdit(false);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsBulkSaving(false);
+    }
+  };
+
   return (
     <Card className="border border-border">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 py-3">
@@ -266,17 +362,41 @@ const ModuleSection = ({ config, fromDate, toDate, editable }: ModuleSectionProp
           <span className="text-xs text-muted-foreground">Total:</span>
           <span className="text-sm font-semibold tabular-nums">{fmt(total)}</span>
           {editable && fromDate === toDate && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                setAdding(true);
-                setNewDraft({});
-              }}
-              disabled={adding}
-            >
-              <Plus className="h-3.5 w-3.5 mr-1" /> Add
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                variant={bulkEdit ? "secondary" : "outline"}
+                size="sm"
+                onClick={() => {
+                  if (bulkEdit) {
+                    saveBulk();
+                  } else {
+                    setBulkEdit(true);
+                  }
+                }}
+                disabled={adding || isBulkSaving}
+              >
+                {isBulkSaving ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <Layers className="h-3.5 w-3.5 mr-1" />}
+                {bulkEdit ? "Save All" : "Bulk Edit"}
+              </Button>
+              {bulkEdit && (
+                <Button variant="ghost" size="sm" onClick={() => { setBulkEdit(false); setBulkDrafts({}); }}>
+                  Cancel
+                </Button>
+              )}
+              {!bulkEdit && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setAdding(true);
+                    setNewDraft({});
+                  }}
+                  disabled={adding}
+                >
+                  <Plus className="h-3.5 w-3.5 mr-1" /> Add
+                </Button>
+              )}
+            </div>
           )}
           <Button variant="ghost" size="sm" onClick={() => refetch()} disabled={isFetching}>
             {isFetching ? (
@@ -379,14 +499,23 @@ const ModuleSection = ({ config, fromDate, toDate, editable }: ModuleSectionProp
                             {idx === 0 && attachmentCounts[row.id] > 0 && (
                               <span title={`${attachmentCounts[row.id]} attachment(s)`}><Paperclip className="h-3 w-3 text-muted-foreground shrink-0" /></span>
                             )}
-                            {c.type === "number" ? (
-                              <span className="tabular-nums">
-                                {row[c.key] === null || row[c.key] === undefined
-                                  ? "—"
-                                  : Number(row[c.key]).toFixed(2)}
-                              </span>
+                            {bulkEdit && c.editable ? (
+                              <Input
+                                type={c.type === "number" ? "number" : "text"}
+                                value={bulkDrafts[row.id]?.[c.key] ?? row[c.key] ?? ""}
+                                onChange={(e) => handleBulkUpdate(row.id, c.key, e.target.value)}
+                                className="h-7 text-xs min-w-[80px]"
+                              />
                             ) : (
-                              String(row[c.key] ?? "—")
+                              c.type === "number" ? (
+                                <span className="tabular-nums">
+                                  {row[c.key] === null || row[c.key] === undefined
+                                    ? "—"
+                                    : Number(row[c.key]).toFixed(2)}
+                                </span>
+                              ) : (
+                                String(row[c.key] ?? "—")
+                              )
                             )}
                           </div>
                         </TableCell>
