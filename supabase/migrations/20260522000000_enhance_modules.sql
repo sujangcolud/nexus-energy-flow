@@ -60,7 +60,7 @@ BEGIN
         ALTER TABLE public.expense_bookings ADD COLUMN booking_date DATE DEFAULT CURRENT_DATE;
     END IF;
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='expense_bookings' AND column_name='status') THEN
-        ALTER TABLE public.expense_bookings ADD COLUMN status TEXT DEFAULT "pending";
+        ALTER TABLE public.expense_bookings ADD COLUMN status TEXT DEFAULT 'pending';
     END IF;
 END $$;
 -- 1. Correct the process_inventory_expense function to use proper balances columns
@@ -207,9 +207,9 @@ BEGIN
   RETURN v_record_id;
 END;
 $$;
-
 -- 2. Correct update_daily_summary to use daily_summary table
-CREATE OR REPLACE FUNCTION public.update_daily_summary(summary_date date)
+-- Fix the "column reference 'summary_date' is ambiguous" error by renaming the parameter
+CREATE OR REPLACE FUNCTION public.update_daily_summary(p_summary_date date)
 RETURNS void
 LANGUAGE plpgsql
 SECURITY DEFINER
@@ -242,7 +242,7 @@ BEGIN
         COALESCE(SUM(CASE WHEN LOWER(payment_mode) = 'fonepay' THEN total ELSE 0 END), 0),
         COALESCE(SUM(CASE WHEN LOWER(payment_mode) = 'esewa' THEN total ELSE 0 END), 0)
     INTO orders_total, orders_cash, orders_fonepay, orders_esewa
-    FROM orders WHERE order_date = summary_date;
+    FROM orders WHERE order_date = p_summary_date;
 
     SELECT
         COALESCE(SUM(total_amount), 0),
@@ -250,7 +250,7 @@ BEGIN
         COALESCE(SUM(CASE WHEN LOWER(payment_mode) = 'fonepay' THEN total_amount ELSE 0 END), 0),
         COALESCE(SUM(CASE WHEN LOWER(payment_mode) = 'esewa' THEN total_amount ELSE 0 END), 0)
     INTO charging_total, charging_cash, charging_fonepay, charging_esewa
-    FROM charging_sessions WHERE session_date = summary_date;
+    FROM charging_sessions WHERE session_date = p_summary_date;
 
     SELECT
         COALESCE(SUM(amount), 0),
@@ -258,7 +258,7 @@ BEGIN
         COALESCE(SUM(CASE WHEN LOWER(payment_mode) = 'fonepay' THEN amount ELSE 0 END), 0),
         COALESCE(SUM(CASE WHEN LOWER(payment_mode) = 'esewa' THEN amount ELSE 0 END), 0)
     INTO expenses_total, expenses_cash, expenses_fonepay, expenses_esewa
-    FROM expenses WHERE expense_date = summary_date;
+    FROM expenses WHERE expense_date = p_summary_date;
 
     SELECT
         COALESCE(SUM(amount), 0),
@@ -266,22 +266,22 @@ BEGIN
         COALESCE(SUM(CASE WHEN LOWER(mode) = 'fonepay' THEN amount ELSE 0 END), 0),
         COALESCE(SUM(CASE WHEN LOWER(mode) = 'esewa' THEN amount ELSE 0 END), 0)
     INTO deposits_total, deposits_cash, deposits_fonepay, deposits_esewa
-    FROM deposits WHERE deposit_date = summary_date;
+    FROM deposits WHERE deposit_date = p_summary_date;
 
     SELECT COALESCE(SUM(amount), 0), COALESCE(SUM(CASE WHEN LOWER(payment_mode) = 'cash' THEN amount ELSE 0 END), 0)
     INTO withdrawals_total, withdrawals_cash
-    FROM withdrawals WHERE withdrawal_date = summary_date;
+    FROM withdrawals WHERE withdrawal_date = p_summary_date;
 
     SELECT COALESCE(SUM(contribution_amount), 0)
     INTO cooperative_total
-    FROM cooperative_savings WHERE contribution_date = summary_date;
+    FROM cooperative_savings WHERE contribution_date = p_summary_date;
 
     INSERT INTO daily_summary (
         summary_date, cash_balance, fonepay_balance, esewa_balance, cooperative_balance,
         total_income, total_expenses, total_balance, total_income_from_orders, total_income_from_charging, expenses_total,
         total_deposits, total_withdrawals, total_savings, updated_at
     ) VALUES (
-        summary_date,
+        p_summary_date,
         (orders_cash + charging_cash - expenses_cash + deposits_cash + withdrawals_cash),
         (orders_fonepay + charging_fonepay - expenses_fonepay + deposits_fonepay),
         (orders_esewa + charging_esewa - expenses_esewa + deposits_esewa),
@@ -303,10 +303,6 @@ BEGIN
         updated_at = NOW();
 END;
 $$;
-
--- 3. Update trigger function to use summary_date for daily_summary table
-CREATE OR REPLACE FUNCTION public.trigger_update_daily_summary()
-RETURNS trigger
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
