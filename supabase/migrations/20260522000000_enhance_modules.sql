@@ -53,6 +53,15 @@ BEGIN
             UPDATE public.expense_bookings SET remarks = notes;
         END IF;
     END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='expense_bookings' AND column_name='payment_mode') THEN
+        ALTER TABLE public.expense_bookings ADD COLUMN payment_mode TEXT;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='expense_bookings' AND column_name='booking_date') THEN
+        ALTER TABLE public.expense_bookings ADD COLUMN booking_date DATE DEFAULT CURRENT_DATE;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='expense_bookings' AND column_name='status') THEN
+        ALTER TABLE public.expense_bookings ADD COLUMN status TEXT DEFAULT 'pending';
+    END IF;
 END $$;
 
 -- 4. process_new_loan
