@@ -280,8 +280,10 @@ const ExpenseBookingsTab = () => {
 
       await supabase.from("expense_bookings").delete().eq("id", selectedBooking.id);
       toast.success("Expense recorded and balance updated!");
-      setIsPaidDialogOpen(false);
-      fetchBookings();
+      setTimeout(() => {
+        setIsPaidDialogOpen(false);
+        fetchBookings();
+      }, 0);
     } catch (error) {
       console.error("Error:", error);
       toast.error("Failed to process");
@@ -303,7 +305,7 @@ const ExpenseBookingsTab = () => {
   return (
     <div className="min-h-screen bg-background p-4 sm:p-6">
       <Dialog open={isPaidDialogOpen} onOpenChange={setIsPaidDialogOpen}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-h-[90vh] overflow-y-auto" aria-describedby={undefined}>
           <DialogHeader><DialogTitle>Mark as Paid</DialogTitle></DialogHeader>
           {selectedBooking && (
             <form onSubmit={handleExpenseSubmit} className="space-y-4">
@@ -329,7 +331,7 @@ const ExpenseBookingsTab = () => {
       </Dialog>
 
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-h-[90vh] overflow-y-auto" aria-describedby={undefined}>
           <DialogHeader><DialogTitle>Edit Booking</DialogTitle></DialogHeader>
           <form onSubmit={handleUpdate} className="space-y-4">
             <div><Label>Party Name *</Label><Input value={editFormData.partyName} onChange={(e) => setEditFormData({ ...editFormData, partyName: e.target.value })} required /></div>
