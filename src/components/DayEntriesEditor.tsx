@@ -249,7 +249,7 @@ const ModuleSection = ({ config, fromDate, toDate, editable }: ModuleSectionProp
           p_cost_per_unit: patch.cost_per_unit ? Number(patch.cost_per_unit) : null,
           p_supplier: patch.supplier || null,
           p_invoice_number: patch.invoice_number || null,
-          p_is_credit: config.table === "expense_bookings" || patch.is_credit === "true" || patch.is_credit === true,
+          p_is_credit: patch.is_credit === "true" || patch.is_credit === true,
           p_id: id
         });
         if (error) throw error;
@@ -306,7 +306,7 @@ const ModuleSection = ({ config, fromDate, toDate, editable }: ModuleSectionProp
           p_cost_per_unit: patch.cost_per_unit ? Number(patch.cost_per_unit) : null,
           p_supplier: patch.supplier || null,
           p_invoice_number: patch.invoice_number || null,
-          p_is_credit: config.table === "expense_bookings" || patch.is_credit === "true" || patch.is_credit === true
+          p_is_credit: patch.is_credit === "true" || patch.is_credit === true
         });
         if (error) throw error;
       } else {
@@ -345,6 +345,12 @@ const ModuleSection = ({ config, fromDate, toDate, editable }: ModuleSectionProp
     setEditingId(row.id);
     const d: any = {};
     for (const col of allEditFields) d[col.key] = row[col.key] ?? "";
+    // Ensure is_credit is correctly initialized for the toggle
+    if (config.table === "expense_bookings") {
+      d.is_credit = true;
+    } else if (config.table === "expenses") {
+      d.is_credit = row.is_credit ?? false;
+    }
     setDraft(d);
   };
 
@@ -488,7 +494,7 @@ const ModuleSection = ({ config, fromDate, toDate, editable }: ModuleSectionProp
                   onClick={() => {
                     setAdding(true);
                     setNewDraft({
-                      is_credit: false,
+                      is_credit: config.table === "expense_bookings",
                       is_inventory_purchase: false,
                       payment_mode: "Cash",
                     });
