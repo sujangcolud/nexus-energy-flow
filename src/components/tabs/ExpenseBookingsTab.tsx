@@ -276,12 +276,12 @@ const ExpenseBookingsTab = () => {
         p_cost_per_unit: selectedBooking.cost_per_unit || null,
         p_supplier: selectedBooking.supplier || null,
         p_invoice_number: selectedBooking.invoice_number || null,
-        p_is_credit: false // Now it's being paid
+        p_is_credit: false, // Now it's being paid
+        p_id: selectedBooking.id // Pass the ID to make it atomic
       });
 
       if (error) throw error;
 
-      await supabase.from("expense_bookings").delete().eq("id", selectedBooking.id);
       toast.success("Expense recorded and balance updated!");
       setTimeout(() => {
         setIsPaidDialogOpen(false);
