@@ -4,10 +4,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import {
   Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { Loader2, Pencil, Save, X, RefreshCw, Trash2, Plus, Paperclip, Layers } from "lucide-react";
+import { Loader2, Pencil, Save, X, RefreshCw, Trash2, Plus, Paperclip, Layers, CheckSquare, Square, Package, CreditCard, Banknote } from "lucide-react";
 import { toast } from "sonner";
 import { formatCurrency } from "@/utils/unifiedCalculations";
 import { useAuth } from "@/context/AuthContext";
@@ -176,10 +178,15 @@ const ModuleSection = ({ config, fromDate, toDate, editable }: ModuleSectionProp
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState<any>({});
   const [adding, setAdding] = useState(false);
-  const [newDraft, setNewDraft] = useState<any>({});
+  const [newDraft, setNewDraft] = useState<any>({
+    is_credit: false,
+    is_inventory_purchase: false,
+    payment_mode: "Cash",
+  });
   const [bulkEdit, setBulkEdit] = useState(false);
   const [bulkDrafts, setBulkDrafts] = useState<Record<string, any>>({});
   const [isBulkSaving, setIsBulkSaving] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   const queryKey = ["day-entries", config.table, fromDate, toDate];
 
@@ -282,22 +289,48 @@ const ModuleSection = ({ config, fromDate, toDate, editable }: ModuleSectionProp
   const insertMutation = useMutation({
     mutationFn: async (patch: any) => {
       if (!user?.id) throw new Error("Not signed in");
-      const payload: any = {
-        user_id: user.id,
-        [config.dateColumn]: fromDate,
-      };
-      for (const col of allEditFields) {
-        const v = patch[col.key];
-        if (v === undefined || v === "") continue;
-        payload[col.key] = col.type === "number" ? Number(v) : v;
+
+      if (config.table === "expenses" || config.table === "expense_bookings") {
+        const { error } = await supabase.rpc("process_inventory_expense", {
+          p_user_id: user.id,
+          p_description: patch.description || patch.party_name || "Bulk Entry",
+          p_amount: Number(patch.amount),
+          p_category: patch.category,
+          p_payment_mode: patch.payment_mode || "Cash",
+          p_remarks: patch.remarks || null,
+          p_expense_date: fromDate,
+          p_is_inventory_purchase: patch.is_inventory_purchase === "true" || patch.is_inventory_purchase === true,
+          p_inventory_item_id: patch.inventory_item_id || null,
+          p_quantity: patch.quantity ? Number(patch.quantity) : null,
+          p_unit: patch.unit || null,
+          p_cost_per_unit: patch.cost_per_unit ? Number(patch.cost_per_unit) : null,
+          p_supplier: patch.supplier || null,
+          p_invoice_number: patch.invoice_number || null,
+          p_is_credit: config.table === "expense_bookings" || patch.is_credit === "true" || patch.is_credit === true
+        });
+        if (error) throw error;
+      } else {
+        const payload: any = {
+          user_id: user.id,
+          [config.dateColumn]: fromDate,
+        };
+        for (const col of allEditFields) {
+          const v = patch[col.key];
+          if (v === undefined || v === "") continue;
+          payload[col.key] = col.type === "number" ? Number(v) : v;
+        }
+        const { error } = await (supabase as any).from(config.table).insert(payload);
+        if (error) throw error;
       }
-      const { error } = await (supabase as any).from(config.table).insert(payload);
-      if (error) throw error;
     },
     onSuccess: async () => {
       toast.success(`${config.title.replace(/s$/, "")} added`);
       setAdding(false);
-      setNewDraft({});
+      setNewDraft({
+        is_credit: false,
+        is_inventory_purchase: false,
+        payment_mode: "Cash",
+      });
       await qc.invalidateQueries({ queryKey });
     },
     onError: (e: any) => toast.error(e.message || "Insert failed"),
@@ -349,6 +382,52 @@ const ModuleSection = ({ config, fromDate, toDate, editable }: ModuleSectionProp
     }
   };
 
+  const toggleSelectAll = () => {
+    if (selectedIds.size === rows.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set((rows as any[]).map(r => r.id)));
+    }
+  };
+
+  const toggleSelect = (id: string) => {
+    const next = new Set(selectedIds);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setSelectedIds(next);
+  };
+
+  const runBatchAction = async (action: "credit" | "cash" | "inventory-on" | "inventory-off" | "both-on") => {
+    if (selectedIds.size === 0) return;
+    setIsBulkSaving(true);
+    let success = 0;
+    try {
+      for (const id of Array.from(selectedIds)) {
+        const row = (rows as any[]).find(r => r.id === id);
+        if (!row) continue;
+
+        const patch = { ...row };
+        if (action === "credit") patch.is_credit = true;
+        if (action === "cash") { patch.is_credit = false; patch.payment_mode = "Cash"; }
+        if (action === "inventory-on") patch.is_inventory_purchase = true;
+        if (action === "inventory-off") patch.is_inventory_purchase = false;
+        if (action === "both-on") {
+          patch.is_credit = true;
+          patch.is_inventory_purchase = true;
+        }
+
+        await updateMutation.mutateAsync({ id, patch });
+        success++;
+      }
+      toast.success(`Batch action applied to ${success} records`);
+      setSelectedIds(new Set());
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsBulkSaving(false);
+    }
+  };
+
   return (
     <Card className="border border-border">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 py-3">
@@ -361,8 +440,27 @@ const ModuleSection = ({ config, fromDate, toDate, editable }: ModuleSectionProp
         <div className="flex items-center gap-2">
           <span className="text-xs text-muted-foreground">Total:</span>
           <span className="text-sm font-semibold tabular-nums">{fmt(total)}</span>
-          {editable && fromDate === toDate && (
+          {editable && (
             <div className="flex items-center gap-2">
+              {selectedIds.size > 0 && (config.table === "expenses" || config.table === "expense_bookings") && (
+                <div className="flex items-center gap-1 border-r pr-2 mr-2">
+                  <Button size="sm" variant="outline" className="h-7 text-[10px]" onClick={() => runBatchAction("credit")}>
+                    <CreditCard className="h-3 w-3 mr-1" /> Credit
+                  </Button>
+                  <Button size="sm" variant="outline" className="h-7 text-[10px]" onClick={() => runBatchAction("cash")}>
+                    <Banknote className="h-3 w-3 mr-1" /> Cash
+                  </Button>
+                  <Button size="sm" variant="outline" className="h-7 text-[10px]" onClick={() => runBatchAction("inventory-on")}>
+                    <Package className="h-3 w-3 mr-1" /> Inv ON
+                  </Button>
+                  <Button size="sm" variant="outline" className="h-7 text-[10px]" onClick={() => runBatchAction("inventory-off")}>
+                    <Package className="h-3 w-3 mr-1" /> Inv OFF
+                  </Button>
+                  <Button size="sm" variant="outline" className="h-7 text-[10px] bg-primary/10" onClick={() => runBatchAction("both-on")}>
+                    <Plus className="h-3 w-3 mr-1" /> Credit + Inv
+                  </Button>
+                </div>
+              )}
               <Button
                 variant={bulkEdit ? "secondary" : "outline"}
                 size="sm"
@@ -389,7 +487,11 @@ const ModuleSection = ({ config, fromDate, toDate, editable }: ModuleSectionProp
                   size="sm"
                   onClick={() => {
                     setAdding(true);
-                    setNewDraft({});
+                    setNewDraft({
+                      is_credit: false,
+                      is_inventory_purchase: false,
+                      payment_mode: "Cash",
+                    });
                   }}
                   disabled={adding}
                 >
@@ -412,6 +514,13 @@ const ModuleSection = ({ config, fromDate, toDate, editable }: ModuleSectionProp
           <Table>
             <TableHeader>
               <TableRow>
+                {editable && (
+                  <TableHead className="w-8">
+                    <Button variant="ghost" size="icon" onClick={toggleSelectAll} className="h-6 w-6">
+                      {selectedIds.size === rows.length && rows.length > 0 ? <CheckSquare className="h-4 w-4" /> : <Square className="h-4 w-4" />}
+                    </Button>
+                  </TableHead>
+                )}
                 <TableHead className="text-xs whitespace-nowrap">Date</TableHead>
                 {config.columns.map((c) => (
                   <TableHead key={c.key} className="text-xs whitespace-nowrap">
@@ -423,7 +532,9 @@ const ModuleSection = ({ config, fromDate, toDate, editable }: ModuleSectionProp
             </TableHeader>
             <TableBody>
               {adding && editable && (
-                <TableRow className="bg-muted/40">
+                <>
+                <TableRow className="bg-muted/40 border-b-0">
+                  <TableCell />
                   <TableCell className="text-xs whitespace-nowrap">{fromDate}</TableCell>
                   {config.columns.map((c) => (
                     <TableCell key={c.key} className="text-xs">
@@ -457,7 +568,11 @@ const ModuleSection = ({ config, fromDate, toDate, editable }: ModuleSectionProp
                         variant="ghost"
                         onClick={() => {
                           setAdding(false);
-                          setNewDraft({});
+                          setNewDraft({
+                            is_credit: false,
+                            is_inventory_purchase: false,
+                            payment_mode: "Cash",
+                          });
                         }}
                       >
                         <X className="h-3.5 w-3.5" />
@@ -465,6 +580,48 @@ const ModuleSection = ({ config, fromDate, toDate, editable }: ModuleSectionProp
                     </div>
                   </TableCell>
                 </TableRow>
+                {(config.table === "expenses" || config.table === "expense_bookings") && (
+                  <TableRow className="bg-muted/40">
+                    <TableCell colSpan={2} />
+                    <TableCell colSpan={config.columns.length + 1} className="p-2 pt-0">
+                      <div className="flex items-center gap-6 px-2 pb-2">
+                        <div className="flex items-center space-x-2">
+                          <Switch
+                            id="new-is-credit"
+                            checked={newDraft.is_credit || false}
+                            onCheckedChange={(c) => setNewDraft((d: any) => ({ ...d, is_credit: c }))}
+                          />
+                          <Label htmlFor="new-is-credit" className="text-[10px] font-bold">On Credit?</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Switch
+                            id="new-is-inventory"
+                            checked={newDraft.is_inventory_purchase || false}
+                            onCheckedChange={(c) => setNewDraft((d: any) => ({ ...d, is_inventory_purchase: c }))}
+                          />
+                          <Label htmlFor="new-is-inventory" className="text-[10px] font-bold">Update Inventory?</Label>
+                        </div>
+                        {newDraft.is_inventory_purchase && (
+                          <div className="flex-1 flex gap-2">
+                            <Input
+                              placeholder="Item ID"
+                              value={newDraft.inventory_item_id || ""}
+                              onChange={(e) => setNewDraft((d: any) => ({ ...d, inventory_item_id: e.target.value }))}
+                              className="h-7 text-[10px] max-w-[200px]"
+                            />
+                            <Input
+                              placeholder="Supplier"
+                              value={newDraft.supplier || ""}
+                              onChange={(e) => setNewDraft((d: any) => ({ ...d, supplier: e.target.value }))}
+                              className="h-7 text-[10px] max-w-[150px]"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )}
+                </>
               )}
               {isLoading ? (
                 <TableRow>
@@ -490,6 +647,13 @@ const ModuleSection = ({ config, fromDate, toDate, editable }: ModuleSectionProp
                   const colSpan = config.columns.length + (editable ? 2 : 1);
                   const mainRow = (
                     <TableRow key={row.id}>
+                      {editable && (
+                        <TableCell className="w-8">
+                          <Button variant="ghost" size="icon" onClick={() => toggleSelect(row.id)} className="h-6 w-6">
+                            {selectedIds.has(row.id) ? <CheckSquare className="h-4 w-4" /> : <Square className="h-4 w-4" />}
+                          </Button>
+                        </TableCell>
+                      )}
                       <TableCell className="text-xs whitespace-nowrap">
                         {row[config.dateColumn] || "—"}
                       </TableCell>
@@ -554,7 +718,7 @@ const ModuleSection = ({ config, fromDate, toDate, editable }: ModuleSectionProp
                       <TableCell colSpan={colSpan} className="p-3">
                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                           {allEditFields
-                            .filter((c) => c.editable)
+                            .filter((c) => c.editable && c.key !== "is_credit" && c.key !== "is_inventory_purchase")
                             .map((c) => (
                               <div key={c.key} className="flex flex-col gap-1">
                                 <label className="text-[11px] text-muted-foreground">
@@ -571,6 +735,27 @@ const ModuleSection = ({ config, fromDate, toDate, editable }: ModuleSectionProp
                               </div>
                             ))}
                         </div>
+
+                        {(config.table === "expenses" || config.table === "expense_bookings") && (
+                          <div className="flex items-center gap-6 mt-4 p-2 bg-background/50 rounded-md border border-dashed">
+                            <div className="flex items-center space-x-2">
+                              <Switch
+                                id={`edit-credit-${row.id}`}
+                                checked={draft.is_credit === "true" || draft.is_credit === true}
+                                onCheckedChange={(c) => setDraft((d: any) => ({ ...d, is_credit: c }))}
+                              />
+                              <Label htmlFor={`edit-credit-${row.id}`} className="text-xs font-semibold">On Credit?</Label>
+                            </div>
+                            <div className="flex items-center space-x-2 border-l pl-4">
+                              <Switch
+                                id={`edit-inv-${row.id}`}
+                                checked={draft.is_inventory_purchase === "true" || draft.is_inventory_purchase === true}
+                                onCheckedChange={(c) => setDraft((d: any) => ({ ...d, is_inventory_purchase: c }))}
+                              />
+                              <Label htmlFor={`edit-inv-${row.id}`} className="text-xs font-semibold">Update Inventory?</Label>
+                            </div>
+                          </div>
+                        )}
                         {config.attachmentType && (
                           <div className="mt-3">
                             <RecordAttachments
@@ -615,6 +800,7 @@ const ModuleSection = ({ config, fromDate, toDate, editable }: ModuleSectionProp
             {(rows as any[]).length > 0 && (
               <TableFooter>
                 <TableRow>
+                  {editable && <TableCell />}
                   <TableCell
                     colSpan={config.columns.length}
                     className="text-xs font-medium"

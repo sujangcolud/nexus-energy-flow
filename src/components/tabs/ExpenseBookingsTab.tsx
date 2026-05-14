@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/select";
 import { Trash2, BookMarked, Edit, PlusCircle, CheckCircle2, Calendar as CalendarIcon, Info, ChevronDown, ChevronRight, Package, Paperclip } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { extractErrorMessage, logError } from "@/utils/errorHandling";
 import RecordAttachments from "@/components/RecordAttachments";
 import {
   Dialog,
@@ -162,8 +163,10 @@ const ExpenseBookingsTab = () => {
       });
       fetchBookings();
     } catch (error) {
-      console.error("Error:", error);
-      toast.error("Failed to add booking");
+      logError("fetching bookings", error);
+      toast.error(`Failed to load bookings: ${extractErrorMessage(error)}`);
+      logError("adding booking", error);
+      toast.error(`Failed to add booking: ${extractErrorMessage(error)}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -179,8 +182,8 @@ const ExpenseBookingsTab = () => {
       setNewCategory("");
       fetchCategories();
     } catch (error) {
-      console.error("Error:", error);
-      toast.error("Failed to add category");
+      logError("adding category", error);
+      toast.error(`Failed to add category: ${extractErrorMessage(error)}`);
     }
   };
 
@@ -225,8 +228,8 @@ const ExpenseBookingsTab = () => {
       setIsEditDialogOpen(false);
       fetchBookings();
     } catch (error) {
-      console.error("Error:", error);
-      toast.error("Failed to update booking");
+      logError("updating booking", error);
+      toast.error(`Failed to update booking: ${extractErrorMessage(error)}`);
     }
   };
 
@@ -237,8 +240,8 @@ const ExpenseBookingsTab = () => {
       toast.success("Booking deleted!");
       fetchBookings();
     } catch (error) {
-      console.error("Error:", error);
-      toast.error("Failed to delete booking");
+      logError("deleting booking", error);
+      toast.error(`Failed to delete booking: ${extractErrorMessage(error)}`);
     }
   };
 
@@ -249,8 +252,8 @@ const ExpenseBookingsTab = () => {
       toast.success("Category deleted!");
       fetchCategories();
     } catch (error) {
-      console.error("Error:", error);
-      toast.error("Failed to delete category");
+      logError("deleting category", error);
+      toast.error(`Failed to delete category: ${extractErrorMessage(error)}`);
     }
   };
 
@@ -285,8 +288,8 @@ const ExpenseBookingsTab = () => {
         fetchBookings();
       }, 0);
     } catch (error) {
-      console.error("Error:", error);
-      toast.error("Failed to process");
+      logError("processing expense payment", error);
+      toast.error(`Failed to process: ${extractErrorMessage(error)}`);
     }
   };
 
