@@ -209,6 +209,7 @@ END;
 $$;
 -- 2. Correct update_daily_summary to use daily_summary table
 -- Fix the "column reference 'summary_date' is ambiguous" error by renaming the parameter
+DROP FUNCTION IF EXISTS public.update_daily_summary(date) CASCADE;
 CREATE OR REPLACE FUNCTION public.update_daily_summary(p_summary_date date)
 RETURNS void
 LANGUAGE plpgsql
@@ -559,3 +560,40 @@ BEGIN
         DROP TRIGGER IF EXISTS trigger_update_daily_summary_balances ON public.balances;
     END IF;
 END $$;
+
+-- 9. Re-create triggers to ensure they exist after CASCADE
+DROP TRIGGER IF EXISTS trigger_update_daily_summary_orders ON orders;
+CREATE TRIGGER trigger_update_daily_summary_orders
+    AFTER INSERT OR UPDATE OR DELETE ON orders
+    FOR EACH ROW
+    EXECUTE FUNCTION trigger_update_daily_summary();
+
+DROP TRIGGER IF EXISTS trigger_update_daily_summary_charging ON charging_sessions;
+CREATE TRIGGER trigger_update_daily_summary_charging
+    AFTER INSERT OR UPDATE OR DELETE ON charging_sessions
+    FOR EACH ROW
+    EXECUTE FUNCTION trigger_update_daily_summary();
+
+DROP TRIGGER IF EXISTS trigger_update_daily_summary_expenses ON expenses;
+CREATE TRIGGER trigger_update_daily_summary_expenses
+    AFTER INSERT OR UPDATE OR DELETE ON expenses
+    FOR EACH ROW
+    EXECUTE FUNCTION trigger_update_daily_summary();
+
+DROP TRIGGER IF EXISTS trigger_update_daily_summary_deposits ON deposits;
+CREATE TRIGGER trigger_update_daily_summary_deposits
+    AFTER INSERT OR UPDATE OR DELETE ON deposits
+    FOR EACH ROW
+    EXECUTE FUNCTION trigger_update_daily_summary();
+
+DROP TRIGGER IF EXISTS trigger_update_daily_summary_withdrawals ON withdrawals;
+CREATE TRIGGER trigger_update_daily_summary_withdrawals
+    AFTER INSERT OR UPDATE OR DELETE ON withdrawals
+    FOR EACH ROW
+    EXECUTE FUNCTION trigger_update_daily_summary();
+
+DROP TRIGGER IF EXISTS trigger_update_daily_summary_cooperative ON cooperative_savings;
+CREATE TRIGGER trigger_update_daily_summary_cooperative
+    AFTER INSERT OR UPDATE OR DELETE ON cooperative_savings
+    FOR EACH ROW
+    EXECUTE FUNCTION trigger_update_daily_summary();
