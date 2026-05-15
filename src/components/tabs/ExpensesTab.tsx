@@ -554,40 +554,15 @@ const ExpensesTab = () => {
                 </div>
               </div>
 
-              {selectedExpense.is_inventory_purchase && (
-                <div className="space-y-4 p-4 bg-amber-50 rounded-lg border border-amber-100">
-                  <p className="text-sm font-medium text-amber-800 flex items-center gap-2">
-                    <Package className="h-4 w-4" />
-                    Inventory Purchase Details
+              {(selectedExpense.is_inventory_purchase || selectedExpense.is_credit) && (
+                <div className="space-y-4 p-4 bg-blue-50 rounded-lg border border-blue-100">
+                  <p className="text-sm font-medium text-blue-800 flex items-center gap-2">
+                    <CreditCard className="h-4 w-4" />
+                    Additional Details
                   </p>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label>Quantity</Label>
-                      <Input
-                        type="number"
-                        value={selectedExpense.quantity || ""}
-                        onChange={(e) =>
-                          setSelectedExpense({
-                            ...selectedExpense,
-                            quantity: parseFloat(e.target.value),
-                          })
-                        }
-                      />
-                    </div>
-                    <div>
-                      <Label>Unit</Label>
-                      <Input
-                        value={selectedExpense.unit || ""}
-                        onChange={(e) =>
-                          setSelectedExpense({
-                            ...selectedExpense,
-                            unit: e.target.value,
-                          })
-                        }
-                      />
-                    </div>
-                    <div>
-                      <Label>Supplier</Label>
+                      <Label>Supplier (Party Name)</Label>
                       <Input
                         value={selectedExpense.supplier || ""}
                         onChange={(e) =>
@@ -610,19 +585,48 @@ const ExpensesTab = () => {
                         }
                       />
                     </div>
-                    <div className="col-span-2">
-                      <Label>Inventory Item ID (UUID)</Label>
-                      <Input
-                        value={selectedExpense.inventory_item_id || ""}
-                        onChange={(e) =>
-                          setSelectedExpense({
-                            ...selectedExpense,
-                            inventory_item_id: e.target.value,
-                          })
-                        }
-                        placeholder="Required for stock update"
-                      />
-                    </div>
+                    {selectedExpense.is_inventory_purchase && (
+                      <>
+                        <div>
+                          <Label>Quantity</Label>
+                          <Input
+                            type="number"
+                            value={selectedExpense.quantity || ""}
+                            onChange={(e) =>
+                              setSelectedExpense({
+                                ...selectedExpense,
+                                quantity: parseFloat(e.target.value),
+                              })
+                            }
+                          />
+                        </div>
+                        <div>
+                          <Label>Unit</Label>
+                          <Input
+                            value={selectedExpense.unit || ""}
+                            onChange={(e) =>
+                              setSelectedExpense({
+                                ...selectedExpense,
+                                unit: e.target.value,
+                              })
+                            }
+                          />
+                        </div>
+                        <div className="col-span-2">
+                          <Label>Inventory Item ID (UUID)</Label>
+                          <Input
+                            value={selectedExpense.inventory_item_id || ""}
+                            onChange={(e) =>
+                              setSelectedExpense({
+                                ...selectedExpense,
+                                inventory_item_id: e.target.value,
+                              })
+                            }
+                            placeholder="Required for stock update"
+                          />
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
               )}
@@ -772,8 +776,9 @@ const ExpensesTab = () => {
                   </div>
                 </div>
 
-                {formData.isInventoryPurchase ? (
+                {(formData.isInventoryPurchase || formData.isCredit) ? (
                   <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
+                    {formData.isInventoryPurchase && (
                     <div className="space-y-2">
                       <Label htmlFor="inventoryItemId" className="text-sm font-medium flex items-center gap-2">
                         <ShoppingCart className="h-4 w-4 text-amber-600" />
@@ -812,7 +817,9 @@ const ExpensesTab = () => {
                         </SelectContent>
                       </Select>
                     </div>
+                    )}
 
+                    {formData.isInventoryPurchase && (
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="quantity" className="text-sm font-medium flex items-center gap-2">
@@ -861,8 +868,10 @@ const ExpensesTab = () => {
                         />
                       </div>
                     </div>
+                    )}
 
-                    <div className="grid grid-cols-3 gap-4">
+                    {formData.isInventoryPurchase && (
+                    <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="unit" className="text-sm font-medium">Unit</Label>
                         <Select
@@ -908,6 +917,24 @@ const ExpensesTab = () => {
                           className="border-amber-100"
                         />
                       </div>
+                    </div>
+                    )}
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="supplier" className="text-sm font-medium flex items-center gap-2">
+                          <ShoppingCart className="h-4 w-4 text-blue-600" />
+                          Supplier (Party Name) *
+                        </Label>
+                        <Input
+                          id="supplier"
+                          value={formData.supplier}
+                          onChange={(e) => setFormData({ ...formData, supplier: e.target.value })}
+                          placeholder="Supplier name"
+                          required
+                          className="border-blue-100"
+                        />
+                      </div>
                       <div className="space-y-2">
                         <Label htmlFor="invoiceNumber" className="text-sm font-medium flex items-center gap-2">
                           <Hash className="h-4 w-4 text-amber-600" />
@@ -924,13 +951,22 @@ const ExpensesTab = () => {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="supplier" className="text-sm font-medium">Supplier</Label>
+                      <Label
+                        htmlFor="description"
+                        className="text-sm font-medium text-gray-700 flex items-center gap-2"
+                      >
+                        <FileText className="h-4 w-4 text-red-600" />
+                        Description *
+                      </Label>
                       <Input
-                        id="supplier"
-                        value={formData.supplier}
-                        onChange={(e) => setFormData({ ...formData, supplier: e.target.value })}
-                        placeholder="Supplier name"
-                        className="border-amber-100"
+                        id="description"
+                        value={formData.description}
+                        onChange={(e) =>
+                          setFormData({ ...formData, description: e.target.value })
+                        }
+                        placeholder="e.g. Meat for restaurant"
+                        required
+                        className="border-red-200 focus:border-red-500"
                       />
                     </div>
                   </div>
@@ -1025,7 +1061,11 @@ const ExpensesTab = () => {
                     <Select
                       value={formData.paymentMode}
                       onValueChange={(value) =>
-                        setFormData({ ...formData, paymentMode: value })
+                        setFormData({
+                          ...formData,
+                          paymentMode: value,
+                          isCredit: value === "Credit" || value === "Cheque"
+                        })
                       }
                       required
                     >

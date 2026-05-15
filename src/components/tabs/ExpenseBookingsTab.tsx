@@ -54,7 +54,7 @@ import { format } from "date-fns";
 
 interface ExpenseBooking {
   id: string;
-  party_name: string;
+  description: string;
   amount: number;
   category: string;
   remarks: string | null;
@@ -78,7 +78,8 @@ const ExpenseBookingsTab = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
-    partyName: "",
+    description: "",
+    supplier: "",
     amount: "",
     category: "",
     remarks: "",
@@ -96,11 +97,18 @@ const ExpenseBookingsTab = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingBooking, setEditingBooking] = useState<ExpenseBooking | null>(null);
   const [editFormData, setEditFormData] = useState({
-    partyName: "",
+    description: "",
+    supplier: "",
     amount: "",
     category: "",
     remarks: "",
-    paymentDate: ""
+    paymentDate: "",
+    is_inventory_purchase: false,
+    inventory_item_id: "",
+    quantity: "",
+    unit: "",
+    cost_per_unit: "",
+    invoice_number: ""
   });
 
   useEffect(() => {
@@ -138,7 +146,7 @@ const ExpenseBookingsTab = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) { toast.error("Please log in"); return; }
-    if (!formData.partyName || !formData.amount || !formData.category) {
+    if (!formData.description || !formData.supplier || !formData.amount || !formData.category) {
       toast.error("Fill all required fields");
       return;
     }
@@ -146,7 +154,8 @@ const ExpenseBookingsTab = () => {
     try {
       const { error } = await supabase.from("expense_bookings").insert([{
         user_id: user.id,
-        party_name: formData.partyName,
+        description: formData.description,
+        supplier: formData.supplier,
         amount: parseFloat(formData.amount),
         category: formData.category,
         remarks: formData.remarks || null,
@@ -155,7 +164,8 @@ const ExpenseBookingsTab = () => {
       if (error) throw error;
       toast.success("Booking added!");
       setFormData({
-        partyName: "",
+        description: "",
+        supplier: "",
         amount: "",
         category: "",
         remarks: "",
@@ -200,11 +210,18 @@ const ExpenseBookingsTab = () => {
   const handleEdit = (booking: ExpenseBooking) => {
     setEditingBooking(booking);
     setEditFormData({
-      partyName: booking.party_name,
+      description: booking.description,
+      supplier: booking.supplier || "",
       amount: booking.amount.toString(),
       category: booking.category,
       remarks: booking.remarks || "",
-      paymentDate: booking.payment_date || ""
+      paymentDate: booking.payment_date || "",
+      is_inventory_purchase: booking.is_inventory_purchase || false,
+      inventory_item_id: booking.inventory_item_id || "",
+      quantity: booking.quantity?.toString() || "",
+      unit: booking.unit || "",
+      cost_per_unit: booking.cost_per_unit?.toString() || "",
+      invoice_number: booking.invoice_number || ""
     });
     setIsEditDialogOpen(true);
   };
@@ -216,11 +233,18 @@ const ExpenseBookingsTab = () => {
       const { error } = await supabase
         .from("expense_bookings")
         .update({
-          party_name: editFormData.partyName,
+          description: editFormData.description,
+          supplier: editFormData.supplier,
           amount: parseFloat(editFormData.amount),
           category: editFormData.category,
           remarks: editFormData.remarks || null,
           payment_date: editFormData.paymentDate || null,
+          is_inventory_purchase: editFormData.is_inventory_purchase,
+          inventory_item_id: editFormData.inventory_item_id || null,
+          quantity: editFormData.quantity ? parseFloat(editFormData.quantity) : null,
+          unit: editFormData.unit || null,
+          cost_per_unit: editFormData.cost_per_unit ? parseFloat(editFormData.cost_per_unit) : null,
+          invoice_number: editFormData.invoice_number || null,
         })
         .eq("id", editingBooking.id);
       if (error) throw error;
@@ -263,7 +287,7 @@ const ExpenseBookingsTab = () => {
     try {
       const { data, error } = await supabase.rpc("process_inventory_expense", {
         p_user_id: user.id,
-        p_description: selectedBooking.party_name,
+        p_description: selectedBooking.description,
         p_amount: selectedBooking.amount,
         p_category: selectedBooking.category,
         p_payment_mode: expenseFormData.paymentMode,
@@ -296,8 +320,9 @@ const ExpenseBookingsTab = () => {
   const totalBookings = bookings.reduce((sum, b) => sum + b.amount, 0);
 
   const groupedBookings = bookings.reduce((acc, b) => {
-    if (!acc[b.party_name]) acc[b.party_name] = [];
-    acc[b.party_name].push(b);
+    const key = b.supplier || "No Supplier";
+    if (!acc[key]) acc[key] = [];
+    acc[key].push(b);
     return acc;
   }, {} as Record<string, ExpenseBooking[]>);
 
@@ -313,7 +338,8 @@ const ExpenseBookingsTab = () => {
           {selectedBooking && (
             <form onSubmit={handleExpenseSubmit} className="space-y-4">
               <div className="space-y-2 p-3 bg-muted rounded-md text-sm">
-                <div className="flex justify-between"><span>Party:</span><span className="font-medium">{selectedBooking.party_name}</span></div>
+                <div className="flex justify-between"><span>Supplier/Party:</span><span className="font-medium">{selectedBooking.supplier || "N/A"}</span></div>
+                <div className="flex justify-between"><span>Description:</span><span className="font-medium">{selectedBooking.description}</span></div>
                 <div className="flex justify-between"><span>Amount:</span><span className="font-medium">NRs. {selectedBooking.amount.toFixed(2)}</span></div>
                 <div className="flex justify-between"><span>Category:</span><span className="font-medium">{selectedBooking.category}</span></div>
               </div>
@@ -337,17 +363,47 @@ const ExpenseBookingsTab = () => {
         <DialogContent className="max-h-[90vh] overflow-y-auto" aria-describedby={undefined}>
           <DialogHeader><DialogTitle>Edit Booking</DialogTitle></DialogHeader>
           <form onSubmit={handleUpdate} className="space-y-4">
-            <div><Label>Party Name *</Label><Input value={editFormData.partyName} onChange={(e) => setEditFormData({ ...editFormData, partyName: e.target.value })} required /></div>
-            <div><Label>Amount *</Label><Input type="number" value={editFormData.amount} onChange={(e) => setEditFormData({ ...editFormData, amount: e.target.value })} required /></div>
-            <div><Label>Category *</Label><Select value={editFormData.category} onValueChange={(v) => setEditFormData({ ...editFormData, category: v })}><SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger><SelectContent>{categories.map((c) => <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>)}</SelectContent></Select></div>
+            <div><Label>Description *</Label><Input value={editFormData.description} onChange={(e) => setEditFormData({ ...editFormData, description: e.target.value })} required /></div>
+            <div><Label>Supplier (Party Name) *</Label><Input value={editFormData.supplier} onChange={(e) => setEditFormData({ ...editFormData, supplier: e.target.value })} required /></div>
+            <div className="grid grid-cols-2 gap-4">
+              <div><Label>Amount *</Label><Input type="number" value={editFormData.amount} onChange={(e) => setEditFormData({ ...editFormData, amount: e.target.value })} required /></div>
+              <div><Label>Category *</Label><Select value={editFormData.category} onValueChange={(v) => setEditFormData({ ...editFormData, category: v })}><SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger><SelectContent>{categories.map((c) => <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>)}</SelectContent></Select></div>
+            </div>
             <div>
-              <Label>Payment Date</Label>
+              <Label>Expected Payment Date</Label>
               <TransactionDatePicker
                 selectedDate={editFormData.paymentDate}
                 onDateChange={(d) => setEditFormData({ ...editFormData, paymentDate: d })}
               />
             </div>
             <div><Label>Remarks</Label><Textarea value={editFormData.remarks} onChange={(e) => setEditFormData({ ...editFormData, remarks: e.target.value })} /></div>
+
+            <div className="border-t pt-4 mt-4 space-y-4">
+              <h3 className="font-medium text-sm">Inventory Details</h3>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="edit-is-inventory"
+                  checked={editFormData.is_inventory_purchase}
+                  onChange={(e) => setEditFormData({...editFormData, is_inventory_purchase: e.target.checked})}
+                />
+                <Label htmlFor="edit-is-inventory">Is Inventory Purchase?</Label>
+              </div>
+
+              {editFormData.is_inventory_purchase && (
+                <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2">
+                  <div className="col-span-2">
+                    <Label>Inventory Item ID (UUID)</Label>
+                    <Input value={editFormData.inventory_item_id} onChange={(e) => setEditFormData({...editFormData, inventory_item_id: e.target.value})} placeholder="UUID of inventory item" />
+                  </div>
+                  <div><Label>Quantity</Label><Input type="number" value={editFormData.quantity} onChange={(e) => setEditFormData({...editFormData, quantity: e.target.value})} /></div>
+                  <div><Label>Unit</Label><Input value={editFormData.unit} onChange={(e) => setEditFormData({...editFormData, unit: e.target.value})} /></div>
+                  <div><Label>Cost Per Unit</Label><Input type="number" value={editFormData.cost_per_unit} onChange={(e) => setEditFormData({...editFormData, cost_per_unit: e.target.value})} /></div>
+                  <div><Label>Invoice Number</Label><Input value={editFormData.invoice_number} onChange={(e) => setEditFormData({...editFormData, invoice_number: e.target.value})} /></div>
+                </div>
+              )}
+            </div>
+
             <DialogFooter><Button type="submit" className="w-full">Update Booking</Button></DialogFooter>
           </form>
         </DialogContent>
@@ -424,8 +480,9 @@ const ExpenseBookingsTab = () => {
                                     <TableCell>
                                       <div className="flex items-center gap-2">
                                         {b.is_inventory_purchase && <Package className="h-3 w-3 text-amber-600" />}
-                                        <div className="font-medium">{b.remarks || "No remarks"}</div>
+                                        <div className="font-medium">{b.description}</div>
                                       </div>
+                                      {b.remarks && <div className="text-xs text-muted-foreground italic">{b.remarks}</div>}
                                       {b.is_inventory_purchase && (
                                         <div className="text-[10px] text-muted-foreground mt-1">
                                           Qty: {b.quantity} {b.unit} @ {b.cost_per_unit}
@@ -498,7 +555,8 @@ const ExpenseBookingsTab = () => {
               <CardHeader className="pb-3"><CardTitle className="text-base">Add Booking</CardTitle></CardHeader>
               <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-4">
-                  <div><Label>Party Name *</Label><Input value={formData.partyName} onChange={(e) => setFormData({ ...formData, partyName: e.target.value })} placeholder="e.g. Supplier Name" required /></div>
+                  <div><Label>Description *</Label><Input value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} placeholder="e.g. Meat purchase" required /></div>
+                  <div><Label>Supplier (Party Name) *</Label><Input value={formData.supplier} onChange={(e) => setFormData({ ...formData, supplier: e.target.value })} placeholder="e.g. ABC Meat Shop" required /></div>
                   <div><Label>Amount *</Label><Input type="number" value={formData.amount} onChange={(e) => setFormData({ ...formData, amount: e.target.value })} placeholder="0.00" required /></div>
                   <div><Label>Category *</Label><Select value={formData.category} onValueChange={(v) => setFormData({ ...formData, category: v })}><SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger><SelectContent>{categories.map((c) => <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>)}</SelectContent></Select></div>
                   <div>

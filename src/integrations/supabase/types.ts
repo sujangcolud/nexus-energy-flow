@@ -603,30 +603,60 @@ export type Database = {
           category: string
           created_at: string | null
           id: string
-          party_name: string
+          description: string
           payment_date: string | null
           remarks: string | null
           user_id: string | null
+          is_inventory_purchase: boolean | null
+          inventory_item_id: string | null
+          quantity: number | null
+          unit: string | null
+          cost_per_unit: number | null
+          supplier: string | null
+          invoice_number: string | null
+          payment_mode: string | null
+          booking_date: string | null
+          status: string | null
         }
         Insert: {
           amount: number
           category: string
           created_at?: string | null
           id?: string
-          party_name: string
+          description: string
           payment_date?: string | null
           remarks?: string | null
           user_id?: string | null
+          is_inventory_purchase?: boolean | null
+          inventory_item_id?: string | null
+          quantity?: number | null
+          unit?: string | null
+          cost_per_unit?: number | null
+          supplier?: string | null
+          invoice_number?: string | null
+          payment_mode?: string | null
+          booking_date?: string | null
+          status?: string | null
         }
         Update: {
           amount?: number
           category?: string
           created_at?: string | null
           id?: string
-          party_name?: string
+          description?: string
           payment_date?: string | null
           remarks?: string | null
           user_id?: string | null
+          is_inventory_purchase?: boolean | null
+          inventory_item_id?: string | null
+          quantity?: number | null
+          unit?: string | null
+          cost_per_unit?: number | null
+          supplier?: string | null
+          invoice_number?: string | null
+          payment_mode?: string | null
+          booking_date?: string | null
+          status?: string | null
         }
         Relationships: []
       }
