@@ -26,6 +26,7 @@ import { format } from "date-fns";
 interface Row {
   expense_date: string;
   description: string;
+  supplier: string;
   amount: number;
   category: string;
   payment_mode: string;
@@ -75,6 +76,7 @@ const paymentModes = [
 const blankRow = (): Row => ({
   expense_date: format(new Date(), "yyyy-MM-dd"),
   description: "",
+  supplier: "",
   amount: 0,
   category: "",
   payment_mode: "Cash",
@@ -134,9 +136,10 @@ const MultiExpenseEntry = ({ categories, inventory, onComplete }: Props) => {
           p_quantity: r.is_inventory_purchase ? Number(r.quantity) : null,
           p_unit: r.is_inventory_purchase ? r.unit : null,
           p_cost_per_unit: r.is_inventory_purchase ? Number(r.unit_cost) : null,
-          p_supplier: null,
+          p_supplier: r.supplier || null,
           p_invoice_number: null,
-          p_manual_conversion_factor: r.is_inventory_purchase ? r.factor : null
+          p_manual_conversion_factor: r.is_inventory_purchase ? r.factor : null,
+          p_is_credit: r.payment_mode === "Credit" || r.payment_mode === "On Credit"
         });
 
         if (error) {
@@ -185,10 +188,11 @@ const MultiExpenseEntry = ({ categories, inventory, onComplete }: Props) => {
         </DialogHeader>
 
         <div className="space-y-4">
-          <div className="hidden lg:grid grid-cols-12 gap-2 px-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+          <div className="hidden lg:grid grid-cols-[repeat(13,minmax(0,1fr))] gap-2 px-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
             <div className="col-span-1">Date</div>
             <div className="col-span-1">Inv?</div>
-            <div className="col-span-2">Item / Description</div>
+            <div className="col-span-2">Description</div>
+            <div className="col-span-1">Supplier</div>
             <div className="col-span-1">Qty</div>
             <div className="col-span-1">Unit</div>
             <div className="col-span-1">Factor</div>
@@ -209,7 +213,7 @@ const MultiExpenseEntry = ({ categories, inventory, onComplete }: Props) => {
             return (
               <div
                 key={i}
-                className="grid grid-cols-1 lg:grid-cols-12 gap-2 items-end p-3 border rounded-md bg-muted/30 relative"
+                className="grid grid-cols-1 lg:grid-cols-[repeat(13,minmax(0,1fr))] gap-2 items-end p-3 border rounded-md bg-muted/30 relative"
               >
                 <div className="lg:col-span-1">
                   <Label className="text-[10px] lg:hidden">Date</Label>
@@ -234,39 +238,45 @@ const MultiExpenseEntry = ({ categories, inventory, onComplete }: Props) => {
                 </div>
 
                 <div className="lg:col-span-2">
-                  <Label className="text-[10px] lg:hidden">
-                    {r.is_inventory_purchase ? "Inventory Item" : "Description"}
-                  </Label>
+                  <Label className="text-[10px] lg:hidden">Description</Label>
                   {r.is_inventory_purchase ? (
-                    <Select
-                      value={r.inventory_item_id}
-                      onValueChange={(v) => {
-                        const item = inventory.find(it => it.id === v);
-                        if (item) {
-                          const amount = (r.quantity * (item.unit_cost || 0)).toFixed(2);
-                          updateRow(i, {
-                            inventory_item_id: v,
-                            description: `Purchase: ${item.item_name}`,
-                            category: item.category || r.category,
-                            unit_cost: item.unit_cost || 0,
-                            unit: item.base_unit,
-                            factor: 1,
-                            amount: parseFloat(amount) > 0 ? parseFloat(amount) : r.amount
-                          });
-                        }
-                      }}
-                    >
-                      <SelectTrigger className="h-9 text-xs">
-                        <SelectValue placeholder="Select item" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {inventory.map((item) => (
-                          <SelectItem key={item.id} value={item.id}>
-                              {item.item_name} ({(item.current_stock_base ?? 0).toFixed(2)} {item.base_unit} in stock)
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <div className="space-y-1">
+                      <Select
+                        value={r.inventory_item_id}
+                        onValueChange={(v) => {
+                          const item = inventory.find(it => it.id === v);
+                          if (item) {
+                            const amount = (r.quantity * (item.unit_cost || 0)).toFixed(2);
+                            updateRow(i, {
+                              inventory_item_id: v,
+                              description: `Purchase: ${item.item_name}`,
+                              category: item.category || r.category,
+                              unit_cost: item.unit_cost || 0,
+                              unit: item.base_unit,
+                              factor: 1,
+                              amount: parseFloat(amount) > 0 ? parseFloat(amount) : r.amount
+                            });
+                          }
+                        }}
+                      >
+                        <SelectTrigger className="h-7 text-[10px]">
+                          <SelectValue placeholder="Select item" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {inventory.map((item) => (
+                            <SelectItem key={item.id} value={item.id}>
+                                {item.item_name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Input
+                        value={r.description}
+                        onChange={(e) => updateRow(i, { description: e.target.value })}
+                        placeholder="Description"
+                        className="h-7 text-[10px]"
+                      />
+                    </div>
                   ) : (
                     <Input
                       value={r.description}
@@ -275,6 +285,16 @@ const MultiExpenseEntry = ({ categories, inventory, onComplete }: Props) => {
                       className="h-9 text-xs"
                     />
                   )}
+                </div>
+
+                <div className="lg:col-span-1">
+                  <Label className="text-[10px] lg:hidden">Supplier</Label>
+                  <Input
+                    value={r.supplier}
+                    onChange={(e) => updateRow(i, { supplier: e.target.value })}
+                    placeholder="Supplier"
+                    className="h-9 text-xs"
+                  />
                 </div>
 
                 <div className="lg:col-span-1">
