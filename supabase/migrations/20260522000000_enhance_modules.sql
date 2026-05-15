@@ -302,7 +302,8 @@ BEGIN
         total_withdrawals = EXCLUDED.total_withdrawals, total_savings = EXCLUDED.total_savings,
         updated_at = NOW();
 END;
-$$;
+CREATE OR REPLACE FUNCTION public.trigger_update_daily_summary()
+RETURNS trigger
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
