@@ -201,23 +201,23 @@ const MultiExpenseEntry = ({ categories, inventory, onComplete }: Props) => {
             return (
               <div
                 key={i}
-                className="flex flex-col gap-4 p-4 rounded-2xl border border-slate-100 bg-slate-50/50 relative overflow-hidden"
+                className="flex flex-col gap-4 p-4 rounded-2xl border border-border bg-muted/50 relative overflow-hidden"
               >
                 <div className="absolute top-0 left-0 w-1 h-full bg-primary/20" />
 
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-3 md:items-end">
                   <div className="md:col-span-2">
-                    <Label className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5 block">Date</Label>
+                    <Label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground mb-1.5 block">Date</Label>
                     <Input
                       type="date"
                       value={r.expense_date}
-                      className="h-11 rounded-xl font-bold border-slate-200"
+                      className="h-11 rounded-xl font-bold border-border"
                       onChange={(e) => updateRow(i, { expense_date: e.target.value })}
                     />
                   </div>
 
                   <div className="md:col-span-3">
-                    <Label className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5 block">Description</Label>
+                    <Label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground mb-1.5 block">Description</Label>
                     {r.is_inventory_purchase ? (
                       <div className="space-y-2">
                         <Select
@@ -238,7 +238,7 @@ const MultiExpenseEntry = ({ categories, inventory, onComplete }: Props) => {
                             }
                           }}
                         >
-                          <SelectTrigger className="h-11 rounded-xl font-bold border-slate-200 bg-white">
+                          <SelectTrigger className="h-11 rounded-xl font-bold border-border bg-white">
                             <SelectValue placeholder="Select inventory item" />
                           </SelectTrigger>
                           <SelectContent className="rounded-xl shadow-2xl">
@@ -251,7 +251,7 @@ const MultiExpenseEntry = ({ categories, inventory, onComplete }: Props) => {
                         </Select>
                         <Input
                           value={r.description}
-                          className="h-9 rounded-lg font-medium border-slate-200"
+                          className="h-9 rounded-lg font-medium border-border"
                           onChange={(e) => updateRow(i, { description: e.target.value })}
                           placeholder="Detail description..."
                         />
@@ -259,7 +259,7 @@ const MultiExpenseEntry = ({ categories, inventory, onComplete }: Props) => {
                     ) : (
                       <Input
                         value={r.description}
-                        className="h-11 rounded-xl font-bold border-slate-200"
+                        className="h-11 rounded-xl font-bold border-border"
                         onChange={(e) => updateRow(i, { description: e.target.value })}
                         placeholder="What was this expense for?"
                       />
@@ -267,22 +267,22 @@ const MultiExpenseEntry = ({ categories, inventory, onComplete }: Props) => {
                   </div>
 
                   <div className="md:col-span-2">
-                    <Label className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5 block">Supplier / Party</Label>
+                    <Label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground mb-1.5 block">Supplier / Party</Label>
                     <Input
                       value={r.supplier}
-                      className="h-11 rounded-xl font-bold border-slate-200"
+                      className="h-11 rounded-xl font-bold border-border"
                       onChange={(e) => updateRow(i, { supplier: e.target.value })}
                       placeholder="Vendor name..."
                     />
                   </div>
 
                   <div className="md:col-span-2">
-                    <Label className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5 block">Category</Label>
+                    <Label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground mb-1.5 block">Category</Label>
                     <Select
                       value={r.category}
                       onValueChange={(v) => updateRow(i, { category: v })}
                     >
-                      <SelectTrigger className="h-11 rounded-xl font-bold border-slate-200 bg-white">
+                      <SelectTrigger className="h-11 rounded-xl font-bold border-border bg-white">
                         <SelectValue placeholder="Category" />
                       </SelectTrigger>
                       <SelectContent className="rounded-xl shadow-2xl">
@@ -296,12 +296,12 @@ const MultiExpenseEntry = ({ categories, inventory, onComplete }: Props) => {
                   </div>
 
                   <div className="md:col-span-2">
-                    <Label className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5 block">Payment Mode</Label>
+                    <Label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground mb-1.5 block">Payment Mode</Label>
                     <Select
                       value={r.payment_mode}
                       onValueChange={(v) => updateRow(i, { payment_mode: v })}
                     >
-                      <SelectTrigger className="h-11 rounded-xl font-bold border-slate-200 bg-white">
+                      <SelectTrigger className="h-11 rounded-xl font-bold border-border bg-white">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="rounded-xl shadow-2xl">
@@ -316,7 +316,7 @@ const MultiExpenseEntry = ({ categories, inventory, onComplete }: Props) => {
 
                   <div className="md:col-span-1 flex items-center justify-center h-11">
                     <div className="flex flex-col items-center">
-                      <Label className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1 block">Stock?</Label>
+                      <Label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground mb-1 block">Stock?</Label>
                       <input
                         type="checkbox"
                         checked={r.is_inventory_purchase}
@@ -330,11 +330,11 @@ const MultiExpenseEntry = ({ categories, inventory, onComplete }: Props) => {
                 {r.is_inventory_purchase && (
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-3 bg-white/50 rounded-xl border border-white">
                     <div>
-                      <Label className="text-[9px] font-black uppercase tracking-wider text-slate-400 mb-1 block">Quantity</Label>
+                      <Label className="text-[9px] font-black uppercase tracking-wider text-muted-foreground mb-1 block">Quantity</Label>
                       <Input
                         type="number"
                         value={r.quantity || ""}
-                        className="h-10 rounded-lg font-bold border-slate-200"
+                        className="h-10 rounded-lg font-bold border-border"
                         onChange={(e) => {
                           const q = parseFloat(e.target.value) || 0;
                           const amount = (q * r.unit_cost).toFixed(2);
@@ -346,7 +346,7 @@ const MultiExpenseEntry = ({ categories, inventory, onComplete }: Props) => {
                       />
                     </div>
                     <div>
-                      <Label className="text-[9px] font-black uppercase tracking-wider text-slate-400 mb-1 block">Unit</Label>
+                      <Label className="text-[9px] font-black uppercase tracking-wider text-muted-foreground mb-1 block">Unit</Label>
                       <Select
                         value={r.unit}
                         onValueChange={(v) => {
@@ -361,7 +361,7 @@ const MultiExpenseEntry = ({ categories, inventory, onComplete }: Props) => {
                           updateRow(i, { unit: v, factor: f });
                         }}
                       >
-                        <SelectTrigger className="h-10 rounded-lg font-bold border-slate-200 bg-white">
+                        <SelectTrigger className="h-10 rounded-lg font-bold border-border bg-white">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent className="rounded-lg">
@@ -372,11 +372,11 @@ const MultiExpenseEntry = ({ categories, inventory, onComplete }: Props) => {
                       </Select>
                     </div>
                     <div>
-                      <Label className="text-[9px] font-black uppercase tracking-wider text-slate-400 mb-1 block">Rate (रु)</Label>
+                      <Label className="text-[9px] font-black uppercase tracking-wider text-muted-foreground mb-1 block">Rate (रु)</Label>
                       <Input
                         type="number"
                         value={r.unit_cost || ""}
-                        className="h-10 rounded-lg font-bold border-slate-200"
+                        className="h-10 rounded-lg font-bold border-border"
                         onChange={(e) => {
                           const rate = parseFloat(e.target.value) || 0;
                           const amount = (r.quantity * rate).toFixed(2);
@@ -388,11 +388,11 @@ const MultiExpenseEntry = ({ categories, inventory, onComplete }: Props) => {
                       />
                     </div>
                     <div>
-                      <Label className="text-[9px] font-black uppercase tracking-wider text-slate-400 mb-1 block">Conversion Factor</Label>
+                      <Label className="text-[9px] font-black uppercase tracking-wider text-muted-foreground mb-1 block">Conversion Factor</Label>
                       <Input
                         type="number"
                         value={r.factor}
-                        className="h-10 rounded-lg font-bold border-slate-200 bg-slate-50"
+                        className="h-10 rounded-lg font-bold border-border bg-slate-50"
                         onChange={(e) => updateRow(i, { factor: parseFloat(e.target.value) || 1 })}
                       />
                     </div>
@@ -401,10 +401,10 @@ const MultiExpenseEntry = ({ categories, inventory, onComplete }: Props) => {
 
                 <div className="flex items-center justify-between mt-1">
                   <div className="flex-1 flex items-center gap-3">
-                    <div className="bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">
-                      <Label className="text-[9px] font-black uppercase text-slate-400 block mb-0.5">Total Amount</Label>
+                    <div className="bg-muted px-3 py-1.5 rounded-lg border border-border">
+                      <Label className="text-[9px] font-black uppercase text-muted-foreground block mb-0.5">Total Amount</Label>
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-slate-400">रु</span>
+                        <span className="text-xs font-bold text-muted-foreground">रु</span>
                         <Input
                           type="number"
                           value={r.amount || ""}
@@ -431,16 +431,16 @@ const MultiExpenseEntry = ({ categories, inventory, onComplete }: Props) => {
           <Button
             variant="secondary"
             onClick={addRow}
-            className="w-full h-12 rounded-2xl font-black uppercase text-xs tracking-widest bg-slate-100 hover:bg-slate-200 text-slate-600"
+            className="w-full h-12 rounded-2xl font-black uppercase text-xs tracking-widest bg-muted hover:bg-slate-200 text-muted-foreground"
           >
             <Plus className="h-4 w-4 mr-2" />
             Add Another Record
           </Button>
         </div>
 
-        <DialogFooter className="mt-8 flex flex-col sm:flex-row items-center gap-4 border-t border-slate-100 pt-6">
+        <DialogFooter className="mt-8 flex flex-col sm:flex-row items-center gap-4 border-t border-border pt-6">
           <div className="flex-1 text-center sm:text-left">
-            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Batch Total Amount</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Batch Total Amount</p>
             <div className="text-2xl font-black text-primary">
               रु {grandTotal.toLocaleString()}
             </div>
@@ -449,7 +449,7 @@ const MultiExpenseEntry = ({ categories, inventory, onComplete }: Props) => {
             <Button
               variant="ghost"
               onClick={() => setOpen(false)}
-              className="rounded-xl font-bold h-12 text-slate-500"
+              className="rounded-xl font-bold h-12 text-muted-foreground"
             >
               Cancel
             </Button>

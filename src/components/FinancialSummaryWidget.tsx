@@ -461,7 +461,7 @@ const FinancialSummaryWidget: React.FC<FinancialSummaryWidgetProps> = ({
 
       {/* Today's Summary Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <Card className="rounded-3xl border-none shadow-sm bg-emerald-500 text-white overflow-hidden">
+        <Card className="rounded-3xl border-none shadow-sm bg-success text-success-foreground overflow-hidden">
           <CardHeader className="p-4 pb-0">
             <CardTitle className="text-[10px] font-black uppercase tracking-widest opacity-80 flex items-center gap-1.5">
               <TrendingUp className="h-3 w-3" />
@@ -481,7 +481,7 @@ const FinancialSummaryWidget: React.FC<FinancialSummaryWidgetProps> = ({
           </CardContent>
         </Card>
 
-        <Card className="rounded-3xl border-none shadow-sm bg-rose-500 text-white overflow-hidden">
+        <Card className="rounded-3xl border-none shadow-sm bg-destructive text-destructive-foreground overflow-hidden">
           <CardHeader className="p-4 pb-0">
             <CardTitle className="text-[10px] font-black uppercase tracking-widest opacity-80 flex items-center gap-1.5">
               <TrendingDown className="h-3 w-3" />
@@ -500,7 +500,7 @@ const FinancialSummaryWidget: React.FC<FinancialSummaryWidgetProps> = ({
           </CardContent>
         </Card>
 
-        <Card className="rounded-3xl border-none shadow-sm bg-slate-900 text-white overflow-hidden">
+        <Card className="rounded-3xl border-none shadow-sm bg-primary text-primary-foreground overflow-hidden">
           <CardHeader className="p-4 pb-0">
             <CardTitle className="text-[10px] font-black uppercase tracking-widest opacity-80 flex items-center gap-1.5">
               <Wallet className="h-3 w-3" />
@@ -519,7 +519,7 @@ const FinancialSummaryWidget: React.FC<FinancialSummaryWidgetProps> = ({
           </CardContent>
         </Card>
 
-        <Card className="rounded-3xl border-none shadow-sm bg-violet-600 text-white overflow-hidden">
+        <Card className="rounded-3xl border-none shadow-sm bg-accent text-accent-foreground overflow-hidden">
           <CardHeader className="p-4 pb-0">
             <CardTitle className="text-[10px] font-black uppercase tracking-widest opacity-80 flex items-center gap-1.5">
               <PiggyBank className="h-3 w-3" />
@@ -539,9 +539,9 @@ const FinancialSummaryWidget: React.FC<FinancialSummaryWidgetProps> = ({
 
       {/* Monthly Summary */}
       {monthSummary && (
-        <Card className="rounded-3xl border-none shadow-2xl bg-white overflow-hidden">
-          <CardHeader className="bg-slate-50/50 border-b border-slate-100 p-4">
-            <CardTitle className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500">
+        <Card className="rounded-3xl border-none shadow-2xl bg-card overflow-hidden">
+          <CardHeader className="bg-muted/50 border-b border-border p-4">
+            <CardTitle className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
               <Calendar className="h-3 w-3" />
               Monthly Overview
             </CardTitle>
@@ -549,32 +549,32 @@ const FinancialSummaryWidget: React.FC<FinancialSummaryWidgetProps> = ({
           <CardContent className="p-4">
             <div className="grid grid-cols-3 md:grid-cols-5 gap-4">
               <div>
-                <div className="text-[9px] font-bold text-slate-400 uppercase mb-1">Income</div>
-                <div className="text-sm font-black text-emerald-600 truncate">
+                <div className="text-[9px] font-bold text-muted-foreground uppercase mb-1">Income</div>
+                <div className="text-sm font-black text-success truncate">
                   रु {monthSummary.total_income.toLocaleString()}
                 </div>
               </div>
               <div>
-                <div className="text-[9px] font-bold text-slate-400 uppercase mb-1">Expense</div>
-                <div className="text-sm font-black text-rose-600 truncate">
+                <div className="text-[9px] font-bold text-muted-foreground uppercase mb-1">Expense</div>
+                <div className="text-sm font-black text-destructive truncate">
                   रु {monthSummary.total_expenses.toLocaleString()}
                 </div>
               </div>
               <div className="hidden md:block">
-                <div className="text-[9px] font-bold text-slate-400 uppercase mb-1">Deposit</div>
-                <div className="text-sm font-black text-blue-600 truncate">
+                <div className="text-[9px] font-bold text-muted-foreground uppercase mb-1">Deposit</div>
+                <div className="text-sm font-black text-primary truncate">
                   रु {monthSummary.total_deposits.toLocaleString()}
                 </div>
               </div>
               <div className="hidden md:block">
-                <div className="text-[9px] font-bold text-slate-400 uppercase mb-1">Withdraw</div>
-                <div className="text-sm font-black text-orange-600 truncate">
+                <div className="text-[9px] font-bold text-muted-foreground uppercase mb-1">Withdraw</div>
+                <div className="text-sm font-black text-accent truncate">
                   रु {monthSummary.total_withdrawals.toLocaleString()}
                 </div>
               </div>
               <div>
-                <div className="text-[9px] font-bold text-slate-400 uppercase mb-1">Net</div>
-                <div className={cn("text-sm font-black truncate", monthSummary.net_profit >= 0 ? "text-emerald-600" : "text-rose-600")}>
+                <div className="text-[9px] font-bold text-muted-foreground uppercase mb-1">Net</div>
+                <div className={cn("text-sm font-black truncate", monthSummary.net_profit >= 0 ? "text-success" : "text-destructive")}>
                   रु {monthSummary.net_profit.toLocaleString()}
                 </div>
               </div>
@@ -634,19 +634,20 @@ const FinancialSummaryWidget: React.FC<FinancialSummaryWidgetProps> = ({
 
       {/* No Data Warning */}
       {!todaySummary && !loading && (
-        <Card className="bg-yellow-50 border-yellow-200">
+        <Card className="bg-warning/5 border-warning/10">
           <CardContent className="flex items-center gap-3 p-6">
-            <AlertCircle className="h-6 w-6 text-yellow-600" />
+            <AlertCircle className="h-6 w-6 text-warning" />
             <div>
-              <p className="font-medium text-yellow-800">
+              <p className="font-medium text-foreground">
                 No daily summary data available
               </p>
-              <p className="text-sm text-yellow-600">
+              <p className="text-sm text-muted-foreground">
                 Please perform daily closing to generate summary data. All
                 analytics are based on daily_summary table for consistency.
               </p>
               <Button
                 size="sm"
+                variant="outline"
                 className="mt-2"
                 onClick={refreshSummary}
                 disabled={refreshing}
@@ -662,14 +663,14 @@ const FinancialSummaryWidget: React.FC<FinancialSummaryWidgetProps> = ({
       )}
 
       {/* Data Source Badge */}
-      <Card className="bg-blue-50 border-blue-200">
+      <Card className="bg-primary/5 border-primary/10">
         <CardContent className="p-4">
           <div className="flex items-center gap-2 text-sm">
-            <Database className="h-4 w-4 text-blue-600" />
-            <span className="text-blue-700 font-medium">
+            <Database className="h-4 w-4 text-primary" />
+            <span className="text-primary font-medium">
               Data Source: daily_summary table
             </span>
-            <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+            <Badge variant="secondary" className="bg-primary/10 text-primary">
               Consistent Reports
             </Badge>
           </div>

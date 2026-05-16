@@ -121,47 +121,47 @@ const MultiSavingsEntry = ({ onComplete }: Props) => {
           {rows.map((r, i) => (
             <div
               key={i}
-              className="flex flex-col gap-4 p-4 rounded-2xl border border-slate-100 bg-slate-50/50 relative overflow-hidden"
+              className="flex flex-col gap-4 p-4 rounded-2xl border border-border bg-muted/50 relative overflow-hidden"
             >
               <div className="absolute top-0 left-0 w-1 h-full bg-primary/20" />
 
               <div className="grid grid-cols-1 md:grid-cols-12 gap-3 md:items-end">
                 <div className="md:col-span-2">
-                  <Label className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5 block">Date</Label>
+                  <Label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground mb-1.5 block">Date</Label>
                   <Input
                     type="date"
                     value={r.contribution_date}
-                    className="h-11 rounded-xl font-bold border-slate-200"
+                    className="h-11 rounded-xl font-bold border-border"
                     onChange={(e) => updateRow(i, { contribution_date: e.target.value })}
                   />
                 </div>
                 <div className="md:col-span-2">
-                  <Label className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5 block">Amount (रु)</Label>
+                  <Label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground mb-1.5 block">Amount (रु)</Label>
                   <Input
                     type="number"
                     value={r.contribution_amount}
-                    className="h-11 rounded-xl font-bold border-slate-200"
+                    className="h-11 rounded-xl font-bold border-border"
                     onChange={(e) =>
                       updateRow(i, { contribution_amount: parseFloat(e.target.value) || 0 })
                     }
                   />
                 </div>
                 <div className="md:col-span-2">
-                  <Label className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5 block">Member ID</Label>
+                  <Label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground mb-1.5 block">Member ID</Label>
                   <Input
                     value={r.member_id}
-                    className="h-11 rounded-xl font-bold border-slate-200"
+                    className="h-11 rounded-xl font-bold border-border"
                     onChange={(e) => updateRow(i, { member_id: e.target.value })}
                     placeholder="M-001..."
                   />
                 </div>
                 <div className="md:col-span-2">
-                  <Label className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5 block">Cycle</Label>
+                  <Label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground mb-1.5 block">Cycle</Label>
                   <Select
                     value={r.cycle_period}
                     onValueChange={(v) => updateRow(i, { cycle_period: v })}
                   >
-                    <SelectTrigger className="h-11 rounded-xl font-bold border-slate-200 bg-white">
+                    <SelectTrigger className="h-11 rounded-xl font-bold border-border bg-white">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="rounded-xl shadow-2xl">
@@ -174,12 +174,12 @@ const MultiSavingsEntry = ({ onComplete }: Props) => {
                   </Select>
                 </div>
                 <div className="md:col-span-2">
-                  <Label className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5 block">Payment</Label>
+                  <Label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground mb-1.5 block">Payment</Label>
                   <Select
                     value={r.payment_mode}
                     onValueChange={(v) => updateRow(i, { payment_mode: v })}
                   >
-                    <SelectTrigger className="h-11 rounded-xl font-bold border-slate-200 bg-white">
+                    <SelectTrigger className="h-11 rounded-xl font-bold border-border bg-white">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="rounded-xl shadow-2xl">
@@ -192,12 +192,12 @@ const MultiSavingsEntry = ({ onComplete }: Props) => {
                   </Select>
                 </div>
                 <div className="md:col-span-1">
-                  <Label className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5 block text-center">To</Label>
+                  <Label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground mb-1.5 block text-center">To</Label>
                   <Select
                     value={r.savings_to}
                     onValueChange={(v) => updateRow(i, { savings_to: v })}
                   >
-                    <SelectTrigger className="h-11 rounded-xl font-bold border-slate-200 bg-white">
+                    <SelectTrigger className="h-11 rounded-xl font-bold border-border bg-white">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="rounded-xl shadow-2xl">
@@ -227,16 +227,16 @@ const MultiSavingsEntry = ({ onComplete }: Props) => {
           <Button
             variant="secondary"
             onClick={addRow}
-            className="w-full h-12 rounded-2xl font-black uppercase text-xs tracking-widest bg-slate-100 hover:bg-slate-200 text-slate-600"
+            className="w-full h-12 rounded-2xl font-black uppercase text-xs tracking-widest bg-muted hover:bg-slate-200 text-muted-foreground"
           >
             <Plus className="h-4 w-4 mr-2" />
             Add Another Record
           </Button>
         </div>
 
-        <DialogFooter className="mt-8 flex flex-col sm:flex-row items-center gap-4 border-t border-slate-100 pt-6">
+        <DialogFooter className="mt-8 flex flex-col sm:flex-row items-center gap-4 border-t border-border pt-6">
           <div className="flex-1 text-center sm:text-left">
-            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Batch Total Savings</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Batch Total Savings</p>
             <div className="text-2xl font-black text-primary">
               रु {grandTotal.toLocaleString()}
             </div>
@@ -245,7 +245,7 @@ const MultiSavingsEntry = ({ onComplete }: Props) => {
             <Button
               variant="ghost"
               onClick={() => setOpen(false)}
-              className="rounded-xl font-bold h-12 text-slate-500"
+              className="rounded-xl font-bold h-12 text-muted-foreground"
             >
               Cancel
             </Button>
