@@ -174,38 +174,25 @@ const MultiExpenseEntry = ({ categories, inventory, onComplete }: Props) => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-2">
+        <Button variant="outline" size="sm" className="gap-2 rounded-xl font-bold h-10 border-primary/20 text-primary hover:bg-primary/5">
           <Layers className="h-4 w-4" />
-          Bulk Add
+          Bulk Entry
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-7xl max-h-[90vh] overflow-y-auto" aria-describedby={undefined}>
-        <DialogHeader>
-          <DialogTitle>Add Multiple Expenses</DialogTitle>
-          <p className="text-sm text-muted-foreground">
-            Enter multiple expenses across different dates in one go.
+      <DialogContent className="max-w-7xl w-[95vw] max-h-[95vh] overflow-y-auto p-4 md:p-6 rounded-3xl" aria-describedby={undefined}>
+        <DialogHeader className="mb-4">
+          <DialogTitle className="text-xl md:text-2xl font-black text-primary flex items-center gap-2">
+            <Receipt className="h-6 w-6" />
+            Bulk Expenses
+          </DialogTitle>
+          <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1">
+            Batch process multiple expense records & inventory purchases
           </p>
         </DialogHeader>
 
         <div className="space-y-4">
-          <div className="hidden lg:grid grid-cols-[repeat(13,minmax(0,1fr))] gap-2 px-3 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-            <div className="col-span-1">Date</div>
-            <div className="col-span-1">Inv?</div>
-            <div className="col-span-2">Description</div>
-            <div className="col-span-1">Supplier</div>
-            <div className="col-span-1">Qty</div>
-            <div className="col-span-1">Unit</div>
-            <div className="col-span-1">Factor</div>
-            <div className="col-span-1">Rate</div>
-            <div className="col-span-1">Amount</div>
-            <div className="col-span-1">Category</div>
-            <div className="col-span-1">Payment</div>
-            <div className="col-span-1"></div>
-          </div>
-
           {rows.map((r, i) => {
             const item = inventory.find(it => it.id === r.inventory_item_id);
-            // Deduplicate and filter units
             const units = Array.from(new Set(
               item ? [item.base_unit, ...(item.unit_conversions?.map(u => u.unit_name) || [])] : []
             )).filter(Boolean);
@@ -213,247 +200,271 @@ const MultiExpenseEntry = ({ categories, inventory, onComplete }: Props) => {
             return (
               <div
                 key={i}
-                className="grid grid-cols-1 lg:grid-cols-[repeat(13,minmax(0,1fr))] gap-2 items-end p-3 border rounded-md bg-muted/30 relative"
+                className="flex flex-col gap-4 p-4 rounded-2xl border border-slate-100 bg-slate-50/50 relative overflow-hidden"
               >
-                <div className="lg:col-span-1">
-                  <Label className="text-[10px] lg:hidden">Date</Label>
-                  <Input
-                    type="date"
-                    value={r.expense_date}
-                    onChange={(e) => updateRow(i, { expense_date: e.target.value })}
-                    className="h-9 text-xs"
-                  />
-                </div>
+                <div className="absolute top-0 left-0 w-1 h-full bg-primary/20" />
 
-                <div className="lg:col-span-1 flex items-center justify-center h-9">
-                  <div className="flex flex-col items-center">
-                    <Label className="text-[10px] lg:hidden mb-1">Inv?</Label>
-                    <input
-                      type="checkbox"
-                      checked={r.is_inventory_purchase}
-                      onChange={(e) => updateRow(i, { is_inventory_purchase: e.target.checked })}
-                      className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-3 md:items-end">
+                  <div className="md:col-span-2">
+                    <Label className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5 block">Date</Label>
+                    <Input
+                      type="date"
+                      value={r.expense_date}
+                      className="h-11 rounded-xl font-bold border-slate-200"
+                      onChange={(e) => updateRow(i, { expense_date: e.target.value })}
                     />
+                  </div>
+
+                  <div className="md:col-span-3">
+                    <Label className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5 block">Description</Label>
+                    {r.is_inventory_purchase ? (
+                      <div className="space-y-2">
+                        <Select
+                          value={r.inventory_item_id}
+                          onValueChange={(v) => {
+                            const item = inventory.find(it => it.id === v);
+                            if (item) {
+                              const amount = (r.quantity * (item.unit_cost || 0)).toFixed(2);
+                              updateRow(i, {
+                                inventory_item_id: v,
+                                description: `Purchase: ${item.item_name}`,
+                                category: item.category || r.category,
+                                unit_cost: item.unit_cost || 0,
+                                unit: item.base_unit,
+                                factor: 1,
+                                amount: parseFloat(amount) > 0 ? parseFloat(amount) : r.amount
+                              });
+                            }
+                          }}
+                        >
+                          <SelectTrigger className="h-11 rounded-xl font-bold border-slate-200 bg-white">
+                            <SelectValue placeholder="Select inventory item" />
+                          </SelectTrigger>
+                          <SelectContent className="rounded-xl shadow-2xl">
+                            {inventory.map((item) => (
+                              <SelectItem key={item.id} value={item.id} className="font-bold">
+                                  {item.item_name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Input
+                          value={r.description}
+                          className="h-9 rounded-lg font-medium border-slate-200"
+                          onChange={(e) => updateRow(i, { description: e.target.value })}
+                          placeholder="Detail description..."
+                        />
+                      </div>
+                    ) : (
+                      <Input
+                        value={r.description}
+                        className="h-11 rounded-xl font-bold border-slate-200"
+                        onChange={(e) => updateRow(i, { description: e.target.value })}
+                        placeholder="What was this expense for?"
+                      />
+                    )}
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <Label className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5 block">Supplier / Party</Label>
+                    <Input
+                      value={r.supplier}
+                      className="h-11 rounded-xl font-bold border-slate-200"
+                      onChange={(e) => updateRow(i, { supplier: e.target.value })}
+                      placeholder="Vendor name..."
+                    />
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <Label className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5 block">Category</Label>
+                    <Select
+                      value={r.category}
+                      onValueChange={(v) => updateRow(i, { category: v })}
+                    >
+                      <SelectTrigger className="h-11 rounded-xl font-bold border-slate-200 bg-white">
+                        <SelectValue placeholder="Category" />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-xl shadow-2xl">
+                        {categories.map((c) => (
+                          <SelectItem key={c.id} value={c.name} className="font-bold">
+                            {c.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <Label className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5 block">Payment Mode</Label>
+                    <Select
+                      value={r.payment_mode}
+                      onValueChange={(v) => updateRow(i, { payment_mode: v })}
+                    >
+                      <SelectTrigger className="h-11 rounded-xl font-bold border-slate-200 bg-white">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-xl shadow-2xl">
+                        {paymentModes.map((p) => (
+                          <SelectItem key={p} value={p} className="font-bold">
+                            {p}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="md:col-span-1 flex items-center justify-center h-11">
+                    <div className="flex flex-col items-center">
+                      <Label className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1 block">Stock?</Label>
+                      <input
+                        type="checkbox"
+                        checked={r.is_inventory_purchase}
+                        onChange={(e) => updateRow(i, { is_inventory_purchase: e.target.checked })}
+                        className="h-5 w-5 rounded-md border-slate-300 text-primary focus:ring-primary"
+                      />
+                    </div>
                   </div>
                 </div>
 
-                <div className="lg:col-span-2">
-                  <Label className="text-[10px] lg:hidden">Description</Label>
-                  {r.is_inventory_purchase ? (
-                    <div className="space-y-1">
+                {r.is_inventory_purchase && (
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-3 bg-white/50 rounded-xl border border-white">
+                    <div>
+                      <Label className="text-[9px] font-black uppercase tracking-wider text-slate-400 mb-1 block">Quantity</Label>
+                      <Input
+                        type="number"
+                        value={r.quantity || ""}
+                        className="h-10 rounded-lg font-bold border-slate-200"
+                        onChange={(e) => {
+                          const q = parseFloat(e.target.value) || 0;
+                          const amount = (q * r.unit_cost).toFixed(2);
+                          updateRow(i, {
+                            quantity: q,
+                            amount: parseFloat(amount) > 0 ? parseFloat(amount) : r.amount
+                          });
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-[9px] font-black uppercase tracking-wider text-slate-400 mb-1 block">Unit</Label>
                       <Select
-                        value={r.inventory_item_id}
+                        value={r.unit}
                         onValueChange={(v) => {
-                          const item = inventory.find(it => it.id === v);
+                          let f = 1;
                           if (item) {
-                            const amount = (r.quantity * (item.unit_cost || 0)).toFixed(2);
-                            updateRow(i, {
-                              inventory_item_id: v,
-                              description: `Purchase: ${item.item_name}`,
-                              category: item.category || r.category,
-                              unit_cost: item.unit_cost || 0,
-                              unit: item.base_unit,
-                              factor: 1,
-                              amount: parseFloat(amount) > 0 ? parseFloat(amount) : r.amount
-                            });
+                            if (v === item.base_unit) f = 1;
+                            else {
+                              const c = item.unit_conversions?.find(cv => cv.unit_name === v);
+                              if (c) f = c.conversion_to_base;
+                            }
                           }
+                          updateRow(i, { unit: v, factor: f });
                         }}
                       >
-                        <SelectTrigger className="h-7 text-[10px]">
-                          <SelectValue placeholder="Select item" />
+                        <SelectTrigger className="h-10 rounded-lg font-bold border-slate-200 bg-white">
+                          <SelectValue />
                         </SelectTrigger>
-                        <SelectContent>
-                          {inventory.map((item) => (
-                            <SelectItem key={item.id} value={item.id}>
-                                {item.item_name}
-                            </SelectItem>
+                        <SelectContent className="rounded-lg">
+                          {units.map((u) => (
+                            <SelectItem key={u} value={u}>{u}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
+                    </div>
+                    <div>
+                      <Label className="text-[9px] font-black uppercase tracking-wider text-slate-400 mb-1 block">Rate (रु)</Label>
                       <Input
-                        value={r.description}
-                        onChange={(e) => updateRow(i, { description: e.target.value })}
-                        placeholder="Description"
-                        className="h-7 text-[10px]"
+                        type="number"
+                        value={r.unit_cost || ""}
+                        className="h-10 rounded-lg font-bold border-slate-200"
+                        onChange={(e) => {
+                          const rate = parseFloat(e.target.value) || 0;
+                          const amount = (r.quantity * rate).toFixed(2);
+                          updateRow(i, {
+                            unit_cost: rate,
+                            amount: parseFloat(amount) > 0 ? parseFloat(amount) : r.amount
+                          });
+                        }}
                       />
                     </div>
-                  ) : (
-                    <Input
-                      value={r.description}
-                      onChange={(e) => updateRow(i, { description: e.target.value })}
-                      placeholder="Description"
-                      className="h-9 text-xs"
-                    />
-                  )}
-                </div>
+                    <div>
+                      <Label className="text-[9px] font-black uppercase tracking-wider text-slate-400 mb-1 block">Conversion Factor</Label>
+                      <Input
+                        type="number"
+                        value={r.factor}
+                        className="h-10 rounded-lg font-bold border-slate-200 bg-slate-50"
+                        onChange={(e) => updateRow(i, { factor: parseFloat(e.target.value) || 1 })}
+                      />
+                    </div>
+                  </div>
+                )}
 
-                <div className="lg:col-span-1">
-                  <Label className="text-[10px] lg:hidden">Supplier</Label>
-                  <Input
-                    value={r.supplier}
-                    onChange={(e) => updateRow(i, { supplier: e.target.value })}
-                    placeholder="Supplier"
-                    className="h-9 text-xs"
-                  />
-                </div>
-
-                <div className="lg:col-span-1">
-                  <Label className="text-[10px] lg:hidden">Qty</Label>
-                  <Input
-                    type="number"
-                    disabled={!r.is_inventory_purchase}
-                    value={r.quantity || ""}
-                    onChange={(e) => {
-                      const q = parseFloat(e.target.value) || 0;
-                      const amount = (q * r.unit_cost).toFixed(2);
-                      updateRow(i, {
-                        quantity: q,
-                        amount: parseFloat(amount) > 0 ? parseFloat(amount) : r.amount
-                      });
-                    }}
-                    placeholder="0"
-                    className="h-9 text-xs"
-                  />
-                </div>
-
-                <div className="lg:col-span-1">
-                  <Label className="text-[10px] lg:hidden">Unit</Label>
-                  <Select
-                    value={r.unit}
-                    onValueChange={(v) => {
-                      let f = 1;
-                      if (item) {
-                        if (v === item.base_unit) f = 1;
-                        else {
-                          const c = item.unit_conversions?.find(cv => cv.unit_name === v);
-                          if (c) f = c.conversion_to_base;
-                        }
-                      }
-                      updateRow(i, { unit: v, factor: f });
-                    }}
-                    disabled={!r.is_inventory_purchase || !r.inventory_item_id}
-                  >
-                    <SelectTrigger className="h-9 text-xs">
-                      <SelectValue placeholder="Unit" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {units.map((u) => (
-                        <SelectItem key={u} value={u}>
-                          {u}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="lg:col-span-1">
-                  <Label className="text-[10px] lg:hidden">Factor</Label>
-                  <Input
-                    type="number"
-                    disabled={!r.is_inventory_purchase}
-                    value={r.factor}
-                    onChange={(e) => updateRow(i, { factor: parseFloat(e.target.value) || 1 })}
-                    className="h-9 text-xs"
-                  />
-                </div>
-
-                <div className="lg:col-span-1">
-                  <Label className="text-[10px] lg:hidden">Rate</Label>
-                  <Input
-                    type="number"
-                    disabled={!r.is_inventory_purchase}
-                    value={r.unit_cost || ""}
-                    onChange={(e) => {
-                      const rate = parseFloat(e.target.value) || 0;
-                      const amount = (r.quantity * rate).toFixed(2);
-                      updateRow(i, {
-                        unit_cost: rate,
-                        amount: parseFloat(amount) > 0 ? parseFloat(amount) : r.amount
-                      });
-                    }}
-                    placeholder="0"
-                    className="h-9 text-xs"
-                  />
-                </div>
-
-                <div className="lg:col-span-1">
-                  <Label className="text-[10px] lg:hidden">Amount</Label>
-                  <Input
-                    type="number"
-                    value={r.amount || ""}
-                    onChange={(e) => updateRow(i, { amount: parseFloat(e.target.value) || 0 })}
-                    className={r.is_inventory_purchase ? "h-9 text-xs bg-muted/50 font-bold" : "h-9 text-xs"}
-                  />
-                </div>
-
-                <div className="lg:col-span-1">
-                  <Label className="text-[10px] lg:hidden">Category</Label>
-                  <Select
-                    value={r.category}
-                    onValueChange={(v) => updateRow(i, { category: v })}
-                  >
-                    <SelectTrigger className="h-9 text-xs">
-                      <SelectValue placeholder="Category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.map((c) => (
-                        <SelectItem key={c.id} value={c.name}>
-                          {c.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="lg:col-span-1">
-                  <Label className="text-[10px] lg:hidden">Payment</Label>
-                  <Select
-                    value={r.payment_mode}
-                    onValueChange={(v) => updateRow(i, { payment_mode: v })}
-                  >
-                    <SelectTrigger className="h-9 text-xs">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {paymentModes.map((p) => (
-                        <SelectItem key={p} value={p}>
-                          {p}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="absolute top-2 right-2 lg:static lg:col-span-1 flex justify-end">
+                <div className="flex items-center justify-between mt-1">
+                  <div className="flex-1 flex items-center gap-3">
+                    <div className="bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">
+                      <Label className="text-[9px] font-black uppercase text-slate-400 block mb-0.5">Total Amount</Label>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-slate-400">रु</span>
+                        <Input
+                          type="number"
+                          value={r.amount || ""}
+                          className="h-7 w-28 bg-transparent border-none p-0 font-black text-lg focus-visible:ring-0"
+                          onChange={(e) => updateRow(i, { amount: parseFloat(e.target.value) || 0 })}
+                        />
+                      </div>
+                    </div>
+                  </div>
                   <Button
                     size="icon"
                     variant="ghost"
+                    className="text-rose-500 hover:text-rose-600 hover:bg-rose-50 rounded-full"
                     onClick={() => removeRow(i)}
                     disabled={rows.length === 1}
-                    className="h-9 w-9 text-destructive hover:text-destructive hover:bg-destructive/10"
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <Trash2 className="h-5 w-5" />
                   </Button>
                 </div>
               </div>
             );
           })}
 
-          <Button variant="outline" size="sm" onClick={addRow} className="gap-2">
-            <Plus className="h-4 w-4" />
-            Add Row
+          <Button
+            variant="secondary"
+            onClick={addRow}
+            className="w-full h-12 rounded-2xl font-black uppercase text-xs tracking-widest bg-slate-100 hover:bg-slate-200 text-slate-600"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add Another Record
           </Button>
         </div>
 
-        <DialogFooter className="flex items-center justify-between sm:justify-between pt-4 border-t mt-4">
-          <div className="text-sm">
-            <span className="text-muted-foreground">Total: </span>
-            <span className="font-semibold">NRs. {grandTotal.toFixed(2)}</span>
-            <span className="text-muted-foreground ml-2">({rows.length} rows)</span>
+        <DialogFooter className="mt-8 flex flex-col sm:flex-row items-center gap-4 border-t border-slate-100 pt-6">
+          <div className="flex-1 text-center sm:text-left">
+            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Batch Total Amount</p>
+            <div className="text-2xl font-black text-primary">
+              रु {grandTotal.toLocaleString()}
+            </div>
           </div>
-          <Button onClick={submit} disabled={submitting}>
-            {submitting ? "Saving..." : `Save ${rows.length} Expenses`}
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            <Button
+              variant="ghost"
+              onClick={() => setOpen(false)}
+              className="rounded-xl font-bold h-12 text-slate-500"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={submit}
+              disabled={submitting}
+              className="rounded-xl font-black uppercase tracking-widest text-xs h-12 px-8 bg-primary shadow-lg shadow-primary/20"
+            >
+              {submitting ? (
+                <>
+                  <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
+                  Saving...
+                </>
+              ) : `Save ${rows.length} Records`}
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>

@@ -269,62 +269,101 @@ const SavingsWithdrawalsTab = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background p-4 sm:p-6">
+    <div className="min-h-screen bg-background p-2 md:p-6 pb-24 md:pb-6">
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto" aria-describedby={undefined}>
-          <DialogHeader>
-            <DialogTitle>Edit {editType === "saving" ? "Saving" : "Withdrawal"}</DialogTitle>
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto p-4 md:p-6 rounded-3xl" aria-describedby={undefined}>
+          <DialogHeader className="mb-4">
+            <DialogTitle className="text-xl font-bold text-primary">Edit {editType === "saving" ? "Saving" : "Withdrawal"}</DialogTitle>
           </DialogHeader>
           {selectedItem && (
             <div className="space-y-4">
               {editType === "saving" ? (
                 <>
-                  <div><Label>Amount</Label><Input type="number" value={(selectedItem as Saving).contribution_amount} onChange={(e) => setSelectedItem({ ...selectedItem, contribution_amount: parseFloat(e.target.value) } as Saving)} /></div>
-                  <div><Label>Member ID</Label><Input value={(selectedItem as Saving).member_id} onChange={(e) => setSelectedItem({ ...selectedItem, member_id: e.target.value } as Saving)} /></div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Amount</Label>
+                    <Input type="number" value={(selectedItem as Saving).contribution_amount} onChange={(e) => setSelectedItem({ ...selectedItem, contribution_amount: parseFloat(e.target.value) } as Saving)} className="h-11 rounded-xl" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Member ID</Label>
+                    <Input value={(selectedItem as Saving).member_id} onChange={(e) => setSelectedItem({ ...selectedItem, member_id: e.target.value } as Saving)} className="h-11 rounded-xl" />
+                  </div>
                 </>
               ) : (
                 <>
-                  <div><Label>Amount</Label><Input type="number" value={(selectedItem as Withdrawal).amount} onChange={(e) => setSelectedItem({ ...selectedItem, amount: parseFloat(e.target.value) } as Withdrawal)} /></div>
-                  <div><Label>Purpose</Label><Input value={(selectedItem as Withdrawal).purpose} onChange={(e) => setSelectedItem({ ...selectedItem, purpose: e.target.value } as Withdrawal)} /></div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Amount</Label>
+                    <Input type="number" value={(selectedItem as Withdrawal).amount} onChange={(e) => setSelectedItem({ ...selectedItem, amount: parseFloat(e.target.value) } as Withdrawal)} className="h-11 rounded-xl" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Purpose</Label>
+                    <Input value={(selectedItem as Withdrawal).purpose} onChange={(e) => setSelectedItem({ ...selectedItem, purpose: e.target.value } as Withdrawal)} className="h-11 rounded-xl" />
+                  </div>
                 </>
               )}
             </div>
           )}
-          <DialogFooter><Button onClick={handleUpdate}>Save</Button></DialogFooter>
+          <DialogFooter className="pt-2"><Button onClick={handleUpdate} className="w-full h-12 rounded-xl text-lg font-bold">Save Changes</Button></DialogFooter>
         </DialogContent>
       </Dialog>
 
-      <div className="space-y-6">
-        <div className="flex items-center gap-2">
-          <PiggyBank className="h-5 w-5 text-muted-foreground" />
-          <h1 className="text-lg font-semibold text-foreground">Savings & Withdrawals</h1>
+      <div className="space-y-4 md:space-y-6">
+        <div className="bg-primary/5 p-4 rounded-3xl mb-4 md:mb-6 flex items-center gap-3">
+          <div className="p-2 bg-primary rounded-xl text-white">
+            <PiggyBank className="h-5 w-5 md:h-6 md:w-6" />
+          </div>
+          <h1 className="text-xl md:text-2xl font-bold text-foreground">Savings & Withdrawals</h1>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card className="bg-card border"><CardContent className="p-4"><p className="text-xs text-muted-foreground">Total Savings</p><p className="text-lg font-bold text-foreground">NRs. {totalSavings.toFixed(2)}</p></CardContent></Card>
-          <Card className="bg-card border"><CardContent className="p-4"><p className="text-xs text-muted-foreground">Total Withdrawals</p><p className="text-lg font-bold text-foreground">NRs. {totalWithdrawals.toFixed(2)}</p></CardContent></Card>
-          <Card className="bg-card border"><CardContent className="p-4"><p className="text-xs text-muted-foreground">Savings Count</p><p className="text-lg font-bold text-foreground">{savings.length}</p></CardContent></Card>
-          <Card className="bg-card border"><CardContent className="p-4"><p className="text-xs text-muted-foreground">Withdrawals Count</p><p className="text-lg font-bold text-foreground">{withdrawals.length}</p></CardContent></Card>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+          <Card className="rounded-3xl border-none bg-white shadow-sm overflow-hidden">
+            <CardContent className="p-4 md:p-6">
+              <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Total Savings</p>
+              <p className="text-sm md:text-xl font-bold text-primary">NRs. {totalSavings.toFixed(2)}</p>
+            </CardContent>
+          </Card>
+          <Card className="rounded-3xl border-none bg-white shadow-sm overflow-hidden">
+            <CardContent className="p-4 md:p-6">
+              <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Total Withdrawals</p>
+              <p className="text-sm md:text-xl font-bold text-destructive">NRs. {totalWithdrawals.toFixed(2)}</p>
+            </CardContent>
+          </Card>
+          <Card className="rounded-3xl border-none bg-white shadow-sm overflow-hidden hidden md:block">
+            <CardContent className="p-4 md:p-6">
+              <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Savings Count</p>
+              <p className="text-sm md:text-xl font-bold text-foreground">{savings.length}</p>
+            </CardContent>
+          </Card>
+          <Card className="rounded-3xl border-none bg-white shadow-sm overflow-hidden hidden md:block">
+            <CardContent className="p-4 md:p-6">
+              <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Withdrawals Count</p>
+              <p className="text-sm md:text-xl font-bold text-foreground">{withdrawals.length}</p>
+            </CardContent>
+          </Card>
         </div>
 
         <Tabs defaultValue="savings" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="savings" className="flex items-center gap-2"><ArrowUpCircle className="h-4 w-4" />Savings</TabsTrigger>
-            <TabsTrigger value="withdrawals" className="flex items-center gap-2"><ArrowDownCircle className="h-4 w-4" />Withdrawals</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2 bg-slate-100 p-1 rounded-2xl h-12">
+            <TabsTrigger value="savings" className="flex items-center gap-2 rounded-xl data-[state=active]:bg-white data-[state=active]:shadow-sm"><ArrowUpCircle className="h-4 w-4" />Savings</TabsTrigger>
+            <TabsTrigger value="withdrawals" className="flex items-center gap-2 rounded-xl data-[state=active]:bg-white data-[state=active]:shadow-sm"><ArrowDownCircle className="h-4 w-4" />Withdrawals</TabsTrigger>
           </TabsList>
 
           <TabsContent value="savings" className="space-y-4">
-            <Card className="bg-card border">
-              <CardHeader className="pb-3"><CardTitle className="text-base">Add Saving</CardTitle></CardHeader>
-              <CardContent>
+            <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden">
+              <CardHeader className="bg-slate-50/50 border-b border-slate-100 px-4 md:px-6 py-4">
+                <CardTitle className="text-base md:text-lg font-bold flex items-center gap-2">
+                  <ArrowUpCircle className="h-5 w-5 text-primary" />
+                  Add Saving
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 md:p-6">
                 <form onSubmit={handleSavingsSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div><Label>Amount *</Label><Input type="number" value={savingsFormData.contributionAmount} onChange={(e) => setSavingsFormData({ ...savingsFormData, contributionAmount: e.target.value })} required /></div>
-                  <div><Label>Member ID *</Label><Input value={savingsFormData.memberId} onChange={(e) => setSavingsFormData({ ...savingsFormData, memberId: e.target.value })} required /></div>
-                  <div><Label>Cycle Period *</Label><Select value={savingsFormData.cyclePeriod} onValueChange={(v) => setSavingsFormData({ ...savingsFormData, cyclePeriod: v })}><SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger><SelectContent>{cyclePeriods.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}</SelectContent></Select></div>
-                  <div><Label>Payment Mode *</Label><Select value={savingsFormData.paymentMode} onValueChange={(v) => setSavingsFormData({ ...savingsFormData, paymentMode: v })}><SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger><SelectContent>{paymentModes.map((m) => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent></Select></div>
-                  <div><Label>Savings To *</Label><Select value={savingsFormData.savingsTo} onValueChange={(v) => setSavingsFormData({ ...savingsFormData, savingsTo: v })}><SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger><SelectContent>{savingsToOptions.map((o) => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select></div>
-                  <div><Label>Date</Label><Input type="date" value={transactionDate} onChange={(e) => setTransactionDate(e.target.value)} /></div>
-                  <div className="md:col-span-3"><Button type="submit" disabled={isSubmitting}>{isSubmitting ? "Saving..." : "Add Saving"}</Button></div>
+                  <div className="space-y-1.5"><Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Amount *</Label><Input type="number" value={savingsFormData.contributionAmount} onChange={(e) => setSavingsFormData({ ...savingsFormData, contributionAmount: e.target.value })} required className="h-11 rounded-xl" /></div>
+                  <div className="space-y-1.5"><Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Member ID *</Label><Input value={savingsFormData.memberId} onChange={(e) => setSavingsFormData({ ...savingsFormData, memberId: e.target.value })} required className="h-11 rounded-xl" /></div>
+                  <div className="space-y-1.5"><Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Cycle Period *</Label><Select value={savingsFormData.cyclePeriod} onValueChange={(v) => setSavingsFormData({ ...savingsFormData, cyclePeriod: v })}><SelectTrigger className="h-11 rounded-xl"><SelectValue placeholder="Select" /></SelectTrigger><SelectContent>{cyclePeriods.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}</SelectContent></Select></div>
+                  <div className="space-y-1.5"><Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Payment Mode *</Label><Select value={savingsFormData.paymentMode} onValueChange={(v) => setSavingsFormData({ ...savingsFormData, paymentMode: v })}><SelectTrigger className="h-11 rounded-xl"><SelectValue placeholder="Select" /></SelectTrigger><SelectContent>{paymentModes.map((m) => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent></Select></div>
+                  <div className="space-y-1.5"><Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Savings To *</Label><Select value={savingsFormData.savingsTo} onValueChange={(v) => setSavingsFormData({ ...savingsFormData, savingsTo: v })}><SelectTrigger className="h-11 rounded-xl"><SelectValue placeholder="Select" /></SelectTrigger><SelectContent>{savingsToOptions.map((o) => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select></div>
+                  <div className="space-y-1.5"><Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Date</Label><Input type="date" value={transactionDate} onChange={(e) => setTransactionDate(e.target.value)} className="h-11 rounded-xl" /></div>
+                  <div className="md:col-span-3 pt-2"><Button type="submit" disabled={isSubmitting} className="w-full h-12 rounded-xl text-lg font-bold shadow-lg shadow-primary/20">{isSubmitting ? "Saving..." : "Add Saving"}</Button></div>
                 </form>
               </CardContent>
             </Card>
@@ -359,17 +398,22 @@ const SavingsWithdrawalsTab = () => {
           </TabsContent>
 
           <TabsContent value="withdrawals" className="space-y-4">
-            <Card className="bg-card border">
-              <CardHeader className="pb-3"><CardTitle className="text-base">Add Withdrawal</CardTitle></CardHeader>
-              <CardContent>
+            <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden">
+              <CardHeader className="bg-slate-50/50 border-b border-slate-100 px-4 md:px-6 py-4">
+                <CardTitle className="text-base md:text-lg font-bold flex items-center gap-2">
+                  <ArrowDownCircle className="h-5 w-5 text-destructive" />
+                  Add Withdrawal
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 md:p-6">
                 <form onSubmit={handleWithdrawalsSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div><Label>Amount *</Label><Input type="number" value={withdrawalsFormData.amount} onChange={(e) => setWithdrawalsFormData({ ...withdrawalsFormData, amount: e.target.value })} required /></div>
-                  <div><Label>Purpose *</Label><Select value={withdrawalsFormData.purpose} onValueChange={(v) => setWithdrawalsFormData({ ...withdrawalsFormData, purpose: v })}><SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger><SelectContent>{commonPurposes.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}</SelectContent></Select></div>
-                  <div><Label>From *</Label><Select value={withdrawalsFormData.withdrawalFrom} onValueChange={(v) => setWithdrawalsFormData({ ...withdrawalsFormData, withdrawalFrom: v })}><SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger><SelectContent>{withdrawalSources.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent></Select></div>
-                  <div><Label>Payment Mode *</Label><Select value={withdrawalsFormData.paymentMode} onValueChange={(v) => setWithdrawalsFormData({ ...withdrawalsFormData, paymentMode: v })}><SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger><SelectContent>{paymentModes.map((m) => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent></Select></div>
-                  <div><Label>Recipient</Label><Input value={withdrawalsFormData.recipient} onChange={(e) => setWithdrawalsFormData({ ...withdrawalsFormData, recipient: e.target.value })} /></div>
-                  <div><Label>Date</Label><Input type="date" value={transactionDate} onChange={(e) => setTransactionDate(e.target.value)} /></div>
-                  <div className="md:col-span-3"><Button type="submit" disabled={isSubmitting}>{isSubmitting ? "Saving..." : "Add Withdrawal"}</Button></div>
+                  <div className="space-y-1.5"><Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Amount *</Label><Input type="number" value={withdrawalsFormData.amount} onChange={(e) => setWithdrawalsFormData({ ...withdrawalsFormData, amount: e.target.value })} required className="h-11 rounded-xl" /></div>
+                  <div className="space-y-1.5"><Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Purpose *</Label><Select value={withdrawalsFormData.purpose} onValueChange={(v) => setWithdrawalsFormData({ ...withdrawalsFormData, purpose: v })}><SelectTrigger className="h-11 rounded-xl"><SelectValue placeholder="Select" /></SelectTrigger><SelectContent>{commonPurposes.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}</SelectContent></Select></div>
+                  <div className="space-y-1.5"><Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">From *</Label><Select value={withdrawalsFormData.withdrawalFrom} onValueChange={(v) => setWithdrawalsFormData({ ...withdrawalsFormData, withdrawalFrom: v })}><SelectTrigger className="h-11 rounded-xl"><SelectValue placeholder="Select" /></SelectTrigger><SelectContent>{withdrawalSources.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent></Select></div>
+                  <div className="space-y-1.5"><Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Payment Mode *</Label><Select value={withdrawalsFormData.paymentMode} onValueChange={(v) => setWithdrawalsFormData({ ...withdrawalsFormData, paymentMode: v })}><SelectTrigger className="h-11 rounded-xl"><SelectValue placeholder="Select" /></SelectTrigger><SelectContent>{paymentModes.map((m) => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent></Select></div>
+                  <div className="space-y-1.5"><Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Recipient</Label><Input value={withdrawalsFormData.recipient} onChange={(e) => setWithdrawalsFormData({ ...withdrawalsFormData, recipient: e.target.value })} className="h-11 rounded-xl" /></div>
+                  <div className="space-y-1.5"><Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Date</Label><Input type="date" value={transactionDate} onChange={(e) => setTransactionDate(e.target.value)} className="h-11 rounded-xl" /></div>
+                  <div className="md:col-span-3 pt-2"><Button type="submit" disabled={isSubmitting} className="w-full h-12 rounded-xl text-lg font-bold shadow-lg shadow-destructive/20 variant-destructive">{isSubmitting ? "Saving..." : "Add Withdrawal"}</Button></div>
                 </form>
               </CardContent>
             </Card>

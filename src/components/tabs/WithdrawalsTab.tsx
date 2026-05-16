@@ -296,16 +296,16 @@ const WithdrawalsTab = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 relative overflow-hidden">
+    <div className="min-h-screen bg-background p-2 md:p-6 pb-24 md:pb-6">
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto" aria-describedby={undefined}>
-          <DialogHeader>
-            <DialogTitle>Edit Withdrawal</DialogTitle>
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto p-4 md:p-6 rounded-3xl" aria-describedby={undefined}>
+          <DialogHeader className="mb-4">
+            <DialogTitle className="text-xl font-bold text-primary">Edit Withdrawal</DialogTitle>
           </DialogHeader>
           {selectedWithdrawal && (
             <div className="space-y-4">
-              <div>
-                <Label htmlFor="editAmount">Amount</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="editAmount" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Amount</Label>
                 <Input
                   id="editAmount"
                   value={selectedWithdrawal.amount}
@@ -315,10 +315,11 @@ const WithdrawalsTab = () => {
                       amount: parseFloat(e.target.value),
                     })
                   }
+                  className="h-11 rounded-xl"
                 />
               </div>
-              <div>
-                <Label htmlFor="editPurpose">Purpose</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="editPurpose" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Purpose</Label>
                 <Input
                   id="editPurpose"
                   value={selectedWithdrawal.purpose}
@@ -328,36 +329,41 @@ const WithdrawalsTab = () => {
                       purpose: e.target.value,
                     })
                   }
+                  className="h-11 rounded-xl"
                 />
               </div>
-              <div>
-                <Label htmlFor="editRecipient">Recipient</Label>
-                <Input
-                  id="editRecipient"
-                  value={selectedWithdrawal.recipient || ""}
-                  onChange={(e) =>
-                    setSelectedWithdrawal({
-                      ...selectedWithdrawal,
-                      recipient: e.target.value,
-                    })
-                  }
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="editRecipient" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Recipient</Label>
+                  <Input
+                    id="editRecipient"
+                    value={selectedWithdrawal.recipient || ""}
+                    onChange={(e) =>
+                      setSelectedWithdrawal({
+                        ...selectedWithdrawal,
+                        recipient: e.target.value,
+                      })
+                    }
+                    className="h-11 rounded-xl"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="editReferenceNumber" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Ref No.</Label>
+                  <Input
+                    id="editReferenceNumber"
+                    value={selectedWithdrawal.reference_number || ""}
+                    onChange={(e) =>
+                      setSelectedWithdrawal({
+                        ...selectedWithdrawal,
+                        reference_number: e.target.value,
+                      })
+                    }
+                    className="h-11 rounded-xl"
+                  />
+                </div>
               </div>
-              <div>
-                <Label htmlFor="editReferenceNumber">Reference Number</Label>
-                <Input
-                  id="editReferenceNumber"
-                  value={selectedWithdrawal.reference_number || ""}
-                  onChange={(e) =>
-                    setSelectedWithdrawal({
-                      ...selectedWithdrawal,
-                      reference_number: e.target.value,
-                    })
-                  }
-                />
-              </div>
-              <div>
-                <Label htmlFor="editSourceCooperative">Source/Cooperative</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="editSourceCooperative" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Source</Label>
                 <Input
                   id="editSourceCooperative"
                   value={selectedWithdrawal.source_cooperative || ""}
@@ -367,11 +373,12 @@ const WithdrawalsTab = () => {
                       source_cooperative: e.target.value,
                     })
                   }
+                  className="h-11 rounded-xl"
                 />
               </div>
-              <div>
-                <Label htmlFor="editRemarks">Remarks</Label>
-                <Input
+              <div className="space-y-1.5">
+                <Label htmlFor="editRemarks" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Remarks</Label>
+                <Textarea
                   id="editRemarks"
                   value={selectedWithdrawal.remarks || ""}
                   onChange={(e) =>
@@ -380,149 +387,93 @@ const WithdrawalsTab = () => {
                       remarks: e.target.value,
                     })
                   }
+                  className="rounded-xl"
                 />
               </div>
-              <RecordAttachments recordType="withdrawal" recordId={selectedWithdrawal.id} />
+              <RecordAttachments recordType="withdrawal" recordId={selectedWithdrawal.id} compact />
             </div>
           )}
-          <DialogFooter>
-            <Button onClick={handleUpdate}>Save</Button>
+          <DialogFooter className="pt-2">
+            <Button onClick={handleUpdate} className="w-full h-12 rounded-xl text-lg font-bold">Save Changes</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      {/* Animated Background Elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-20 w-64 h-64 bg-gradient-to-r from-blue-400/20 to-indigo-500/20 rounded-full blur-3xl animate-pulse"></div>
-        <div
-          className="absolute top-1/3 right-20 w-80 h-80 bg-gradient-to-r from-indigo-400/20 to-purple-500/20 rounded-full blur-3xl animate-pulse"
-          style={{ animationDelay: "1s" }}
-        ></div>
-        <div
-          className="absolute bottom-20 left-1/4 w-72 h-72 bg-gradient-to-r from-purple-400/20 to-pink-500/20 rounded-full blur-3xl animate-pulse"
-          style={{ animationDelay: "2s" }}
-        ></div>
-      </div>
 
-      <div className="relative z-10 space-y-8 p-6">
+      <div className="space-y-4 md:space-y-6">
         {/* Header */}
-        <div className="mb-8 flex items-start justify-between gap-4 flex-wrap">
-          <div>
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-3 rounded-xl bg-primary text-primary-foreground">
-                <Banknote className="h-6 w-6" />
-              </div>
-              <h1 className="text-2xl font-semibold text-foreground">
-                Withdrawal Manager
-              </h1>
+        <div className="bg-primary/5 p-4 rounded-3xl mb-4 md:mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-primary rounded-xl text-white">
+              <Banknote className="h-5 w-5 md:h-6 md:w-6" />
             </div>
-            <p className="text-sm text-muted-foreground">
-              Track withdrawals with detailed purpose tracking.
-            </p>
+            <div>
+              <h1 className="text-xl md:text-2xl font-bold text-foreground">
+                Withdrawals
+              </h1>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Track withdrawals with detailed purpose tracking
+              </p>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full md:w-auto">
             <HistoryDateRangeFilter range={range} onChange={onRangeChange} />
             <MultiWithdrawalEntry onComplete={fetchWithdrawals} />
           </div>
         </div>
 
         {/* All-Time Total Display */}
-        <AllTimeTotalDisplay type="withdrawals" className="mb-8" />
+        <AllTimeTotalDisplay type="withdrawals" className="mb-4 md:mb-6" />
 
         {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-blue-600 font-medium">
-                    Total Withdrawals
-                  </p>
-                  <p className="text-2xl font-bold text-blue-800">
-                    NRs. {totalWithdrawals.toFixed(2)}
-                  </p>
-                </div>
-                <div className="p-3 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl text-white">
-                  <TrendingDown className="h-6 w-6" />
-                </div>
-              </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-4 md:mb-6">
+          <Card className="rounded-3xl border-none bg-white shadow-sm overflow-hidden">
+            <CardContent className="p-4 md:p-6">
+              <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Total</p>
+              <p className="text-sm md:text-xl font-bold text-destructive">NRs. {totalWithdrawals.toFixed(2)}</p>
             </CardContent>
           </Card>
-
-          <Card className="bg-gradient-to-br from-indigo-50 to-purple-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-indigo-600 font-medium">
-                    Total Entries
-                  </p>
-                  <p className="text-2xl font-bold text-indigo-800">
-                    {withdrawals.length}
-                  </p>
-                </div>
-                <div className="p-3 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-xl text-white">
-                  <ArrowDownCircle className="h-6 w-6" />
-                </div>
-              </div>
+          <Card className="rounded-3xl border-none bg-white shadow-sm overflow-hidden">
+            <CardContent className="p-4 md:p-6">
+              <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Entries</p>
+              <p className="text-sm md:text-xl font-bold text-foreground">{withdrawals.length}</p>
             </CardContent>
           </Card>
-
-          <Card className="bg-gradient-to-br from-purple-50 to-pink-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-purple-600 font-medium">
-                    Average Amount
-                  </p>
-                  <p className="text-2xl font-bold text-purple-800">
-                    NRs. {averageWithdrawal.toFixed(2)}
-                  </p>
-                </div>
-                <div className="p-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl text-white">
-                  <DollarSign className="h-6 w-6" />
-                </div>
-              </div>
+          <Card className="rounded-3xl border-none bg-white shadow-sm overflow-hidden hidden md:block">
+            <CardContent className="p-4 md:p-6">
+              <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Avg Amount</p>
+              <p className="text-sm md:text-xl font-bold text-foreground">NRs. {averageWithdrawal.toFixed(2)}</p>
             </CardContent>
           </Card>
-
-          <Card className="bg-gradient-to-br from-pink-50 to-red-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-pink-600 font-medium">
-                    Top Purpose
-                  </p>
-                  <p className="text-lg font-bold text-pink-800 truncate">
-                    {topPurpose ? topPurpose[0] : "None"}
-                  </p>
-                </div>
-                <div className="p-3 bg-gradient-to-r from-pink-500 to-red-500 rounded-xl text-white">
-                  <Target className="h-6 w-6" />
-                </div>
-              </div>
+          <Card className="rounded-3xl border-none bg-white shadow-sm overflow-hidden">
+            <CardContent className="p-4 md:p-6">
+              <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Top Purpose</p>
+              <p className="text-[10px] md:text-sm font-bold text-primary truncate">
+                {topPurpose ? topPurpose[0] : "None"}
+              </p>
             </CardContent>
           </Card>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-8">
           {/* Add Withdrawal Form */}
-          <Card className="bg-gradient-to-br from-white/90 to-blue-50/90 backdrop-blur-sm border-0 shadow-2xl hover:shadow-3xl transition-all duration-300">
-            <CardHeader className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-t-lg">
-              <CardTitle className="flex items-center gap-3 text-xl">
-                <div className="p-2 bg-white/20 rounded-lg">
-                  <ArrowDownCircle className="h-6 w-6" />
+          <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden">
+            <CardHeader className="bg-rose-500 text-white p-4 md:p-6">
+              <CardTitle className="flex items-center gap-3 text-lg md:text-xl font-bold">
+                <div className="p-2 bg-white/20 rounded-xl">
+                  <ArrowDownCircle className="h-5 w-5 md:h-6 md:w-6" />
                 </div>
-                Record New Withdrawal
-                <Sparkles className="h-5 w-5 animate-pulse" />
+                New Withdrawal
+                <Sparkles className="h-4 w-4 md:h-5 md:w-5 ml-auto opacity-70" />
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-6">
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="space-y-2">
+            <CardContent className="p-4 md:p-6">
+              <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
+                <div className="space-y-1.5">
                   <Label
                     htmlFor="amount"
-                    className="text-sm font-medium text-gray-700 flex items-center gap-2"
+                    className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2"
                   >
-                    <DollarSign className="h-4 w-4 text-blue-600" />
+                    <DollarSign className="h-3.5 w-3.5 text-rose-600" />
                     Amount (NRs.) *
                   </Label>
                   <Input
@@ -535,44 +486,38 @@ const WithdrawalsTab = () => {
                     }
                     placeholder="0.00"
                     required
-                    className="border-blue-200 focus:border-blue-500 focus:ring-blue-500 h-12 text-lg"
+                    className="h-12 text-xl font-bold rounded-xl border-rose-100 focus:border-rose-500"
                   />
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   <Label
                     htmlFor="purpose"
-                    className="text-sm font-medium text-gray-700 flex items-center gap-2"
+                    className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2"
                   >
-                    <Target className="h-4 w-4 text-purple-600" />
+                    <Target className="h-3.5 w-3.5 text-indigo-600" />
                     Purpose *
                   </Label>
-                  <Input
-                    id="purpose"
+                  <Select
                     value={formData.purpose}
-                    onChange={(e) =>
-                      setFormData({ ...formData, purpose: e.target.value })
-                    }
-                    placeholder="Enter withdrawal purpose"
-                    required
-                    className="border-purple-200 focus:border-purple-500 focus:ring-purple-500 h-12"
-                    list="purpose-suggestions"
-                  />
-                  <datalist id="purpose-suggestions">
-                    {commonPurposes.map((purpose) => (
-                      <option key={purpose} value={purpose} />
-                    ))}
-                  </datalist>
+                    onValueChange={(val) => setFormData({...formData, purpose: val})}
+                  >
+                    <SelectTrigger className="h-11 rounded-xl">
+                      <SelectValue placeholder="Select purpose" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {commonPurposes.map(purpose => <SelectItem key={purpose} value={purpose}>{purpose}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
+                  <div className="space-y-1.5">
                     <Label
                       htmlFor="recipient"
-                      className="text-sm font-medium text-gray-700 flex items-center gap-2"
+                      className="text-xs font-bold uppercase tracking-wider text-muted-foreground"
                     >
-                      <User className="h-4 w-4 text-green-600" />
-                      Recipient (Optional)
+                      Recipient
                     </Label>
                     <Input
                       id="recipient"
@@ -580,18 +525,17 @@ const WithdrawalsTab = () => {
                       onChange={(e) =>
                         setFormData({ ...formData, recipient: e.target.value })
                       }
-                      placeholder="Enter recipient name"
-                      className="border-green-200 focus:border-green-500 focus:ring-green-500 h-12"
+                      placeholder="Name"
+                      className="h-11 rounded-xl"
                     />
                   </div>
 
-                  <div className="space-y-2">
+                  <div className="space-y-1.5">
                     <Label
                       htmlFor="referenceNumber"
-                      className="text-sm font-medium text-gray-700 flex items-center gap-2"
+                      className="text-xs font-bold uppercase tracking-wider text-muted-foreground"
                     >
-                      <Hash className="h-4 w-4 text-orange-600" />
-                      Reference No. (Optional)
+                      Ref No.
                     </Label>
                     <Input
                       id="referenceNumber"
@@ -602,19 +546,19 @@ const WithdrawalsTab = () => {
                           referenceNumber: e.target.value,
                         })
                       }
-                      placeholder="Enter reference number"
-                      className="border-orange-200 focus:border-orange-500 focus:ring-orange-500 h-12"
+                      placeholder="#"
+                      className="h-11 rounded-xl"
                     />
                   </div>
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   <Label
                     htmlFor="sourceCooperative"
-                    className="text-sm font-medium text-gray-700 flex items-center gap-2"
+                    className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2"
                   >
-                    <Landmark className="h-4 w-4 text-indigo-600" />
-                    Source/Cooperative (Optional)
+                    <Landmark className="h-3.5 w-3.5 text-indigo-600" />
+                    Source/Cooperative
                   </Label>
                   <Input
                     id="sourceCooperative"
@@ -625,18 +569,17 @@ const WithdrawalsTab = () => {
                         sourceCooperative: e.target.value,
                       })
                     }
-                    placeholder="Identify withdraw from where/which cooperative"
-                    className="border-indigo-200 focus:border-indigo-500 focus:ring-indigo-500 h-12"
+                    placeholder="e.g. Bank Account, Cooperative Name"
+                    className="h-11 rounded-xl"
                   />
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   <Label
                     htmlFor="remarks"
-                    className="text-sm font-medium text-gray-700 flex items-center gap-2"
+                    className="text-xs font-bold uppercase tracking-wider text-muted-foreground"
                   >
-                    <FileText className="h-4 w-4 text-gray-600" />
-                    Remarks (Optional)
+                    Remarks
                   </Label>
                   <Textarea
                     id="remarks"
@@ -644,9 +587,9 @@ const WithdrawalsTab = () => {
                     onChange={(e) =>
                       setFormData({ ...formData, remarks: e.target.value })
                     }
-                    placeholder="Additional notes or details"
-                    rows={3}
-                    className="border-gray-200 focus:border-gray-500 focus:ring-gray-500"
+                    placeholder="Notes..."
+                    rows={2}
+                    className="rounded-xl min-h-[60px]"
                   />
                 </div>
 
@@ -655,18 +598,17 @@ const WithdrawalsTab = () => {
                   selectedDate={transactionDate}
                   onDateChange={setTransactionDate}
                   label="Withdrawal Date"
-                  className="mb-4"
                 />
 
                 <Button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full h-12 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 hover:from-blue-600 hover:via-indigo-600 hover:to-purple-600 text-white font-semibold shadow-lg transition-all duration-300 transform hover:scale-105"
+                  className="w-full h-12 md:h-14 rounded-2xl bg-rose-500 hover:bg-rose-600 text-white font-black text-lg shadow-lg shadow-rose-500/20 transition-all active:scale-[0.98]"
                 >
                   {isSubmitting ? (
                     <div className="flex items-center gap-2">
                       <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                      Recording Withdrawal...
+                      Recording...
                     </div>
                   ) : (
                     <div className="flex items-center gap-2">

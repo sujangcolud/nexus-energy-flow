@@ -331,215 +331,261 @@ const ExpenseBookingsTab = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background p-4 sm:p-6">
+    <div className="min-h-screen bg-background p-2 md:p-6 pb-24 md:pb-6">
       <Dialog open={isPaidDialogOpen} onOpenChange={setIsPaidDialogOpen}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto" aria-describedby={undefined}>
-          <DialogHeader><DialogTitle>Mark as Paid</DialogTitle></DialogHeader>
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto p-4 md:p-6 rounded-3xl" aria-describedby={undefined}>
+          <DialogHeader className="mb-4"><DialogTitle className="text-xl font-bold text-primary">Mark as Paid</DialogTitle></DialogHeader>
           {selectedBooking && (
-            <form onSubmit={handleExpenseSubmit} className="space-y-4">
-              <div className="space-y-2 p-3 bg-muted rounded-md text-sm">
-                <div className="flex justify-between"><span>Supplier/Party:</span><span className="font-medium">{selectedBooking.supplier || "N/A"}</span></div>
-                <div className="flex justify-between"><span>Description:</span><span className="font-medium">{selectedBooking.description}</span></div>
-                <div className="flex justify-between"><span>Amount:</span><span className="font-medium">NRs. {selectedBooking.amount.toFixed(2)}</span></div>
-                <div className="flex justify-between"><span>Category:</span><span className="font-medium">{selectedBooking.category}</span></div>
+            <form onSubmit={handleExpenseSubmit} className="space-y-4 md:space-y-6">
+              <div className="space-y-2 p-4 bg-primary/5 rounded-2xl border border-primary/10 text-sm">
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground">Party:</span>
+                  <span className="font-bold">{selectedBooking.supplier || "N/A"}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground">Amount:</span>
+                  <span className="font-bold text-primary text-base">NRs. {selectedBooking.amount.toFixed(2)}</span>
+                </div>
+                <div className="pt-2 border-t border-primary/10 flex justify-between items-center">
+                  <span className="text-muted-foreground">Details:</span>
+                  <span className="font-medium">{selectedBooking.description}</span>
+                </div>
               </div>
-              <div>
-                <Label>Payment Date *</Label>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Payment Date *</Label>
                 <TransactionDatePicker
                   selectedDate={expenseFormData.paymentDate}
                   onDateChange={(d) => setExpenseFormData({ ...expenseFormData, paymentDate: d })}
                 />
               </div>
-              <div><Label>Payment Mode *</Label><Select value={expenseFormData.paymentMode} onValueChange={(v) => setExpenseFormData({ ...expenseFormData, paymentMode: v })}><SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger><SelectContent><SelectItem value="Cash">Cash</SelectItem><SelectItem value="Esewa">Esewa</SelectItem><SelectItem value="Fonepay">Fonepay</SelectItem><SelectItem value="Bank">Bank</SelectItem></SelectContent></Select></div>
-              <div><Label>Remarks</Label><Textarea value={expenseFormData.remarks} onChange={(e) => setExpenseFormData({ ...expenseFormData, remarks: e.target.value })} /></div>
-              <RecordAttachments recordType="expense_booking" recordId={selectedBooking.id} />
-              <DialogFooter><Button type="submit" className="w-full">Confirm Payment</Button></DialogFooter>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Payment Mode *</Label>
+                <Select value={expenseFormData.paymentMode} onValueChange={(v) => setExpenseFormData({ ...expenseFormData, paymentMode: v })}>
+                  <SelectTrigger className="h-11 rounded-xl">
+                    <SelectValue placeholder="Select" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Cash">Cash</SelectItem>
+                    <SelectItem value="Esewa">Esewa</SelectItem>
+                    <SelectItem value="Fonepay">Fonepay</SelectItem>
+                    <SelectItem value="Bank">Bank</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Remarks</Label>
+                <Textarea value={expenseFormData.remarks} onChange={(e) => setExpenseFormData({ ...expenseFormData, remarks: e.target.value })} className="rounded-xl min-h-[80px]" />
+              </div>
+              <RecordAttachments recordType="expense_booking" recordId={selectedBooking.id} compact />
+              <DialogFooter className="pt-2">
+                <Button type="submit" className="w-full h-12 rounded-xl text-lg font-bold shadow-lg shadow-primary/20">Confirm Payment</Button>
+              </DialogFooter>
             </form>
           )}
         </DialogContent>
       </Dialog>
 
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto" aria-describedby={undefined}>
-          <DialogHeader><DialogTitle>Edit Booking</DialogTitle></DialogHeader>
-          <form onSubmit={handleUpdate} className="space-y-4">
-            <div><Label>Description *</Label><Input value={editFormData.description} onChange={(e) => setEditFormData({ ...editFormData, description: e.target.value })} required /></div>
-            <div><Label>Supplier (Party Name) *</Label><Input value={editFormData.supplier} onChange={(e) => setEditFormData({ ...editFormData, supplier: e.target.value })} required /></div>
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto p-4 md:p-6 rounded-3xl" aria-describedby={undefined}>
+          <DialogHeader className="mb-4"><DialogTitle className="text-xl font-bold text-primary">Edit Booking</DialogTitle></DialogHeader>
+          <form onSubmit={handleUpdate} className="space-y-4 md:space-y-6">
+            <div className="space-y-1.5"><Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Description *</Label><Input value={editFormData.description} onChange={(e) => setEditFormData({ ...editFormData, description: e.target.value })} required className="h-11 rounded-xl" /></div>
+            <div className="space-y-1.5"><Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Supplier/Party *</Label><Input value={editFormData.supplier} onChange={(e) => setEditFormData({ ...editFormData, supplier: e.target.value })} required className="h-11 rounded-xl" /></div>
             <div className="grid grid-cols-2 gap-4">
-              <div><Label>Amount *</Label><Input type="number" value={editFormData.amount} onChange={(e) => setEditFormData({ ...editFormData, amount: e.target.value })} required /></div>
-              <div><Label>Category *</Label><Select value={editFormData.category} onValueChange={(v) => setEditFormData({ ...editFormData, category: v })}><SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger><SelectContent>{categories.map((c) => <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>)}</SelectContent></Select></div>
+              <div className="space-y-1.5"><Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Amount *</Label><Input type="number" value={editFormData.amount} onChange={(e) => setEditFormData({ ...editFormData, amount: e.target.value })} required className="h-11 rounded-xl" /></div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Category *</Label>
+                <Select value={editFormData.category} onValueChange={(v) => setEditFormData({ ...editFormData, category: v })}>
+                  <SelectTrigger className="h-11 rounded-xl"><SelectValue placeholder="Select" /></SelectTrigger>
+                  <SelectContent>{categories.map((c) => <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
             </div>
-            <div>
-              <Label>Expected Payment Date</Label>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Expected Payment Date</Label>
               <TransactionDatePicker
                 selectedDate={editFormData.paymentDate}
                 onDateChange={(d) => setEditFormData({ ...editFormData, paymentDate: d })}
               />
             </div>
-            <div><Label>Remarks</Label><Textarea value={editFormData.remarks} onChange={(e) => setEditFormData({ ...editFormData, remarks: e.target.value })} /></div>
+            <div className="space-y-1.5"><Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Remarks</Label><Textarea value={editFormData.remarks} onChange={(e) => setEditFormData({ ...editFormData, remarks: e.target.value })} className="rounded-xl" /></div>
 
-            <div className="border-t pt-4 mt-4 space-y-4">
-              <h3 className="font-medium text-sm">Inventory Details</h3>
-              <div className="flex items-center space-x-2">
+            <div className="border-t border-slate-100 pt-4 mt-4 space-y-4">
+              <h3 className="font-bold text-xs uppercase tracking-wider text-muted-foreground">Inventory Details</h3>
+              <div className="flex items-center space-x-3 bg-slate-50 p-3 rounded-xl border border-slate-100">
                 <input
                   type="checkbox"
                   id="edit-is-inventory"
+                  className="h-5 w-5 rounded border-slate-300 text-primary focus:ring-primary"
                   checked={editFormData.is_inventory_purchase}
                   onChange={(e) => setEditFormData({...editFormData, is_inventory_purchase: e.target.checked})}
                 />
-                <Label htmlFor="edit-is-inventory">Is Inventory Purchase?</Label>
+                <Label htmlFor="edit-is-inventory" className="font-medium cursor-pointer">Is Inventory Purchase?</Label>
               </div>
 
               {editFormData.is_inventory_purchase && (
-                <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2">
-                  <div className="col-span-2">
-                    <Label>Inventory Item ID (UUID)</Label>
-                    <Input value={editFormData.inventory_item_id} onChange={(e) => setEditFormData({...editFormData, inventory_item_id: e.target.value})} placeholder="UUID of inventory item" />
+                <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Item ID (UUID)</Label>
+                    <Input value={editFormData.inventory_item_id} onChange={(e) => setEditFormData({...editFormData, inventory_item_id: e.target.value})} placeholder="UUID" className="h-11 rounded-xl" />
                   </div>
-                  <div><Label>Quantity</Label><Input type="number" value={editFormData.quantity} onChange={(e) => setEditFormData({...editFormData, quantity: e.target.value})} /></div>
-                  <div><Label>Unit</Label><Input value={editFormData.unit} onChange={(e) => setEditFormData({...editFormData, unit: e.target.value})} /></div>
-                  <div><Label>Cost Per Unit</Label><Input type="number" value={editFormData.cost_per_unit} onChange={(e) => setEditFormData({...editFormData, cost_per_unit: e.target.value})} /></div>
-                  <div><Label>Invoice Number</Label><Input value={editFormData.invoice_number} onChange={(e) => setEditFormData({...editFormData, invoice_number: e.target.value})} /></div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5"><Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Qty</Label><Input type="number" value={editFormData.quantity} onChange={(e) => setEditFormData({...editFormData, quantity: e.target.value})} className="h-11 rounded-xl" /></div>
+                    <div className="space-y-1.5"><Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Unit</Label><Input value={editFormData.unit} onChange={(e) => setEditFormData({...editFormData, unit: e.target.value})} className="h-11 rounded-xl" /></div>
+                  </div>
                 </div>
               )}
             </div>
 
-            <DialogFooter><Button type="submit" className="w-full">Update Booking</Button></DialogFooter>
+            <DialogFooter className="pt-2"><Button type="submit" className="w-full h-12 rounded-xl text-lg font-bold shadow-lg shadow-primary/20">Update Booking</Button></DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
 
-      <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <BookMarked className="h-5 w-5 text-muted-foreground" />
-            <h1 className="text-lg font-semibold text-foreground">Expense Bookings</h1>
+      <div className="space-y-4 md:space-y-6">
+        <div className="bg-primary/5 p-4 rounded-3xl mb-4 md:mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-primary rounded-xl text-white">
+              <BookMarked className="h-5 w-5 md:h-6 md:w-6" />
+            </div>
+            <div>
+              <h1 className="text-xl md:text-2xl font-bold text-foreground">Expense Bookings</h1>
+              <p className="text-xs text-muted-foreground mt-0.5 italic">Track pending payments and liabilities</p>
+            </div>
           </div>
-          <p className="text-sm text-muted-foreground italic">Track pending payments and liabilities</p>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          <Card className="bg-card border"><CardContent className="p-4"><p className="text-xs text-muted-foreground">Total Bookings</p><p className="text-lg font-bold text-foreground">{bookings.length}</p></CardContent></Card>
-          <Card className="bg-card border"><CardContent className="p-4"><p className="text-xs text-muted-foreground">Total Amount</p><p className="text-lg font-bold text-foreground">NRs. {totalBookings.toFixed(2)}</p></CardContent></Card>
-          <Card className="bg-card border"><CardContent className="p-4"><p className="text-xs text-muted-foreground">Categories</p><p className="text-lg font-bold text-foreground">{categories.length}</p></CardContent></Card>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
+          <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden">
+            <CardContent className="p-4 md:p-6">
+              <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Bookings</p>
+              <p className="text-sm md:text-xl font-bold text-foreground">{bookings.length}</p>
+            </CardContent>
+          </Card>
+          <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden">
+            <CardContent className="p-4 md:p-6">
+              <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Amount</p>
+              <p className="text-sm md:text-xl font-bold text-primary">NRs. {totalBookings.toFixed(2)}</p>
+            </CardContent>
+          </Card>
+          <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden hidden md:block">
+            <CardContent className="p-4 md:p-6">
+              <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Categories</p>
+              <p className="text-sm md:text-xl font-bold text-foreground">{categories.length}</p>
+            </CardContent>
+          </Card>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2">
-            <Card className="bg-card border">
-              <CardHeader className="pb-3"><CardTitle className="text-base">Active Liabilities</CardTitle></CardHeader>
-              <CardContent>
-                <div className="space-y-4">
+          <div className="lg:col-span-2 space-y-4">
+            <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden">
+              <CardHeader className="bg-slate-50/50 border-b border-slate-100 px-4 md:px-6 py-4">
+                <CardTitle className="text-base md:text-lg font-bold">Active Liabilities</CardTitle>
+              </CardHeader>
+              <CardContent className="p-2 md:p-6">
+                <div className="space-y-3">
                   {bookings.length === 0 && (
-                    <div className="text-center py-8 text-muted-foreground">No pending expense bookings found.</div>
+                    <div className="text-center py-12 text-muted-foreground bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
+                      <BookMarked className="h-10 w-10 mx-auto mb-3 opacity-20" />
+                      <p className="font-medium">No pending expense bookings</p>
+                    </div>
                   )}
                   {Object.entries(groupedBookings).map(([party, partyBookings]) => {
                     const partyTotal = partyBookings.reduce((sum, b) => sum + b.amount, 0);
                     const isExpanded = expandedParties[party];
 
                     return (
-                      <div key={party} className="border rounded-lg overflow-hidden">
+                      <div key={party} className="border border-slate-100 rounded-2xl overflow-hidden bg-white shadow-sm">
                         <div
-                          className="bg-muted/50 p-4 flex items-center justify-between cursor-pointer hover:bg-muted/80 transition-colors"
+                          className={cn(
+                            "p-4 flex items-center justify-between cursor-pointer transition-all",
+                            isExpanded ? "bg-primary/5" : "hover:bg-slate-50"
+                          )}
                           onClick={() => toggleParty(party)}
                         >
                           <div className="flex items-center gap-3">
-                            {isExpanded ? <ChevronDown className="h-5 w-5 text-muted-foreground" /> : <ChevronRight className="h-5 w-5 text-muted-foreground" />}
+                            <div className={cn(
+                              "h-8 w-8 rounded-full flex items-center justify-center transition-transform duration-200",
+                              isExpanded ? "bg-primary text-white rotate-90" : "bg-slate-100 text-slate-500"
+                            )}>
+                              <ChevronRight className="h-5 w-5" />
+                            </div>
                             <div>
-                              <div className="font-bold text-lg">{party}</div>
-                              <div className="text-xs text-muted-foreground">{partyBookings.length} booking(s)</div>
+                              <div className="font-bold text-base md:text-lg text-slate-800">{party}</div>
+                              <div className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">{partyBookings.length} booking(s)</div>
                             </div>
                           </div>
-                          <div className="flex items-center gap-4">
-                            <div className="text-right">
-                              <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Total Pending</div>
-                              <div className="text-xl font-black text-primary">NRs. {partyTotal.toFixed(2)}</div>
-                            </div>
-                            <Button size="sm" variant="outline" className="hidden sm:flex items-center gap-2">
-                              <Info className="h-4 w-4" />
-                              {isExpanded ? "Hide Details" : "Show Details"}
-                            </Button>
+                          <div className="text-right">
+                            <div className="text-xs text-muted-foreground font-bold uppercase tracking-tighter mb-0.5">Pending</div>
+                            <div className="text-lg md:text-xl font-black text-primary">NRs. {partyTotal.toLocaleString()}</div>
                           </div>
                         </div>
 
                         {isExpanded && (
-                          <div className="border-t p-4 bg-background/50">
-                            <Table>
-                              <TableHeader>
-                                <TableRow className="bg-muted/20">
-                                  <TableHead className="w-1/3">Description/Details</TableHead>
-                                  <TableHead>Amount</TableHead>
-                                  <TableHead>Category</TableHead>
-                                  <TableHead>Expected Date</TableHead>
-                                  <TableHead className="text-right">Actions</TableHead>
-                                </TableRow>
-                              </TableHeader>
-                              <TableBody>
-                                {partyBookings.map((b) => (
-                                  <TableRow key={b.id} className="hover:bg-muted/10">
-                                    <TableCell>
-                                      <div className="flex items-center gap-2">
-                                        {b.is_inventory_purchase && <Package className="h-3 w-3 text-amber-600" />}
-                                        <div className="font-medium">{b.description}</div>
-                                      </div>
-                                      {b.remarks && <div className="text-xs text-muted-foreground italic">{b.remarks}</div>}
-                                      {b.is_inventory_purchase && (
-                                        <div className="text-[10px] text-muted-foreground mt-1">
-                                          Qty: {b.quantity} {b.unit} @ {b.cost_per_unit}
-                                        </div>
-                                      )}
-                                    </TableCell>
-                                    <TableCell className="font-semibold text-lg">NRs. {b.amount.toFixed(2)}</TableCell>
-                                    <TableCell><Badge variant="outline" className="bg-background">{b.category}</Badge></TableCell>
-                                    <TableCell className="text-xs">
-                                      {b.payment_date ? (
-                                        <div className="flex items-center gap-1 font-medium text-orange-600">
-                                          <CalendarIcon className="h-3 w-3" />
-                                          {format(new Date(b.payment_date), "MMM dd, yyyy")}
-                                        </div>
-                                      ) : "-"}
-                                    </TableCell>
-                                    <TableCell className="text-right">
-                                      <div className="flex justify-end gap-1">
-                                        <Popover>
-                                          <PopoverTrigger asChild>
-                                            <Button size="icon" variant="ghost" className="h-9 w-9 text-muted-foreground">
-                                              <Paperclip className="h-4 w-4" />
-                                            </Button>
-                                          </PopoverTrigger>
-                                          <PopoverContent className="w-80">
-                                            <RecordAttachments recordType="expense_booking" recordId={b.id} compact />
-                                          </PopoverContent>
-                                        </Popover>
-                                        <Button size="icon" variant="ghost" className="h-9 w-9 text-green-600 hover:text-green-700 hover:bg-green-50 border border-transparent hover:border-green-200" onClick={() => handlePaid(b)} title="Mark as Paid">
-                                          <CheckCircle2 className="h-5 w-5" />
-                                        </Button>
-                                        <Button size="icon" variant="ghost" className="h-9 w-9 text-blue-600 hover:text-blue-700 hover:bg-blue-50" onClick={() => handleEdit(b)} title="Edit">
-                                          <Edit className="h-4 w-4" />
-                                        </Button>
-                                        <AlertDialog>
-                                          <AlertDialogTrigger asChild>
-                                            <Button size="icon" variant="ghost" className="h-9 w-9 text-destructive hover:bg-destructive/10" title="Delete">
-                                              <Trash2 className="h-4 w-4" />
-                                            </Button>
-                                          </AlertDialogTrigger>
-                                          <AlertDialogContent>
-                                            <AlertDialogHeader>
-                                              <AlertDialogTitle>Delete Booking?</AlertDialogTitle>
-                                              <AlertDialogDescription>This will permanently remove this booking record.</AlertDialogDescription>
-                                            </AlertDialogHeader>
-                                            <AlertDialogFooter>
-                                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                              <AlertDialogAction onClick={() => handleDelete(b.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Delete</AlertDialogAction>
-                                            </AlertDialogFooter>
-                                          </AlertDialogContent>
-                                        </AlertDialog>
-                                      </div>
-                                    </TableCell>
+                          <div className="border-t border-slate-100 p-0 animate-in slide-in-from-top-2 duration-200">
+                            <div className="overflow-x-auto">
+                              <Table>
+                                <TableHeader className="bg-slate-50/50">
+                                  <TableRow>
+                                    <TableHead className="text-[10px] font-black uppercase">Details</TableHead>
+                                    <TableHead className="text-[10px] font-black uppercase">Amount</TableHead>
+                                    <TableHead className="text-[10px] font-black uppercase text-right">Actions</TableHead>
                                   </TableRow>
-                                ))}
-                              </TableBody>
-                            </Table>
+                                </TableHeader>
+                                <TableBody>
+                                  {partyBookings.map((b) => (
+                                    <TableRow key={b.id} className="hover:bg-slate-50/50">
+                                      <TableCell>
+                                        <div className="space-y-1">
+                                          <div className="flex items-center gap-1.5">
+                                            {b.is_inventory_purchase && <Package className="h-3 w-3 text-amber-500" />}
+                                            <span className="font-bold text-sm text-slate-700">{b.description}</span>
+                                          </div>
+                                          <div className="flex flex-wrap gap-1">
+                                            <Badge variant="secondary" className="text-[9px] h-4 px-1.5 rounded-md font-bold">{b.category}</Badge>
+                                            {b.payment_date && (
+                                              <Badge variant="outline" className="text-[9px] h-4 px-1.5 rounded-md font-bold text-orange-600 border-orange-100 bg-orange-50/30">
+                                                Due: {format(new Date(b.payment_date), "MMM dd")}
+                                              </Badge>
+                                            )}
+                                          </div>
+                                        </div>
+                                      </TableCell>
+                                      <TableCell>
+                                        <span className="font-black text-slate-800">NRs. {b.amount.toLocaleString()}</span>
+                                      </TableCell>
+                                      <TableCell className="text-right">
+                                        <div className="flex justify-end gap-1">
+                                          <Button size="icon" variant="ghost" className="h-8 w-8 text-green-600 hover:bg-green-50 rounded-lg" onClick={() => handlePaid(b)}>
+                                            <CheckCircle2 className="h-4 w-4" />
+                                          </Button>
+                                          <Button size="icon" variant="ghost" className="h-8 w-8 text-blue-600 hover:bg-blue-50 rounded-lg" onClick={() => handleEdit(b)}>
+                                            <Edit className="h-4 w-4" />
+                                          </Button>
+                                          <AlertDialog>
+                                            <AlertDialogTrigger asChild>
+                                              <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive hover:bg-destructive/10 rounded-lg">
+                                                <Trash2 className="h-4 w-4" />
+                                              </Button>
+                                            </AlertDialogTrigger>
+                                            <AlertDialogContent className="rounded-3xl">
+                                              <AlertDialogHeader>
+                                                <AlertDialogTitle>Delete Booking?</AlertDialogTitle>
+                                                <AlertDialogDescription>This will permanently remove this liability.</AlertDialogDescription>
+                                              </AlertDialogHeader>
+                                              <AlertDialogFooter>
+                                                <AlertDialogCancel className="rounded-xl">Cancel</AlertDialogCancel>
+                                                <AlertDialogAction onClick={() => handleDelete(b.id)} className="bg-destructive hover:bg-destructive/90 rounded-xl">Delete</AlertDialogAction>
+                                              </AlertDialogFooter>
+                                            </AlertDialogContent>
+                                          </AlertDialog>
+                                        </div>
+                                      </TableCell>
+                                    </TableRow>
+                                  ))}
+                                </TableBody>
+                              </Table>
+                            </div>
                           </div>
                         )}
                       </div>
@@ -550,54 +596,67 @@ const ExpenseBookingsTab = () => {
             </Card>
           </div>
 
-          <div className="space-y-4">
-            <Card className="bg-card border">
-              <CardHeader className="pb-3"><CardTitle className="text-base">Add Booking</CardTitle></CardHeader>
-              <CardContent>
+          <div className="space-y-4 md:space-y-6">
+            <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden">
+              <CardHeader className="bg-primary text-white p-4 md:px-6 py-4">
+                <CardTitle className="text-base md:text-lg font-bold flex items-center gap-2">
+                  <PlusCircle className="h-5 w-5" />
+                  Add New Booking
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 md:p-6">
                 <form onSubmit={handleSubmit} className="space-y-4">
-                  <div><Label>Description *</Label><Input value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} placeholder="e.g. Meat purchase" required /></div>
-                  <div><Label>Supplier (Party Name) *</Label><Input value={formData.supplier} onChange={(e) => setFormData({ ...formData, supplier: e.target.value })} placeholder="e.g. ABC Meat Shop" required /></div>
-                  <div><Label>Amount *</Label><Input type="number" value={formData.amount} onChange={(e) => setFormData({ ...formData, amount: e.target.value })} placeholder="0.00" required /></div>
-                  <div><Label>Category *</Label><Select value={formData.category} onValueChange={(v) => setFormData({ ...formData, category: v })}><SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger><SelectContent>{categories.map((c) => <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>)}</SelectContent></Select></div>
-                  <div>
-                    <Label>Expected Payment Date</Label>
+                  <div className="space-y-1.5"><Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Description *</Label><Input value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} placeholder="e.g. Meat purchase" required className="h-11 rounded-xl" /></div>
+                  <div className="space-y-1.5"><Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Supplier (Party Name) *</Label><Input value={formData.supplier} onChange={(e) => setFormData({ ...formData, supplier: e.target.value })} placeholder="e.g. ABC Meat Shop" required className="h-11 rounded-xl" /></div>
+                  <div className="space-y-1.5"><Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Amount *</Label><Input type="number" value={formData.amount} onChange={(e) => setFormData({ ...formData, amount: e.target.value })} placeholder="0.00" required className="h-11 rounded-xl" /></div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Category *</Label>
+                    <Select value={formData.category} onValueChange={(v) => setFormData({ ...formData, category: v })}>
+                      <SelectTrigger className="h-11 rounded-xl"><SelectValue placeholder="Select" /></SelectTrigger>
+                      <SelectContent>{categories.map((c) => <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Expected Payment Date</Label>
                     <TransactionDatePicker
                       selectedDate={formData.paymentDate}
                       onDateChange={(d) => setFormData({ ...formData, paymentDate: d })}
                     />
                   </div>
-                  <div><Label>Remarks</Label><Textarea value={formData.remarks} onChange={(e) => setFormData({ ...formData, remarks: e.target.value })} placeholder="Optional notes" /></div>
-                  <Button type="submit" disabled={isSubmitting} className="w-full">{isSubmitting ? "Adding..." : "Add Booking"}</Button>
+                  <div className="space-y-1.5"><Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Remarks</Label><Textarea value={formData.remarks} onChange={(e) => setFormData({ ...formData, remarks: e.target.value })} placeholder="Notes..." className="rounded-xl min-h-[80px]" /></div>
+                  <Button type="submit" disabled={isSubmitting} className="w-full h-12 rounded-xl text-lg font-bold shadow-lg shadow-primary/20">{isSubmitting ? "Adding..." : "Create Booking"}</Button>
                 </form>
               </CardContent>
             </Card>
 
             {canAddCategory && (
-              <Card className="bg-card border">
-                <CardHeader className="pb-3"><CardTitle className="text-base">Categories</CardTitle></CardHeader>
-                <CardContent>
-                  <form onSubmit={handleAddCategory} className="flex gap-2 mb-4">
-                    <Input value={newCategory} onChange={(e) => setNewCategory(e.target.value)} placeholder="New category" />
-                    <Button type="submit">Add</Button>
+              <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden">
+                <CardHeader className="bg-slate-50/50 border-b border-slate-100 px-4 md:px-6 py-4">
+                  <CardTitle className="text-base md:text-lg font-bold">Categories</CardTitle>
+                </CardHeader>
+                <CardContent className="p-4 md:p-6">
+                  <form onSubmit={handleAddCategory} className="flex gap-2 mb-6">
+                    <Input value={newCategory} onChange={(e) => setNewCategory(e.target.value)} placeholder="New category" className="h-11 rounded-xl" />
+                    <Button type="submit" className="h-11 w-11 rounded-xl p-0 font-bold"><PlusCircle className="h-5 w-5" /></Button>
                   </form>
                   <div className="space-y-2">
                     {categories.map((c) => (
-                      <div key={c.id} className="flex items-center justify-between p-2 bg-muted rounded group">
-                        <span className="text-sm font-medium">{c.name}</span>
+                      <div key={c.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-2xl border border-slate-100 group">
+                        <span className="text-sm font-medium text-slate-700">{c.name}</span>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <Button size="icon" variant="ghost" className="h-6 w-6 opacity-0 group-hover:opacity-100 text-destructive hover:bg-destructive/10">
-                              <Trash2 className="h-3.5 w-3.5" />
+                            <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive hover:bg-destructive/10 rounded-lg">
+                              <Trash2 className="h-4 w-4" />
                             </Button>
                           </AlertDialogTrigger>
-                          <AlertDialogContent>
+                          <AlertDialogContent className="rounded-3xl">
                             <AlertDialogHeader>
                               <AlertDialogTitle>Delete Category?</AlertDialogTitle>
-                              <AlertDialogDescription>This will remove the category "{c.name}".</AlertDialogDescription>
+                              <AlertDialogDescription>Remove "{c.name}" from bookings.</AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => handleDeleteCategory(c.id)}>Delete</AlertDialogAction>
+                              <AlertDialogCancel className="rounded-xl">Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDeleteCategory(c.id)} className="bg-destructive hover:bg-destructive/90 rounded-xl">Delete</AlertDialogAction>
                             </AlertDialogFooter>
                           </AlertDialogContent>
                         </AlertDialog>

@@ -100,133 +100,167 @@ const MultiSavingsEntry = ({ onComplete }: Props) => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-2">
+        <Button variant="outline" size="sm" className="gap-2 rounded-xl font-bold h-10 border-primary/20 text-primary hover:bg-primary/5">
           <Layers className="h-4 w-4" />
-          Bulk Add
+          Bulk Savings
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto" aria-describedby={undefined}>
-        <DialogHeader>
-          <DialogTitle>Add Multiple Savings Contributions</DialogTitle>
-          <p className="text-sm text-muted-foreground">
-            Enter multiple savings entries across different dates in one go.
+      <DialogContent className="max-w-5xl w-[95vw] max-h-[95vh] overflow-y-auto p-4 md:p-6 rounded-3xl" aria-describedby={undefined}>
+        <DialogHeader className="mb-4">
+          <DialogTitle className="text-xl md:text-2xl font-black text-primary flex items-center gap-2">
+            <PiggyBank className="h-6 w-6" />
+            Bulk Savings
+          </DialogTitle>
+          <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1">
+            Batch process multiple savings contributions across different dates
           </p>
         </DialogHeader>
 
-        <div className="space-y-3">
+        <div className="space-y-4">
           {rows.map((r, i) => (
             <div
               key={i}
-              className="grid grid-cols-12 gap-2 items-end p-3 border rounded-md bg-muted/30"
+              className="flex flex-col gap-4 p-4 rounded-2xl border border-slate-100 bg-slate-50/50 relative overflow-hidden"
             >
-              <div className="col-span-12 sm:col-span-2">
-                <Label className="text-xs">Date</Label>
-                <Input
-                  type="date"
-                  value={r.contribution_date}
-                  onChange={(e) => updateRow(i, { contribution_date: e.target.value })}
-                />
-              </div>
-              <div className="col-span-6 sm:col-span-2">
-                <Label className="text-xs">Amount</Label>
-                <Input
-                  type="number"
-                  value={r.contribution_amount}
-                  onChange={(e) =>
-                    updateRow(i, { contribution_amount: parseFloat(e.target.value) || 0 })
-                  }
-                />
-              </div>
-              <div className="col-span-6 sm:col-span-2">
-                <Label className="text-xs">Member ID</Label>
-                <Input
-                  value={r.member_id}
-                  onChange={(e) => updateRow(i, { member_id: e.target.value })}
-                  placeholder="ID"
-                />
-              </div>
-              <div className="col-span-6 sm:col-span-2">
-                <Label className="text-xs">Cycle</Label>
-                <Select
-                  value={r.cycle_period}
-                  onValueChange={(v) => updateRow(i, { cycle_period: v })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {cyclePeriods.map((p) => (
-                      <SelectItem key={p} value={p}>
-                        {p}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="col-span-6 sm:col-span-2">
-                <Label className="text-xs">Payment</Label>
-                <Select
-                  value={r.payment_mode}
-                  onValueChange={(v) => updateRow(i, { payment_mode: v })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {paymentModes.map((p) => (
-                      <SelectItem key={p} value={p}>
-                        {p}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="col-span-10 sm:col-span-1">
-                <Label className="text-xs">To</Label>
-                <Select
-                  value={r.savings_to}
-                  onValueChange={(v) => updateRow(i, { savings_to: v })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {savingsTo.map((p) => (
-                      <SelectItem key={p} value={p}>
-                        {p}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="col-span-2 sm:col-span-1 flex justify-end">
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  onClick={() => removeRow(i)}
-                  disabled={rows.length === 1}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+              <div className="absolute top-0 left-0 w-1 h-full bg-primary/20" />
+
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-3 md:items-end">
+                <div className="md:col-span-2">
+                  <Label className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5 block">Date</Label>
+                  <Input
+                    type="date"
+                    value={r.contribution_date}
+                    className="h-11 rounded-xl font-bold border-slate-200"
+                    onChange={(e) => updateRow(i, { contribution_date: e.target.value })}
+                  />
+                </div>
+                <div className="md:col-span-2">
+                  <Label className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5 block">Amount (रु)</Label>
+                  <Input
+                    type="number"
+                    value={r.contribution_amount}
+                    className="h-11 rounded-xl font-bold border-slate-200"
+                    onChange={(e) =>
+                      updateRow(i, { contribution_amount: parseFloat(e.target.value) || 0 })
+                    }
+                  />
+                </div>
+                <div className="md:col-span-2">
+                  <Label className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5 block">Member ID</Label>
+                  <Input
+                    value={r.member_id}
+                    className="h-11 rounded-xl font-bold border-slate-200"
+                    onChange={(e) => updateRow(i, { member_id: e.target.value })}
+                    placeholder="M-001..."
+                  />
+                </div>
+                <div className="md:col-span-2">
+                  <Label className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5 block">Cycle</Label>
+                  <Select
+                    value={r.cycle_period}
+                    onValueChange={(v) => updateRow(i, { cycle_period: v })}
+                  >
+                    <SelectTrigger className="h-11 rounded-xl font-bold border-slate-200 bg-white">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-xl shadow-2xl">
+                      {cyclePeriods.map((p) => (
+                        <SelectItem key={p} value={p} className="font-bold">
+                          {p}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="md:col-span-2">
+                  <Label className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5 block">Payment</Label>
+                  <Select
+                    value={r.payment_mode}
+                    onValueChange={(v) => updateRow(i, { payment_mode: v })}
+                  >
+                    <SelectTrigger className="h-11 rounded-xl font-bold border-slate-200 bg-white">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-xl shadow-2xl">
+                      {paymentModes.map((p) => (
+                        <SelectItem key={p} value={p} className="font-bold">
+                          {p}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="md:col-span-1">
+                  <Label className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5 block text-center">To</Label>
+                  <Select
+                    value={r.savings_to}
+                    onValueChange={(v) => updateRow(i, { savings_to: v })}
+                  >
+                    <SelectTrigger className="h-11 rounded-xl font-bold border-slate-200 bg-white">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-xl shadow-2xl">
+                      {savingsTo.map((p) => (
+                        <SelectItem key={p} value={p} className="font-bold">
+                          {p}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex items-center justify-between md:col-span-1">
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="text-rose-500 hover:text-rose-600 hover:bg-rose-50 rounded-full md:mb-1 w-11 h-11"
+                    onClick={() => removeRow(i)}
+                    disabled={rows.length === 1}
+                  >
+                    <Trash2 className="h-5 w-5" />
+                  </Button>
+                </div>
               </div>
             </div>
           ))}
 
-          <Button variant="outline" size="sm" onClick={addRow} className="gap-2">
-            <Plus className="h-4 w-4" />
-            Add Row
+          <Button
+            variant="secondary"
+            onClick={addRow}
+            className="w-full h-12 rounded-2xl font-black uppercase text-xs tracking-widest bg-slate-100 hover:bg-slate-200 text-slate-600"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add Another Record
           </Button>
         </div>
 
-        <DialogFooter className="flex items-center justify-between sm:justify-between">
-          <div className="text-sm">
-            <span className="text-muted-foreground">Total: </span>
-            <span className="font-semibold">NRs. {grandTotal.toFixed(2)}</span>
-            <span className="text-muted-foreground ml-2">({rows.length} rows)</span>
+        <DialogFooter className="mt-8 flex flex-col sm:flex-row items-center gap-4 border-t border-slate-100 pt-6">
+          <div className="flex-1 text-center sm:text-left">
+            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Batch Total Savings</p>
+            <div className="text-2xl font-black text-primary">
+              रु {grandTotal.toLocaleString()}
+            </div>
           </div>
-          <Button onClick={submit} disabled={submitting}>
-            {submitting ? "Saving..." : `Save ${rows.length} Entries`}
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            <Button
+              variant="ghost"
+              onClick={() => setOpen(false)}
+              className="rounded-xl font-bold h-12 text-slate-500"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={submit}
+              disabled={submitting}
+              className="rounded-xl font-black uppercase tracking-widest text-xs h-12 px-8 bg-primary shadow-lg shadow-primary/20"
+            >
+              {submitting ? (
+                <>
+                  <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
+                  Saving...
+                </>
+              ) : `Save ${rows.length} Entries`}
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>

@@ -350,18 +350,16 @@ const CooperativeSavingsTab = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-teal-50 via-cyan-50 to-blue-50 relative overflow-hidden">
+    <div className="min-h-screen bg-background p-2 md:p-6 pb-24 md:pb-6">
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto" aria-describedby={undefined}>
-          <DialogHeader>
-            <DialogTitle>Edit Saving</DialogTitle>
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto p-4 md:p-6 rounded-3xl" aria-describedby={undefined}>
+          <DialogHeader className="mb-4">
+            <DialogTitle className="text-xl font-bold text-primary">Edit Saving</DialogTitle>
           </DialogHeader>
           {selectedSaving && (
             <div className="space-y-4">
-              <div>
-                <Label htmlFor="editContributionAmount">
-                  Contribution Amount
-                </Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="editContributionAmount" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Amount</Label>
                 <Input
                   id="editContributionAmount"
                   type="number"
@@ -372,10 +370,11 @@ const CooperativeSavingsTab = () => {
                       contribution_amount: parseFloat(e.target.value),
                     })
                   }
+                  className="h-11 rounded-xl"
                 />
               </div>
-              <div>
-                <Label htmlFor="editMemberId">Member ID</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="editMemberId" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Member ID</Label>
                 <Input
                   id="editMemberId"
                   value={selectedSaving.member_id}
@@ -385,10 +384,11 @@ const CooperativeSavingsTab = () => {
                       member_id: e.target.value,
                     })
                   }
+                  className="h-11 rounded-xl"
                 />
               </div>
-              <div>
-                <Label htmlFor="editCyclePeriod">Cycle Period</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="editCyclePeriod" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Cycle Period</Label>
                 <Input
                   id="editCyclePeriod"
                   value={selectedSaving.cycle_period || ""}
@@ -398,150 +398,94 @@ const CooperativeSavingsTab = () => {
                       cycle_period: e.target.value,
                     })
                   }
+                  className="h-11 rounded-xl"
                 />
               </div>
-              <RecordAttachments recordType="cooperative_saving" recordId={selectedSaving.id} />
+              <RecordAttachments recordType="cooperative_saving" recordId={selectedSaving.id} compact />
             </div>
           )}
-          <DialogFooter>
-            <Button onClick={handleUpdate}>Save</Button>
+          <DialogFooter className="pt-2">
+            <Button onClick={handleUpdate} className="w-full h-12 rounded-xl text-lg font-bold shadow-lg">Save Changes</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      {/* Animated Background Elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-20 w-64 h-64 bg-gradient-to-r from-teal-400/20 to-cyan-500/20 rounded-full blur-3xl animate-pulse"></div>
-        <div
-          className="absolute top-1/3 right-20 w-80 h-80 bg-gradient-to-r from-cyan-400/20 to-blue-500/20 rounded-full blur-3xl animate-pulse"
-          style={{ animationDelay: "1s" }}
-        ></div>
-        <div
-          className="absolute bottom-20 left-1/4 w-72 h-72 bg-gradient-to-r from-blue-400/20 to-indigo-500/20 rounded-full blur-3xl animate-pulse"
-          style={{ animationDelay: "2s" }}
-        ></div>
-      </div>
 
-      <div className="relative z-10 space-y-8 p-6">
+      <div className="space-y-4 md:space-y-6">
         {/* Header */}
-        <div className="mb-8 flex items-start justify-between gap-4 flex-wrap">
-          <div>
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-3 rounded-xl bg-primary text-primary-foreground">
-                <PiggyBank className="h-6 w-6" />
-              </div>
-              <h1 className="text-2xl font-semibold text-foreground">
-                Cooperative Savings
-              </h1>
+        <div className="bg-primary/5 p-4 rounded-3xl mb-4 md:mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-primary rounded-xl text-white">
+              <PiggyBank className="h-5 w-5 md:h-6 md:w-6" />
             </div>
-            <p className="text-sm text-muted-foreground">
-              Manage community savings contributions and member tracking.
-            </p>
+            <div>
+              <h1 className="text-xl md:text-2xl font-bold text-foreground">
+                Savings
+              </h1>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Track cooperative savings and member contributions
+              </p>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full md:w-auto">
             <HistoryDateRangeFilter range={range} onChange={onRangeChange} />
             <MultiSavingsEntry onComplete={fetchSavings} />
           </div>
         </div>
 
         {/* All-Time Total Display */}
-        <AllTimeTotalDisplay type="savings" className="mb-8" />
+        <AllTimeTotalDisplay type="savings" className="mb-4 md:mb-6" />
 
         {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card className="bg-gradient-to-br from-teal-50 to-cyan-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-teal-600 font-medium">
-                    Total Savings
-                  </p>
-                  <p className="text-2xl font-bold text-teal-800">
-                    NRs. {totalSavings.toFixed(2)}
-                  </p>
-                </div>
-                <div className="p-3 bg-gradient-to-r from-teal-500 to-cyan-500 rounded-xl text-white">
-                  <PiggyBank className="h-6 w-6" />
-                </div>
-              </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-4 md:mb-6">
+          <Card className="rounded-3xl border-none bg-white shadow-sm overflow-hidden">
+            <CardContent className="p-4 md:p-6">
+              <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Total</p>
+              <p className="text-sm md:text-xl font-bold text-primary">NRs. {totalSavings.toFixed(2)}</p>
             </CardContent>
           </Card>
-
-          <Card className="bg-gradient-to-br from-cyan-50 to-blue-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-cyan-600 font-medium">
-                    Active Members
-                  </p>
-                  <p className="text-2xl font-bold text-cyan-800">
-                    {uniqueMembers}
-                  </p>
-                </div>
-                <div className="p-3 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl text-white">
-                  <Users className="h-6 w-6" />
-                </div>
-              </div>
+          <Card className="rounded-3xl border-none bg-white shadow-sm overflow-hidden">
+            <CardContent className="p-4 md:p-6">
+              <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Members</p>
+              <p className="text-sm md:text-xl font-bold text-foreground">{uniqueMembers}</p>
             </CardContent>
           </Card>
-
-          <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-blue-600 font-medium">
-                    Average Contribution
-                  </p>
-                  <p className="text-2xl font-bold text-blue-800">
-                    NRs. {averageContribution.toFixed(2)}
-                  </p>
-                </div>
-                <div className="p-3 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl text-white">
-                  <TrendingUp className="h-6 w-6" />
-                </div>
-              </div>
+          <Card className="rounded-3xl border-none bg-white shadow-sm overflow-hidden hidden md:block">
+            <CardContent className="p-4 md:p-6">
+              <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Avg Contribution</p>
+              <p className="text-sm md:text-xl font-bold text-foreground">NRs. {averageContribution.toFixed(0)}</p>
             </CardContent>
           </Card>
-
-          <Card className="bg-gradient-to-br from-indigo-50 to-purple-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-indigo-600 font-medium">
-                    Top Cycle
-                  </p>
-                  <p className="text-lg font-bold text-indigo-800 truncate">
-                    {topPeriod ? topPeriod[0] : "None"}
-                  </p>
-                </div>
-                <div className="p-3 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-xl text-white">
-                  <Clock className="h-6 w-6" />
-                </div>
-              </div>
+          <Card className="rounded-3xl border-none bg-white shadow-sm overflow-hidden">
+            <CardContent className="p-4 md:p-6">
+              <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Cycle</p>
+              <p className="text-[10px] md:text-sm font-bold text-primary truncate">
+                {topPeriod ? topPeriod[0] : "None"}
+              </p>
             </CardContent>
           </Card>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-8">
           {/* Add Saving Form */}
-          <Card className="bg-gradient-to-br from-white/90 to-teal-50/90 backdrop-blur-sm border-0 shadow-2xl hover:shadow-3xl transition-all duration-300">
-            <CardHeader className="bg-gradient-to-r from-teal-500 to-cyan-600 text-white rounded-t-lg">
-              <CardTitle className="flex items-center gap-3 text-xl">
-                <div className="p-2 bg-white/20 rounded-lg">
-                  <Plus className="h-6 w-6" />
+          <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden">
+            <CardHeader className="bg-teal-500 text-white p-4 md:p-6">
+              <CardTitle className="flex items-center gap-3 text-lg md:text-xl font-bold">
+                <div className="p-2 bg-white/20 rounded-xl">
+                  <Plus className="h-5 w-5 md:h-6 md:w-6" />
                 </div>
-                Record New Contribution
-                <Sparkles className="h-5 w-5 animate-pulse" />
+                New Contribution
+                <Sparkles className="h-4 w-4 md:h-5 md:w-5 ml-auto opacity-70" />
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-6">
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="space-y-2">
+            <CardContent className="p-4 md:p-6 space-y-6">
+              <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
+                <div className="space-y-1.5">
                   <Label
                     htmlFor="contributionAmount"
-                    className="text-sm font-medium text-gray-700 flex items-center gap-2"
+                    className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2"
                   >
-                    <DollarSign className="h-4 w-4 text-teal-600" />
-                    Contribution Amount (NRs.) *
+                    <DollarSign className="h-3.5 w-3.5 text-teal-600" />
+                    Amount (NRs.) *
                   </Label>
                   <Input
                     id="contributionAmount"
@@ -556,17 +500,17 @@ const CooperativeSavingsTab = () => {
                     }
                     placeholder="0.00"
                     required
-                    className="border-teal-200 focus:border-teal-500 focus:ring-teal-500 h-12 text-lg"
+                    className="h-12 text-xl font-bold rounded-xl border-teal-100 focus:border-teal-500"
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
+                  <div className="space-y-1.5">
                     <Label
                       htmlFor="memberId"
-                      className="text-sm font-medium text-gray-700 flex items-center gap-2"
+                      className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2"
                     >
-                      <Users className="h-4 w-4 text-blue-600" />
+                      <Users className="h-3.5 w-3.5 text-blue-600" />
                       Member ID *
                     </Label>
                     <Select
@@ -575,8 +519,8 @@ const CooperativeSavingsTab = () => {
                         setFormData({ ...formData, memberId: value })
                       }
                     >
-                      <SelectTrigger className="border-blue-200 focus:border-blue-500 focus:ring-blue-500 h-12">
-                        <SelectValue placeholder="Select member ID" />
+                      <SelectTrigger className="h-11 rounded-xl">
+                        <SelectValue placeholder="ID" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="DF1">DF1</SelectItem>
@@ -585,33 +529,32 @@ const CooperativeSavingsTab = () => {
                     </Select>
                   </div>
 
-                  <div className="space-y-2">
+                  <div className="space-y-1.5">
                     <Label
                       htmlFor="cyclePeriod"
-                      className="text-sm font-medium text-gray-700 flex items-center gap-2"
+                      className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2"
                     >
-                      <Clock className="h-4 w-4 text-purple-600" />
-                      Cycle Period *
+                      <Clock className="h-3.5 w-3.5 text-purple-600" />
+                      Cycle *
                     </Label>
-                    <select
-                      id="cyclePeriod"
+                    <Select
                       value={formData.cyclePeriod}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          cyclePeriod: e.target.value,
-                        })
+                      onValueChange={(value) =>
+                        setFormData({ ...formData, cyclePeriod: value })
                       }
                       required
-                      className="w-full h-12 border border-purple-200 rounded-md px-3 bg-white focus:border-purple-500 focus:ring-purple-500"
                     >
-                      <option value="">Select cycle period</option>
-                      {cyclePeriods.map((period) => (
-                        <option key={period} value={period}>
-                          {period}
-                        </option>
-                      ))}
-                    </select>
+                      <SelectTrigger className="h-11 rounded-xl">
+                        <SelectValue placeholder="Period" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {cyclePeriods.map((period) => (
+                          <SelectItem key={period} value={period}>
+                            {period}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
 
@@ -620,15 +563,14 @@ const CooperativeSavingsTab = () => {
                   selectedDate={transactionDate}
                   onDateChange={setTransactionDate}
                   label="Contribution Date"
-                  className="mb-4"
                 />
 
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   <Label
                     htmlFor="remarks"
-                    className="text-sm font-medium text-gray-700"
+                    className="text-xs font-bold uppercase tracking-wider text-muted-foreground"
                   >
-                    Additional Notes (Optional)
+                    Remarks
                   </Label>
                   <Textarea
                     id="remarks"
@@ -636,21 +578,21 @@ const CooperativeSavingsTab = () => {
                     onChange={(e) =>
                       setFormData({ ...formData, remarks: e.target.value })
                     }
-                    placeholder="Any additional notes or remarks"
-                    rows={3}
-                    className="border-gray-200 focus:border-gray-500 focus:ring-gray-500"
+                    placeholder="Notes..."
+                    rows={2}
+                    className="rounded-xl min-h-[80px]"
                   />
                 </div>
 
                 <Button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full h-12 bg-gradient-to-r from-teal-500 via-cyan-500 to-blue-500 hover:from-teal-600 hover:via-cyan-600 hover:to-blue-600 text-white font-semibold shadow-lg transition-all duration-300 transform hover:scale-105"
+                  className="w-full h-12 md:h-14 rounded-2xl bg-teal-500 hover:bg-teal-600 text-white font-black text-lg shadow-lg shadow-teal-500/20 transition-all active:scale-[0.98]"
                 >
                   {isSubmitting ? (
                     <div className="flex items-center gap-2">
                       <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                      Recording Contribution...
+                      Recording...
                     </div>
                   ) : (
                     <div className="flex items-center gap-2">

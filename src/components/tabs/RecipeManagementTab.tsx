@@ -244,20 +244,26 @@ const RecipeManagementTab = () => {
   if (loading) return <div className="p-6">Loading…</div>;
 
   return (
-    <div className="min-h-screen bg-background p-4 sm:p-6">
-      <div className="flex items-center gap-2 mb-6">
-        <ChefHat className="h-5 w-5 text-muted-foreground" />
-        <h1 className="text-lg font-semibold">Recipe Management</h1>
+    <div className="min-h-screen bg-background p-2 md:p-6 pb-24 md:pb-6">
+      <div className="bg-primary/5 p-4 rounded-3xl mb-4 md:mb-6 flex items-center gap-3">
+        <div className="p-2 bg-primary rounded-xl text-white">
+          <ChefHat className="h-5 w-5 md:h-6 md:w-6" />
+        </div>
+        <h1 className="text-xl md:text-2xl font-bold text-foreground">Recipe Management</h1>
       </div>
 
-      <Card className="mb-6">
-        <CardHeader className="pb-3"><CardTitle className="text-base">Select menu item</CardTitle></CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid sm:grid-cols-4 gap-3">
-            <div className="sm:col-span-2">
-              <Label>Menu item</Label>
+      <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden mb-4 md:mb-6">
+        <CardHeader className="bg-slate-50/50 border-b border-slate-100 px-4 md:px-6 py-4">
+          <CardTitle className="text-base md:text-lg font-bold">Menu Item Configuration</CardTitle>
+        </CardHeader>
+        <CardContent className="p-4 md:p-6 space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-6">
+            <div className="md:col-span-2 space-y-1.5">
+              <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Menu Item</Label>
               <Select value={selectedMenuId} onValueChange={setSelectedMenuId}>
-                <SelectTrigger><SelectValue placeholder="Pick menu item to edit recipe" /></SelectTrigger>
+                <SelectTrigger className="h-11 rounded-xl">
+                  <SelectValue placeholder="Select item to edit recipe" />
+                </SelectTrigger>
                 <SelectContent>
                   {menu.map((m) => (
                     <SelectItem key={m.id} value={m.id}>
@@ -270,26 +276,37 @@ const RecipeManagementTab = () => {
                 </SelectContent>
               </Select>
             </div>
-            <div>
-              <Label className="text-amber-600 font-bold">Servings per Batch</Label>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold uppercase tracking-wider text-amber-600">Servings per Batch</Label>
               <Input
                 type="number"
                 step="1"
                 min="1"
-                className="border-amber-200 focus:ring-amber-500"
+                className="h-11 rounded-xl border-amber-100 focus:border-amber-500"
                 value={selectedMenu?.recipe_yield || 1}
                 onChange={(e) => handleYieldChange(e.target.value)}
                 placeholder="e.g. 10"
                 disabled={!selectedMenuId}
               />
-              <p className="text-[10px] text-muted-foreground mt-1">Define how many plates/servings the ingredients below produce in total.</p>
             </div>
             {selectedMenu && (
-              <div className="grid grid-cols-4 gap-2 text-[10px]">
-                <div className="rounded border p-2"><div className="text-muted-foreground">Sell Price</div><div className="font-semibold">NRs. {selectedMenu.price.toFixed(2)}</div></div>
-                <div className="rounded border p-2"><div className="text-muted-foreground text-amber-600">Batch Cost</div><div className="font-semibold">NRs. {totalCost.toFixed(2)}</div></div>
-                <div className="rounded border p-2"><div className="text-muted-foreground text-blue-600">Unit Cost</div><div className="font-semibold">NRs. {unitCostVal.toFixed(2)}</div></div>
-                <div className="rounded border p-2"><div className="text-muted-foreground text-green-600">Unit Profit</div><div className="font-semibold">NRs. {profit.toFixed(2)}</div></div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:col-span-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                <div className="space-y-1">
+                  <div className="text-[10px] font-black uppercase text-muted-foreground">Sell Price</div>
+                  <div className="text-sm font-bold">NRs. {selectedMenu.price.toFixed(0)}</div>
+                </div>
+                <div className="space-y-1">
+                  <div className="text-[10px] font-black uppercase text-amber-600">Batch Cost</div>
+                  <div className="text-sm font-bold">NRs. {totalCost.toFixed(0)}</div>
+                </div>
+                <div className="space-y-1">
+                  <div className="text-[10px] font-black uppercase text-blue-600">Unit Cost</div>
+                  <div className="text-sm font-bold text-blue-700">NRs. {unitCostVal.toFixed(0)}</div>
+                </div>
+                <div className="space-y-1">
+                  <div className="text-[10px] font-black uppercase text-green-600">Unit Profit</div>
+                  <div className="text-sm font-bold text-green-700">NRs. {profit.toFixed(0)}</div>
+                </div>
               </div>
             )}
           </div>
@@ -299,14 +316,14 @@ const RecipeManagementTab = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
           {selectedMenuId && (
-            <Card>
-              <CardHeader className="pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <CardTitle className="text-base">Ingredients</CardTitle>
+            <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden">
+              <CardHeader className="bg-slate-50/50 border-b border-slate-100 px-4 md:px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <CardTitle className="text-base md:text-lg font-bold">Ingredients Breakdown</CardTitle>
                 <div className="flex flex-wrap items-center gap-2">
-                  <div className="flex items-center gap-2 mr-2">
+                  <div className="hidden md:flex items-center gap-2 mr-2">
                     <Select value={copySourceId} onValueChange={setCopySourceId}>
-                      <SelectTrigger className="w-[180px] h-8 text-xs">
-                        <SelectValue placeholder="Copy recipe from..." />
+                      <SelectTrigger className="w-[180px] h-9 rounded-lg text-xs">
+                        <SelectValue placeholder="Copy from..." />
                       </SelectTrigger>
                       <SelectContent>
                         {menu.filter(m => m.hasRecipe && m.id !== selectedMenuId).map((m) => (
@@ -317,18 +334,18 @@ const RecipeManagementTab = () => {
                     <Button
                       size="sm"
                       variant="secondary"
-                      className="h-8"
+                      className="h-9 rounded-lg px-4"
                       onClick={handleCopyRecipe}
                       disabled={!copySourceId}
                     >
-                      <Copy className="h-3 w-3 mr-1" /> Copy
+                      <Copy className="h-3.5 w-3.5 mr-2" /> Copy
                     </Button>
                   </div>
-                  <Button size="sm" variant="outline" onClick={addRow}><Plus className="h-4 w-4 mr-1" />Add</Button>
-                  <Button size="sm" onClick={save} disabled={saving}><Save className="h-4 w-4 mr-1" />{saving ? "Saving…" : "Save"}</Button>
+                  <Button size="sm" variant="outline" onClick={addRow} className="h-9 rounded-lg px-4 font-bold border-primary/20 text-primary hover:bg-primary/5"><Plus className="h-4 w-4 mr-2" />Add</Button>
+                  <Button size="sm" onClick={save} disabled={saving} className="h-9 rounded-lg px-6 font-bold shadow-sm shadow-primary/20"><Save className="h-4 w-4 mr-2" />{saving ? "Saving…" : "Save Recipe"}</Button>
                 </div>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-0">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -385,15 +402,15 @@ const RecipeManagementTab = () => {
           )}
         </div>
 
-        <div className="space-y-6">
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-green-500" />
-                Recipe-Ready Items
+        <div className="space-y-4 md:space-y-6">
+          <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden">
+            <CardHeader className="bg-emerald-50 border-b border-emerald-100 px-4 md:px-6 py-4">
+              <CardTitle className="text-base font-bold flex items-center gap-2 text-emerald-700">
+                <CheckCircle2 className="h-5 w-5" />
+                Recipe-Ready
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 md:p-6">
               <div className="space-y-2">
                 {menu.filter(m => m.hasRecipe).length === 0 ? (
                   <p className="text-sm text-muted-foreground italic">No recipes entered yet.</p>
@@ -413,11 +430,11 @@ const RecipeManagementTab = () => {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base">Pending Recipes</CardTitle>
+          <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden">
+            <CardHeader className="bg-slate-50 border-b border-slate-100 px-4 md:px-6 py-4">
+              <CardTitle className="text-base font-bold text-slate-700">Pending Setup</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 md:p-6">
               <div className="space-y-2">
                 {menu.filter(m => !m.hasRecipe).length === 0 ? (
                   <p className="text-sm text-muted-foreground italic">All items have recipes!</p>

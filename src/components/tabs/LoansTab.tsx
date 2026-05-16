@@ -254,14 +254,14 @@ const LoansTab = () => {
   };
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex justify-between items-center">
+    <div className="space-y-4 md:space-y-6 p-2 md:p-6 pb-24 md:pb-6">
+      <div className="bg-primary/5 p-4 rounded-3xl mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h2 className="text-2xl font-bold flex items-center gap-2">
-            <Landmark className="h-6 w-6 text-primary" />
+          <h2 className="text-xl md:text-2xl font-bold flex items-center gap-2 text-primary">
+            <Landmark className="h-5 w-5 md:h-6 md:w-6" />
             Loan Management
           </h2>
-          <p className="text-muted-foreground">
+          <p className="text-xs md:text-sm text-muted-foreground mt-1">
             Track your liabilities, repayments, and outstanding balances.
           </p>
         </div>
@@ -273,15 +273,15 @@ const LoansTab = () => {
           }}
         >
           <DialogTrigger asChild>
-            <Button className="gap-2">
+            <Button className="w-full md:w-auto gap-2 rounded-xl h-11 md:h-10">
               <Plus className="h-4 w-4" />
               Add New Loan
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto" aria-describedby={undefined}>
-            <DialogHeader>
-              <DialogTitle>{isEditMode ? "Edit Loan" : "Add New Loan"}</DialogTitle>
-              <DialogDescription>
+          <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto p-4 md:p-6 rounded-3xl" aria-describedby={undefined}>
+            <DialogHeader className="mb-4">
+              <DialogTitle className="text-xl font-bold text-primary">{isEditMode ? "Edit Loan" : "Add New Loan"}</DialogTitle>
+              <DialogDescription className="text-xs">
                 {isEditMode
                   ? "Update your loan details below. Note: Changing amounts won't re-adjust previous balances."
                   : "Enter the details of your new loan agreement here."
@@ -289,9 +289,9 @@ const LoansTab = () => {
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSaveLoan} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Loan Name</Label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Loan Name</Label>
                   <Input
                     required
                     value={loanForm.loan_name}
@@ -299,10 +299,11 @@ const LoansTab = () => {
                       setLoanForm({ ...loanForm, loan_name: e.target.value })
                     }
                     placeholder="e.g., Business Expansion"
+                    className="h-11 md:h-10 rounded-xl"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label>Lender Name</Label>
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Lender Name</Label>
                   <Input
                     required
                     value={loanForm.lender_name}
@@ -310,20 +311,21 @@ const LoansTab = () => {
                       setLoanForm({ ...loanForm, lender_name: e.target.value })
                     }
                     placeholder="e.g., Global Bank"
+                    className="h-11 md:h-10 rounded-xl"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Loan Type</Label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Loan Type</Label>
                   <Select
                     value={loanForm.loan_type}
                     onValueChange={(val: LoanType) =>
                       setLoanForm({ ...loanForm, loan_type: val })
                     }
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="h-11 md:h-10 rounded-xl">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -333,15 +335,15 @@ const LoansTab = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-2">
-                  <Label>Frequency</Label>
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Frequency</Label>
                   <Select
                     value={loanForm.repayment_frequency}
                     onValueChange={(val: RepaymentFrequency) =>
                       setLoanForm({ ...loanForm, repayment_frequency: val })
                     }
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="h-11 md:h-10 rounded-xl">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -353,9 +355,9 @@ const LoansTab = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Principal Amount</Label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Principal Amount</Label>
                   <Input
                     type="number"
                     required
@@ -367,10 +369,11 @@ const LoansTab = () => {
                         principal_amount: e.target.value,
                       })
                     }
+                    className="h-11 md:h-10 rounded-xl"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label>Interest Rate (% Annual)</Label>
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Interest Rate (% Annual)</Label>
                   <Input
                     type="number"
                     step="0.01"
@@ -379,11 +382,12 @@ const LoansTab = () => {
                     onChange={(e) =>
                       setLoanForm({ ...loanForm, interest_rate: e.target.value })
                     }
+                    className="h-11 md:h-10 rounded-xl"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <TransactionDatePicker
                   label="Loan Date"
                   selectedDate={loanForm.loan_date}
@@ -391,28 +395,29 @@ const LoansTab = () => {
                     setLoanForm({ ...loanForm, loan_date: date })
                   }
                 />
-                <div className="space-y-2">
-                  <Label>Maturity Date (Optional)</Label>
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Maturity Date (Optional)</Label>
                   <Input
                     type="date"
                     value={loanForm.maturity_date}
                     onChange={(e) =>
                       setLoanForm({ ...loanForm, maturity_date: e.target.value })
                     }
+                    className="h-11 md:h-10 rounded-xl"
                   />
                 </div>
               </div>
 
               {!isEditMode && (
-                <div className="space-y-2">
-                  <Label>Deposit Inflow To</Label>
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Deposit Inflow To</Label>
                   <Select
                     value={loanForm.payment_mode}
                     onValueChange={(val) =>
                       setLoanForm({ ...loanForm, payment_mode: val })
                     }
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="h-11 md:h-10 rounded-xl">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -425,19 +430,20 @@ const LoansTab = () => {
                 </div>
               )}
 
-              <div className="space-y-2">
-                <Label>Description</Label>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Description</Label>
                 <Textarea
                   value={loanForm.description}
                   onChange={(e) =>
                     setLoanForm({ ...loanForm, description: e.target.value })
                   }
                   placeholder="Additional details..."
+                  className="rounded-xl min-h-[80px]"
                 />
               </div>
 
-              <DialogFooter>
-                <Button type="submit" className="w-full">
+              <DialogFooter className="pt-2">
+                <Button type="submit" className="w-full h-12 rounded-xl text-lg font-bold shadow-lg shadow-primary/20">
                   {isEditMode ? "Update Loan" : "Create Loan"}
                 </Button>
               </DialogFooter>
@@ -446,62 +452,62 @@ const LoansTab = () => {
         </Dialog>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="bg-gradient-to-br from-red-50 to-red-100 border-red-200">
-          <CardContent className="p-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+        <Card className="rounded-3xl bg-gradient-to-br from-red-50 to-white border-red-100 shadow-sm">
+          <CardContent className="p-5 md:p-6">
             <div className="flex justify-between items-center">
               <div>
-                <p className="text-sm font-medium text-red-600">Total Outstanding Principal</p>
-                <h3 className="text-2xl font-bold text-red-900">NRs. {totalOutstanding.toLocaleString()}</h3>
+                <p className="text-xs font-bold uppercase tracking-wider text-red-600 mb-1">Total Outstanding</p>
+                <h3 className="text-xl md:text-2xl font-bold text-red-900">NRs. {totalOutstanding.toLocaleString()}</h3>
               </div>
-              <div className="p-3 bg-red-500 rounded-full text-white">
-                <TrendingDown className="h-6 w-6" />
+              <div className="h-10 w-10 md:h-12 md:w-12 bg-red-100 rounded-2xl flex items-center justify-center text-red-600">
+                <TrendingDown className="h-5 w-5 md:h-6 md:w-6" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
-          <CardContent className="p-6">
+        <Card className="rounded-3xl bg-gradient-to-br from-blue-50 to-white border-blue-100 shadow-sm">
+          <CardContent className="p-5 md:p-6">
             <div className="flex justify-between items-center">
               <div>
-                <p className="text-sm font-medium text-blue-600">Active Loans</p>
-                <h3 className="text-2xl font-bold text-blue-900">
+                <p className="text-xs font-bold uppercase tracking-wider text-blue-600 mb-1">Active Loans</p>
+                <h3 className="text-xl md:text-2xl font-bold text-blue-900">
                   {loans.filter((l) => l.status === "active").length}
                 </h3>
               </div>
-              <div className="p-3 bg-blue-500 rounded-full text-white">
-                <Landmark className="h-6 w-6" />
+              <div className="h-10 w-10 md:h-12 md:w-12 bg-blue-100 rounded-2xl flex items-center justify-center text-blue-600">
+                <Landmark className="h-5 w-5 md:h-6 md:w-6" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
-          <CardContent className="p-6">
+        <Card className="rounded-3xl bg-gradient-to-br from-green-50 to-white border-green-100 shadow-sm">
+          <CardContent className="p-5 md:p-6">
             <div className="flex justify-between items-center">
               <div>
-                <p className="text-sm font-medium text-green-600">Total Interest Paid</p>
-                <h3 className="text-2xl font-bold text-green-900">
+                <p className="text-xs font-bold uppercase tracking-wider text-green-600 mb-1">Total Interest Paid</p>
+                <h3 className="text-xl md:text-2xl font-bold text-green-900">
                   NRs. {loans.reduce((sum, l) => sum + Number(l.interest_paid), 0).toLocaleString()}
                 </h3>
               </div>
-              <div className="p-3 bg-green-500 rounded-full text-white">
-                <Percent className="h-6 w-6" />
+              <div className="h-10 w-10 md:h-12 md:w-12 bg-green-100 rounded-2xl flex items-center justify-center text-green-600">
+                <Percent className="h-5 w-5 md:h-6 md:w-6" />
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <History className="h-5 w-5" />
+      <Card className="rounded-3xl border-none shadow-sm overflow-hidden">
+        <CardHeader className="bg-slate-50 border-b border-slate-100 p-4">
+          <CardTitle className="text-base md:text-lg flex items-center gap-2 font-bold">
+            <History className="h-5 w-5 text-primary" />
             Loan List
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           <div className="rounded-md border">
             <Table>
               <TableHeader>
@@ -605,30 +611,30 @@ const LoansTab = () => {
       </Card>
 
       <Dialog open={isRepayOpen} onOpenChange={setIsRepayOpen}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto" aria-describedby={undefined}>
-          <DialogHeader>
-            <DialogTitle>Record Loan Repayment</DialogTitle>
-            <DialogDescription>
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto p-4 md:p-6 rounded-3xl" aria-describedby={undefined}>
+          <DialogHeader className="mb-4">
+            <DialogTitle className="text-xl font-bold text-primary">Record Loan Repayment</DialogTitle>
+            <DialogDescription className="text-xs">
               Submit a payment against your outstanding loan balance.
             </DialogDescription>
           </DialogHeader>
           {selectedLoan && (
             <form onSubmit={handleRepayment} className="space-y-4">
-              <div className="p-3 bg-muted rounded-md text-sm space-y-1">
-                <div className="flex justify-between">
-                  <span>Loan:</span>
-                  <span className="font-medium">{selectedLoan.loan_name}</span>
+              <div className="p-4 bg-muted/50 rounded-2xl text-sm space-y-2 border border-muted">
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground">Loan:</span>
+                  <span className="font-bold text-foreground">{selectedLoan.loan_name}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span>Outstanding Principal:</span>
-                  <span className="font-bold text-red-600">
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground">Outstanding:</span>
+                  <span className="font-bold text-red-600 text-base">
                     NRs. {Number(selectedLoan.outstanding_principal).toLocaleString()}
                   </span>
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label>Total Repayment Amount</Label>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Total Repayment Amount</Label>
                 <Input
                   type="number"
                   required
@@ -645,12 +651,13 @@ const LoansTab = () => {
                     });
                   }}
                   placeholder="Total amount including interest"
+                  className="h-12 text-lg font-bold rounded-xl border-primary/20 focus:border-primary"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Principal Portion</Label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Principal Portion</Label>
                   <Input
                     type="number"
                     required
@@ -658,10 +665,11 @@ const LoansTab = () => {
                     onChange={(e) =>
                       setRepayment({ ...repayment, principal_paid: e.target.value })
                     }
+                    className="h-11 rounded-xl"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label>Interest Portion</Label>
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Interest Portion</Label>
                   <Input
                     type="number"
                     required
@@ -676,11 +684,12 @@ const LoansTab = () => {
                         principal_paid: (parsedTotal - parsedInt).toString(),
                       });
                     }}
+                    className="h-11 rounded-xl"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <TransactionDatePicker
                   label="Repayment Date"
                   selectedDate={repayment.repayment_date}
@@ -688,15 +697,15 @@ const LoansTab = () => {
                     setRepayment({ ...repayment, repayment_date: date })
                   }
                 />
-                <div className="space-y-2">
-                  <Label>Payment Mode</Label>
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Payment Mode</Label>
                   <Select
                     value={repayment.payment_mode}
                     onValueChange={(val) =>
                       setRepayment({ ...repayment, payment_mode: val })
                     }
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="h-11 rounded-xl">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -709,19 +718,20 @@ const LoansTab = () => {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label>Remarks</Label>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Remarks</Label>
                 <Textarea
                   value={repayment.remarks}
                   onChange={(e) =>
                     setRepayment({ ...repayment, remarks: e.target.value })
                   }
                   placeholder="Notes for this payment..."
+                  className="rounded-xl min-h-[80px]"
                 />
               </div>
 
-              <DialogFooter>
-                <Button type="submit" className="w-full">
+              <DialogFooter className="pt-2">
+                <Button type="submit" className="w-full h-12 rounded-xl text-lg font-bold shadow-lg shadow-primary/20">
                   Submit Repayment
                 </Button>
               </DialogFooter>

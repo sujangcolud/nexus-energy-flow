@@ -262,88 +262,90 @@ const DataInputTab = () => {
   };
 
   return (
-    <div className="space-y-6 bg-background">
-      <div className="flex items-center gap-2">
-        <Upload className="h-4 w-4 text-muted-foreground" />
-        <h2 className="text-lg font-semibold text-foreground">Bulk Data Import</h2>
+    <div className="space-y-4 md:space-y-6 bg-background p-2 md:p-0 pb-24 md:pb-6">
+      <div className="bg-primary/5 p-4 rounded-3xl mb-6 flex items-center gap-3">
+        <div className="p-2 bg-primary rounded-xl text-white">
+          <Upload className="h-5 w-5 md:h-6 md:w-6" />
+        </div>
+        <h2 className="text-xl md:text-2xl font-bold text-foreground">Bulk Data Import</h2>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="bg-card border">
-          <CardContent className="p-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+        <Card className="rounded-3xl border-none bg-white shadow-sm overflow-hidden">
+          <CardContent className="p-4 md:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Data Types</p>
-                <p className="text-xl font-bold text-foreground">{dataTypes.length}</p>
+                <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Types</p>
+                <p className="text-sm md:text-xl font-bold text-foreground">{dataTypes.length}</p>
               </div>
-              <Database className="h-4 w-4 text-muted-foreground" />
+              <Database className="h-4 w-4 text-primary opacity-20" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-card border">
-          <CardContent className="p-4">
+        <Card className="rounded-3xl border-none bg-white shadow-sm overflow-hidden hidden md:block">
+          <CardContent className="p-4 md:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Selected Type</p>
-                <p className="text-base font-semibold text-foreground">
+                <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Selected</p>
+                <p className="text-sm md:text-xl font-bold text-foreground truncate max-w-[100px]">
                   {dataType ? dataTypes.find((t) => t.value === dataType)?.label : "None"}
                 </p>
               </div>
-              <FileUp className="h-4 w-4 text-muted-foreground" />
+              <FileUp className="h-4 w-4 text-primary opacity-20" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-card border">
-          <CardContent className="p-4">
+        <Card className="rounded-3xl border-none bg-white shadow-sm overflow-hidden">
+          <CardContent className="p-4 md:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Data Rows</p>
-                <p className="text-xl font-bold text-foreground">
+                <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Rows</p>
+                <p className="text-sm md:text-xl font-bold text-foreground">
                   {bulkData ? bulkData.split("\n").length - 1 : 0}
                 </p>
               </div>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+              <TrendingUp className="h-4 w-4 text-primary opacity-20" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-card border">
-          <CardContent className="p-4">
+        <Card className="rounded-3xl border-none bg-white shadow-sm overflow-hidden hidden md:block">
+          <CardContent className="p-4 md:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Status</p>
-                <p className="text-base font-semibold text-foreground">
+                <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Status</p>
+                <p className="text-sm md:text-xl font-bold text-foreground">
                   {saving ? "Uploading" : "Ready"}
                 </p>
               </div>
-              <Save className="h-4 w-4 text-muted-foreground" />
+              <Save className="h-4 w-4 text-primary opacity-20" />
             </div>
           </CardContent>
         </Card>
       </div>
 
-      <Card className="bg-card border">
-        <CardHeader className="border-b">
-          <CardTitle className="flex items-center gap-2 text-base font-medium text-foreground">
-            <Upload className="h-4 w-4" />
+      <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden">
+        <CardHeader className="bg-slate-50/50 border-b border-slate-100 px-4 md:px-6 py-4">
+          <CardTitle className="flex items-center gap-2 text-base md:text-lg font-bold">
+            <Upload className="h-5 w-5 text-primary" />
             Copy and Paste Data
           </CardTitle>
         </CardHeader>
-        <CardContent className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-            <div className="space-y-2 md:col-span-1">
-              <label className="text-sm font-medium text-foreground flex items-center gap-2">
-                <Database className="h-4 w-4 text-muted-foreground" />
+        <CardContent className="p-4 md:p-6">
+          <div className="space-y-6">
+            <div className="space-y-1.5 w-full md:w-1/3">
+              <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                <Database className="h-3.5 w-3.5" />
                 Data Type *
               </label>
               <Select
                 value={dataType}
                 onValueChange={(value: DataType) => setDataType(value)}
               >
-                <SelectTrigger className="h-10">
-                  <SelectValue placeholder="Select data type to upload" />
+                <SelectTrigger className="h-11 rounded-xl">
+                  <SelectValue placeholder="Select data type" />
                 </SelectTrigger>
                 <SelectContent>
                   {dataTypes.map((type) => (
@@ -354,84 +356,86 @@ const DataInputTab = () => {
                 </SelectContent>
               </Select>
             </div>
-          </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground flex items-center gap-2">
-              <FileUp className="h-4 w-4 text-muted-foreground" />
-              Paste Data from Spreadsheet
-            </label>
-            <div className="relative">
-              <Textarea
-                placeholder="Copy data from Google Sheets, Excel, or a TSV file and paste it here. Each row should be on a new line, and each column separated by a tab."
-                value={bulkData}
-                onChange={(e) => setBulkData(e.target.value)}
-                rows={12}
-                disabled={!dataType}
-                className="bg-background"
-              />
-              {!dataType && (
-                <div className="absolute inset-0 bg-muted/50 rounded-md flex items-center justify-center">
-                  <p className="text-muted-foreground font-medium">
-                    Please select a data type first
-                  </p>
-                </div>
-              )}
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                <FileUp className="h-3.5 w-3.5" />
+                Paste Data from Spreadsheet
+              </label>
+              <div className="relative">
+                <Textarea
+                  placeholder="Copy data from Google Sheets, Excel, or a TSV file and paste it here. Each row should be on a new line, and each column separated by a tab."
+                  value={bulkData}
+                  onChange={(e) => setBulkData(e.target.value)}
+                  rows={10}
+                  disabled={!dataType}
+                  className="rounded-2xl border-slate-200 focus:border-primary resize-none p-4"
+                />
+                {!dataType && (
+                  <div className="absolute inset-0 bg-slate-50/80 backdrop-blur-[1px] rounded-2xl flex items-center justify-center border-2 border-dashed border-slate-200">
+                    <p className="text-slate-400 font-bold uppercase tracking-wider text-xs">
+                      Please select a data type first
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
 
-          <div className="mt-6 flex justify-end">
-            <Button
-              onClick={saveData}
-              disabled={saving || !dataType || !bulkData}
-            >
-              {saving ? (
-                <div className="flex items-center gap-2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-foreground"></div>
-                  Uploading...
-                </div>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <Save className="h-4 w-4" />
-                  Upload Data
-                </div>
-              )}
-            </Button>
+            <div className="pt-2">
+              <Button
+                onClick={saveData}
+                disabled={saving || !dataType || !bulkData}
+                className="w-full md:w-auto h-12 px-8 rounded-xl font-bold shadow-lg shadow-primary/20"
+              >
+                {saving ? (
+                  <div className="flex items-center gap-2">
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                    Uploading Records...
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <Save className="h-5 w-5" />
+                    Upload Data
+                  </div>
+                )}
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
 
       {dataType && (
-        <Card className="bg-card border">
-          <CardHeader>
-            <CardTitle className="text-base font-medium text-foreground">
-              Expected Format for {dataTypes.find((t) => t.value === dataType)?.label}
+        <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden">
+          <CardHeader className="bg-slate-50 border-b border-slate-100 px-4 md:px-6 py-3">
+            <CardTitle className="text-sm font-bold uppercase tracking-tight text-slate-600 flex items-center gap-2">
+              <Database className="h-4 w-4" />
+              Expected Format: {dataTypes.find((t) => t.value === dataType)?.label}
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-0">
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full text-xs">
                 <thead>
-                  <tr className="border-b">
-                    <th className="text-left py-2 px-3 font-medium text-muted-foreground">Field</th>
-                    <th className="text-left py-2 px-3 font-medium text-muted-foreground">Type</th>
-                    <th className="text-left py-2 px-3 font-medium text-muted-foreground">Required</th>
-                    <th className="text-left py-2 px-3 font-medium text-muted-foreground">Options</th>
+                  <tr className="bg-slate-50/50">
+                    <th className="text-left py-3 px-4 font-black uppercase text-muted-foreground tracking-wider">Field</th>
+                    <th className="text-left py-3 px-4 font-black uppercase text-muted-foreground tracking-wider">Type</th>
+                    <th className="text-left py-3 px-4 font-black uppercase text-muted-foreground tracking-wider">Req?</th>
+                    <th className="text-left py-3 px-4 font-black uppercase text-muted-foreground tracking-wider">Options</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-slate-100">
                   {tableFields[dataType].map((field) => (
-                    <tr key={field.name} className="border-b last:border-0">
-                      <td className="py-2 px-3 font-medium text-foreground">{field.name}</td>
-                      <td className="py-2 px-3 text-muted-foreground">{field.type}</td>
-                      <td className="py-2 px-3">
+                    <tr key={field.name} className="hover:bg-slate-50/30 transition-colors">
+                      <td className="py-3 px-4 font-bold text-slate-700">{field.name}</td>
+                      <td className="py-3 px-4 text-slate-500 font-medium">{field.type}</td>
+                      <td className="py-3 px-4">
                         {field.required ? (
-                          <span className="text-destructive">Yes</span>
+                          <Badge variant="destructive" className="rounded-md h-5 px-1 text-[10px] uppercase">Yes</Badge>
                         ) : (
-                          <span className="text-muted-foreground">No</span>
+                          <Badge variant="secondary" className="rounded-md h-5 px-1 text-[10px] uppercase font-normal">No</Badge>
                         )}
                       </td>
-                      <td className="py-2 px-3 text-muted-foreground">
+                      <td className="py-3 px-4 text-slate-400 italic">
                         {field.options?.join(", ") || "-"}
                       </td>
                     </tr>

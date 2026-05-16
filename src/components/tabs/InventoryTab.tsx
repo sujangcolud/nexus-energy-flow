@@ -277,84 +277,94 @@ const InventoryTab = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background p-4 sm:p-6">
+    <div className="min-h-screen bg-background p-2 md:p-6 pb-24 md:pb-6">
       <Dialog open={stockOutDialogOpen} onOpenChange={setStockOutDialogOpen}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto" aria-describedby={undefined}>
-          <DialogHeader><DialogTitle>Stock Out - {selectedItem?.item_name}</DialogTitle></DialogHeader>
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto p-4 md:p-6 rounded-3xl" aria-describedby={undefined}>
+          <DialogHeader className="mb-4">
+            <DialogTitle className="text-xl font-bold text-primary">Stock Out - {selectedItem?.item_name}</DialogTitle>
+          </DialogHeader>
           <div className="space-y-4">
-            <div><Label>Quantity (in {selectedItem?.base_unit}) (Max: {selectedItem?.current_stock_base ?? selectedItem?.quantity})</Label><Input type="number" value={stockOutForm.quantity} onChange={(e) => setStockOutForm({ ...stockOutForm, quantity: e.target.value })} /></div>
-            <div><Label>Notes</Label><Input value={stockOutForm.notes} onChange={(e) => setStockOutForm({ ...stockOutForm, notes: e.target.value })} /></div>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Quantity (in {selectedItem?.base_unit})</Label>
+              <div className="flex flex-col gap-1">
+                <Input type="number" value={stockOutForm.quantity} onChange={(e) => setStockOutForm({ ...stockOutForm, quantity: e.target.value })} className="h-11 rounded-xl" />
+                <span className="text-[10px] text-muted-foreground italic">Available: {selectedItem?.current_stock_base ?? selectedItem?.quantity} {selectedItem?.base_unit}</span>
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Notes</Label>
+              <Input value={stockOutForm.notes} onChange={(e) => setStockOutForm({ ...stockOutForm, notes: e.target.value })} className="h-11 rounded-xl" />
+            </div>
           </div>
-          <DialogFooter><Button onClick={stockOut}>Record Stock Out</Button></DialogFooter>
+          <DialogFooter className="pt-2"><Button onClick={stockOut} className="w-full h-12 rounded-xl text-lg font-bold shadow-lg shadow-primary/20">Record Stock Out</Button></DialogFooter>
         </DialogContent>
       </Dialog>
 
       <Dialog open={conversionDialogOpen} onOpenChange={setConversionDialogOpen}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto" aria-describedby={undefined}>
-          <DialogHeader><DialogTitle>Unit Conversions - {selectedItem?.item_name}</DialogTitle></DialogHeader>
-          <div className="space-y-4">
-            <div className="text-sm text-muted-foreground">
-              Base Unit: <strong>{selectedItem?.base_unit}</strong>
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto p-4 md:p-6 rounded-3xl" aria-describedby={undefined}>
+          <DialogHeader className="mb-4">
+            <DialogTitle className="text-xl font-bold text-primary">Unit Conversions</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-6">
+            <div className="p-3 bg-primary/5 rounded-2xl border border-primary/10 flex justify-between items-center">
+              <span className="text-sm font-bold text-primary">{selectedItem?.item_name}</span>
+              <Badge variant="outline" className="rounded-lg">Base: {selectedItem?.base_unit}</Badge>
             </div>
             <div className="space-y-2">
-              <Label>Existing Conversions</Label>
-              <div className="border rounded-md divide-y">
+              <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Existing Conversions</Label>
+              <div className="border rounded-2xl divide-y overflow-hidden bg-slate-50/50">
                 {selectedItem?.unit_conversions?.map((conv) => (
-                  <div key={conv.id} className="p-2 flex justify-between items-center text-sm">
-                    <span>1 {conv.unit_name} = {conv.conversion_to_base} {selectedItem?.base_unit}</span>
-                    <Button variant="ghost" size="sm" onClick={() => deleteConversion(conv.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                  <div key={conv.id} className="p-3 flex justify-between items-center text-sm">
+                    <span className="font-medium text-slate-700">1 {conv.unit_name} = {conv.conversion_to_base} {selectedItem?.base_unit}</span>
+                    <Button variant="ghost" size="sm" onClick={() => deleteConversion(conv.id)} className="h-8 w-8 p-0 text-destructive"><Trash2 className="h-4 w-4" /></Button>
                   </div>
                 ))}
                 {(!selectedItem?.unit_conversions || selectedItem.unit_conversions.length === 0) && (
-                  <div className="p-4 text-center text-muted-foreground text-xs">No custom conversions defined</div>
+                  <div className="p-6 text-center text-muted-foreground text-xs italic">No custom conversions defined</div>
                 )}
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <Label>Unit Name</Label>
-                <Input placeholder="e.g. Box" value={newConversion.unit_name} onChange={(e) => setNewConversion({ ...newConversion, unit_name: e.target.value })} />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Unit Name</Label>
+                <Input placeholder="e.g. Box" value={newConversion.unit_name} onChange={(e) => setNewConversion({ ...newConversion, unit_name: e.target.value })} className="h-11 rounded-xl" />
               </div>
-              <div>
-                <Label>Factor to {selectedItem?.base_unit}</Label>
-                <Input type="number" placeholder="e.g. 1000" value={newConversion.conversion_to_base} onChange={(e) => setNewConversion({ ...newConversion, conversion_to_base: e.target.value })} />
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Factor</Label>
+                <Input type="number" placeholder="to base" value={newConversion.conversion_to_base} onChange={(e) => setNewConversion({ ...newConversion, conversion_to_base: e.target.value })} className="h-11 rounded-xl" />
               </div>
             </div>
-            <Button className="w-full" onClick={addConversion}><Plus className="h-4 w-4 mr-2" /> Add Conversion</Button>
+            <Button className="w-full h-11 rounded-xl font-bold shadow-sm" onClick={addConversion}><Plus className="h-4 w-4 mr-2" /> Add Conversion</Button>
           </div>
         </DialogContent>
       </Dialog>
 
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" aria-describedby={undefined}>
-          <DialogHeader><DialogTitle>Edit Inventory Item</DialogTitle></DialogHeader>
-          <div className="grid grid-cols-2 gap-4">
-            <div><Label>Item Name *</Label><Input value={editForm.item_name} onChange={(e) => setEditForm({ ...editForm, item_name: e.target.value })} /></div>
-            <div>
-              <Label>Category</Label>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-4 md:p-6 rounded-3xl" aria-describedby={undefined}>
+          <DialogHeader className="mb-4"><DialogTitle className="text-xl font-bold text-primary">Edit Inventory Item</DialogTitle></DialogHeader>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-1.5"><Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Item Name *</Label><Input value={editForm.item_name} onChange={(e) => setEditForm({ ...editForm, item_name: e.target.value })} className="h-11 rounded-xl" /></div>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Category</Label>
               <Select
                 value={editForm.category || ""}
                 onValueChange={(value) => setEditForm({ ...editForm, category: value })}
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
+                <SelectTrigger className="h-11 rounded-xl"><SelectValue placeholder="Select" /></SelectTrigger>
                 <SelectContent>
                   {categories.map((cat) => (
-                    <SelectItem key={cat.id} value={cat.name}>
-                      {cat.name}
-                    </SelectItem>
+                    <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-            <div>
-              <Label>Unit Category</Label>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Unit Category</Label>
               <Select
                 value={editForm.unit_category || ""}
                 onValueChange={(value: any) => setEditForm({ ...editForm, unit_category: value })}
               >
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger className="h-11 rounded-xl"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="weight">Weight (gm, kg)</SelectItem>
                   <SelectItem value="volume">Volume (ml, l)</SelectItem>
@@ -362,29 +372,25 @@ const InventoryTab = () => {
                 </SelectContent>
               </Select>
             </div>
-            <div>
-              <Label>Base Unit *</Label>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Base Unit *</Label>
               <Select
                 value={editForm.base_unit}
                 onValueChange={(value) => setEditForm({ ...editForm, base_unit: value })}
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select unit" />
-                </SelectTrigger>
+                <SelectTrigger className="h-11 rounded-xl"><SelectValue placeholder="Select unit" /></SelectTrigger>
                 <SelectContent>
                   {UNIT_OPTIONS.map((unit) => (
-                    <SelectItem key={unit} value={unit}>
-                      {unit}
-                    </SelectItem>
+                    <SelectItem key={unit} value={unit}>{unit}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-            <div><Label>Unit Cost</Label><Input type="number" value={editForm.unit_cost} onChange={(e) => setEditForm({ ...editForm, unit_cost: e.target.value })} /></div>
-            <div><Label>Supplier</Label><Input value={editForm.supplier} onChange={(e) => setEditForm({ ...editForm, supplier: e.target.value })} /></div>
-            <div><Label>Location</Label><Input value={editForm.location} onChange={(e) => setEditForm({ ...editForm, location: e.target.value })} /></div>
-            <div><Label>Min Stock</Label><Input type="number" value={editForm.minimum_stock} onChange={(e) => setEditForm({ ...editForm, minimum_stock: e.target.value })} /></div>
-            <div>
+            <div className="space-y-1.5"><Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Unit Cost</Label><Input type="number" value={editForm.unit_cost} onChange={(e) => setEditForm({ ...editForm, unit_cost: e.target.value })} className="h-11 rounded-xl" /></div>
+            <div className="space-y-1.5"><Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Supplier</Label><Input value={editForm.supplier} onChange={(e) => setEditForm({ ...editForm, supplier: e.target.value })} className="h-11 rounded-xl" /></div>
+            <div className="space-y-1.5"><Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Location</Label><Input value={editForm.location} onChange={(e) => setEditForm({ ...editForm, location: e.target.value })} className="h-11 rounded-xl" /></div>
+            <div className="space-y-1.5"><Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Min Stock</Label><Input type="number" value={editForm.minimum_stock} onChange={(e) => setEditForm({ ...editForm, minimum_stock: e.target.value })} className="h-11 rounded-xl" /></div>
+            <div className="space-y-1.5">
               <TransactionDatePicker
                 label="Expiry Date"
                 selectedDate={editForm.expiry_date}
@@ -393,43 +399,39 @@ const InventoryTab = () => {
                 showBackdateWarning={false}
               />
             </div>
-            <div className="col-span-2"><Label>Description</Label><Input value={editForm.description} onChange={(e) => setEditForm({ ...editForm, description: e.target.value })} /></div>
+            <div className="md:col-span-2 space-y-1.5"><Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Description</Label><Input value={editForm.description} onChange={(e) => setEditForm({ ...editForm, description: e.target.value })} className="h-11 rounded-xl" /></div>
           </div>
-          <DialogFooter><Button onClick={updateItem}>Update Item</Button></DialogFooter>
+          <DialogFooter className="pt-2"><Button onClick={updateItem} className="w-full h-12 rounded-xl text-lg font-bold shadow-lg shadow-primary/20">Update Item</Button></DialogFooter>
         </DialogContent>
       </Dialog>
 
       <Dialog open={manualAddDialogOpen} onOpenChange={setManualAddDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" aria-describedby={undefined}>
-          <DialogHeader><DialogTitle>Add Inventory Item</DialogTitle></DialogHeader>
-          <div className="grid grid-cols-2 gap-4">
-            <div><Label>Item Name *</Label><Input value={manualItemForm.item_name} onChange={(e) => setManualItemForm({ ...manualItemForm, item_name: e.target.value })} /></div>
-            <div>
-              <Label>Category</Label>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-4 md:p-6 rounded-3xl" aria-describedby={undefined}>
+          <DialogHeader className="mb-4"><DialogTitle className="text-xl font-bold text-primary">Add Inventory Item</DialogTitle></DialogHeader>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-1.5"><Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Item Name *</Label><Input value={manualItemForm.item_name} onChange={(e) => setManualItemForm({ ...manualItemForm, item_name: e.target.value })} className="h-11 rounded-xl" /></div>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Category</Label>
               <Select
                 value={manualItemForm.category}
                 onValueChange={(value) => setManualItemForm({ ...manualItemForm, category: value })}
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
+                <SelectTrigger className="h-11 rounded-xl"><SelectValue placeholder="Select" /></SelectTrigger>
                 <SelectContent>
                   {categories.map((cat) => (
-                    <SelectItem key={cat.id} value={cat.name}>
-                      {cat.name}
-                    </SelectItem>
+                    <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-            <div><Label>Opening Stock (Base) *</Label><Input type="number" value={manualItemForm.quantity} onChange={(e) => setManualItemForm({ ...manualItemForm, quantity: e.target.value })} /></div>
-            <div>
-              <Label>Unit Category</Label>
+            <div className="space-y-1.5"><Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Opening Stock *</Label><Input type="number" value={manualItemForm.quantity} onChange={(e) => setManualItemForm({ ...manualItemForm, quantity: e.target.value })} className="h-11 rounded-xl" /></div>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Unit Category</Label>
               <Select
                 value={manualItemForm.unit_category || ""}
                 onValueChange={(value: any) => setManualItemForm({ ...manualItemForm, unit_category: value })}
               >
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger className="h-11 rounded-xl"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="weight">Weight (gm, kg)</SelectItem>
                   <SelectItem value="volume">Volume (ml, l)</SelectItem>
@@ -437,29 +439,25 @@ const InventoryTab = () => {
                 </SelectContent>
               </Select>
             </div>
-            <div>
-              <Label>Base Unit *</Label>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Base Unit *</Label>
               <Select
                 value={manualItemForm.base_unit}
                 onValueChange={(value) => setManualItemForm({ ...manualItemForm, base_unit: value })}
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select unit" />
-                </SelectTrigger>
+                <SelectTrigger className="h-11 rounded-xl"><SelectValue placeholder="Select unit" /></SelectTrigger>
                 <SelectContent>
                   {UNIT_OPTIONS.map((unit) => (
-                    <SelectItem key={unit} value={unit}>
-                      {unit}
-                    </SelectItem>
+                    <SelectItem key={unit} value={unit}>{unit}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-            <div><Label>Unit Cost</Label><Input type="number" value={manualItemForm.unit_cost} onChange={(e) => setManualItemForm({ ...manualItemForm, unit_cost: e.target.value })} /></div>
-            <div><Label>Supplier</Label><Input value={manualItemForm.supplier} onChange={(e) => setManualItemForm({ ...manualItemForm, supplier: e.target.value })} /></div>
-            <div><Label>Location</Label><Input value={manualItemForm.location} onChange={(e) => setManualItemForm({ ...manualItemForm, location: e.target.value })} /></div>
-            <div><Label>Min Stock</Label><Input type="number" value={manualItemForm.minimum_stock} onChange={(e) => setManualItemForm({ ...manualItemForm, minimum_stock: e.target.value })} /></div>
-            <div>
+            <div className="space-y-1.5"><Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Unit Cost</Label><Input type="number" value={manualItemForm.unit_cost} onChange={(e) => setManualItemForm({ ...manualItemForm, unit_cost: e.target.value })} className="h-11 rounded-xl" /></div>
+            <div className="space-y-1.5"><Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Supplier</Label><Input value={manualItemForm.supplier} onChange={(e) => setManualItemForm({ ...manualItemForm, supplier: e.target.value })} className="h-11 rounded-xl" /></div>
+            <div className="space-y-1.5"><Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Location</Label><Input value={manualItemForm.location} onChange={(e) => setManualItemForm({ ...manualItemForm, location: e.target.value })} className="h-11 rounded-xl" /></div>
+            <div className="space-y-1.5"><Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Min Stock</Label><Input type="number" value={manualItemForm.minimum_stock} onChange={(e) => setManualItemForm({ ...manualItemForm, minimum_stock: e.target.value })} className="h-11 rounded-xl" /></div>
+            <div className="space-y-1.5">
               <TransactionDatePicker
                 label="Expiry Date"
                 selectedDate={manualItemForm.expiry_date}
@@ -469,39 +467,66 @@ const InventoryTab = () => {
               />
             </div>
           </div>
-          <DialogFooter><Button onClick={addManualItem}>Add Item</Button></DialogFooter>
+          <DialogFooter className="pt-2"><Button onClick={addManualItem} className="w-full h-12 rounded-xl text-lg font-bold shadow-lg shadow-primary/20">Add Item</Button></DialogFooter>
         </DialogContent>
       </Dialog>
 
-      <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <Package className="h-5 w-5 text-muted-foreground" />
-            <h1 className="text-lg font-semibold text-foreground">Inventory</h1>
+      <div className="space-y-4 md:space-y-6">
+        <div className="bg-primary/5 p-4 rounded-3xl mb-4 md:mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-primary rounded-xl text-white">
+              <Package className="h-5 w-5 md:h-6 md:w-6" />
+            </div>
+            <div>
+              <h1 className="text-xl md:text-2xl font-bold text-foreground">Inventory</h1>
+              <p className="text-xs text-muted-foreground mt-0.5">Manage stock levels and unit conversions</p>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 w-full md:w-auto">
             <MultiInventoryEntry
               inventory={inventory}
               categories={categories}
               onComplete={fetchInventory}
             />
-            <Button onClick={() => setManualAddDialogOpen(true)}>
+            <Button onClick={() => setManualAddDialogOpen(true)} className="flex-1 md:flex-none rounded-xl h-11 px-6 font-bold shadow-sm">
               <Plus className="h-4 w-4 mr-2" />
               Add Item
             </Button>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card className="bg-card border"><CardContent className="p-4"><p className="text-xs text-muted-foreground">Total Items</p><p className="text-lg font-bold text-foreground">{inventory.length}</p></CardContent></Card>
-          <Card className="bg-card border"><CardContent className="p-4"><p className="text-xs text-muted-foreground">Total Value</p><p className="text-lg font-bold text-foreground">NPR {totalValue.toFixed(2)}</p></CardContent></Card>
-          <Card className="bg-card border"><CardContent className="p-4"><p className="text-xs text-muted-foreground">Low Stock</p><p className="text-lg font-bold text-foreground">{lowStock.length}</p></CardContent></Card>
-          <Card className="bg-card border"><CardContent className="p-4"><p className="text-xs text-muted-foreground">Out of Stock</p><p className="text-lg font-bold text-foreground">{inventory.filter(i => i.quantity <= 0).length}</p></CardContent></Card>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+          <Card className="rounded-3xl border-none bg-white shadow-sm overflow-hidden">
+            <CardContent className="p-4 md:p-6">
+              <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Total Items</p>
+              <p className="text-sm md:text-xl font-bold text-foreground">{inventory.length}</p>
+            </CardContent>
+          </Card>
+          <Card className="rounded-3xl border-none bg-white shadow-sm overflow-hidden hidden md:block">
+            <CardContent className="p-4 md:p-6">
+              <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Total Value</p>
+              <p className="text-sm md:text-xl font-bold text-primary">NPR {totalValue.toFixed(2)}</p>
+            </CardContent>
+          </Card>
+          <Card className="rounded-3xl border-none bg-white shadow-sm overflow-hidden">
+            <CardContent className="p-4 md:p-6">
+              <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Low Stock</p>
+              <p className="text-sm md:text-xl font-bold text-amber-500">{lowStock.length}</p>
+            </CardContent>
+          </Card>
+          <Card className="rounded-3xl border-none bg-white shadow-sm overflow-hidden">
+            <CardContent className="p-4 md:p-6">
+              <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Out of Stock</p>
+              <p className="text-sm md:text-xl font-bold text-destructive">{inventory.filter(i => i.quantity <= 0).length}</p>
+            </CardContent>
+          </Card>
         </div>
 
-        <Card className="bg-card border">
-          <CardHeader className="pb-3"><CardTitle className="text-base">Inventory List</CardTitle></CardHeader>
-          <CardContent>
+        <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden">
+          <CardHeader className="bg-slate-50/50 border-b border-slate-100 px-4 md:px-6 py-4">
+            <CardTitle className="text-base md:text-lg font-bold">Inventory List</CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
             <Table>
               <TableHeader>
                 <TableRow>

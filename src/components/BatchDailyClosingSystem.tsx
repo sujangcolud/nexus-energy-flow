@@ -494,68 +494,71 @@ const BatchDailyClosingSystem: React.FC<BatchDailyClosingSystemProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-7xl max-h-[95vh] overflow-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Database className="h-6 w-6 text-blue-600" />
-            Batch Daily Closing System (
-            {format(parseISO(startDate), "MMM dd, yyyy")} -{" "}
-            {format(parseISO(endDate), "MMM dd, yyyy")})
+      <DialogContent className="max-w-7xl w-[95vw] max-h-[95vh] overflow-y-auto p-4 md:p-6 rounded-3xl">
+        <DialogHeader className="mb-4">
+          <DialogTitle className="text-xl md:text-2xl font-black text-primary flex items-center gap-3">
+            <Database className="h-6 w-6" />
+            Batch Closing
           </DialogTitle>
+          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">
+            {format(parseISO(startDate), "MMM dd")} — {format(parseISO(endDate), "MMM dd, yyyy")}
+          </p>
         </DialogHeader>
 
         <div className="space-y-6">
           {/* Date Range Selector */}
-          <div className="flex items-center gap-4 p-4 bg-blue-50 rounded-lg">
-            <CalendarIcon className="h-5 w-5 text-blue-600" />
-            <div className="flex items-center gap-2">
-              <label className="text-sm font-medium">Start Date:</label>
-              <input
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                disabled={processing}
-                className="border rounded px-3 py-1"
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <label className="text-sm font-medium">End Date:</label>
-              <input
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                disabled={processing}
-                className="border rounded px-3 py-1"
-              />
+          <div className="flex flex-col md:flex-row items-center gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+            <div className="flex flex-1 w-full gap-2">
+              <div className="flex-1">
+                <label className="text-[9px] font-black uppercase text-slate-400 mb-1 block">Start Date</label>
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  disabled={processing}
+                  className="w-full border-slate-200 rounded-xl h-11 px-3 text-sm font-bold focus:ring-primary"
+                />
+              </div>
+              <div className="flex-1">
+                <label className="text-[9px] font-black uppercase text-slate-400 mb-1 block">End Date</label>
+                <input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  disabled={processing}
+                  className="w-full border-slate-200 rounded-xl h-11 px-3 text-sm font-bold focus:ring-primary"
+                />
+              </div>
             </div>
             <Button
               onClick={initializeDateRange}
               disabled={processing}
               variant="outline"
+              className="w-full md:w-auto h-11 rounded-xl font-bold text-xs uppercase border-slate-200"
             >
-              <RotateCcw className="h-4 w-4 mr-2" />
-              Reset Range
+              <RotateCcw className="h-3.5 w-3.5 mr-2" />
+              Reset
             </Button>
           </div>
 
           {/* Progress Section */}
           {processing && (
-            <Card>
-              <CardContent className="p-6">
-                <div className="space-y-4">
+            <Card className="rounded-2xl border-none bg-primary/5 shadow-none overflow-hidden">
+              <CardContent className="p-4">
+                <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-semibold">
-                      Processing Progress
+                    <h3 className="text-xs font-black uppercase tracking-wider text-primary">
+                      Synchronizing Records
                     </h3>
-                    <span className="text-sm text-gray-600">
-                      {progress.completed} of {progress.total} days
+                    <span className="text-[10px] font-black text-primary">
+                      {progress.completed} / {progress.total} DAYS
                     </span>
                   </div>
-                  <Progress value={progress.percentage} className="w-full" />
+                  <Progress value={progress.percentage} className="h-2 bg-primary/10 rounded-full" />
                   {progress.current_date && (
-                    <p className="text-sm text-gray-600">
-                      Currently processing:{" "}
-                      {format(parseISO(progress.current_date), "MMM dd, yyyy")}
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase flex items-center">
+                      <Clock className="h-3 w-3 mr-1.5 animate-pulse" />
+                      Processing {format(parseISO(progress.current_date), "MMM dd, yyyy")}
                     </p>
                   )}
                 </div>
@@ -564,126 +567,88 @@ const BatchDailyClosingSystem: React.FC<BatchDailyClosingSystemProps> = ({
           )}
 
           {/* Summary Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center gap-2">
-                  <TrendingUp className="h-5 w-5 text-green-600" />
-                  <div>
-                    <p className="text-sm text-gray-600">Total Income</p>
-                    <p className="text-lg font-bold text-green-600">
-                      {formatCurrency(totalIncome)}
-                    </p>
-                  </div>
-                </div>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+            <Card className="rounded-2xl border-none shadow-sm bg-emerald-50/50">
+              <CardContent className="p-3">
+                <p className="text-[9px] font-black text-emerald-600 uppercase mb-1">Total Income</p>
+                <p className="text-sm font-black text-emerald-800 truncate">
+                  {formatCurrency(totalIncome)}
+                </p>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center gap-2">
-                  <TrendingDown className="h-5 w-5 text-red-600" />
-                  <div>
-                    <p className="text-sm text-gray-600">Total Expenses</p>
-                    <p className="text-lg font-bold text-red-600">
-                      {formatCurrency(totalExpenses)}
-                    </p>
-                  </div>
-                </div>
+            <Card className="rounded-2xl border-none shadow-sm bg-rose-50/50">
+              <CardContent className="p-3">
+                <p className="text-[9px] font-black text-rose-600 uppercase mb-1">Total Expense</p>
+                <p className="text-sm font-black text-rose-800 truncate">
+                  {formatCurrency(totalExpenses)}
+                </p>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center gap-2">
-                  <BarChart3 className="h-5 w-5 text-blue-600" />
-                  <div>
-                    <p className="text-sm text-gray-600">Net Profit</p>
-                    <p
-                      className={`text-lg font-bold ${totalProfit >= 0 ? "text-green-600" : "text-red-600"}`}
-                    >
-                      {formatCurrency(totalProfit)}
-                    </p>
-                  </div>
-                </div>
+            <Card className="rounded-2xl border-none shadow-sm bg-blue-50/50">
+              <CardContent className="p-3">
+                <p className="text-[9px] font-black text-blue-600 uppercase mb-1">Net Profit</p>
+                <p className={cn("text-sm font-black truncate", totalProfit >= 0 ? "text-emerald-700" : "text-rose-700")}>
+                  {formatCurrency(totalProfit)}
+                </p>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="h-5 w-5 text-green-600" />
-                  <div>
-                    <p className="text-sm text-gray-600">Completed</p>
-                    <p className="text-lg font-bold text-green-600">
-                      {completedDays} days
-                    </p>
-                  </div>
-                </div>
+            <Card className="rounded-2xl border-none shadow-sm bg-slate-50/50">
+              <CardContent className="p-3 text-center">
+                <p className="text-[9px] font-black text-slate-400 uppercase mb-1">Done</p>
+                <p className="text-sm font-black text-slate-700">
+                  {completedDays} <span className="text-[10px]">Days</span>
+                </p>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center gap-2">
-                  <AlertTriangle className="h-5 w-5 text-red-600" />
-                  <div>
-                    <p className="text-sm text-gray-600">Errors</p>
-                    <p className="text-lg font-bold text-red-600">
-                      {errorDays} days
-                    </p>
-                  </div>
-                </div>
+            <Card className="rounded-2xl border-none shadow-sm bg-amber-50/50">
+              <CardContent className="p-3 text-center">
+                <p className="text-[9px] font-black text-amber-600 uppercase mb-1">Errors</p>
+                <p className="text-sm font-black text-amber-700">
+                  {errorDays}
+                </p>
               </CardContent>
             </Card>
           </div>
 
           {/* Detailed Data */}
           <Tabs value={selectedTab} onValueChange={setSelectedTab}>
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="daily">Daily Details</TabsTrigger>
-              <TabsTrigger value="trends">Trends & Analysis</TabsTrigger>
+            <TabsList className="flex w-full overflow-x-auto h-auto bg-slate-50 p-1 rounded-xl mb-4 scrollbar-hide">
+              <TabsTrigger value="overview" className="flex-1 font-bold text-[10px] uppercase py-2.5 rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">Overview</TabsTrigger>
+              <TabsTrigger value="daily" className="flex-1 font-bold text-[10px] uppercase py-2.5 rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">Cards</TabsTrigger>
+              <TabsTrigger value="trends" className="flex-1 font-bold text-[10px] uppercase py-2.5 rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">Trends</TabsTrigger>
             </TabsList>
 
             <TabsContent value="overview" className="space-y-4">
-              <div className="overflow-x-auto">
+              <div className="rounded-2xl border border-slate-100 overflow-hidden">
                 <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="text-right">Income</TableHead>
-                      <TableHead className="text-right">Expenses</TableHead>
-                      <TableHead className="text-right">Net Profit</TableHead>
-                      <TableHead className="text-right">Balance</TableHead>
+                  <TableHeader className="bg-slate-50/50">
+                    <TableRow className="hover:bg-transparent border-slate-100">
+                      <TableHead className="text-[10px] font-black uppercase text-slate-500 h-10 px-4">Date</TableHead>
+                      <TableHead className="text-[10px] font-black uppercase text-slate-500 h-10 px-4">Status</TableHead>
+                      <TableHead className="text-right text-[10px] font-black uppercase text-slate-500 h-10 px-4">Profit</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {dailySummaries.map((summary) => (
-                      <TableRow key={summary.summary_date}>
-                        <TableCell className="font-medium">
-                          {format(
-                            parseISO(summary.summary_date),
-                            "MMM dd, yyyy",
-                          )}
+                      <TableRow key={summary.summary_date} className="border-slate-100 hover:bg-slate-50/30">
+                        <TableCell className="py-3 px-4">
+                          <span className="text-[11px] font-bold block">
+                            {format(parseISO(summary.summary_date), "MMM dd")}
+                          </span>
+                          <span className="text-[9px] text-muted-foreground font-medium uppercase">
+                            {format(parseISO(summary.summary_date), "yyyy")}
+                          </span>
                         </TableCell>
-                        <TableCell>{getStatusBadge(summary.status)}</TableCell>
-                        <TableCell className="text-right font-semibold text-green-600">
-                          {formatCurrency(summary.total_income)}
-                        </TableCell>
-                        <TableCell className="text-right font-semibold text-red-600">
-                          {formatCurrency(summary.total_expenses)}
-                        </TableCell>
-                        <TableCell
-                          className={`text-right font-semibold ${summary.total_income - summary.total_expenses >= 0 ? "text-green-600" : "text-red-600"}`}
-                        >
-                          {formatCurrency(
-                            summary.total_income - summary.total_expenses,
-                          )}
-                        </TableCell>
-                        <TableCell className="text-right font-semibold text-blue-600">
-                          {formatCurrency(summary.total_balance)}
+                        <TableCell className="py-3 px-4">{getStatusBadge(summary.status)}</TableCell>
+                        <TableCell className={cn(
+                          "text-right py-3 px-4 text-[11px] font-black",
+                          summary.total_income - summary.total_expenses >= 0 ? "text-emerald-600" : "text-rose-600"
+                        )}>
+                          {formatCurrency(summary.total_income - summary.total_expenses)}
                         </TableCell>
                       </TableRow>
                     ))}

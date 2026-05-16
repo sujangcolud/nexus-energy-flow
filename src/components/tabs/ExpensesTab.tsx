@@ -450,16 +450,16 @@ const ExpensesTab = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background p-2 md:p-6 pb-24 md:pb-6">
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto" aria-describedby={undefined}>
-          <DialogHeader>
-            <DialogTitle>Edit Expense</DialogTitle>
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto p-4 md:p-6 rounded-3xl" aria-describedby={undefined}>
+          <DialogHeader className="mb-4">
+            <DialogTitle className="text-xl font-bold text-primary">Edit Expense</DialogTitle>
           </DialogHeader>
           {selectedExpense && (
             <div className="space-y-4">
-              <div>
-                <Label htmlFor="editDescription">Description</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="editDescription" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Description</Label>
                 <Input
                   id="editDescription"
                   value={selectedExpense.description}
@@ -469,63 +469,72 @@ const ExpensesTab = () => {
                       description: e.target.value,
                     })
                   }
+                  className="h-11 rounded-xl"
                 />
               </div>
-              <div>
-                <Label htmlFor="editAmount">Amount</Label>
-                <Input
-                  id="editAmount"
-                  type="number"
-                  value={selectedExpense.amount}
-                  onChange={(e) =>
-                    setSelectedExpense({
-                      ...selectedExpense,
-                      amount: parseFloat(e.target.value),
-                    })
-                  }
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="editAmount" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Amount</Label>
+                  <Input
+                    id="editAmount"
+                    type="number"
+                    value={selectedExpense.amount}
+                    onChange={(e) =>
+                      setSelectedExpense({
+                        ...selectedExpense,
+                        amount: parseFloat(e.target.value),
+                      })
+                    }
+                    className="h-11 rounded-xl"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="editCategory" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Category</Label>
+                  <Input
+                    id="editCategory"
+                    value={selectedExpense.category}
+                    onChange={(e) =>
+                      setSelectedExpense({
+                        ...selectedExpense,
+                        category: e.target.value,
+                      })
+                    }
+                    className="h-11 rounded-xl"
+                  />
+                </div>
               </div>
-              <div>
-                <Label htmlFor="editCategory">Category</Label>
-                <Input
-                  id="editCategory"
-                  value={selectedExpense.category}
-                  onChange={(e) =>
-                    setSelectedExpense({
-                      ...selectedExpense,
-                      category: e.target.value,
-                    })
-                  }
-                />
-              </div>
-              <div>
-                <Label htmlFor="editPaymentMode">Payment Mode</Label>
-                <Input
-                  id="editPaymentMode"
-                  value={selectedExpense.payment_mode}
-                  onChange={(e) =>
-                    setSelectedExpense({
-                      ...selectedExpense,
-                      payment_mode: e.target.value,
-                    })
-                  }
-                />
-              </div>
-              <div>
-                <Label htmlFor="editRemarks">Remarks</Label>
-                <Input
-                  id="editRemarks"
-                  value={selectedExpense.remarks || ""}
-                  onChange={(e) =>
-                    setSelectedExpense({
-                      ...selectedExpense,
-                      remarks: e.target.value,
-                    })
-                  }
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="editPaymentMode" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Payment Mode</Label>
+                  <Input
+                    id="editPaymentMode"
+                    value={selectedExpense.payment_mode}
+                    onChange={(e) =>
+                      setSelectedExpense({
+                        ...selectedExpense,
+                        payment_mode: e.target.value,
+                      })
+                    }
+                    className="h-11 rounded-xl"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="editRemarks" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Remarks</Label>
+                  <Input
+                    id="editRemarks"
+                    value={selectedExpense.remarks || ""}
+                    onChange={(e) =>
+                      setSelectedExpense({
+                        ...selectedExpense,
+                        remarks: e.target.value,
+                      })
+                    }
+                    className="h-11 rounded-xl"
+                  />
+                </div>
               </div>
 
-              <div className="flex items-center justify-between py-2 bg-muted/30 p-3 rounded-lg border border-dashed border-primary/20">
+              <div className="flex items-center justify-between py-2 bg-primary/5 p-3 rounded-xl border border-primary/10">
                 <div className="flex items-center space-x-2">
                   <Switch
                     id="edit-inventory-purchase"
@@ -534,12 +543,12 @@ const ExpensesTab = () => {
                       setSelectedExpense({ ...selectedExpense, is_inventory_purchase: checked })
                     }
                   />
-                  <Label htmlFor="edit-inventory-purchase" className="text-sm font-semibold flex items-center gap-2 cursor-pointer">
-                    <Package className={cn("h-4 w-4", selectedExpense.is_inventory_purchase ? "text-amber-600" : "text-muted-foreground")} />
-                    Update Inventory?
+                  <Label htmlFor="edit-inventory-purchase" className="text-[10px] font-black uppercase flex items-center gap-1.5 cursor-pointer">
+                    <Package className={cn("h-3.5 w-3.5", selectedExpense.is_inventory_purchase ? "text-amber-600" : "text-muted-foreground")} />
+                    Stock Update?
                   </Label>
                 </div>
-                <div className="flex items-center space-x-2 border-l pl-4">
+                <div className="flex items-center space-x-2 border-l border-primary/10 pl-4">
                   <Switch
                     id="edit-is-credit"
                     checked={selectedExpense.is_credit || false}
@@ -547,22 +556,18 @@ const ExpensesTab = () => {
                       setSelectedExpense({ ...selectedExpense, is_credit: checked })
                     }
                   />
-                  <Label htmlFor="edit-is-credit" className="text-sm font-semibold flex items-center gap-2 cursor-pointer">
-                    <CreditCard className={cn("h-4 w-4", selectedExpense.is_credit ? "text-blue-600" : "text-muted-foreground")} />
-                    On Credit?
+                  <Label htmlFor="edit-is-credit" className="text-[10px] font-black uppercase flex items-center gap-1.5 cursor-pointer">
+                    <CreditCard className={cn("h-3.5 w-3.5", selectedExpense.is_credit ? "text-blue-600" : "text-muted-foreground")} />
+                    Credit?
                   </Label>
                 </div>
               </div>
 
               {(selectedExpense.is_inventory_purchase || selectedExpense.is_credit) && (
-                <div className="space-y-4 p-4 bg-blue-50 rounded-lg border border-blue-100">
-                  <p className="text-sm font-medium text-blue-800 flex items-center gap-2">
-                    <CreditCard className="h-4 w-4" />
-                    Additional Details
-                  </p>
+                <div className="space-y-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
                   <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label>Supplier (Party Name)</Label>
+                    <div className="space-y-1.5">
+                      <Label className="text-[10px] font-bold uppercase text-muted-foreground">Supplier</Label>
                       <Input
                         value={selectedExpense.supplier || ""}
                         onChange={(e) =>
@@ -571,10 +576,11 @@ const ExpensesTab = () => {
                             supplier: e.target.value,
                           })
                         }
+                        className="h-10 rounded-lg"
                       />
                     </div>
-                    <div>
-                      <Label>Invoice #</Label>
+                    <div className="space-y-1.5">
+                      <Label className="text-[10px] font-bold uppercase text-muted-foreground">Invoice #</Label>
                       <Input
                         value={selectedExpense.invoice_number || ""}
                         onChange={(e) =>
@@ -583,12 +589,13 @@ const ExpensesTab = () => {
                             invoice_number: e.target.value,
                           })
                         }
+                        className="h-10 rounded-lg"
                       />
                     </div>
                     {selectedExpense.is_inventory_purchase && (
                       <>
-                        <div>
-                          <Label>Quantity</Label>
+                        <div className="space-y-1.5">
+                          <Label className="text-[10px] font-bold uppercase text-muted-foreground">Quantity</Label>
                           <Input
                             type="number"
                             value={selectedExpense.quantity || ""}
@@ -598,10 +605,11 @@ const ExpensesTab = () => {
                                 quantity: parseFloat(e.target.value),
                               })
                             }
+                            className="h-10 rounded-lg"
                           />
                         </div>
-                        <div>
-                          <Label>Unit</Label>
+                        <div className="space-y-1.5">
+                          <Label className="text-[10px] font-bold uppercase text-muted-foreground">Unit</Label>
                           <Input
                             value={selectedExpense.unit || ""}
                             onChange={(e) =>
@@ -610,10 +618,11 @@ const ExpensesTab = () => {
                                 unit: e.target.value,
                               })
                             }
+                            className="h-10 rounded-lg"
                           />
                         </div>
-                        <div className="col-span-2">
-                          <Label>Inventory Item ID (UUID)</Label>
+                        <div className="col-span-2 space-y-1.5">
+                          <Label className="text-[10px] font-bold uppercase text-muted-foreground">Item ID (UUID)</Label>
                           <Input
                             value={selectedExpense.inventory_item_id || ""}
                             onChange={(e) =>
@@ -622,7 +631,8 @@ const ExpensesTab = () => {
                                 inventory_item_id: e.target.value,
                               })
                             }
-                            placeholder="Required for stock update"
+                            placeholder="Required"
+                            className="h-10 rounded-lg"
                           />
                         </div>
                       </>
@@ -630,30 +640,30 @@ const ExpensesTab = () => {
                   </div>
                 </div>
               )}
-              <RecordAttachments recordType="expense" recordId={selectedExpense.id} />
+              <RecordAttachments recordType="expense" recordId={selectedExpense.id} compact />
             </div>
           )}
-          <DialogFooter>
-            <Button onClick={handleUpdate}>Save</Button>
+          <DialogFooter className="pt-2">
+            <Button onClick={handleUpdate} className="w-full h-12 rounded-xl text-lg font-bold shadow-lg">Save Changes</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      <div className="space-y-6 p-4 sm:p-6">
+      <div className="space-y-4 md:space-y-6">
         {/* Header */}
-        <div className="mb-6 flex items-start justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              <div className="p-2 rounded-md bg-primary text-primary-foreground">
-                <Receipt className="h-4 w-4" />
-              </div>
-              <h1 className="text-xl font-semibold text-foreground">
-                Expense Tracker
-              </h1>
+        <div className="bg-primary/5 p-4 rounded-3xl mb-4 md:mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-primary rounded-xl text-white">
+              <Receipt className="h-5 w-5 md:h-6 md:w-6" />
             </div>
-            <p className="text-sm text-muted-foreground">
-              Track and manage your business expenses with detailed categorization
-            </p>
+            <div>
+              <h1 className="text-xl md:text-2xl font-bold text-foreground">
+                Expenses
+              </h1>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Track and manage your business expenses
+              </p>
+            </div>
           </div>
           <MultiExpenseEntry
             categories={categories}
@@ -663,115 +673,79 @@ const ExpensesTab = () => {
         </div>
 
         {/* All-Time Total Display */}
-        <AllTimeTotalDisplay type="expenses" className="mb-6" />
+        <AllTimeTotalDisplay type="expenses" className="mb-4 md:mb-6" />
 
         {/* Quick Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <Card className="bg-card border">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-muted-foreground font-medium">Total Expenses</p>
-                  <p className="text-lg font-semibold text-foreground">
-                    NRs. {totalExpenses.toFixed(2)}
-                  </p>
-                </div>
-                <div className="p-2 bg-muted rounded-md">
-                  <TrendingDown className="h-4 w-4 text-muted-foreground" />
-                </div>
-              </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-4 md:mb-6">
+          <Card className="rounded-3xl border-none bg-white shadow-sm overflow-hidden">
+            <CardContent className="p-4 md:p-6">
+              <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Total</p>
+              <p className="text-sm md:text-xl font-bold text-destructive">NRs. {totalExpenses.toFixed(2)}</p>
             </CardContent>
           </Card>
-
-          <Card className="bg-card border">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-muted-foreground font-medium">Total Entries</p>
-                  <p className="text-lg font-semibold text-foreground">{expenses.length}</p>
-                </div>
-                <div className="p-2 bg-muted rounded-md">
-                  <FileText className="h-4 w-4 text-muted-foreground" />
-                </div>
-              </div>
+          <Card className="rounded-3xl border-none bg-white shadow-sm overflow-hidden">
+            <CardContent className="p-4 md:p-6">
+              <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Entries</p>
+              <p className="text-sm md:text-xl font-bold text-foreground">{expenses.length}</p>
             </CardContent>
           </Card>
-
-          <Card className="bg-card border">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-muted-foreground font-medium">Avg. Expense</p>
-                  <p className="text-lg font-semibold text-foreground">
-                    NRs.{" "}
-                    {expenses.length > 0
-                      ? (totalExpenses / expenses.length).toFixed(2)
-                      : "0.00"}
-                  </p>
-                </div>
-                <div className="p-2 bg-muted rounded-md">
-                  <DollarSign className="h-4 w-4 text-muted-foreground" />
-                </div>
-              </div>
+          <Card className="rounded-3xl border-none bg-white shadow-sm overflow-hidden hidden md:block">
+            <CardContent className="p-4 md:p-6">
+              <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Avg Expense</p>
+              <p className="text-sm md:text-xl font-bold text-foreground">NRs. {(totalExpenses / Math.max(1, expenses.length)).toFixed(0)}</p>
             </CardContent>
           </Card>
-
-          <Card className="bg-card border">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-muted-foreground font-medium">Top Category</p>
-                  <p className="text-lg font-semibold text-foreground">
-                    {topCategory ? topCategory[0] : "N/A"}
-                  </p>
-                </div>
-                <div className="p-2 bg-muted rounded-md">
-                  <Tag className="h-4 w-4 text-muted-foreground" />
-                </div>
-              </div>
+          <Card className="rounded-3xl border-none bg-white shadow-sm overflow-hidden">
+            <CardContent className="p-4 md:p-6">
+              <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Top Type</p>
+              <p className="text-[10px] md:text-sm font-bold text-primary truncate">
+                {topCategory ? topCategory[0] : "N/A"}
+              </p>
             </CardContent>
           </Card>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-8">
           {/* Add Expense Form */}
-          <Card className="bg-gradient-to-br from-white/90 to-red-50/90 backdrop-blur-sm border-0 shadow-2xl hover:shadow-3xl transition-all duration-300">
-            <CardHeader className="bg-gradient-to-r from-red-500 to-pink-600 text-white rounded-t-lg">
-              <CardTitle className="flex items-center gap-3 text-xl">
-                <div className="p-2 bg-white/20 rounded-lg">
-                  <PlusCircle className="h-6 w-6" />
+          <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden">
+            <CardHeader className="bg-rose-500 text-white p-4 md:p-6">
+              <CardTitle className="flex items-center gap-3 text-lg md:text-xl font-bold">
+                <div className="p-2 bg-white/20 rounded-xl">
+                  <PlusCircle className="h-5 w-5 md:h-6 md:w-6" />
                 </div>
-                Add New Expense
-                <Sparkles className="h-5 w-5 animate-pulse" />
+                New Expense
+                <Sparkles className="h-4 w-4 md:h-5 md:w-5 ml-auto opacity-70" />
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-6">
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="flex items-center justify-between py-2 bg-muted/30 p-3 rounded-lg border border-dashed border-primary/20">
+            <CardContent className="p-4 md:p-6 space-y-6">
+              <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
+                <div className="flex items-center justify-between py-2 bg-slate-50 p-3 rounded-2xl border border-slate-100">
                   <div className="flex items-center space-x-2">
                     <Switch
                       id="inventory-purchase"
+                      className="data-[state=checked]:bg-amber-500"
                       checked={formData.isInventoryPurchase}
                       onCheckedChange={(checked) =>
                         setFormData({ ...formData, isInventoryPurchase: checked })
                       }
                     />
-                    <Label htmlFor="inventory-purchase" className="text-sm font-semibold flex items-center gap-2 cursor-pointer">
-                      <Package className={cn("h-4 w-4", formData.isInventoryPurchase ? "text-amber-600" : "text-muted-foreground")} />
-                      Update Inventory?
+                    <Label htmlFor="inventory-purchase" className="text-[10px] font-black uppercase flex items-center gap-1 cursor-pointer">
+                      <Package className={cn("h-3.5 w-3.5", formData.isInventoryPurchase ? "text-amber-600" : "text-muted-foreground")} />
+                      Stock?
                     </Label>
                   </div>
-                  <div className="flex items-center space-x-2 border-l pl-4">
+                  <div className="flex items-center space-x-2 border-l border-slate-200 pl-4">
                     <Switch
                       id="is-credit"
+                      className="data-[state=checked]:bg-blue-600"
                       checked={formData.isCredit}
                       onCheckedChange={(checked) =>
                         setFormData({ ...formData, isCredit: checked })
                       }
                     />
-                    <Label htmlFor="is-credit" className="text-sm font-semibold flex items-center gap-2 cursor-pointer">
-                      <CreditCard className={cn("h-4 w-4", formData.isCredit ? "text-blue-600" : "text-muted-foreground")} />
-                      On Credit?
+                    <Label htmlFor="is-credit" className="text-[10px] font-black uppercase flex items-center gap-1 cursor-pointer">
+                      <CreditCard className={cn("h-3.5 w-3.5", formData.isCredit ? "text-blue-600" : "text-muted-foreground")} />
+                      Credit?
                     </Label>
                   </div>
                 </div>

@@ -410,22 +410,27 @@ const UnifiedBulkImportTab = () => {
   const currentSchema = dataType ? SCHEMAS[dataType] : null;
 
   return (
-    <div className="min-h-screen bg-background p-4 sm:p-6">
-      <div className="space-y-6">
-        <div className="flex items-center gap-2">
-          <Upload className="h-4 w-4 text-muted-foreground" />
-          <h1 className="text-lg font-semibold text-foreground">Bulk Import</h1>
+    <div className="min-h-screen bg-background p-2 md:p-6 pb-24 md:pb-6">
+      <div className="space-y-4 md:space-y-6">
+        <div className="bg-primary/5 p-4 rounded-3xl mb-4 md:mb-6 flex items-center gap-3">
+          <div className="p-2 bg-primary rounded-xl text-white">
+            <Upload className="h-5 w-5 md:h-6 md:w-6" />
+          </div>
+          <h1 className="text-xl md:text-2xl font-bold text-foreground">Bulk Import</h1>
         </div>
 
         {/* Shared data-type selector + template download */}
-        <Card className="bg-card border">
-          <CardContent className="p-4">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
-              <div className="md:col-span-2 space-y-1">
-                <label className="text-sm font-medium text-foreground">Data Type</label>
+        <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden">
+          <CardHeader className="bg-slate-50/50 border-b border-slate-100 px-4 md:px-6 py-4">
+            <CardTitle className="text-base md:text-lg font-bold">Import Configuration</CardTitle>
+          </CardHeader>
+          <CardContent className="p-4 md:p-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+              <div className="md:col-span-2 space-y-1.5">
+                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Select Category</label>
                 <Select value={dataType} onValueChange={(v: DataType) => setDataType(v)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select what to import" />
+                  <SelectTrigger className="h-11 rounded-xl">
+                    <SelectValue placeholder="What are you importing?" />
                   </SelectTrigger>
                   <SelectContent>
                     {Object.entries(SCHEMAS).map(([key, v]) => (
@@ -434,10 +439,10 @@ const UnifiedBulkImportTab = () => {
                   </SelectContent>
                 </Select>
               </div>
-              <Button variant="outline" onClick={() => handleDownloadTemplate("xlsx")} disabled={!dataType}>
+              <Button variant="outline" onClick={() => handleDownloadTemplate("xlsx")} disabled={!dataType} className="h-11 rounded-xl font-bold border-slate-200">
                 <Download className="h-4 w-4 mr-2" />Excel Template
               </Button>
-              <Button variant="outline" onClick={() => handleDownloadTemplate("csv")} disabled={!dataType}>
+              <Button variant="outline" onClick={() => handleDownloadTemplate("csv")} disabled={!dataType} className="h-11 rounded-xl font-bold border-slate-200">
                 <Download className="h-4 w-4 mr-2" />CSV Template
               </Button>
             </div>
@@ -445,7 +450,7 @@ const UnifiedBulkImportTab = () => {
         </Card>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-4">
+          <TabsList className="grid w-full grid-cols-2 bg-slate-100 p-1 rounded-2xl h-12 mb-6">
             <TabsTrigger value="data-import" className="flex items-center gap-2">
               <Database className="h-4 w-4" />Paste Data
             </TabsTrigger>
@@ -455,25 +460,33 @@ const UnifiedBulkImportTab = () => {
           </TabsList>
 
           <TabsContent value="data-import">
-            <Card className="bg-card border">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base">Paste from Spreadsheet (TSV)</CardTitle>
+            <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden">
+              <CardHeader className="bg-slate-50/50 border-b border-slate-100 px-4 md:px-6 py-4">
+                <CardTitle className="text-base md:text-lg font-bold">Paste from Spreadsheet</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <p className="text-xs text-muted-foreground">
-                  Copy rows from Google Sheets / Excel. First row should be headers matching the template.
+              <CardContent className="p-4 md:p-6 space-y-6">
+                <p className="text-xs text-muted-foreground italic">
+                  Copy rows from Sheets/Excel. Include the header row for best results.
                 </p>
-                <Textarea
-                  placeholder={dataType ? `Paste ${SCHEMAS[dataType].label} data here (tab-separated)` : "Select a data type first"}
-                  value={pasteData}
-                  onChange={(e) => setPasteData(e.target.value)}
-                  rows={10}
-                  disabled={!dataType}
-                />
-                <div className="flex justify-end">
-                  <Button onClick={handlePasteUpload} disabled={pasteSaving || !dataType || !pasteData.trim()}>
-                    <Save className="h-4 w-4 mr-2" />
-                    {pasteSaving ? "Uploading..." : "Upload Data"}
+                <div className="relative">
+                  <Textarea
+                    placeholder={dataType ? `Paste ${SCHEMAS[dataType].label} data here...` : "Select category first"}
+                    value={pasteData}
+                    onChange={(e) => setPasteData(e.target.value)}
+                    rows={10}
+                    disabled={!dataType}
+                    className="rounded-2xl border-slate-200 focus:border-primary resize-none p-4"
+                  />
+                  {!dataType && (
+                    <div className="absolute inset-0 bg-slate-50/80 backdrop-blur-[1px] rounded-2xl flex items-center justify-center border-2 border-dashed border-slate-200">
+                      <p className="text-slate-400 font-bold uppercase tracking-wider text-xs">Pick Category Above</p>
+                    </div>
+                  )}
+                </div>
+                <div className="pt-2">
+                  <Button onClick={handlePasteUpload} disabled={pasteSaving || !dataType || !pasteData.trim()} className="w-full md:w-auto h-12 px-8 rounded-xl font-bold shadow-lg shadow-primary/20">
+                    <Save className="h-5 w-5 mr-2" />
+                    {pasteSaving ? "Processing..." : "Process Paste Data"}
                   </Button>
                 </div>
               </CardContent>
@@ -481,47 +494,60 @@ const UnifiedBulkImportTab = () => {
           </TabsContent>
 
           <TabsContent value="file-upload">
-            <Card className="bg-card border">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base">Upload Excel, CSV or JSON File</CardTitle>
+            <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden">
+              <CardHeader className="bg-slate-50/50 border-b border-slate-100 px-4 md:px-6 py-4">
+                <CardTitle className="text-base md:text-lg font-bold">Select File</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <Input
-                  type="file"
-                  accept=".csv,.json,.xlsx,.xls"
-                  onChange={handleFileChange}
-                  disabled={uploading || !dataType}
-                />
+              <CardContent className="p-4 md:p-6 space-y-6">
+                <div className="border-2 border-dashed border-slate-200 rounded-2xl p-8 text-center bg-slate-50/50 relative overflow-hidden group hover:border-primary/50 transition-colors">
+                  <input
+                    type="file"
+                    accept=".csv,.json,.xlsx,.xls"
+                    onChange={handleFileChange}
+                    disabled={uploading || !dataType}
+                    className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                  />
+                  <div className="flex flex-col items-center">
+                    <Cloud className="h-10 w-10 text-slate-300 group-hover:text-primary transition-colors mb-4" />
+                    <p className="text-sm font-bold text-slate-600">Click or drag file to upload</p>
+                    <p className="text-[10px] uppercase font-bold text-slate-400 mt-1">XLSX, CSV, or JSON</p>
+                  </div>
+                </div>
+
                 {file && (
-                  <div className="p-3 bg-muted rounded-md border flex items-center gap-2">
-                    <FileText className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm font-medium text-foreground">{file.name}</span>
-                    <span className="text-xs text-muted-foreground">({(file.size / 1024).toFixed(1)} KB)</span>
+                  <div className="p-4 bg-primary/5 rounded-2xl border border-primary/10 flex items-center gap-3">
+                    <div className="h-10 w-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
+                      <FileText className="h-5 w-5" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-slate-800 truncate">{file.name}</p>
+                      <p className="text-[10px] text-slate-500">{(file.size / 1024).toFixed(1)} KB</p>
+                    </div>
                   </div>
                 )}
                 {uploading && (
                   <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Uploading...</span>
-                      <span className="text-foreground">{Math.round(progress)}%</span>
+                    <div className="flex justify-between text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                      <span>Importing records...</span>
+                      <span>{Math.round(progress)}%</span>
                     </div>
-                    <Progress value={progress} />
+                    <Progress value={progress} className="h-2 rounded-full" />
                   </div>
                 )}
                 {uploadStatus === "success" && (
-                  <div className="flex items-center gap-2 text-primary bg-primary/10 p-3 rounded-md">
-                    <CheckCircle className="h-4 w-4" />
-                    <span className="text-sm font-medium">Upload completed!</span>
+                  <div className="flex items-center gap-2 text-emerald-600 bg-emerald-50 p-4 rounded-2xl border border-emerald-100">
+                    <CheckCircle className="h-5 w-5" />
+                    <span className="text-sm font-bold">Import successful!</span>
                   </div>
                 )}
                 {uploadStatus === "error" && (
-                  <div className="flex items-center gap-2 text-destructive bg-destructive/10 p-3 rounded-md">
-                    <AlertCircle className="h-4 w-4" />
-                    <span className="text-sm font-medium">Upload failed. Check format.</span>
+                  <div className="flex items-center gap-2 text-destructive bg-destructive/5 p-4 rounded-2xl border border-destructive/10">
+                    <AlertCircle className="h-5 w-5" />
+                    <span className="text-sm font-bold">Import failed. Please verify format.</span>
                   </div>
                 )}
-                <Button onClick={handleFileUpload} disabled={!file || !dataType || uploading} className="w-full">
-                  {uploading ? "Uploading..." : "Upload File"}
+                <Button onClick={handleFileUpload} disabled={!file || !dataType || uploading} className="w-full h-12 rounded-xl font-bold shadow-lg shadow-primary/20">
+                  {uploading ? "Importing..." : "Start Import"}
                 </Button>
               </CardContent>
             </Card>
@@ -529,30 +555,36 @@ const UnifiedBulkImportTab = () => {
         </Tabs>
 
         {currentSchema && (
-          <Card className="bg-card border">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base">Expected Format — {currentSchema.label}</CardTitle>
+          <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden">
+            <CardHeader className="bg-slate-50 border-b border-slate-100 px-4 md:px-6 py-4">
+              <CardTitle className="text-sm font-bold uppercase text-slate-600 flex items-center gap-2">
+                <Database className="h-4 w-4" />
+                Required Template Structure: {currentSchema.label}
+              </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-0">
               <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-left py-2 px-3 font-medium text-muted-foreground">Field</th>
-                      <th className="text-left py-2 px-3 font-medium text-muted-foreground">Type</th>
-                      <th className="text-left py-2 px-3 font-medium text-muted-foreground">Required</th>
-                      <th className="text-left py-2 px-3 font-medium text-muted-foreground">Example</th>
+                <table className="w-full text-xs">
+                  <thead className="bg-slate-50/50">
+                    <tr>
+                      <th className="text-left py-3 px-4 font-black uppercase text-muted-foreground">Column</th>
+                      <th className="text-left py-3 px-4 font-black uppercase text-muted-foreground">Type</th>
+                      <th className="text-left py-3 px-4 font-black uppercase text-muted-foreground">Required</th>
+                      <th className="text-left py-3 px-4 font-black uppercase text-muted-foreground">Sample</th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody className="divide-y divide-slate-50">
                     {currentSchema.fields.map((f) => (
-                      <tr key={f.name} className="border-b last:border-0">
-                        <td className="py-2 px-3 font-medium text-foreground">{f.name}</td>
-                        <td className="py-2 px-3 text-muted-foreground">{f.type}</td>
-                        <td className="py-2 px-3">
-                          {f.required ? <span className="text-destructive">Yes</span> : <span className="text-muted-foreground">No</span>}
+                      <tr key={f.name} className="hover:bg-slate-50/30 transition-colors">
+                        <td className="py-3 px-4 font-bold text-slate-700">{f.name}</td>
+                        <td className="py-3 px-4 text-slate-500 font-medium">{f.type}</td>
+                        <td className="py-3 px-4">
+                          {f.required ?
+                            <Badge variant="destructive" className="h-5 px-1.5 text-[10px] uppercase font-bold rounded-md">Yes</Badge> :
+                            <Badge variant="secondary" className="h-5 px-1.5 text-[10px] uppercase font-normal rounded-md text-slate-400 bg-slate-100">No</Badge>
+                          }
                         </td>
-                        <td className="py-2 px-3 text-muted-foreground">{f.example}</td>
+                        <td className="py-3 px-4 text-slate-400 italic font-medium">{f.example}</td>
                       </tr>
                     ))}
                   </tbody>
