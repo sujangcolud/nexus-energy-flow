@@ -15,12 +15,17 @@ export default defineConfig(({ mode }) => ({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'robots.txt'],
+      injectRegister: 'auto',
+      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'robots.txt', 'android-chrome-192x192.png'],
       devOptions: {
         enabled: true
       },
       workbox: {
-        maximumFileSizeToCacheInBytes: 3000000, // Increase limit to 3MB for the main bundle
+        maximumFileSizeToCacheInBytes: 3000000,
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,webmanifest}'],
+        cleanupOutdatedCaches: true,
+        clientsClaim: true,
+        skipWaiting: true
       },
       manifest: {
         name: 'Energy Palace - Business Management Platform',
