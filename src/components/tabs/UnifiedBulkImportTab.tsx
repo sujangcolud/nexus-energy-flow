@@ -2,6 +2,7 @@ import { useState } from "react";
 import * as XLSX from "xlsx";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,8 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Upload,
+import {Upload,
   Database,
   Download,
   Cloud,
@@ -24,7 +24,7 @@ import {
   AlertCircle,
   CheckCircle,
   Save,
-} from "lucide-react";
+  File,} from "lucide-react";
 import { toast } from "sonner";
 
 type DataType =

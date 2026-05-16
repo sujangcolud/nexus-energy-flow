@@ -19,7 +19,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Trash2, Layers } from "lucide-react";
+import {Plus, Trash2, Layers,
+  Zap,} from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 

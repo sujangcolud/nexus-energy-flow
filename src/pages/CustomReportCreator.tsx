@@ -15,7 +15,8 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
-import { Plus, Trash2, Calculator, FileText } from "lucide-react";
+import {Plus, Trash2, Calculator, FileText,
+  Filter,} from "lucide-react";
 
 interface CustomCalculation {
   [key: string]: any;
