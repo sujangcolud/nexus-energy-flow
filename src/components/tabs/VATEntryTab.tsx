@@ -165,50 +165,91 @@ const VATEntryTab = () => {
   if (loading) return <div className="p-6 animate-pulse"><div className="h-8 bg-muted rounded w-1/4 mb-4"></div><div className="h-64 bg-muted rounded"></div></div>;
 
   return (
-    <div className="min-h-screen bg-background p-4 sm:p-6">
+    <div className="min-h-screen bg-background p-2 md:p-6 pb-24 md:pb-6">
       <Dialog open={vatDialogOpen} onOpenChange={setVatDialogOpen}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto" aria-describedby={undefined}>
-          <DialogHeader><DialogTitle>Create VAT Entry</DialogTitle></DialogHeader>
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto p-4 md:p-6 rounded-3xl" aria-describedby={undefined}>
+          <DialogHeader className="mb-4">
+            <DialogTitle className="text-xl font-bold text-primary">Create VAT Entry</DialogTitle>
+          </DialogHeader>
           {selectedEntry && (
-            <div className="space-y-4">
-              <p className="text-sm text-muted-foreground">Item: {selectedEntry.item_name}</p>
-              <p className="text-sm text-muted-foreground">Amount: NPR {selectedEntry.amount.toFixed(2)}</p>
-              <p className="text-sm text-muted-foreground">VAT ({nepalVATRate}%): NPR {calculateVATFromInclusive(selectedEntry.amount).vatAmount.toFixed(2)}</p>
+            <div className="space-y-4 p-4 bg-primary/5 rounded-2xl border border-primary/10">
+              <div className="flex justify-between items-center">
+                <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Item:</span>
+                <span className="font-bold">{selectedEntry.item_name}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Amount:</span>
+                <span className="font-bold">NPR {selectedEntry.amount.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">VAT ({nepalVATRate}%):</span>
+                <span className="font-bold text-primary">NPR {calculateVATFromInclusive(selectedEntry.amount).vatAmount.toFixed(2)}</span>
+              </div>
             </div>
           )}
-          <DialogFooter><Button onClick={createVATEntry}>Create Entry</Button></DialogFooter>
+          <DialogFooter className="pt-2">
+            <Button onClick={createVATEntry} className="w-full h-12 rounded-xl text-lg font-bold shadow-lg shadow-primary/20">Create Entry</Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
       <Dialog open={billDialogOpen} onOpenChange={setBillDialogOpen}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto" aria-describedby={undefined}>
-          <DialogHeader><DialogTitle>Generate VAT Bill</DialogTitle></DialogHeader>
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto p-4 md:p-6 rounded-3xl" aria-describedby={undefined}>
+          <DialogHeader className="mb-4">
+            <DialogTitle className="text-xl font-bold text-primary">Generate VAT Bill</DialogTitle>
+          </DialogHeader>
           <div className="space-y-4">
-            <div><Label>Customer Name *</Label><Input value={billForm.customer_name} onChange={(e) => setBillForm({ ...billForm, customer_name: e.target.value })} /></div>
-            <div><Label>Customer PAN</Label><Input value={billForm.customer_pan} onChange={(e) => setBillForm({ ...billForm, customer_pan: e.target.value })} /></div>
-            <div><Label>Bill Number</Label><Input value={billForm.bill_number} onChange={(e) => setBillForm({ ...billForm, bill_number: e.target.value })} placeholder="Auto-generated if empty" /></div>
+            <div className="space-y-1.5"><Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Customer Name *</Label><Input value={billForm.customer_name} onChange={(e) => setBillForm({ ...billForm, customer_name: e.target.value })} className="h-11 rounded-xl" /></div>
+            <div className="space-y-1.5"><Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Customer PAN</Label><Input value={billForm.customer_pan} onChange={(e) => setBillForm({ ...billForm, customer_pan: e.target.value })} className="h-11 rounded-xl" /></div>
+            <div className="space-y-1.5"><Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Bill Number</Label><Input value={billForm.bill_number} onChange={(e) => setBillForm({ ...billForm, bill_number: e.target.value })} placeholder="Auto-generated if empty" className="h-11 rounded-xl" /></div>
           </div>
-          <DialogFooter><Button onClick={generateBill}>Generate Bill</Button></DialogFooter>
+          <DialogFooter className="pt-4">
+            <Button onClick={generateBill} className="w-full h-12 rounded-xl text-lg font-bold shadow-lg shadow-primary/20">Generate Bill</Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      <div className="space-y-6">
-        <div className="flex items-center gap-2">
-          <Receipt className="h-5 w-5 text-muted-foreground" />
-          <h1 className="text-lg font-semibold text-foreground">VAT Entry</h1>
+      <div className="space-y-4 md:space-y-6">
+        <div className="bg-primary/5 p-4 rounded-3xl mb-4 md:mb-6 flex items-center gap-3">
+          <div className="p-2 bg-primary rounded-xl text-white">
+            <Receipt className="h-5 w-5 md:h-6 md:w-6" />
+          </div>
+          <h1 className="text-xl md:text-2xl font-bold text-foreground">VAT Entry</h1>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card className="bg-card border"><CardContent className="p-4"><p className="text-xs text-muted-foreground">Total VAT</p><p className="text-lg font-bold text-foreground">NPR {totalVAT.toFixed(2)}</p></CardContent></Card>
-          <Card className="bg-card border"><CardContent className="p-4"><p className="text-xs text-muted-foreground">Base Amount</p><p className="text-lg font-bold text-foreground">NPR {totalBase.toFixed(2)}</p></CardContent></Card>
-          <Card className="bg-card border"><CardContent className="p-4"><p className="text-xs text-muted-foreground">VAT Entries</p><p className="text-lg font-bold text-foreground">{vatEntries.length}</p></CardContent></Card>
-          <Card className="bg-card border"><CardContent className="p-4"><p className="text-xs text-muted-foreground">VAT Rate</p><p className="text-lg font-bold text-foreground">{nepalVATRate}%</p></CardContent></Card>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+          <Card className="rounded-3xl border-none bg-white shadow-sm overflow-hidden">
+            <CardContent className="p-4 md:p-6">
+              <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Total VAT</p>
+              <p className="text-sm md:text-xl font-bold text-primary">NPR {totalVAT.toFixed(2)}</p>
+            </CardContent>
+          </Card>
+          <Card className="rounded-3xl border-none bg-white shadow-sm overflow-hidden">
+            <CardContent className="p-4 md:p-6">
+              <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Base Amount</p>
+              <p className="text-sm md:text-xl font-bold text-foreground">NPR {totalBase.toFixed(2)}</p>
+            </CardContent>
+          </Card>
+          <Card className="rounded-3xl border-none bg-white shadow-sm overflow-hidden hidden md:block">
+            <CardContent className="p-4 md:p-6">
+              <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">VAT Entries</p>
+              <p className="text-sm md:text-xl font-bold text-foreground">{vatEntries.length}</p>
+            </CardContent>
+          </Card>
+          <Card className="rounded-3xl border-none bg-white shadow-sm overflow-hidden hidden md:block">
+            <CardContent className="p-4 md:p-6">
+              <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">VAT Rate</p>
+              <p className="text-sm md:text-xl font-bold text-foreground">{nepalVATRate}%</p>
+            </CardContent>
+          </Card>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card className="bg-card border">
-            <CardHeader className="pb-3"><CardTitle className="text-base">Income Entries</CardTitle></CardHeader>
-            <CardContent>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+          <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden">
+            <CardHeader className="bg-slate-50/50 border-b border-slate-100 px-4 md:px-6 py-4">
+              <CardTitle className="text-base md:text-lg font-bold">Income Entries</CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
               <Table>
                 <TableHeader><TableRow><TableHead>Date</TableHead><TableHead>Item</TableHead><TableHead>Amount</TableHead><TableHead>Actions</TableHead></TableRow></TableHeader>
                 <TableBody>

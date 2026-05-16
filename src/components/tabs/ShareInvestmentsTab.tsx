@@ -332,64 +332,68 @@ const ShareInvestmentsTab = () => {
   const netBalance = totalInvestments - totalExpenses;
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <TrendingUp className="h-6 w-6 text-green-600" />
-        <h2 className="text-2xl font-bold text-foreground">Share Investments & Expenses</h2>
+    <div className="space-y-4 md:space-y-6 p-2 md:p-0 pb-24 md:pb-6">
+      <div className="bg-primary/5 p-4 rounded-3xl mb-6">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-primary rounded-xl text-white">
+            <TrendingUp className="h-5 w-5 md:h-6 md:w-6" />
+          </div>
+          <h2 className="text-xl md:text-2xl font-bold text-foreground">Share Investments & Expenses</h2>
+        </div>
       </div>
 
       {/* Summary Cards - Investment vs Expense Comparison */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="pt-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-chart-2/15 rounded-lg">
-                <TrendingUp className="h-5 w-5 text-chart-2" />
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+        <Card className="rounded-3xl shadow-sm border-none bg-white">
+          <CardContent className="p-4 md:p-6">
+            <div className="flex flex-col gap-2">
+              <div className="p-2 bg-chart-2/10 w-fit rounded-xl">
+                <TrendingUp className="h-4 w-4 md:h-5 md:w-5 text-chart-2" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Total Investments</p>
-                <p className="text-xl font-bold text-chart-2">₹{totalInvestments.toLocaleString()}</p>
+                <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground">Investments</p>
+                <p className="text-sm md:text-xl font-bold text-chart-2">₹{totalInvestments.toLocaleString()}</p>
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="pt-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-destructive/15 rounded-lg">
-                <TrendingDown className="h-5 w-5 text-destructive" />
+        <Card className="rounded-3xl shadow-sm border-none bg-white">
+          <CardContent className="p-4 md:p-6">
+            <div className="flex flex-col gap-2">
+              <div className="p-2 bg-destructive/10 w-fit rounded-xl">
+                <TrendingDown className="h-4 w-4 md:h-5 md:w-5 text-destructive" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Total Share Expenses</p>
-                <p className="text-xl font-bold text-destructive">₹{totalExpenses.toLocaleString()}</p>
+                <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground">Expenses</p>
+                <p className="text-sm md:text-xl font-bold text-destructive">₹{totalExpenses.toLocaleString()}</p>
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="pt-4">
-            <div className="flex items-center gap-3">
-              <div className={`p-2 rounded-lg ${netBalance >= 0 ? "bg-primary/15" : "bg-chart-3/15"}`}>
-                <ArrowUpDown className={`h-5 w-5 ${netBalance >= 0 ? "text-primary" : "text-chart-3"}`} />
+        <Card className="rounded-3xl shadow-sm border-none bg-white">
+          <CardContent className="p-4 md:p-6">
+            <div className="flex flex-col gap-2">
+              <div className={`p-2 w-fit rounded-xl ${netBalance >= 0 ? "bg-primary/10" : "bg-chart-3/10"}`}>
+                <ArrowUpDown className={`h-4 w-4 md:h-5 md:w-5 ${netBalance >= 0 ? "text-primary" : "text-chart-3"}`} />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Net Balance</p>
-                <p className={`text-xl font-bold ${netBalance >= 0 ? "text-primary" : "text-chart-3"}`}>
+                <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground">Net Balance</p>
+                <p className={`text-sm md:text-xl font-bold ${netBalance >= 0 ? "text-primary" : "text-chart-3"}`}>
                   ₹{netBalance.toLocaleString()}
                 </p>
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="pt-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-chart-4/15 rounded-lg">
-                <DollarSign className="h-5 w-5 text-chart-4" />
+        <Card className="rounded-3xl shadow-sm border-none bg-white">
+          <CardContent className="p-4 md:p-6">
+            <div className="flex flex-col gap-2">
+              <div className="p-2 bg-chart-4/10 w-fit rounded-xl">
+                <DollarSign className="h-4 w-4 md:h-5 md:w-5 text-chart-4" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Opening Balance</p>
-                <p className="text-xl font-bold text-chart-4">
+                <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground">Opening</p>
+                <p className="text-sm md:text-xl font-bold text-chart-4">
                   ₹{openingBalance ? openingBalance.opening_balance_amount.toLocaleString() : "0"}
                 </p>
               </div>
@@ -399,47 +403,48 @@ const ShareInvestmentsTab = () => {
       </div>
 
       {/* Opening Balance Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <DollarSign className="h-5 w-5" />
+      <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden">
+        <CardHeader className="bg-slate-50/50 border-b border-slate-100 px-4 md:px-6 py-4">
+          <CardTitle className="flex items-center gap-2 text-base md:text-lg font-bold">
+            <DollarSign className="h-5 w-5 text-primary" />
             Opening Balance
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-4 md:p-6">
           {openingBalance ? (
-            <div className="mb-4 p-4 bg-accent rounded-lg">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="mb-6 p-4 bg-primary/5 border border-primary/10 rounded-2xl">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm text-muted-foreground">Cutoff Date</p>
-                  <p className="text-lg font-semibold">{format(new Date(openingBalance.cutoff_date), "dd/MM/yyyy")}</p>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">Cutoff Date</p>
+                  <p className="text-sm md:text-base font-semibold">{format(new Date(openingBalance.cutoff_date), "dd/MM/yyyy")}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Opening Balance</p>
-                  <p className="text-lg font-semibold text-chart-2">₹{openingBalance.opening_balance_amount.toLocaleString()}</p>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">Opening Balance</p>
+                  <p className="text-sm md:text-base font-bold text-primary">₹{openingBalance.opening_balance_amount.toLocaleString()}</p>
                 </div>
               </div>
             </div>
           ) : (
-            <div className="mb-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
-              <p className="text-yellow-800 dark:text-yellow-200">No opening balance set. Please set the cutoff date and opening balance amount.</p>
+            <div className="mb-6 p-4 bg-amber-50 border border-amber-100 rounded-2xl">
+              <p className="text-xs text-amber-800">No opening balance set. Please set the cutoff date and opening balance amount.</p>
             </div>
           )}
 
           <form onSubmit={handleSetOpeningBalance} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="cutoff_date">Cutoff Date</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="cutoff_date" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Cutoff Date</Label>
                 <Input
                   id="cutoff_date"
                   type="date"
                   value={newOpeningBalance.cutoff_date}
                   onChange={(e) => setNewOpeningBalance((prev) => ({ ...prev, cutoff_date: e.target.value }))}
                   required
+                  className="h-11 rounded-xl"
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="opening_balance">Opening Balance Amount (₹)</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="opening_balance" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Opening Balance Amount (₹)</Label>
                 <Input
                   id="opening_balance"
                   type="number"
@@ -448,10 +453,11 @@ const ShareInvestmentsTab = () => {
                   value={newOpeningBalance.opening_balance_amount}
                   onChange={(e) => setNewOpeningBalance((prev) => ({ ...prev, opening_balance_amount: e.target.value }))}
                   required
+                  className="h-11 rounded-xl"
                 />
               </div>
             </div>
-            <Button type="submit" disabled={isSettingBalance}>
+            <Button type="submit" disabled={isSettingBalance} className="w-full md:w-auto h-11 rounded-xl px-6 font-bold shadow-lg shadow-primary/20">
               <DollarSign className="h-4 w-4 mr-2" />
               {isSettingBalance ? "Setting..." : "Set Opening Balance"}
             </Button>
@@ -474,18 +480,18 @@ const ShareInvestmentsTab = () => {
 
         {/* Investments Tab */}
         <TabsContent value="investments" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Plus className="h-5 w-5" />
+          <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden">
+            <CardHeader className="bg-slate-50/50 border-b border-slate-100 px-4 md:px-6 py-4">
+              <CardTitle className="flex items-center gap-2 text-base md:text-lg font-bold">
+                <Plus className="h-5 w-5 text-primary" />
                 Add Share Investment
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 md:p-6">
               <form onSubmit={handleAddInvestment} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="shareholder_name">Shareholder Name</Label>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="shareholder_name" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Shareholder Name</Label>
                     <Input
                       id="shareholder_name"
                       type="text"
@@ -493,10 +499,11 @@ const ShareInvestmentsTab = () => {
                       value={newInvestment.shareholder_name}
                       onChange={(e) => setNewInvestment((prev) => ({ ...prev, shareholder_name: e.target.value }))}
                       required
+                      className="h-11 rounded-xl"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="contribution_amount">Contribution Amount (₹)</Label>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="contribution_amount" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Contribution Amount (₹)</Label>
                     <Input
                       id="contribution_amount"
                       type="number"
@@ -505,27 +512,29 @@ const ShareInvestmentsTab = () => {
                       value={newInvestment.contribution_amount}
                       onChange={(e) => setNewInvestment((prev) => ({ ...prev, contribution_amount: e.target.value }))}
                       required
+                      className="h-11 rounded-xl"
                     />
                   </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="investment_date">Investment Date</Label>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="investment_date" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Investment Date</Label>
                     <Input
                       id="investment_date"
                       type="date"
                       value={newInvestment.investment_date}
                       onChange={(e) => setNewInvestment((prev) => ({ ...prev, investment_date: e.target.value }))}
                       required
+                      className="h-11 rounded-xl"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="payment_mode">Payment Mode</Label>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="payment_mode" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Payment Mode</Label>
                     <Select
                       value={newInvestment.payment_mode}
                       onValueChange={(value) => setNewInvestment((prev) => ({ ...prev, payment_mode: value }))}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="h-11 rounded-xl">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -538,17 +547,18 @@ const ShareInvestmentsTab = () => {
                     </Select>
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="investment_remarks">Remarks (Optional)</Label>
+                <div className="space-y-1.5">
+                  <Label htmlFor="investment_remarks" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Remarks (Optional)</Label>
                   <Input
                     id="investment_remarks"
                     type="text"
                     placeholder="Enter remarks (optional)"
                     value={newInvestment.remarks}
                     onChange={(e) => setNewInvestment((prev) => ({ ...prev, remarks: e.target.value }))}
+                    className="h-11 rounded-xl"
                   />
                 </div>
-                <Button type="submit" disabled={isAddingInvestment} className="w-full">
+                <Button type="submit" disabled={isAddingInvestment} className="w-full h-12 rounded-xl text-lg font-bold shadow-lg shadow-primary/20">
                   <Plus className="h-4 w-4 mr-2" />
                   {isAddingInvestment ? "Adding..." : "Add Investment"}
                 </Button>
@@ -621,18 +631,18 @@ const ShareInvestmentsTab = () => {
 
         {/* Expenses Tab */}
         <TabsContent value="expenses" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Minus className="h-5 w-5" />
+          <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden">
+            <CardHeader className="bg-slate-50/50 border-b border-slate-100 px-4 md:px-6 py-4">
+              <CardTitle className="flex items-center gap-2 text-base md:text-lg font-bold">
+                <Minus className="h-5 w-5 text-primary" />
                 Add Share Expense
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 md:p-6">
               <form onSubmit={handleAddExpense} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="expense_description">Description</Label>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="expense_description" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Description</Label>
                     <Input
                       id="expense_description"
                       type="text"
@@ -640,10 +650,11 @@ const ShareInvestmentsTab = () => {
                       value={newExpense.description}
                       onChange={(e) => setNewExpense((prev) => ({ ...prev, description: e.target.value }))}
                       required
+                      className="h-11 rounded-xl"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="expense_amount">Amount (₹)</Label>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="expense_amount" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Amount (₹)</Label>
                     <Input
                       id="expense_amount"
                       type="number"
@@ -652,27 +663,29 @@ const ShareInvestmentsTab = () => {
                       value={newExpense.amount}
                       onChange={(e) => setNewExpense((prev) => ({ ...prev, amount: e.target.value }))}
                       required
+                      className="h-11 rounded-xl"
                     />
                   </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="expense_date">Expense Date</Label>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="expense_date" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Expense Date</Label>
                     <Input
                       id="expense_date"
                       type="date"
                       value={newExpense.expense_date}
                       onChange={(e) => setNewExpense((prev) => ({ ...prev, expense_date: e.target.value }))}
                       required
+                      className="h-11 rounded-xl"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="expense_payment_mode">Payment Mode</Label>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="expense_payment_mode" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Payment Mode</Label>
                     <Select
                       value={newExpense.payment_mode}
                       onValueChange={(value) => setNewExpense((prev) => ({ ...prev, payment_mode: value }))}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="h-11 rounded-xl">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -684,13 +697,13 @@ const ShareInvestmentsTab = () => {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="expense_category">Category</Label>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="expense_category" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Category</Label>
                     <Select
                       value={newExpense.category}
                       onValueChange={(value) => setNewExpense((prev) => ({ ...prev, category: value }))}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="h-11 rounded-xl">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -703,17 +716,18 @@ const ShareInvestmentsTab = () => {
                     </Select>
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="expense_remarks">Remarks (Optional)</Label>
+                <div className="space-y-1.5">
+                  <Label htmlFor="expense_remarks" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Remarks (Optional)</Label>
                   <Input
                     id="expense_remarks"
                     type="text"
                     placeholder="Enter remarks (optional)"
                     value={newExpense.remarks}
                     onChange={(e) => setNewExpense((prev) => ({ ...prev, remarks: e.target.value }))}
+                    className="h-11 rounded-xl"
                   />
                 </div>
-                <Button type="submit" disabled={isAddingExpense} className="w-full">
+                <Button type="submit" disabled={isAddingExpense} className="w-full h-12 rounded-xl text-lg font-bold shadow-lg shadow-primary/20">
                   <Minus className="h-4 w-4 mr-2" />
                   {isAddingExpense ? "Adding..." : "Add Share Expense"}
                 </Button>

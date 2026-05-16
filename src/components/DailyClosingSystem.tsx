@@ -433,35 +433,35 @@ export const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-6xl max-h-[95vh] overflow-auto">
-          <DialogHeader>
-            <DialogTitle>
-              Daily Closing System
-              {startDate && endDate ? (
-                ` - ${format(startDate, "MMM d")} to ${format(endDate, "MMM d, yyyy")}`
-              ) : (
-                ` - ${format(selectedDate, "MMMM d, yyyy")}`
-              )}
+        <DialogContent className="max-w-6xl w-[95vw] max-h-[95vh] overflow-y-auto p-4 md:p-6 rounded-3xl">
+          <DialogHeader className="mb-4">
+            <DialogTitle className="text-xl md:text-2xl font-black text-primary">
+              Daily Closing
+              <span className="block text-xs font-bold text-muted-foreground mt-1 uppercase tracking-wider">
+                {startDate && endDate ? (
+                  `${format(startDate, "MMM d")} — ${format(endDate, "MMM d, yyyy")}`
+                ) : (
+                  format(selectedDate, "MMMM d, yyyy")
+                )}
+              </span>
             </DialogTitle>
           </DialogHeader>
 
           {/* Date Selection and Controls */}
-          <div className="flex flex-wrap gap-4 items-center border-b pb-4">
-            <div className="flex gap-2">
+          <div className="flex flex-col gap-4 border-b border-slate-100 pb-6 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
               {!startDate && !endDate && (
                 <Popover>
                   <PopoverTrigger asChild onClick={handlePopoverClick}>
                     <Button
                       variant="outline"
-                      className={cn(
-                        "w-[180px] justify-start text-left font-normal"
-                      )}
+                      className="w-full justify-start text-left font-bold rounded-xl h-11 border-slate-200"
                     >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      <CalendarIcon className="mr-2 h-4 w-4 text-primary" />
                       {format(selectedDate, "PPP")}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" onClick={handlePopoverClick}>
+                  <PopoverContent className="w-auto p-0 rounded-2xl overflow-hidden shadow-2xl" onClick={handlePopoverClick}>
                     <Calendar
                       mode="single"
                       selected={selectedDate}
@@ -472,263 +472,240 @@ export const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
                 </Popover>
               )}
 
-              <Popover>
-                <PopoverTrigger asChild onClick={handlePopoverClick}>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-[180px] justify-start text-left font-normal",
-                      !startDate && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {startDate ? format(startDate, "PPP") : "Start date"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" onClick={handlePopoverClick}>
-                  <Calendar
-                    mode="single"
-                    selected={startDate}
-                    onSelect={setStartDate}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
+              <div className="grid grid-cols-2 gap-2 md:col-span-2">
+                <Popover>
+                  <PopoverTrigger asChild onClick={handlePopoverClick}>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-bold rounded-xl h-11 border-slate-200",
+                        !startDate && "text-muted-foreground font-normal"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {startDate ? format(startDate, "MMM d") : "Start"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0 rounded-2xl shadow-2xl" onClick={handlePopoverClick}>
+                    <Calendar mode="single" selected={startDate} onSelect={setStartDate} initialFocus />
+                  </PopoverContent>
+                </Popover>
 
-              <Popover>
-                <PopoverTrigger asChild onClick={handlePopoverClick}>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-[180px] justify-start text-left font-normal",
-                      !endDate && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {endDate ? format(endDate, "PPP") : "End date"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" onClick={handlePopoverClick}>
-                  <Calendar
-                    mode="single"
-                    selected={endDate}
-                    onSelect={setEndDate}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-
-              {(startDate || endDate) && (
-                <Button 
-                  variant="outline" 
-                  onClick={() => {
-                    setStartDate(undefined);
-                    setEndDate(undefined);
-                  }}
-                >
-                  Clear Range
-                </Button>
-              )}
+                <Popover>
+                  <PopoverTrigger asChild onClick={handlePopoverClick}>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-bold rounded-xl h-11 border-slate-200",
+                        !endDate && "text-muted-foreground font-normal"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {endDate ? format(endDate, "MMM d") : "End"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0 rounded-2xl shadow-2xl" onClick={handlePopoverClick}>
+                    <Calendar mode="single" selected={endDate} onSelect={setEndDate} initialFocus />
+                  </PopoverContent>
+                </Popover>
+              </div>
             </div>
 
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={() => handleQuickSelect('today')}>
-                Today
+            <div className="flex flex-wrap gap-2 overflow-x-auto pb-2 scrollbar-hide">
+              <Button variant="secondary" size="sm" className="rounded-full px-4 font-bold text-[11px] uppercase" onClick={() => handleQuickSelect('today')}>Today</Button>
+              <Button variant="secondary" size="sm" className="rounded-full px-4 font-bold text-[11px] uppercase" onClick={() => handleQuickSelect('yesterday')}>Yesterday</Button>
+              <Button variant="secondary" size="sm" className="rounded-full px-4 font-bold text-[11px] uppercase" onClick={() => handleQuickSelect('thisWeek')}>This Week</Button>
+              <Button variant="secondary" size="sm" className="rounded-full px-4 font-bold text-[11px] uppercase" onClick={() => handleQuickSelect('thisMonth')}>This Month</Button>
+
+              <div className="flex-1" />
+
+              <Button
+                variant="outline"
+                size="sm"
+                className="rounded-full font-bold text-[11px] uppercase border-primary/20 text-primary"
+                onClick={async () => {
+                  try {
+                    setLoading(true);
+                    const target = startDate && endDate ? startDate : selectedDate;
+                    const { error } = await (supabase.rpc as any)("sync_daily_summary_for_date", {
+                      target_date: toDateStr(target),
+                    });
+                    if (error) throw error;
+                    toast.success("Summary rebuilt");
+                    await fetchDailyClosingData(selectedDate, startDate, endDate);
+                  } catch (e: any) {
+                    toast.error(e.message || "Rebuild failed");
+                    setLoading(false);
+                  }
+                }}
+              >
+                <RefreshCw className="h-3 w-3 mr-1.5" />
+                Sync
               </Button>
-              <Button variant="outline" size="sm" onClick={() => handleQuickSelect('yesterday')}>
-                Yesterday
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => handleQuickSelect('thisWeek')}>
-                This Week
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => handleQuickSelect('thisMonth')}>
-                This Month
+
+              <Button
+                variant="default"
+                size="sm"
+                onClick={handleAllTimeSummary}
+                className="rounded-full font-bold text-[11px] uppercase bg-slate-900"
+              >
+                All-Time
               </Button>
             </div>
-
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={async () => {
-                try {
-                  setLoading(true);
-                  const target = startDate && endDate ? startDate : selectedDate;
-                  const { error } = await (supabase.rpc as any)("sync_daily_summary_for_date", {
-                    target_date: toDateStr(target),
-                  });
-                  if (error) throw error;
-                  toast.success("Summary rebuilt from transactions");
-                  await fetchDailyClosingData(selectedDate, startDate, endDate);
-                } catch (e: any) {
-                  toast.error(e.message || "Rebuild failed");
-                  setLoading(false);
-                }
-              }}
-            >
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Rebuild
-            </Button>
-
-            <Button
-              variant="default"
-              onClick={handleAllTimeSummary}
-              className="bg-purple-600 hover:bg-purple-700"
-            >
-              All Time Summary
-            </Button>
           </div>
 
           {/* Content */}
           {loading ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-8 w-8 animate-spin" />
-              <span className="ml-2">Loading closing data...</span>
+            <div className="flex flex-col items-center justify-center py-20">
+              <Loader2 className="h-10 w-10 animate-spin text-primary opacity-20" />
+              <p className="mt-4 text-xs font-bold uppercase tracking-widest text-muted-foreground">Calculating...</p>
             </div>
           ) : closingData && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {/* Income Summary */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-green-600">Total Income</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    <div className="text-2xl font-bold">{formatCurrency(closingData.totalIncome)}</div>
-                    <div className="space-y-1 text-sm">
-                      <div>Orders: {formatCurrency(closingData.totalIncomeFromOrders)}</div>
-                      <div>Charging: {formatCurrency(closingData.totalIncomeFromCharging)}</div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Income by Payment Mode */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Income by Payment Mode</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-orange-600">Cash:</span>
-                      <span>{formatCurrency(closingData.cashIncome)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-green-600">eSewa:</span>
-                      <span>{formatCurrency(closingData.esewaIncome)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-blue-600">Fonepay:</span>
-                      <span>{formatCurrency(closingData.fonepayIncome)}</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Expenses Summary */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-red-600">Total Expenses</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    <div className="text-2xl font-bold">{formatCurrency(closingData.totalExpenses)}</div>
-                    <div className="space-y-1 text-sm">
-                      <div>Cash: {formatCurrency(closingData.cashExpenses)}</div>
-                      <div>eSewa: {formatCurrency(closingData.esewaExpenses)}</div>
-                      <div>Fonepay: {formatCurrency(closingData.fonepayExpenses)}</div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Other Transactions */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Other Transactions</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span>Total Deposits:</span>
-                      <span className="text-blue-600">{formatCurrency(closingData.totalDeposits)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Total Withdrawals:</span>
-                      <span className="text-red-600">{formatCurrency(closingData.totalWithdrawals)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Total Savings:</span>
-                      <span className="text-purple-600">{formatCurrency(closingData.totalSavings)}</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Current Balances - FIXED */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Current Balances</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-orange-600">Cash:</span>
-                      <span className={closingData.cashBalance < 0 ? 'text-red-600' : ''}>{formatCurrency(closingData.cashBalance)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-green-600">eSewa:</span>
-                      <span className={closingData.esewaBalance < 0 ? 'text-red-600' : ''}>{formatCurrency(closingData.esewaBalance)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-blue-600">Fonepay:</span>
-                      <span className={closingData.fonepayBalance < 0 ? 'text-red-600' : ''}>{formatCurrency(closingData.fonepayBalance)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-purple-600">Cooperative:</span>
-                      <span className={closingData.cooperativeBalance < 0 ? 'text-red-600' : ''}>{formatCurrency(closingData.cooperativeBalance)}</span>
-                    </div>
-                    <hr className="my-2" />
-                    <div className="flex justify-between font-bold">
-                      <span>Total Balance:</span>
-                      <span className={closingData.totalBalance < 0 ? 'text-red-600' : 'text-green-600'}>
+            <div className="space-y-6">
+              {/* Wallet Summary */}
+              <Card className="rounded-3xl border-none bg-slate-900 text-white shadow-2xl overflow-hidden">
+                <CardContent className="p-6">
+                  <div className="flex justify-between items-start mb-6">
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Total Balance</p>
+                      <h3 className={cn("text-3xl font-black", closingData.totalBalance < 0 ? 'text-rose-400' : 'text-emerald-400')}>
                         {formatCurrency(closingData.totalBalance)}
-                      </span>
+                      </h3>
+                    </div>
+                    <div className="bg-white/10 p-2 rounded-xl">
+                      <Wallet className="h-6 w-6 text-slate-300" />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-white/10">
+                    <div>
+                      <p className="text-[9px] font-bold text-slate-500 uppercase">Cash</p>
+                      <p className="text-sm font-bold">{formatCurrency(closingData.cashBalance)}</p>
+                    </div>
+                    <div>
+                      <p className="text-[9px] font-bold text-slate-500 uppercase">eSewa</p>
+                      <p className="text-sm font-bold">{formatCurrency(closingData.esewaBalance)}</p>
+                    </div>
+                    <div>
+                      <p className="text-[9px] font-bold text-slate-500 uppercase">Fonepay</p>
+                      <p className="text-sm font-bold">{formatCurrency(closingData.fonepayBalance)}</p>
+                    </div>
+                    <div>
+                      <p className="text-[9px] font-bold text-slate-500 uppercase">Coop</p>
+                      <p className="text-sm font-bold">{formatCurrency(closingData.cooperativeBalance)}</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              {/* Net Summary */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Net Summary</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span>Net Profit:</span>
-                      <span className={closingData.netProfit >= 0 ? 'text-green-600' : 'text-red-600'}>
-                        {formatCurrency(closingData.netProfit)}
-                      </span>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {/* Income Summary */}
+                <Card className="rounded-3xl border-none shadow-sm bg-emerald-50/50">
+                  <CardHeader className="p-4 pb-2">
+                    <CardTitle className="text-xs font-black uppercase tracking-widest text-emerald-700">Income</CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-4 pt-0 space-y-4">
+                    <div className="text-2xl font-black text-emerald-800">{formatCurrency(closingData.totalIncome)}</div>
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-xs font-medium">
+                        <span className="text-slate-500">Orders</span>
+                        <span className="font-bold">{formatCurrency(closingData.totalIncomeFromOrders)}</span>
+                      </div>
+                      <div className="flex justify-between text-xs font-medium">
+                        <span className="text-slate-500">Charging</span>
+                        <span className="font-bold">{formatCurrency(closingData.totalIncomeFromCharging)}</span>
+                      </div>
                     </div>
-                    <div className="flex justify-between">
-                      <span>Cooperative Withdrawals:</span>
-                      <span className="text-red-600">{formatCurrency(closingData.cooperativeWithdrawals)}</span>
+                  </CardContent>
+                </Card>
+
+                {/* Income by Mode */}
+                <Card className="rounded-3xl border-none shadow-sm bg-white">
+                  <CardHeader className="p-4 pb-2">
+                    <CardTitle className="text-xs font-black uppercase tracking-widest text-slate-500">Inflow</CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-4 pt-0 space-y-2">
+                    <div className="flex justify-between text-xs py-1 border-b border-slate-50">
+                      <span className="font-bold text-orange-600">Cash</span>
+                      <span className="font-black">{formatCurrency(closingData.cashIncome)}</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span>Bank Withdrawals:</span>
-                      <span className="text-red-600">{formatCurrency(closingData.bankWithdrawals)}</span>
+                    <div className="flex justify-between text-xs py-1 border-b border-slate-50">
+                      <span className="font-bold text-emerald-600">eSewa</span>
+                      <span className="font-black">{formatCurrency(closingData.esewaIncome)}</span>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
+                    <div className="flex justify-between text-xs py-1">
+                      <span className="font-bold text-blue-600">Fonepay</span>
+                      <span className="font-black">{formatCurrency(closingData.fonepayIncome)}</span>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Expenses Summary */}
+                <Card className="rounded-3xl border-none shadow-sm bg-rose-50/50">
+                  <CardHeader className="p-4 pb-2">
+                    <CardTitle className="text-xs font-black uppercase tracking-widest text-rose-700">Expenses</CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-4 pt-0 space-y-4">
+                    <div className="text-2xl font-black text-rose-800">{formatCurrency(closingData.totalExpenses)}</div>
+                    <div className="grid grid-cols-3 gap-2">
+                      <div className="text-[9px] bg-white p-1 rounded-md border border-rose-100">
+                        <span className="block text-slate-400 font-bold mb-1">CASH</span>
+                        <span className="font-bold">{formatCurrency(closingData.cashExpenses)}</span>
+                      </div>
+                      <div className="text-[9px] bg-white p-1 rounded-md border border-rose-100">
+                        <span className="block text-slate-400 font-bold mb-1">ESEWA</span>
+                        <span className="font-bold">{formatCurrency(closingData.esewaExpenses)}</span>
+                      </div>
+                      <div className="text-[9px] bg-white p-1 rounded-md border border-rose-100">
+                        <span className="block text-slate-400 font-bold mb-1">FONE</span>
+                        <span className="font-bold">{formatCurrency(closingData.fonepayExpenses)}</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Other Transactions */}
+                <Card className="rounded-3xl border-none shadow-sm bg-white">
+                  <CardHeader className="p-4 pb-2">
+                    <CardTitle className="text-xs font-black uppercase tracking-widest text-slate-500">Activity</CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-4 pt-0 space-y-2">
+                    <div className="flex justify-between text-xs font-bold">
+                      <span className="text-blue-600">Deposits</span>
+                      <span>{formatCurrency(closingData.totalDeposits)}</span>
+                    </div>
+                    <div className="flex justify-between text-xs font-bold">
+                      <span className="text-rose-600">Withdrawals</span>
+                      <span>{formatCurrency(closingData.totalWithdrawals)}</span>
+                    </div>
+                    <div className="flex justify-between text-xs font-bold">
+                      <span className="text-violet-600">Savings</span>
+                      <span>{formatCurrency(closingData.totalSavings)}</span>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Net Summary */}
+                <Card className={cn(
+                  "rounded-3xl border-none shadow-md col-span-1 md:col-span-2",
+                  closingData.netProfit >= 0 ? "bg-emerald-600 text-white" : "bg-rose-600 text-white"
+                )}>
+                  <CardHeader className="p-4 pb-2">
+                    <CardTitle className="text-xs font-black uppercase tracking-widest opacity-70 text-white">Profit / Loss</CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-4 pt-0 flex items-center justify-between">
+                    <div className="text-3xl font-black">{formatCurrency(closingData.netProfit)}</div>
+                    <div className="text-right">
+                      <div className="text-[10px] font-bold opacity-70 uppercase">After all expenses</div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
           )}
 
-          <DialogFooter>
-            <Button variant="outline" onClick={onClose} disabled={processing}>
-              Close
+          <DialogFooter className="mt-6">
+            <Button variant="ghost" onClick={onClose} className="rounded-xl font-bold h-11 w-full md:w-auto">
+              Close System
             </Button>
           </DialogFooter>
         </DialogContent>

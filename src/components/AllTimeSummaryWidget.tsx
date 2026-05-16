@@ -23,6 +23,7 @@ import { extractErrorMessage, logError } from "@/utils/errorHandling";
 import { AllTimeSummaryModal } from "./AllTimeSummaryModal";
 import { DateRange } from "react-day-picker";
 import { formatCurrency as formatCurrencyUtil } from "@/lib/calculations";
+import { cn } from "@/lib/utils";
 
 interface AllTimeSummaryData {
   totalIncome: number;
@@ -505,7 +506,7 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
   }
 
   return (
-    <Card className={`border-2 border-purple-200 shadow-lg ${className}`}>
+    <div className={`space-y-6 ${className}`}>
       <AllTimeSummaryModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
@@ -513,213 +514,129 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
         onDateRangeChange={handleDateRangeChange}
       />
       {/* Header with Refresh Button */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Clock className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600" />
-          <h2 className="text-xl sm:text-2xl font-bold text-gray-800">
-            All-Time Summary
+          <Clock className="h-5 w-5 text-primary" />
+          <h2 className="text-xl font-black text-slate-800 tracking-tight uppercase">
+            Lifetime Stats
           </h2>
-          <Badge
-            variant="outline"
-            className="text-purple-600 border-purple-300 text-xs"
-          >
-            {summaryData.dataPoints} days
+          <Badge variant="secondary" className="rounded-full text-[10px] font-black uppercase bg-slate-100 text-slate-500 border-none">
+            {summaryData.dataPoints} DAYS
           </Badge>
         </div>
-        <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
+        <div className="flex items-center gap-2">
           <Button
-            onClick={() => setIsModalOpen(true)}
-            className="bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white text-xs sm:text-sm px-2 sm:px-3"
+            variant="ghost"
             size="sm"
+            onClick={() => setIsModalOpen(true)}
+            className="rounded-full font-bold text-xs uppercase text-primary hover:bg-primary/5"
           >
-            <Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-            <span className="hidden sm:inline">View Details</span>
-            <span className="sm:hidden">Details</span>
+            Details
           </Button>
-
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
             onClick={() => fetchAllTimeSummary()}
             disabled={loading}
-            className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3"
+            className="rounded-full font-bold text-xs uppercase text-muted-foreground"
           >
-            <RefreshCw
-              className={`h-3 w-3 sm:h-4 sm:w-4 ${loading ? "animate-spin" : ""}`}
-            />
-            <span className="hidden sm:inline">Refresh</span>
-            <span className="sm:hidden">↻</span>
+            <RefreshCw className={cn("h-3 w-3", loading && "animate-spin")} />
           </Button>
         </div>
       </div>
 
-      <CardContent className="pt-6">
+      <div className="space-y-6">
         {loading ? (
-          <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
-            <span className="ml-2 text-gray-600">Loading summary...</span>
+          <div className="flex flex-col items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-primary opacity-20" />
           </div>
         ) : connectionError ? (
-          <div className="flex flex-col items-center justify-center py-8 text-gray-500 space-y-4">
-            <AlertCircle className="h-8 w-8 text-red-500" />
-            <div className="text-center">
-              <p className="font-medium text-red-600">Connection Error</p>
-              <p className="text-sm">Failed to load summary data</p>
-              <div className="flex items-center justify-center mt-2 space-x-2">
-                <div
-                  className={`w-2 h-2 rounded-full ${networkStatus ? "bg-green-500" : "bg-red-500"}`}
-                ></div>
-                <p className="text-xs text-gray-400">
-                  Network: {networkStatus ? "Online" : "Offline"} | Attempt{" "}
-                  {retryCount}/3
-                </p>
-              </div>
-            </div>
-            <div className="flex space-x-2">
-              <Button
-                onClick={retryFetch}
-                variant="outline"
-                size="sm"
-                disabled={loading || retryCount >= 3 || !networkStatus}
-              >
-                <RefreshCw
-                  className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`}
-                />
-                {loading ? "Retrying..." : "Retry Connection"}
-              </Button>
-              <Button
-                onClick={() => window.location.reload()}
-                variant="outline"
-                size="sm"
-              >
-                Refresh Page
-              </Button>
-            </div>
-
-            {/* Debug Information (only show in development or for admins) */}
-            {process.env.NODE_ENV === "development" && (
-              <details className="mt-4 text-xs text-gray-500">
-                <summary className="cursor-pointer hover:text-gray-700">
-                  Debug Info
-                </summary>
-                <div className="mt-2 p-2 bg-gray-100 rounded text-left">
-                  <p>• URL: {window.location.href}</p>
-                  <p>• User Agent: {navigator.userAgent.substring(0, 50)}...</p>
-                  <p>• Online: {navigator.onLine ? "Yes" : "No"}</p>
-                  <p>• User: {user?.email || "Not logged in"}</p>
-                  <p>• Retry Count: {retryCount}</p>
-                  <p>• Timestamp: {new Date().toISOString()}</p>
-                </div>
-              </details>
-            )}
-          </div>
+          <Card className="rounded-3xl border-none bg-rose-50 p-6 text-center">
+            <AlertCircle className="h-8 w-8 text-rose-500 mx-auto mb-3" />
+            <p className="text-xs font-black uppercase text-rose-800 mb-4">Sync Error</p>
+            <Button onClick={retryFetch} size="sm" className="rounded-full bg-rose-600 font-bold uppercase text-[10px]">Retry</Button>
+          </Card>
         ) : summaryData.dataPoints === 0 ? (
-          <div className="flex items-center justify-center py-8 text-gray-500">
-            <AlertCircle className="h-6 w-6 mr-2" />
-            <span>No data available for the selected period</span>
+          <div className="text-center py-12 bg-slate-50 rounded-3xl border border-dashed border-slate-200">
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">No historical data available</p>
           </div>
         ) : (
-          <div className="space-y-6">
+          <>
             {/* Quick Stats Row */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-4 rounded-lg border border-green-200">
-                <div className="flex items-center gap-2 mb-2">
-                  <TrendingUp className="h-4 w-4 text-green-600" />
-                  <span className="text-sm font-medium text-green-700">
-                    Total Income
-                  </span>
-                </div>
-                <div className="text-xl font-bold text-green-800">
-                  {formatCurrency(summaryData.totalIncome)}
-                </div>
-              </div>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+              <Card className="rounded-3xl border-none shadow-sm bg-slate-900 text-white overflow-hidden">
+                <CardContent className="p-4">
+                  <p className="text-[9px] font-black text-slate-500 uppercase mb-1">Total Income</p>
+                  <p className="text-lg font-black text-emerald-400 truncate">
+                    {formatCurrency(summaryData.totalIncome)}
+                  </p>
+                </CardContent>
+              </Card>
 
-              <div className="bg-gradient-to-br from-red-50 to-rose-50 p-4 rounded-lg border border-red-200">
-                <div className="flex items-center gap-2 mb-2">
-                  <TrendingDown className="h-4 w-4 text-red-600" />
-                  <span className="text-sm font-medium text-red-700">
-                    Total Expenses
-                  </span>
-                </div>
-                <div className="text-xl font-bold text-red-800">
-                  {formatCurrency(summaryData.totalExpenses)}
-                </div>
-              </div>
+              <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden">
+                <CardContent className="p-4">
+                  <p className="text-[9px] font-black text-slate-400 uppercase mb-1">Total Burn</p>
+                  <p className="text-lg font-black text-rose-500 truncate">
+                    {formatCurrency(summaryData.totalExpenses)}
+                  </p>
+                </CardContent>
+              </Card>
 
-              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-200">
-                <div className="flex items-center gap-2 mb-2">
-                  <DollarSign className="h-4 w-4 text-blue-600" />
-                  <span className="text-sm font-medium text-blue-700">
-                    Net Profit
-                  </span>
-                </div>
-                <div
-                  className={`text-xl font-bold ${
-                    summaryData.netProfit >= 0
-                      ? "text-green-800"
-                      : "text-red-800"
-                  }`}
-                >
-                  {formatCurrency(summaryData.netProfit)}
-                </div>
-              </div>
+              <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden">
+                <CardContent className="p-4">
+                  <p className="text-[9px] font-black text-slate-400 uppercase mb-1">Net Flow</p>
+                  <p className={cn("text-lg font-black truncate", summaryData.netProfit >= 0 ? "text-emerald-600" : "text-rose-600")}>
+                    {formatCurrency(summaryData.netProfit)}
+                  </p>
+                </CardContent>
+              </Card>
 
-              <div className="bg-gradient-to-br from-purple-50 to-violet-50 p-4 rounded-lg border border-purple-200">
-                <div className="flex items-center gap-2 mb-2">
-                  <PiggyBank className="h-4 w-4 text-purple-600" />
-                  <span className="text-sm font-medium text-purple-700">
-                    Cooperative Savings
-                  </span>
-                </div>
-                <div className="text-xl font-bold text-purple-800">
-                  {formatCurrency(summaryData.cooperativeSavings)}
-                </div>
-              </div>
+              <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden">
+                <CardContent className="p-4">
+                  <p className="text-[9px] font-black text-slate-400 uppercase mb-1">Savings</p>
+                  <p className="text-lg font-black text-violet-600 truncate">
+                    {formatCurrency(summaryData.cooperativeSavings)}
+                  </p>
+                </CardContent>
+              </Card>
             </div>
 
             {/* Current Balances */}
-            <div className="bg-gradient-to-br from-gray-50 to-slate-50 p-4 rounded-lg border border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                <Banknote className="h-5 w-5" />
-                Current Balances
-              </h3>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-                <div className="text-center">
-                  <div className="text-sm text-gray-600">Cash</div>
-                  <div className="text-lg font-semibold text-green-600">
-                    {formatCurrency(summaryData.currentBalances.cash)}
+            <Card className="rounded-3xl border-none shadow-2xl bg-white overflow-hidden">
+              <CardHeader className="bg-slate-50/50 border-b border-slate-100 p-4 flex flex-row items-center justify-between">
+                <CardTitle className="text-[10px] font-black uppercase tracking-widest text-slate-500 flex items-center gap-2">
+                  <Banknote className="h-3 w-3" />
+                  Live Balances
+                </CardTitle>
+                <span className="text-[10px] font-black text-primary">
+                  TOTAL: {formatCurrency(summaryData.currentBalances.total)}
+                </span>
+              </CardHeader>
+              <CardContent className="p-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div>
+                    <p className="text-[9px] font-bold text-slate-400 uppercase mb-0.5">Cash</p>
+                    <p className="text-sm font-black text-slate-800">{formatCurrency(summaryData.currentBalances.cash)}</p>
+                  </div>
+                  <div>
+                    <p className="text-[9px] font-bold text-slate-400 uppercase mb-0.5">eSewa</p>
+                    <p className="text-sm font-black text-slate-800">{formatCurrency(summaryData.currentBalances.esewa)}</p>
+                  </div>
+                  <div>
+                    <p className="text-[9px] font-bold text-slate-400 uppercase mb-0.5">Fonepay</p>
+                    <p className="text-sm font-black text-slate-800">{formatCurrency(summaryData.currentBalances.fonepay)}</p>
+                  </div>
+                  <div>
+                    <p className="text-[9px] font-bold text-slate-400 uppercase mb-0.5">Savings</p>
+                    <p className="text-sm font-black text-slate-800">{formatCurrency(summaryData.currentBalances.cooperative)}</p>
                   </div>
                 </div>
-                <div className="text-center">
-                  <div className="text-sm text-gray-600">eSewa</div>
-                  <div className="text-lg font-semibold text-blue-600">
-                    {formatCurrency(summaryData.currentBalances.esewa)}
-                  </div>
-                </div>
-                <div className="text-center">
-                  <div className="text-sm text-gray-600">Bank/Fonepay</div>
-                  <div className="text-lg font-semibold text-orange-600">
-                    {formatCurrency(summaryData.currentBalances.fonepay)}
-                  </div>
-                </div>
-                <div className="text-center">
-                  <div className="text-sm text-gray-600">Cooperative</div>
-                  <div className="text-lg font-semibold text-indigo-600">
-                    {formatCurrency(summaryData.currentBalances.cooperative)}
-                  </div>
-                </div>
-                <div className="text-center">
-                  <div className="text-sm text-gray-600">Total Balance</div>
-                  <div className="text-lg font-semibold text-gray-800">
-                    {formatCurrency(summaryData.currentBalances.total)}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+              </CardContent>
+            </Card>
+          </>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 

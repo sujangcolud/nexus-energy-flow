@@ -240,161 +240,163 @@ export const AllTimeSummaryModal: React.FC<AllTimeSummaryModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-6xl max-h-[95vh] overflow-auto">
-        <DialogHeader>
-          <DialogTitle>All-Time Financial Summary</DialogTitle>
+      <DialogContent className="max-w-6xl w-[95vw] max-h-[95vh] overflow-y-auto p-4 md:p-6 rounded-3xl">
+        <DialogHeader className="mb-4">
+          <DialogTitle className="text-xl md:text-2xl font-black text-primary">All-Time Report</DialogTitle>
+          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">Full Historical Financial Summary</p>
         </DialogHeader>
 
         {loading ? (
-          <div className="flex items-center justify-center py-8">
-            <Loader2 className="h-8 w-8 animate-spin" />
-            <span className="ml-2">Loading all-time summary...</span>
+          <div className="flex flex-col items-center justify-center py-20">
+            <Loader2 className="h-10 w-10 animate-spin text-primary opacity-20" />
+            <p className="mt-4 text-xs font-bold uppercase tracking-widest text-muted-foreground">Compiling Data...</p>
           </div>
         ) : allTimeData && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {/* Income Summary */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-green-600">Total Income</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <div className="text-2xl font-bold">{formatCurrency(allTimeData.totalIncome)}</div>
-                  <div className="space-y-1 text-sm">
-                    <div>Orders: {formatCurrency(allTimeData.totalIncomeFromOrders)}</div>
-                    <div>Charging: {formatCurrency(allTimeData.totalIncomeFromCharging)}</div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Income by Payment Mode */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Income by Payment Mode</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-orange-600">Cash:</span>
-                    <span>{formatCurrency(allTimeData.cashIncome)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-green-600">eSewa:</span>
-                    <span>{formatCurrency(allTimeData.esewaIncome)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-blue-600">Fonepay:</span>
-                    <span>{formatCurrency(allTimeData.fonepayIncome)}</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Expenses Summary */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-red-600">Total Expenses</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <div className="text-2xl font-bold">{formatCurrency(allTimeData.totalExpenses)}</div>
-                  <div className="space-y-1 text-sm">
-                    <div>Cash: {formatCurrency(allTimeData.cashExpenses)}</div>
-                    <div>eSewa: {formatCurrency(allTimeData.esewaExpenses)}</div>
-                    <div>Fonepay: {formatCurrency(allTimeData.fonepayExpenses)}</div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Other Transactions */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Other Transactions</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span>Total Deposits:</span>
-                    <span className="text-blue-600">{formatCurrency(allTimeData.totalDeposits)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Total Withdrawals:</span>
-                    <span className="text-red-600">{formatCurrency(allTimeData.totalWithdrawals)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Total Savings:</span>
-                    <span className="text-purple-600">{formatCurrency(allTimeData.totalSavings)}</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Current Balances */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Current Balances</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-orange-600">Cash:</span>
-                    <span className={allTimeData.cashBalance < 0 ? 'text-red-600' : ''}>{formatCurrency(allTimeData.cashBalance)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-green-600">eSewa:</span>
-                    <span className={allTimeData.esewaBalance < 0 ? 'text-red-600' : ''}>{formatCurrency(allTimeData.esewaBalance)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-orange-600">Bank/Fonepay:</span>
-                    <span className={allTimeData.fonepayBalance < 0 ? 'text-red-600' : ''}>{formatCurrency(allTimeData.fonepayBalance)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-purple-600">Cooperative:</span>
-                    <span className={allTimeData.cooperativeBalance < 0 ? 'text-red-600' : ''}>{formatCurrency(allTimeData.cooperativeBalance)}</span>
-                  </div>
-                  <hr className="my-2" />
-                  <div className="flex justify-between font-bold">
-                    <span>Total Balance:</span>
-                    <span className={allTimeData.totalBalance < 0 ? 'text-red-600' : 'text-green-600'}>
+          <div className="space-y-6">
+            {/* Wallet Summary */}
+            <Card className="rounded-3xl border-none bg-slate-900 text-white shadow-2xl overflow-hidden">
+              <CardContent className="p-6">
+                <div className="flex justify-between items-start mb-6">
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Total Net Balance</p>
+                    <h3 className={cn("text-3xl font-black", allTimeData.totalBalance < 0 ? 'text-rose-400' : 'text-emerald-400')}>
                       {formatCurrency(allTimeData.totalBalance)}
-                    </span>
+                    </h3>
+                  </div>
+                  <div className="bg-white/10 p-2 rounded-xl">
+                    <Database className="h-6 w-6 text-slate-300" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-white/10">
+                  <div>
+                    <p className="text-[9px] font-bold text-slate-500 uppercase">Cash</p>
+                    <p className="text-sm font-bold">{formatCurrency(allTimeData.cashBalance)}</p>
+                  </div>
+                  <div>
+                    <p className="text-[9px] font-bold text-slate-500 uppercase">eSewa</p>
+                    <p className="text-sm font-bold">{formatCurrency(allTimeData.esewaBalance)}</p>
+                  </div>
+                  <div>
+                    <p className="text-[9px] font-bold text-slate-500 uppercase">Bank/Fone</p>
+                    <p className="text-sm font-bold">{formatCurrency(allTimeData.fonepayBalance)}</p>
+                  </div>
+                  <div>
+                    <p className="text-[9px] font-bold text-slate-500 uppercase">Savings</p>
+                    <p className="text-sm font-bold">{formatCurrency(allTimeData.cooperativeBalance)}</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Net Summary */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Net Summary</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span>Net Profit:</span>
-                    <span className={allTimeData.netProfit >= 0 ? 'text-green-600' : 'text-red-600'}>
-                      {formatCurrency(allTimeData.netProfit)}
-                    </span>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {/* Income Summary */}
+              <Card className="rounded-3xl border-none shadow-sm bg-emerald-50/50">
+                <CardHeader className="p-4 pb-2">
+                  <CardTitle className="text-xs font-black uppercase tracking-widest text-emerald-700">Income Overview</CardTitle>
+                </CardHeader>
+                <CardContent className="p-4 pt-0 space-y-4">
+                  <div className="text-2xl font-black text-emerald-800">{formatCurrency(allTimeData.totalIncome)}</div>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-xs font-medium">
+                      <span className="text-slate-500">Orders</span>
+                      <span className="font-bold">{formatCurrency(allTimeData.totalIncomeFromOrders)}</span>
+                    </div>
+                    <div className="flex justify-between text-xs font-medium">
+                      <span className="text-slate-500">Charging</span>
+                      <span className="font-bold">{formatCurrency(allTimeData.totalIncomeFromCharging)}</span>
+                    </div>
                   </div>
-                  <div className="flex justify-between">
-                    <span>Cooperative Withdrawals:</span>
-                    <span className="text-red-600">{formatCurrency(allTimeData.cooperativeWithdrawals)}</span>
+                </CardContent>
+              </Card>
+
+              {/* Income by Mode */}
+              <Card className="rounded-3xl border-none shadow-sm bg-white">
+                <CardHeader className="p-4 pb-2">
+                  <CardTitle className="text-xs font-black uppercase tracking-widest text-slate-500">Revenue Stream</CardTitle>
+                </CardHeader>
+                <CardContent className="p-4 pt-0 space-y-2">
+                  <div className="flex justify-between text-xs py-1 border-b border-slate-50">
+                    <span className="font-bold text-orange-600">Cash</span>
+                    <span className="font-black">{formatCurrency(allTimeData.cashIncome)}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span>Bank Withdrawals:</span>
-                    <span className="text-red-600">{formatCurrency(allTimeData.bankWithdrawals)}</span>
+                  <div className="flex justify-between text-xs py-1 border-b border-slate-50">
+                    <span className="font-bold text-emerald-600">eSewa</span>
+                    <span className="font-black">{formatCurrency(allTimeData.esewaIncome)}</span>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                  <div className="flex justify-between text-xs py-1">
+                    <span className="font-bold text-blue-600">Fonepay</span>
+                    <span className="font-black">{formatCurrency(allTimeData.fonepayIncome)}</span>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Expenses Summary */}
+              <Card className="rounded-3xl border-none shadow-sm bg-rose-50/50">
+                <CardHeader className="p-4 pb-2">
+                  <CardTitle className="text-xs font-black uppercase tracking-widest text-rose-700">Total Burn</CardTitle>
+                </CardHeader>
+                <CardContent className="p-4 pt-0 space-y-4">
+                  <div className="text-2xl font-black text-rose-800">{formatCurrency(allTimeData.totalExpenses)}</div>
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="text-[9px] bg-white p-1 rounded-md border border-rose-100">
+                      <span className="block text-slate-400 font-bold mb-1">CASH</span>
+                      <span className="font-bold">{formatCurrency(allTimeData.cashExpenses)}</span>
+                    </div>
+                    <div className="text-[9px] bg-white p-1 rounded-md border border-rose-100">
+                      <span className="block text-slate-400 font-bold mb-1">ESEWA</span>
+                      <span className="font-bold">{formatCurrency(allTimeData.esewaExpenses)}</span>
+                    </div>
+                    <div className="text-[9px] bg-white p-1 rounded-md border border-rose-100">
+                      <span className="block text-slate-400 font-bold mb-1">FONE</span>
+                      <span className="font-bold">{formatCurrency(allTimeData.fonepayExpenses)}</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Other Transactions */}
+              <Card className="rounded-3xl border-none shadow-sm bg-white">
+                <CardHeader className="p-4 pb-2">
+                  <CardTitle className="text-xs font-black uppercase tracking-widest text-slate-500">Flow Summary</CardTitle>
+                </CardHeader>
+                <CardContent className="p-4 pt-0 space-y-2">
+                  <div className="flex justify-between text-xs font-bold">
+                    <span className="text-blue-600">Deposits</span>
+                    <span>{formatCurrency(allTimeData.totalDeposits)}</span>
+                  </div>
+                  <div className="flex justify-between text-xs font-bold">
+                    <span className="text-rose-600">Withdrawals</span>
+                    <span>{formatCurrency(allTimeData.totalWithdrawals)}</span>
+                  </div>
+                  <div className="flex justify-between text-xs font-bold">
+                    <span className="text-violet-600">Savings</span>
+                    <span>{formatCurrency(allTimeData.totalSavings)}</span>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Net Summary */}
+              <Card className={cn(
+                "rounded-3xl border-none shadow-md col-span-1 md:col-span-2",
+                allTimeData.netProfit >= 0 ? "bg-emerald-600 text-white" : "bg-rose-600 text-white"
+              )}>
+                <CardHeader className="p-4 pb-2">
+                  <CardTitle className="text-xs font-black uppercase tracking-widest opacity-70 text-white">Historical Net Profit</CardTitle>
+                </CardHeader>
+                <CardContent className="p-4 pt-0 flex items-center justify-between">
+                  <div className="text-3xl font-black">{formatCurrency(allTimeData.netProfit)}</div>
+                  <div className="text-right">
+                    <div className="text-[10px] font-bold opacity-70 uppercase text-white">Lifetime Performance</div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         )}
 
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
-            Close
+        <DialogFooter className="mt-6">
+          <Button variant="ghost" onClick={onClose} className="rounded-xl font-bold h-11 w-full md:w-auto">
+            Close Report
           </Button>
         </DialogFooter>
       </DialogContent>

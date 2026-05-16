@@ -366,72 +366,80 @@ const ChargingTab = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background p-2 md:p-6 pb-24 md:pb-6">
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto" aria-describedby={undefined}>
-          <DialogHeader>
-            <DialogTitle>Edit Charging Session</DialogTitle>
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto p-4 md:p-6 rounded-3xl" aria-describedby={undefined}>
+          <DialogHeader className="mb-4">
+            <DialogTitle className="text-xl font-bold text-primary">Edit Charging Session</DialogTitle>
           </DialogHeader>
           {selectedSession && (
             <div className="space-y-4">
-              <div>
-                <Label htmlFor="editStartPercentage">Start Percentage</Label>
-                <Input
-                  id="editStartPercentage"
-                  type="number"
-                  value={selectedSession.start_percentage}
-                  onChange={(e) =>
-                    setSelectedSession({
-                      ...selectedSession,
-                      start_percentage: parseInt(e.target.value),
-                    })
-                  }
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="editStartPercentage" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Start %</Label>
+                  <Input
+                    id="editStartPercentage"
+                    type="number"
+                    value={selectedSession.start_percentage}
+                    onChange={(e) =>
+                      setSelectedSession({
+                        ...selectedSession,
+                        start_percentage: parseInt(e.target.value),
+                      })
+                    }
+                    className="h-11 rounded-xl"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="editEndPercentage" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">End %</Label>
+                  <Input
+                    id="editEndPercentage"
+                    type="number"
+                    value={selectedSession.end_percentage}
+                    onChange={(e) =>
+                      setSelectedSession({
+                        ...selectedSession,
+                        end_percentage: parseInt(e.target.value),
+                      })
+                    }
+                    className="h-11 rounded-xl"
+                  />
+                </div>
               </div>
-              <div>
-                <Label htmlFor="editEndPercentage">End Percentage</Label>
-                <Input
-                  id="editEndPercentage"
-                  type="number"
-                  value={selectedSession.end_percentage}
-                  onChange={(e) =>
-                    setSelectedSession({
-                      ...selectedSession,
-                      end_percentage: parseInt(e.target.value),
-                    })
-                  }
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="editPerPercentRate" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Rate/%</Label>
+                  <Input
+                    id="editPerPercentRate"
+                    type="number"
+                    value={selectedSession.per_percent_rate}
+                    onChange={(e) =>
+                      setSelectedSession({
+                        ...selectedSession,
+                        per_percent_rate: parseFloat(e.target.value),
+                      })
+                    }
+                    className="h-11 rounded-xl"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="editKcal" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">kCal</Label>
+                  <Input
+                    id="editKcal"
+                    type="number"
+                    value={selectedSession.kcal}
+                    onChange={(e) =>
+                      setSelectedSession({
+                        ...selectedSession,
+                        kcal: parseFloat(e.target.value),
+                      })
+                    }
+                    className="h-11 rounded-xl"
+                  />
+                </div>
               </div>
-              <div>
-                <Label htmlFor="editPerPercentRate">Per Percent Rate</Label>
-                <Input
-                  id="editPerPercentRate"
-                  type="number"
-                  value={selectedSession.per_percent_rate}
-                  onChange={(e) =>
-                    setSelectedSession({
-                      ...selectedSession,
-                      per_percent_rate: parseFloat(e.target.value),
-                    })
-                  }
-                />
-              </div>
-              <div>
-                <Label htmlFor="editKcal">kCal</Label>
-                <Input
-                  id="editKcal"
-                  type="number"
-                  value={selectedSession.kcal}
-                  onChange={(e) =>
-                    setSelectedSession({
-                      ...selectedSession,
-                      kcal: parseFloat(e.target.value),
-                    })
-                  }
-                />
-              </div>
-              <div>
-                <Label htmlFor="editPerUnitRate">Per Unit Rate</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="editPerUnitRate" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Rate/kCal</Label>
                 <Input
                   id="editPerUnitRate"
                   type="number"
@@ -442,10 +450,11 @@ const ChargingTab = () => {
                       per_unit_rate: parseFloat(e.target.value),
                     })
                   }
+                  className="h-11 rounded-xl"
                 />
               </div>
-              <div>
-                <Label htmlFor="editTotalAmount">Total Amount</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="editTotalAmount" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Total Amount</Label>
                 <Input
                   id="editTotalAmount"
                   type="number"
@@ -456,134 +465,101 @@ const ChargingTab = () => {
                       total_amount: parseFloat(e.target.value),
                     })
                   }
+                  className="h-12 text-lg font-bold rounded-xl border-primary/20"
                 />
               </div>
-              <div>
-                <Label htmlFor="editPaymentMode">Payment Mode</Label>
-                <Input
-                  id="editPaymentMode"
+              <div className="space-y-1.5">
+                <Label htmlFor="editPaymentMode" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Payment Mode</Label>
+                <Select
                   value={selectedSession.payment_mode}
-                  onChange={(e) =>
-                    setSelectedSession({
-                      ...selectedSession,
-                      payment_mode: e.target.value,
-                    })
-                  }
-                />
+                  onValueChange={(val) => setSelectedSession({...selectedSession, payment_mode: val})}
+                >
+                  <SelectTrigger className="h-11 rounded-xl">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {paymentModes.map(mode => <SelectItem key={mode} value={mode}>{mode}</SelectItem>)}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           )}
-          <DialogFooter>
-            <Button onClick={handleUpdate}>Save</Button>
+          <DialogFooter className="pt-2">
+            <Button onClick={handleUpdate} className="w-full h-12 rounded-xl text-lg font-bold shadow-lg">Save Changes</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      <div className="space-y-6 p-4 sm:p-6">
+      <div className="space-y-4 md:space-y-6">
         {/* Header */}
-        <div className="mb-6 flex items-start justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              <div className="p-2 rounded-md bg-primary text-primary-foreground">
-                <Zap className="h-4 w-4" />
-              </div>
-              <h1 className="text-xl font-semibold text-foreground">
+        <div className="bg-primary/5 p-4 rounded-3xl mb-4 md:mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-primary rounded-xl text-white">
+              <Zap className="h-5 w-5 md:h-6 md:w-6" />
+            </div>
+            <div>
+              <h1 className="text-xl md:text-2xl font-bold text-foreground">
                 Charging Sessions
               </h1>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Track and manage EV charging sessions
+              </p>
             </div>
-            <p className="text-sm text-muted-foreground">
-              Track and manage EV charging sessions
-            </p>
           </div>
           <MultiChargingEntry categories={categories} onComplete={fetchSessions} />
         </div>
 
         {/* All-Time Total Display */}
-        <AllTimeTotalDisplay type="charging" className="mb-6" />
+        <AllTimeTotalDisplay type="charging" className="mb-4 md:mb-6" />
 
         {/* Quick Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <Card className="bg-card border">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-muted-foreground font-medium">Total Revenue</p>
-                  <p className="text-lg font-semibold text-foreground">
-                    NRs. {totalSessionCost.toFixed(2)}
-                  </p>
-                </div>
-                <div className="p-2 bg-muted rounded-md">
-                  <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                </div>
-              </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-4 md:mb-6">
+          <Card className="rounded-3xl border-none bg-white shadow-sm overflow-hidden">
+            <CardContent className="p-4 md:p-6">
+              <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Total Revenue</p>
+              <p className="text-sm md:text-xl font-bold text-primary">NRs. {totalSessionCost.toFixed(2)}</p>
             </CardContent>
           </Card>
-
-          <Card className="bg-card border">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-muted-foreground font-medium">Total Sessions</p>
-                  <p className="text-lg font-semibold text-foreground">{sessions.length}</p>
-                </div>
-                <div className="p-2 bg-muted rounded-md">
-                  <Activity className="h-4 w-4 text-muted-foreground" />
-                </div>
-              </div>
+          <Card className="rounded-3xl border-none bg-white shadow-sm overflow-hidden">
+            <CardContent className="p-4 md:p-6">
+              <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Sessions</p>
+              <p className="text-sm md:text-xl font-bold text-foreground">{sessions.length}</p>
             </CardContent>
           </Card>
-
-          <Card className="bg-card border">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-muted-foreground font-medium">Avg. Cost</p>
-                  <p className="text-lg font-semibold text-foreground">
-                    NRs. {averageSessionCost.toFixed(2)}
-                  </p>
-                </div>
-                <div className="p-2 bg-muted rounded-md">
-                  <Battery className="h-4 w-4 text-muted-foreground" />
-                </div>
-              </div>
+          <Card className="rounded-3xl border-none bg-white shadow-sm overflow-hidden hidden md:block">
+            <CardContent className="p-4 md:p-6">
+              <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Avg. Cost</p>
+              <p className="text-sm md:text-xl font-bold text-foreground">NRs. {averageSessionCost.toFixed(2)}</p>
             </CardContent>
           </Card>
-
-          <Card className="bg-card border">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-muted-foreground font-medium">Total kCal</p>
-                  <p className="text-lg font-semibold text-foreground">{totalKcal.toFixed(2)}</p>
-                </div>
-                <div className="p-2 bg-muted rounded-md">
-                  <BatteryCharging className="h-4 w-4 text-muted-foreground" />
-                </div>
-              </div>
+          <Card className="rounded-3xl border-none bg-white shadow-sm overflow-hidden hidden md:block">
+            <CardContent className="p-4 md:p-6">
+              <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Total kCal</p>
+              <p className="text-sm md:text-xl font-bold text-foreground">{totalKcal.toFixed(2)}</p>
             </CardContent>
           </Card>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-8">
           {/* Charging Session Form */}
-          <Card className="bg-gradient-to-br from-white/90 to-yellow-50/90 backdrop-blur-sm border-0 shadow-2xl hover:shadow-3xl transition-all duration-300">
-            <CardHeader className="bg-gradient-to-r from-yellow-500 to-orange-600 text-white rounded-t-lg">
-              <CardTitle className="flex items-center gap-3 text-xl">
-                <div className="p-2 bg-white/20 rounded-lg">
-                  <Zap className="h-6 w-6" />
+          <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden">
+            <CardHeader className="bg-amber-500 text-white p-4 md:p-6">
+              <CardTitle className="flex items-center gap-3 text-lg md:text-xl font-bold">
+                <div className="p-2 bg-white/20 rounded-xl">
+                  <Zap className="h-5 w-5 md:h-6 md:w-6" />
                 </div>
                 New Charging Session
-                <Sparkles className="h-5 w-5 animate-pulse" />
+                <Sparkles className="h-4 w-4 md:h-5 md:w-5 ml-auto opacity-70" />
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-6 space-y-6">
-              <form onSubmit={handleSubmit} className="space-y-6">
+            <CardContent className="p-4 md:p-6 space-y-6">
+              <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
                 {/* Battery Percentage Section */}
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                      <Battery className="h-4 w-4 text-yellow-600" />
-                      Start Battery %
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                      <Battery className="h-3.5 w-3.5 text-amber-600" />
+                      Start %
                     </label>
                     <Input
                       type="number"
@@ -595,13 +571,13 @@ const ChargingTab = () => {
                       min="0"
                       max="100"
                       required
-                      className="border-yellow-200 focus:border-yellow-500 focus:ring-yellow-500"
+                      className="h-11 rounded-xl"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                      <BatteryCharging className="h-4 w-4 text-green-600" />
-                      End Battery %
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                      <BatteryCharging className="h-3.5 w-3.5 text-green-600" />
+                      End %
                     </label>
                     <Input
                       type="number"
@@ -611,35 +587,15 @@ const ChargingTab = () => {
                       min="0"
                       max="100"
                       required
-                      className="border-green-200 focus:border-green-500 focus:ring-green-500"
+                      className="h-11 rounded-xl"
                     />
                   </div>
                 </div>
 
-                {/* Charging Progress Visualization */}
-                {startPercentage > 0 && endPercentage > startPercentage && (
-                  <div className="p-4 bg-gradient-to-r from-yellow-50 to-green-50 rounded-lg border border-yellow-200">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium text-gray-600">
-                        Charging Progress
-                      </span>
-                      <span className="text-lg font-bold bg-gradient-to-r from-yellow-600 to-green-600 bg-clip-text text-transparent">
-                        +{calculateChargedPercentage()}%
-                      </span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-3">
-                      <div
-                        className="bg-gradient-to-r from-yellow-500 to-green-500 h-3 rounded-full transition-all duration-500"
-                        style={{ width: `${calculateChargedPercentage()}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                )}
-
                 {/* Rates Section */}
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                       Rate per %
                     </label>
                     <Input
@@ -652,11 +608,11 @@ const ChargingTab = () => {
                       placeholder="0.00"
                       min="0"
                       required
-                      className="border-orange-200 focus:border-orange-500 focus:ring-orange-500"
+                      className="h-11 rounded-xl"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                       kCal Consumed
                     </label>
                     <Input
@@ -667,15 +623,15 @@ const ChargingTab = () => {
                       placeholder="0.00"
                       min="0"
                       required
-                      className="border-red-200 focus:border-red-500 focus:ring-red-500"
+                      className="h-11 rounded-xl"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700">
-                      Rate per kCal
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                      Rate/kCal
                     </label>
                     <Input
                       type="number"
@@ -685,11 +641,11 @@ const ChargingTab = () => {
                       placeholder="0.00"
                       min="0"
                       required
-                      className="border-purple-200 focus:border-purple-500 focus:ring-purple-500"
+                      className="h-11 rounded-xl"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                       Payment Mode
                     </label>
                     <Select
@@ -697,8 +653,8 @@ const ChargingTab = () => {
                       onValueChange={setPaymentMode}
                       required
                     >
-                      <SelectTrigger className="border-blue-200 focus:border-blue-500 focus:ring-blue-500">
-                        <SelectValue placeholder="Select payment mode" />
+                      <SelectTrigger className="h-11 rounded-xl">
+                        <SelectValue placeholder="Select" />
                       </SelectTrigger>
                       <SelectContent>
                         {paymentModes.map((mode) => (
@@ -710,12 +666,12 @@ const ChargingTab = () => {
                     </Select>
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                     Category (Optional)
                   </label>
                   <Select value={category} onValueChange={setCategory}>
-                    <SelectTrigger className="border-blue-200 focus:border-blue-500 focus:ring-blue-500">
+                    <SelectTrigger className="h-11 rounded-xl">
                       <SelectValue placeholder="Select category (optional)" />
                     </SelectTrigger>
                     <SelectContent>
@@ -725,11 +681,6 @@ const ChargingTab = () => {
                           {cat.name}
                         </SelectItem>
                       ))}
-                      {categories.length === 0 && (
-                        <SelectItem value="no-categories" disabled>
-                          No categories available
-                        </SelectItem>
-                      )}
                     </SelectContent>
                   </Select>
                 </div>
@@ -739,31 +690,27 @@ const ChargingTab = () => {
                   selectedDate={transactionDate}
                   onDateChange={setTransactionDate}
                   label="Charging Session Date"
-                  className="mb-4"
                 />
 
                 {/* Cost Calculation Display */}
                 {(startPercentage > 0 || kcal > 0) && (
-                  <div className="p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
-                    <h4 className="font-semibold text-gray-800 mb-3">
-                      Cost Breakdown
-                    </h4>
+                  <div className="p-4 bg-primary/5 rounded-2xl border border-primary/10">
                     <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span>Percentage Cost:</span>
-                        <span className="font-medium">
+                      <div className="flex justify-between items-center">
+                        <span className="text-muted-foreground">Percentage Cost:</span>
+                        <span className="font-bold">
                           NRs. {calculatePercentageCost().toFixed(2)}
                         </span>
                       </div>
-                      <div className="flex justify-between">
-                        <span>kCal Cost:</span>
-                        <span className="font-medium">
+                      <div className="flex justify-between items-center">
+                        <span className="text-muted-foreground">kCal Cost:</span>
+                        <span className="font-bold">
                           NRs. {calculateKcalCost().toFixed(2)}
                         </span>
                       </div>
-                      <div className="border-t border-blue-200 pt-2 flex justify-between font-bold text-lg">
-                        <span>Total Amount:</span>
-                        <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                      <div className="border-t border-primary/10 pt-2 flex justify-between items-center">
+                        <span className="font-bold uppercase tracking-wider text-xs">Total Amount</span>
+                        <span className="font-black text-xl text-primary">
                           NRs. {calculateTotalAmount().toFixed(2)}
                         </span>
                       </div>
@@ -774,17 +721,17 @@ const ChargingTab = () => {
                 <Button
                   type="submit"
                   disabled={submitting}
-                  className="w-full h-12 bg-gradient-to-r from-yellow-500 via-orange-500 to-red-500 hover:from-yellow-600 hover:via-orange-600 hover:to-red-600 text-white font-semibold shadow-lg transition-all duration-300 transform hover:scale-105"
+                  className="w-full h-12 md:h-14 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white font-black text-lg shadow-lg shadow-amber-500/20 transition-all active:scale-[0.98]"
                 >
                   {submitting ? (
                     <div className="flex items-center gap-2">
                       <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                      Recording Session...
+                      Recording...
                     </div>
                   ) : (
                     <div className="flex items-center gap-2">
                       <Plus className="h-5 w-5" />
-                      Record Charging Session
+                      Record Session
                     </div>
                   )}
                 </Button>

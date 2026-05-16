@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { format, startOfMonth, endOfMonth } from "date-fns";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 import { extractErrorMessage, logError } from "@/utils/errorHandling";
 
 interface DailySummary {
@@ -439,115 +440,98 @@ const FinancialSummaryWidget: React.FC<FinancialSummaryWidgetProps> = ({
       {/* Header with Refresh Button */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <BarChart3 className="h-6 w-6 text-blue-600" />
-          <h2 className="text-2xl font-bold text-gray-800">
-            Financial Summary
+          <BarChart3 className="h-5 w-5 text-primary" />
+          <h2 className="text-xl font-black text-slate-800 tracking-tight uppercase">
+            Finance Summary
           </h2>
         </div>
         <Button
-          variant="outline"
+          variant="ghost"
           size="sm"
           onClick={refreshSummary}
           disabled={refreshing}
-          className="flex items-center gap-2"
+          className="flex items-center gap-2 rounded-full font-bold text-xs uppercase text-muted-foreground hover:text-primary"
         >
           <RefreshCw
-            className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
+            className={`h-3 w-3 ${refreshing ? "animate-spin" : ""}`}
           />
-          Refresh
+          Sync
         </Button>
       </div>
 
       {/* Today's Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-green-600 flex items-center gap-2">
-              <TrendingUp className="h-4 w-4" />
-              Today's Income
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <Card className="rounded-3xl border-none shadow-sm bg-emerald-500 text-white overflow-hidden">
+          <CardHeader className="p-4 pb-0">
+            <CardTitle className="text-[10px] font-black uppercase tracking-widest opacity-80 flex items-center gap-1.5">
+              <TrendingUp className="h-3 w-3" />
+              Income
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-800">
-              NRs. {todayIncome.toLocaleString()}
+          <CardContent className="p-4 pt-2">
+            <div className="text-xl font-black truncate">
+              रु {todayIncome.toLocaleString()}
             </div>
             {todaySummary && (
-              <div className="mt-2 space-y-1">
-                <div className="text-xs text-green-600">
-                  Orders: NRs.{" "}
-                  {todaySummary.total_income_from_orders.toFixed(2)}
-                </div>
-                <div className="text-xs text-green-600">
-                  Charging: NRs.{" "}
-                  {todaySummary.total_income_from_charging.toFixed(2)}
-                </div>
+              <div className="mt-1 flex flex-wrap gap-x-2 text-[9px] font-bold opacity-70">
+                <span>Orders: {todaySummary.total_income_from_orders.toFixed(0)}</span>
+                <span>EV: {todaySummary.total_income_from_charging.toFixed(0)}</span>
               </div>
             )}
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-red-50 to-rose-50 border-red-200">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-red-600 flex items-center gap-2">
-              <TrendingDown className="h-4 w-4" />
-              Today's Expenses
+        <Card className="rounded-3xl border-none shadow-sm bg-rose-500 text-white overflow-hidden">
+          <CardHeader className="p-4 pb-0">
+            <CardTitle className="text-[10px] font-black uppercase tracking-widest opacity-80 flex items-center gap-1.5">
+              <TrendingDown className="h-3 w-3" />
+              Expenses
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-800">
-              NRs. {todayExpenses.toLocaleString()}
+          <CardContent className="p-4 pt-2">
+            <div className="text-xl font-black truncate">
+              रु {todayExpenses.toLocaleString()}
             </div>
-            <div className="mt-2">
-              <Badge
-                variant={todayNetProfit >= 0 ? "default" : "destructive"}
-                className="text-xs"
-              >
-                Net: NRs. {todayNetProfit.toFixed(2)}
-              </Badge>
+            <div className="mt-1">
+              <span className="bg-white/20 px-1.5 py-0.5 rounded text-[9px] font-black uppercase">
+                Net: रु {todayNetProfit.toFixed(0)}
+              </span>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-blue-600 flex items-center gap-2">
-              <Wallet className="h-4 w-4" />
-              Total Balance
+        <Card className="rounded-3xl border-none shadow-sm bg-slate-900 text-white overflow-hidden">
+          <CardHeader className="p-4 pb-0">
+            <CardTitle className="text-[10px] font-black uppercase tracking-widest opacity-80 flex items-center gap-1.5">
+              <Wallet className="h-3 w-3" />
+              Balance
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-800">
-              NRs. {todayBalance.toLocaleString()}
+          <CardContent className="p-4 pt-2">
+            <div className="text-xl font-black truncate">
+              रु {todayBalance.toLocaleString()}
             </div>
             {todaySummary && (
-              <div className="mt-2 space-y-1">
-                <div className="text-xs text-blue-600">
-                  Cash: NRs. {todaySummary.cash_balance.toFixed(2)}
-                </div>
-                <div className="text-xs text-blue-600">
-                  eSewa: NRs. {todaySummary.esewa_balance.toFixed(2)}
-                </div>
+              <div className="mt-1 flex gap-2 text-[9px] font-bold opacity-70">
+                <span>Cash: रु {todaySummary.cash_balance.toFixed(0)}</span>
               </div>
             )}
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-purple-50 to-violet-50 border-purple-200">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-purple-600 flex items-center gap-2">
-              <PiggyBank className="h-4 w-4" />
-              Today's Savings
+        <Card className="rounded-3xl border-none shadow-sm bg-violet-600 text-white overflow-hidden">
+          <CardHeader className="p-4 pb-0">
+            <CardTitle className="text-[10px] font-black uppercase tracking-widest opacity-80 flex items-center gap-1.5">
+              <PiggyBank className="h-3 w-3" />
+              Savings
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-purple-800">
-              NRs. {(todaySummary?.total_savings || 0).toLocaleString()}
+          <CardContent className="p-4 pt-2">
+            <div className="text-xl font-black truncate">
+              रु {(todaySummary?.total_savings || 0).toLocaleString()}
             </div>
-            <div className="mt-2">
-              <div className="text-xs text-purple-600">
-                Withdrawals: NRs.{" "}
-                {(todaySummary?.total_withdrawals || 0).toFixed(2)}
-              </div>
+            <div className="mt-1 text-[9px] font-bold opacity-70">
+              Withdraw: रु {(todaySummary?.total_withdrawals || 0).toFixed(0)}
             </div>
           </CardContent>
         </Card>
@@ -555,49 +539,43 @@ const FinancialSummaryWidget: React.FC<FinancialSummaryWidgetProps> = ({
 
       {/* Monthly Summary */}
       {monthSummary && (
-        <Card className="bg-gradient-to-br from-gray-50 to-slate-50">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-gray-700">
-              <Calendar className="h-5 w-5" />
-              This Month Summary
+        <Card className="rounded-3xl border-none shadow-2xl bg-white overflow-hidden">
+          <CardHeader className="bg-slate-50/50 border-b border-slate-100 p-4">
+            <CardTitle className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500">
+              <Calendar className="h-3 w-3" />
+              Monthly Overview
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-              <div className="text-center">
-                <div className="text-sm text-gray-600">Income</div>
-                <div className="text-lg font-semibold text-green-600">
-                  NRs. {monthSummary.total_income.toLocaleString()}
+          <CardContent className="p-4">
+            <div className="grid grid-cols-3 md:grid-cols-5 gap-4">
+              <div>
+                <div className="text-[9px] font-bold text-slate-400 uppercase mb-1">Income</div>
+                <div className="text-sm font-black text-emerald-600 truncate">
+                  रु {monthSummary.total_income.toLocaleString()}
                 </div>
               </div>
-              <div className="text-center">
-                <div className="text-sm text-gray-600">Expenses</div>
-                <div className="text-lg font-semibold text-red-600">
-                  NRs. {monthSummary.total_expenses.toLocaleString()}
+              <div>
+                <div className="text-[9px] font-bold text-slate-400 uppercase mb-1">Expense</div>
+                <div className="text-sm font-black text-rose-600 truncate">
+                  रु {monthSummary.total_expenses.toLocaleString()}
                 </div>
               </div>
-              <div className="text-center">
-                <div className="text-sm text-gray-600">Deposits</div>
-                <div className="text-lg font-semibold text-blue-600">
-                  NRs. {monthSummary.total_deposits.toLocaleString()}
+              <div className="hidden md:block">
+                <div className="text-[9px] font-bold text-slate-400 uppercase mb-1">Deposit</div>
+                <div className="text-sm font-black text-blue-600 truncate">
+                  रु {monthSummary.total_deposits.toLocaleString()}
                 </div>
               </div>
-              <div className="text-center">
-                <div className="text-sm text-gray-600">Withdrawals</div>
-                <div className="text-lg font-semibold text-orange-600">
-                  NRs. {monthSummary.total_withdrawals.toLocaleString()}
+              <div className="hidden md:block">
+                <div className="text-[9px] font-bold text-slate-400 uppercase mb-1">Withdraw</div>
+                <div className="text-sm font-black text-orange-600 truncate">
+                  रु {monthSummary.total_withdrawals.toLocaleString()}
                 </div>
               </div>
-              <div className="text-center">
-                <div className="text-sm text-gray-600">Net Profit</div>
-                <div
-                  className={`text-lg font-semibold ${
-                    monthSummary.net_profit >= 0
-                      ? "text-green-600"
-                      : "text-red-600"
-                  }`}
-                >
-                  NRs. {monthSummary.net_profit.toLocaleString()}
+              <div>
+                <div className="text-[9px] font-bold text-slate-400 uppercase mb-1">Net</div>
+                <div className={cn("text-sm font-black truncate", monthSummary.net_profit >= 0 ? "text-emerald-600" : "text-rose-600")}>
+                  रु {monthSummary.net_profit.toLocaleString()}
                 </div>
               </div>
             </div>

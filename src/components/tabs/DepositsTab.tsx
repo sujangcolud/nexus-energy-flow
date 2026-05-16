@@ -513,16 +513,16 @@ const DepositsTab = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 relative overflow-hidden">
+    <div className="min-h-screen bg-background p-2 md:p-6 pb-24 md:pb-6">
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto" aria-describedby={undefined}>
-          <DialogHeader>
-            <DialogTitle>Edit Deposit</DialogTitle>
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto p-4 md:p-6 rounded-3xl" aria-describedby={undefined}>
+          <DialogHeader className="mb-4">
+            <DialogTitle className="text-xl font-bold text-primary">Edit Deposit</DialogTitle>
           </DialogHeader>
           {selectedDeposit && (
             <div className="space-y-4">
-              <div>
-                <Label htmlFor="editAmount">Amount</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="editAmount" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Amount</Label>
                 <Input
                   id="editAmount"
                   value={selectedDeposit.amount}
@@ -532,10 +532,11 @@ const DepositsTab = () => {
                       amount: parseFloat(e.target.value),
                     })
                   }
+                  className="h-11 rounded-xl"
                 />
               </div>
-              <div>
-                <Label htmlFor="editMode">Mode</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="editMode" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Mode</Label>
                 <Input
                   id="editMode"
                   value={selectedDeposit.mode}
@@ -545,10 +546,11 @@ const DepositsTab = () => {
                       mode: e.target.value,
                     })
                   }
+                  className="h-11 rounded-xl"
                 />
               </div>
-              <div>
-                <Label htmlFor="editDepositedByType">Deposited By Type</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="editDepositedByType" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Depositor Type</Label>
                 <Select
                   value={(selectedDeposit as any).deposited_by_type || ""}
                   onValueChange={(value) =>
@@ -558,7 +560,7 @@ const DepositsTab = () => {
                     } as any)
                   }
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="h-11 rounded-xl">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -570,8 +572,8 @@ const DepositsTab = () => {
                   </SelectContent>
                 </Select>
               </div>
-              <div>
-                <Label htmlFor="editDepositedBy">Depositor Name</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="editDepositedBy" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Depositor Name</Label>
                 <Input
                   id="editDepositedBy"
                   value={selectedDeposit.deposited_by}
@@ -581,11 +583,12 @@ const DepositsTab = () => {
                       deposited_by: e.target.value,
                     })
                   }
+                  className="h-11 rounded-xl"
                 />
               </div>
-              <div>
-                <Label htmlFor="editRemarks">Remarks</Label>
-                <Input
+              <div className="space-y-1.5">
+                <Label htmlFor="editRemarks" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Remarks</Label>
+                <Textarea
                   id="editRemarks"
                   value={selectedDeposit.remarks}
                   onChange={(e) =>
@@ -594,348 +597,263 @@ const DepositsTab = () => {
                       remarks: e.target.value,
                     })
                   }
+                  className="rounded-xl"
                 />
               </div>
-              <RecordAttachments recordType="deposit" recordId={selectedDeposit.id} />
+              <RecordAttachments recordType="deposit" recordId={selectedDeposit.id} compact />
             </div>
           )}
-          <DialogFooter>
-            <Button onClick={handleUpdate}>Save</Button>
+          <DialogFooter className="pt-2">
+            <Button onClick={handleUpdate} className="w-full h-12 rounded-xl text-lg font-bold">Save Changes</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      {/* Animated Background Elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-20 w-64 h-64 bg-gradient-to-r from-green-400/20 to-emerald-500/20 rounded-full blur-3xl animate-pulse"></div>
-        <div
-          className="absolute top-1/3 right-20 w-80 h-80 bg-gradient-to-r from-emerald-400/20 to-teal-500/20 rounded-full blur-3xl animate-pulse"
-          style={{ animationDelay: "1s" }}
-        ></div>
-        <div
-          className="absolute bottom-20 left-1/4 w-72 h-72 bg-gradient-to-r from-teal-400/20 to-cyan-500/20 rounded-full blur-3xl animate-pulse"
-          style={{ animationDelay: "2s" }}
-        ></div>
-      </div>
 
-      <div className="relative z-10 space-y-8 p-6">
+      <div className="space-y-4 md:space-y-6">
         {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="p-4 rounded-2xl bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-xl animate-pulse">
-              <PiggyBank className="h-8 w-8" />
+        <div className="bg-primary/5 p-4 rounded-3xl mb-4 md:mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-primary rounded-xl text-white">
+              <PiggyBank className="h-5 w-5 md:h-6 md:w-6" />
             </div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 bg-clip-text text-transparent">
-              Deposit Manager
-            </h1>
-            <Sparkles className="h-8 w-8 text-emerald-500 animate-bounce" />
+            <div>
+              <h1 className="text-xl md:text-2xl font-bold text-foreground">
+                Deposits
+              </h1>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Track and manage all financial deposits
+              </p>
+            </div>
           </div>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Track and manage all your financial deposits with comprehensive
-            analytics
-          </p>
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full md:w-auto">
+            <HistoryDateRangeFilter range={range} onChange={onRangeChange} />
+            <MultiDepositEntry onComplete={fetchDeposits} />
+          </div>
         </div>
 
         {/* All-Time Total Display */}
-        <AllTimeTotalDisplay type="deposits" className="mb-8" />
+        <AllTimeTotalDisplay type="deposits" className="mb-4 md:mb-6" />
 
         {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-green-600 font-medium">
-                    Total Deposits
-                  </p>
-                  <p className="text-2xl font-bold text-green-800">
-                    NRs. {totalDeposits.toFixed(2)}
-                  </p>
-                </div>
-                <div className="p-3 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl text-white">
-                  <TrendingUp className="h-6 w-6" />
-                </div>
-              </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-4 md:mb-6">
+          <Card className="rounded-3xl border-none bg-white shadow-sm overflow-hidden">
+            <CardContent className="p-4 md:p-6">
+              <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Total Deposits</p>
+              <p className="text-sm md:text-xl font-bold text-primary">NRs. {totalDeposits.toFixed(2)}</p>
             </CardContent>
           </Card>
-
-          <Card className="bg-gradient-to-br from-emerald-50 to-teal-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-emerald-600 font-medium">
-                    Total Entries
-                  </p>
-                  <p className="text-2xl font-bold text-emerald-800">
-                    {deposits.length}
-                  </p>
-                </div>
-                <div className="p-3 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl text-white">
-                  <ArrowUpCircle className="h-6 w-6" />
-                </div>
-              </div>
+          <Card className="rounded-3xl border-none bg-white shadow-sm overflow-hidden">
+            <CardContent className="p-4 md:p-6">
+              <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Entries</p>
+              <p className="text-sm md:text-xl font-bold text-foreground">{deposits.length}</p>
             </CardContent>
           </Card>
-
-          <Card className="bg-gradient-to-br from-teal-50 to-cyan-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-teal-600 font-medium">
-                    Average Deposit
-                  </p>
-                  <p className="text-2xl font-bold text-teal-800">
-                    NRs. {averageDeposit.toFixed(2)}
-                  </p>
-                </div>
-                <div className="p-3 bg-gradient-to-r from-teal-500 to-cyan-500 rounded-xl text-white">
-                  <DollarSign className="h-6 w-6" />
-                </div>
-              </div>
+          <Card className="rounded-3xl border-none bg-white shadow-sm overflow-hidden hidden md:block">
+            <CardContent className="p-4 md:p-6">
+              <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Avg Deposit</p>
+              <p className="text-sm md:text-xl font-bold text-foreground">NRs. {averageDeposit.toFixed(2)}</p>
             </CardContent>
           </Card>
-
-          <Card className="bg-gradient-to-br from-cyan-50 to-blue-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-cyan-600 font-medium">
-                    Top Method
-                  </p>
-                  <p className="text-lg font-bold text-cyan-800 truncate">
-                    {topMode ? topMode[0] : "None"}
-                  </p>
-                </div>
-                <div className="p-3 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl text-white">
-                  <Wallet className="h-6 w-6" />
-                </div>
-              </div>
+          <Card className="rounded-3xl border-none bg-white shadow-sm overflow-hidden">
+            <CardContent className="p-4 md:p-6">
+              <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Top Method</p>
+              <p className="text-[10px] md:text-sm font-bold text-primary truncate">
+                {topMode ? topMode[0] : "None"}
+              </p>
             </CardContent>
           </Card>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-8">
           {/* Add Deposit Form */}
-          <MobileForm
-            title="Record New Deposit"
-            icon={<ArrowUpCircle />}
-            onSubmit={handleSubmit}
-            submitText="Record Deposit"
-            isSubmitting={isSubmitting}
-            submitIcon={<ArrowUpCircle className="h-5 w-5" />}
-            className="bg-gradient-to-br from-white/90 to-green-50/90 backdrop-blur-sm hover:shadow-3xl transition-all duration-300"
-          >
-            <div className="space-y-2">
-              <Label
-                htmlFor="amount"
-                className="text-sm font-medium text-gray-700 flex items-center gap-2"
-              >
-                <DollarSign className="h-4 w-4 text-green-600" />
-                Amount (NRs.) *
-              </Label>
-              <Input
-                id="amount"
-                type="number"
-                step="0.01"
-                value={formData.amount}
-                onChange={(e) =>
-                  setFormData({ ...formData, amount: e.target.value })
-                }
-                placeholder="0.00"
-                required
-                className="border-green-200 focus:border-green-500 focus:ring-green-500 h-12 text-lg"
-              />
-            </div>
+          <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden">
+            <CardHeader className="bg-emerald-500 text-white p-4 md:p-6">
+              <CardTitle className="flex items-center gap-3 text-lg md:text-xl font-bold">
+                <div className="p-2 bg-white/20 rounded-xl">
+                  <ArrowUpCircle className="h-5 w-5 md:h-6 md:w-6" />
+                </div>
+                New Deposit
+                <Sparkles className="h-4 w-4 md:h-5 md:w-5 ml-auto opacity-70" />
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 md:p-6">
+              <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
+                <div className="space-y-1.5">
+                  <Label
+                    htmlFor="amount"
+                    className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2"
+                  >
+                    <DollarSign className="h-3.5 w-3.5 text-emerald-600" />
+                    Amount (NRs.) *
+                  </Label>
+                  <Input
+                    id="amount"
+                    type="number"
+                    step="0.01"
+                    value={formData.amount}
+                    onChange={(e) =>
+                      setFormData({ ...formData, amount: e.target.value })
+                    }
+                    placeholder="0.00"
+                    required
+                    className="h-12 text-xl font-bold rounded-xl border-emerald-100 focus:border-emerald-500"
+                  />
+                </div>
 
-            <div
-              className={`grid gap-4 ${isMobile ? "grid-cols-1" : "grid-cols-2"}`}
-            >
-              <div className="space-y-2">
-                <Label
-                  htmlFor="mode"
-                  className="text-sm font-medium text-gray-700 flex items-center gap-2"
-                >
-                  <CreditCard className="h-4 w-4 text-blue-600" />
-                  Deposit Mode *
-                </Label>
-                <Select
-                  value={formData.mode}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, mode: value })
-                  }
-                  required
-                >
-                  <SelectTrigger className="border-blue-200 focus:border-blue-500 focus:ring-blue-500 h-12">
-                    <SelectValue placeholder="Select mode" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {depositModes.map((mode) => (
-                      <SelectItem key={mode} value={mode}>
-                        <div className="flex items-center gap-2">
-                          <div
-                            className={`w-3 h-3 rounded-full bg-gradient-to-r ${modeColors[mode as keyof typeof modeColors]}`}
-                          ></div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label
+                      htmlFor="mode"
+                      className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2"
+                    >
+                      <CreditCard className="h-3.5 w-3.5 text-blue-600" />
+                      Mode *
+                    </Label>
+                    <Select
+                      value={formData.mode}
+                      onValueChange={(value) =>
+                        setFormData({ ...formData, mode: value })
+                      }
+                      required
+                    >
+                      <SelectTrigger className="h-11 rounded-xl">
+                        <SelectValue placeholder="Select" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {depositModes.map((mode) => (
+                          <SelectItem key={mode} value={mode}>
+                            {mode}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label
+                      htmlFor="depositedByType"
+                      className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2"
+                    >
+                      <User className="h-3.5 w-3.5 text-purple-600" />
+                      By *
+                    </Label>
+                    <Select
+                      value={formData.depositedByType}
+                      onValueChange={(value) =>
+                        setFormData({ ...formData, depositedByType: value })
+                      }
+                      required
+                    >
+                      <SelectTrigger className="h-11 rounded-xl">
+                        <SelectValue placeholder="Select" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {depositedByTypes.map((type) => (
+                          <SelectItem key={type} value={type}>
+                            {type}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label
+                    htmlFor="depositedBy"
+                    className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2"
+                  >
+                    <User className="h-3.5 w-3.5 text-indigo-600" />
+                    Depositor Name *
+                  </Label>
+                  <Input
+                    id="depositedBy"
+                    value={formData.depositedBy}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        depositedBy: e.target.value,
+                      })
+                    }
+                    placeholder="Name"
+                    required
+                    className="h-11 rounded-xl"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label
+                    htmlFor="deposited_to"
+                    className="text-xs font-bold uppercase tracking-wider text-muted-foreground"
+                  >
+                    Deposited To *
+                  </Label>
+                  <Select
+                    value={formData.deposited_to}
+                    onValueChange={(value) =>
+                      setFormData({ ...formData, deposited_to: value })
+                    }
+                    required
+                  >
+                    <SelectTrigger className="h-11 rounded-xl">
+                      <SelectValue placeholder="Select" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {depositedTo.map((mode) => (
+                        <SelectItem key={mode} value={mode}>
                           {mode}
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-              <div className="space-y-2">
-                <Label
-                  htmlFor="depositedByType"
-                  className="text-sm font-medium text-gray-700 flex items-center gap-2"
-                >
-                  <User className="h-4 w-4 text-purple-600" />
-                  Deposited By *
-                </Label>
-                <Select
-                  value={formData.depositedByType}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, depositedByType: value })
-                  }
-                  required
-                >
-                  <SelectTrigger className="border-purple-200 focus:border-purple-500 focus:ring-purple-500 h-12">
-                    <SelectValue placeholder="Select depositor type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {depositedByTypes.map((type) => (
-                      <SelectItem key={type} value={type}>
-                        <div className="flex items-center gap-2">
-                          <User className="h-4 w-4" />
-                          {type}
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label
-                htmlFor="depositedBy"
-                className="text-sm font-medium text-gray-700 flex items-center gap-2"
-              >
-                <User className="h-4 w-4 text-indigo-600" />
-                Depositor Name *
-              </Label>
-              <Input
-                id="depositedBy"
-                value={formData.depositedBy}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    depositedBy: e.target.value,
-                  })
-                }
-                placeholder="Enter depositor name"
-                required
-                className="border-indigo-200 focus:border-indigo-500 focus:ring-indigo-500 h-12"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label
-                htmlFor="deposited_to"
-                className="text-sm font-medium text-gray-700"
-              >
-                Deposited To *
-              </Label>
-              <Select
-                value={formData.deposited_to}
-                onValueChange={(value) =>
-                  setFormData({ ...formData, deposited_to: value })
-                }
-                required
-              >
-                <SelectTrigger className="h-12">
-                  <SelectValue placeholder="Select where to deposit" />
-                </SelectTrigger>
-                <SelectContent>
-                  {depositedTo.map((mode) => (
-                    <SelectItem key={mode} value={mode}>
-                      {mode}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {formData.mode === "Esewa" && (
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   <Label
-                    htmlFor="senderName"
-                    className="text-sm font-medium text-gray-700"
+                    htmlFor="remarks"
+                    className="text-xs font-bold uppercase tracking-wider text-muted-foreground"
                   >
-                    Sender Name
+                    Remarks (Optional)
                   </Label>
-                  <Input
-                    id="senderName"
-                    value={formData.sender_name}
+                  <Textarea
+                    id="remarks"
+                    value={formData.remarks}
                     onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        sender_name: e.target.value,
-                      })
+                      setFormData({ ...formData, remarks: e.target.value })
                     }
-                    placeholder="Enter sender name"
-                    className="border-gray-200 focus:border-gray-500 focus:ring-gray-500 h-12"
+                    placeholder="Notes..."
+                    rows={2}
+                    className="rounded-xl min-h-[60px]"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="receiverName"
-                    className="text-sm font-medium text-gray-700"
-                  >
-                    Receiver Name
-                  </Label>
-                  <Input
-                    id="receiverName"
-                    value={formData.receiver_name}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        receiver_name: e.target.value,
-                      })
-                    }
-                    placeholder="Enter receiver name"
-                    className="border-gray-200 focus:border-gray-500 focus:ring-gray-500 h-12"
-                  />
-                </div>
-              </div>
-            )}
 
-            <div className="space-y-2">
-              <Label
-                htmlFor="remarks"
-                className="text-sm font-medium text-gray-700"
-              >
-                Remarks (Optional)
-              </Label>
-              <Textarea
-                id="remarks"
-                value={formData.remarks}
-                onChange={(e) =>
-                  setFormData({ ...formData, remarks: e.target.value })
-                }
-                placeholder="Additional notes or reference information"
-                rows={3}
-                className="border-gray-200 focus:border-gray-500 focus:ring-gray-500"
-              />
-            </div>
+                {/* Transaction Date */}
+                <TransactionDatePicker
+                  selectedDate={transactionDate}
+                  onDateChange={setTransactionDate}
+                  label="Deposit Date"
+                />
 
-            {/* Transaction Date */}
-            <TransactionDatePicker
-              selectedDate={transactionDate}
-              onDateChange={setTransactionDate}
-              label="Deposit Date"
-              className="mb-4"
-            />
-          </MobileForm>
+                <Button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full h-12 md:h-14 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-black text-lg shadow-lg shadow-emerald-500/20 transition-all active:scale-[0.98]"
+                >
+                  {isSubmitting ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                      Recording...
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <ArrowUpCircle className="h-5 w-5" />
+                      Record Deposit
+                    </div>
+                  )}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
 
           {/* Deposit Mode Breakdown */}
           <Card className="bg-gradient-to-br from-white/90 to-teal-50/90 backdrop-blur-sm border-0 shadow-2xl hover:shadow-3xl transition-all duration-300">

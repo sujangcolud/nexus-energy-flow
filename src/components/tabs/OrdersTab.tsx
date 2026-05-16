@@ -189,7 +189,9 @@ const OrdersTab = () => {
         throw error;
       }
       console.log("Menu items loaded:", data?.length || 0, "items");
-      setMenuItems(data || []);
+      // Sort alphabetically as requested
+      const sortedItems = (data || []).sort((a, b) => a.name.localeCompare(b.name));
+      setMenuItems(sortedItems);
     } catch (error) {
       console.error(
         "Error fetching menu items:",
@@ -371,29 +373,34 @@ const OrdersTab = () => {
   }, [productCategories, selectedCategory]);
 
   const filteredMenuItems = () => {
-    let itemsToDisplay = groupedMenuItems;
+    let allItems = menuItems;
 
     if (selectedCategory) {
-      itemsToDisplay = {
-        [selectedCategory]: groupedMenuItems[selectedCategory] || [],
-      };
+      allItems = allItems.filter(item => item.category === selectedCategory);
     }
 
     if (searchTerm) {
       const lowerSearchTerm = searchTerm.toLowerCase();
-      const result: Record<string, MenuItem[]> = {};
-      for (const category in itemsToDisplay) {
-        result[category] = itemsToDisplay[category].filter(
-          (item) =>
-            item.name.toLowerCase().includes(lowerSearchTerm) ||
-            item.category.toLowerCase().includes(lowerSearchTerm) ||
-            (item.description &&
-              item.description.toLowerCase().includes(lowerSearchTerm)),
-        );
-      }
-      itemsToDisplay = result;
+      allItems = allItems.filter(
+        (item) =>
+          item.name.toLowerCase().includes(lowerSearchTerm) ||
+          item.category.toLowerCase().includes(lowerSearchTerm) ||
+          (item.description &&
+            item.description.toLowerCase().includes(lowerSearchTerm)),
+      );
     }
-    return itemsToDisplay;
+
+    // Re-group but keep alphabetical order within groups (they are already sorted)
+    return allItems.reduce(
+      (acc, item) => {
+        if (!acc[item.category]) {
+          acc[item.category] = [];
+        }
+        acc[item.category].push(item);
+        return acc;
+      },
+      {} as Record<string, MenuItem[]>,
+    );
   };
 
   const currentMenuItemsToDisplay = filteredMenuItems();
@@ -447,7 +454,7 @@ const OrdersTab = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-pink-50 to-red-50 relative overflow-hidden">
+    <div className="min-h-screen bg-background p-2 md:p-6 pb-32 md:pb-6">
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="max-h-[90vh] overflow-y-auto" aria-describedby={undefined}>
           <DialogHeader>
@@ -543,21 +550,19 @@ const OrdersTab = () => {
         ></div>
       </div>
 
-      <div className="relative z-10 space-y-8 p-6">
+      <div className="space-y-4 md:space-y-6">
         {/* Header */}
-        <div className="mb-8 flex items-start justify-between gap-4 flex-wrap">
-          <div>
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-3 rounded-xl bg-primary text-primary-foreground">
-                <ChefHat className="h-6 w-6" />
-              </div>
-              <h1 className="text-2xl font-semibold text-foreground">
-                Restaurant Orders
-              </h1>
+        <div className="bg-primary/5 p-4 rounded-3xl mb-4 md:mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-primary rounded-xl text-white">
+              <ChefHat className="h-5 w-5 md:h-6 md:w-6" />
             </div>
-            <p className="text-sm text-muted-foreground">
-              Browse the menu and place orders, or bulk-add past orders.
-            </p>
+            <div>
+              <h1 className="text-xl md:text-2xl font-bold text-foreground">
+                Orders
+              </h1>
+              <p className="text-xs text-muted-foreground mt-0.5">Browse menu and place orders</p>
+            </div>
           </div>
           <MultiOrderEntry onComplete={fetchOrders} />
         </div>
@@ -705,10 +710,10 @@ const OrdersTab = () => {
                 {/* Menu Items Display */}
                 {Object.keys(currentMenuItemsToDisplay).length === 0 &&
                   searchTerm && (
-                    <div className="text-center py-8">
-                      <Package className="h-16 w-16 mx-auto text-gray-300 mb-4" />
-                      <p className="text-gray-500 text-lg">
-                        No items match your search for "{searchTerm}"
+                    <div className="text-center py-12 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200">
+                      <Package className="h-12 w-12 mx-auto text-slate-300 mb-4" />
+                      <p className="text-slate-500 font-medium">
+                        No matches for "{searchTerm}"
                       </p>
                     </div>
                   )}
@@ -717,51 +722,31 @@ const OrdersTab = () => {
                   ([category, items]) => {
                     if (items.length === 0) return null;
                     return (
-                      <div key={category} className="space-y-4">
-                        <div className="flex items-center gap-3 mb-4">
+                      <div key={category} className="space-y-3">
+                        <div className="flex items-center gap-2 mb-2">
                           <div
-                            className={`w-4 h-4 rounded-full bg-gradient-to-r ${categoryColors[category as keyof typeof categoryColors] || "from-gray-500 to-slate-500"}`}
+                            className={`w-2 h-6 rounded-full bg-gradient-to-b ${categoryColors[category as keyof typeof categoryColors] || "from-slate-400 to-slate-500"}`}
                           ></div>
-                          <h3 className="text-xl font-bold text-gray-800">
+                          <h3 className="text-base font-black uppercase tracking-tight text-slate-800">
                             {category}
                           </h3>
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                        <div className="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2">
                           {items.map((item, index) => (
                             <Card
                               key={item.id}
-                              className="group bg-gradient-to-br from-white to-orange-50/50 hover:from-orange-50 hover:to-red-50 transition-all duration-300 hover:shadow-xl hover:scale-105 cursor-pointer border border-orange-100 hover:border-orange-300"
+                              className="group bg-white hover:bg-primary/5 transition-all active:scale-95 cursor-pointer border-slate-100 hover:border-primary/30 rounded-xl overflow-hidden shadow-sm"
                               onClick={() => addToCart(item)}
-                              style={{ animationDelay: `${index * 50}ms` }}
                             >
-                              <CardContent className="p-3 sm:p-4">
-                                <div className="space-y-2 sm:space-y-3">
-                                  <div className="flex justify-between items-start">
-                                    <div className="flex-1 min-w-0">
-                                      <h4 className="font-bold text-sm sm:text-base lg:text-lg text-gray-800 group-hover:text-orange-600 transition-colors mb-1 line-clamp-1">
-                                        {item.name}
-                                      </h4>
-                                      {item.description && (
-                                        <p className="text-xs sm:text-sm text-gray-600 line-clamp-2 mb-2">
-                                          {item.description}
-                                        </p>
-                                      )}
-                                    </div>
-                                  </div>
-                                  <div className="flex justify-center">
-                                    <Badge
-                                      className={`bg-gradient-to-r ${categoryColors[item.category as keyof typeof categoryColors] || "from-gray-500 to-slate-500"} text-white border-0 text-sm sm:text-base px-3 py-1.5 font-semibold`}
-                                    >
-                                      NRs. {item.price}
-                                    </Badge>
-                                  </div>
+                              <CardContent className="p-2 flex flex-col h-full justify-between min-h-[100px]">
+                                <div className="space-y-1">
+                                  <h4 className="font-bold text-[10px] sm:text-xs leading-tight text-slate-800 group-hover:text-primary break-words whitespace-normal">
+                                    {item.name}
+                                  </h4>
                                 </div>
-                                <div className="flex items-center justify-between mt-2">
-                                  <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full truncate max-w-20 sm:max-w-none">
-                                    {item.category}
-                                  </span>
-                                  <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                                    <Plus className="h-4 w-4 sm:h-5 sm:w-5 text-orange-600" />
+                                <div className="mt-auto pt-2">
+                                  <div className="bg-primary/10 text-primary rounded-lg py-1 px-1.5 text-center">
+                                    <span className="text-[10px] font-black">रु {item.price}</span>
                                   </div>
                                 </div>
                               </CardContent>
@@ -790,7 +775,34 @@ const OrdersTab = () => {
 
           {/* Shopping Cart */}
           <div className="space-y-6">
-            <Card className="bg-gradient-to-br from-white/90 to-pink-50/90 backdrop-blur-sm border-0 shadow-2xl sticky top-6">
+            {/* Mobile Sticky Cart Summary */}
+            <div className="md:hidden fixed bottom-4 left-4 right-4 z-50 pointer-events-none">
+              {cart.length > 0 && (
+                <Button
+                  className="w-full h-14 rounded-2xl bg-primary text-white shadow-2xl shadow-primary/40 flex items-center justify-between px-6 pointer-events-auto animate-in slide-in-from-bottom-10"
+                  onClick={() => {
+                    const cartElement = document.getElementById('shopping-cart-section');
+                    cartElement?.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="bg-white/20 p-2 rounded-lg">
+                      <ShoppingCart className="h-5 w-5" />
+                    </div>
+                    <div className="text-left">
+                      <p className="text-[10px] font-bold uppercase tracking-wider leading-none opacity-80">View Cart</p>
+                      <p className="text-sm font-black">{cart.length} Items</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[10px] font-bold uppercase tracking-wider leading-none opacity-80">Total</p>
+                    <p className="text-base font-black">NRs. {getCartTotal().toFixed(0)}</p>
+                  </div>
+                </Button>
+              )}
+            </div>
+
+            <Card id="shopping-cart-section" className="rounded-3xl border-none shadow-xl bg-white overflow-hidden sticky top-6">
               <CardHeader className="bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-t-lg">
                 <CardTitle className="flex items-center justify-between text-lg">
                   <span className="flex items-center gap-2">
@@ -1094,7 +1106,7 @@ const OrdersTab = () => {
                         </TableCell>
                         <TableCell className="text-right text-xs sm:text-sm px-1 sm:px-4">
                           <div className="sm:hidden">
-                            ₹{Number(order.rate).toFixed(0)}
+                            रु {Number(order.rate).toFixed(0)}
                           </div>
                           <div className="hidden sm:block">
                             NRs. {Number(order.rate).toFixed(2)}
@@ -1103,7 +1115,7 @@ const OrdersTab = () => {
                         <TableCell className="text-right px-1 sm:px-4">
                           <span className="font-bold text-sm sm:text-lg bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
                             <div className="sm:hidden">
-                              ₹{Number(order.total).toFixed(0)}
+                              रु {Number(order.total).toFixed(0)}
                             </div>
                             <div className="hidden sm:block">
                               NRs. {Number(order.total).toFixed(2)}

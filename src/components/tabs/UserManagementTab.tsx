@@ -87,22 +87,24 @@ const UserManagementTab = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-2">
-        <Users className="h-6 w-6 text-blue-600" />
-        <h2 className="text-2xl font-bold text-gray-800">User Management</h2>
+    <div className="space-y-4 md:space-y-6 p-2 md:p-0 pb-24 md:pb-6">
+      <div className="bg-primary/5 p-4 rounded-3xl mb-4 md:mb-6 flex items-center gap-3">
+        <div className="p-2 bg-primary rounded-xl text-white">
+          <Users className="h-5 w-5 md:h-6 md:w-6" />
+        </div>
+        <h1 className="text-xl md:text-2xl font-bold text-foreground">User Management</h1>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Change User Role</CardTitle>
+      <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden">
+        <CardHeader className="bg-slate-50/50 border-b border-slate-100 px-4 md:px-6 py-4">
+          <CardTitle className="text-base md:text-lg font-bold">Change User Role</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="p-4 md:p-6 space-y-4 md:space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="user-select">Select User</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="user-select" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Select User</Label>
               <Select value={selectedUserId} onValueChange={setSelectedUserId}>
-                <SelectTrigger>
+                <SelectTrigger className="h-11 rounded-xl">
                   <SelectValue placeholder="Choose a user" />
                 </SelectTrigger>
                 <SelectContent>
@@ -114,10 +116,10 @@ const UserManagementTab = () => {
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="role-select">New Role</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="role-select" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">New Role</Label>
               <Select value={newRole} onValueChange={setNewRole}>
-                <SelectTrigger>
+                <SelectTrigger className="h-11 rounded-xl">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -129,18 +131,18 @@ const UserManagementTab = () => {
               </Select>
             </div>
           </div>
-          <Button onClick={handleRoleChange} className="w-full">
-            <Shield className="h-4 w-4 mr-2" />
-            Update Role
+          <Button onClick={handleRoleChange} className="w-full h-12 rounded-xl text-lg font-bold shadow-lg shadow-primary/20">
+            <Shield className="h-5 w-5 mr-2" />
+            Update Access
           </Button>
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>All Users</CardTitle>
+      <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden">
+        <CardHeader className="bg-slate-50/50 border-b border-slate-100 px-4 md:px-6 py-4">
+          <CardTitle className="text-base md:text-lg font-bold">System Users</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           <Table>
             <TableHeader>
               <TableRow>

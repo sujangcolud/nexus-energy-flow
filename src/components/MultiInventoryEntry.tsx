@@ -203,225 +203,207 @@ const MultiInventoryEntry = ({ inventory, categories, onComplete }: Props) => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-2">
+        <Button variant="outline" size="sm" className="gap-2 rounded-xl font-bold h-10 border-primary/20 text-primary hover:bg-primary/5">
           <Layers className="h-4 w-4" />
           Bulk Stock In
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-[95vw] sm:max-w-7xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Bulk Inventory Stock In</DialogTitle>
-          <p className="text-sm text-muted-foreground">
-            Record multiple inventory purchases at once. This will update stock levels and create expense records.
+      <DialogContent className="max-w-7xl w-[95vw] max-h-[95vh] overflow-y-auto p-4 md:p-6 rounded-3xl" aria-describedby={undefined}>
+        <DialogHeader className="mb-4">
+          <DialogTitle className="text-xl md:text-2xl font-black text-primary flex items-center gap-2">
+            <Package className="h-6 w-6" />
+            Bulk Stock In
+          </DialogTitle>
+          <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1">
+            Batch process multiple inventory purchases & stock updates
           </p>
         </DialogHeader>
 
-        <div className="space-y-4 my-4">
-          <div className="hidden md:grid grid-cols-12 gap-2 px-3 text-xs font-medium text-muted-foreground">
-            <div className="col-span-1">Date</div>
-            <div className="col-span-2">Item</div>
-            <div className="col-span-1">Qty</div>
-            <div className="col-span-1">Unit</div>
-            <div className="col-span-1">Factor</div>
-            <div className="col-span-1">Rate</div>
-            <div className="col-span-1 text-right pr-1">Total</div>
-            <div className="col-span-1">Category</div>
-            <div className="col-span-1">Payment</div>
-            <div className="col-span-1">Supplier</div>
-            <div className="col-span-1"></div>
-          </div>
-
+        <div className="space-y-4">
           {rows.map((r, i) => {
             const item = inventory.find(it => it.id === r.inventory_item_id);
-            // Deduplicate and filter units
             const units = Array.from(new Set(
               item ? [item.base_unit, ...(item.unit_conversions?.map(u => u.unit_name) || [])] : []
             )).filter(Boolean);
 
             return (
-            <div
-              key={i}
-              className="grid grid-cols-1 md:grid-cols-12 gap-2 items-start md:items-center p-3 border rounded-md bg-muted/20 relative"
-            >
-              <div className="md:col-span-1">
-                <Label className="text-[10px] md:hidden">Date</Label>
-                <Input
-                  type="date"
-                  value={r.date}
-                  onChange={(e) => updateRow(i, { date: e.target.value })}
-                  className="h-9"
-                />
-              </div>
+              <div
+                key={i}
+                className="flex flex-col gap-4 p-4 rounded-2xl border border-slate-100 bg-slate-50/50 relative overflow-hidden"
+              >
+                <div className="absolute top-0 left-0 w-1 h-full bg-primary/20" />
 
-              <div className="md:col-span-2">
-                <Label className="text-[10px] md:hidden">Item</Label>
-                <Select
-                  value={r.inventory_item_id}
-                  onValueChange={(v) => updateRow(i, { inventory_item_id: v })}
-                >
-                  <SelectTrigger className="h-9">
-                    <SelectValue placeholder="Select item" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {inventory.map((item) => (
-                      <SelectItem key={item.id} value={item.id}>
-                        {item.item_name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-3 md:items-end">
+                  <div className="md:col-span-2">
+                    <Label className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5 block">Date</Label>
+                    <Input
+                      type="date"
+                      value={r.date}
+                      className="h-11 rounded-xl font-bold border-slate-200"
+                      onChange={(e) => updateRow(i, { date: e.target.value })}
+                    />
+                  </div>
 
-              <div className="md:col-span-1">
-                <Label className="text-[10px] md:hidden">Factor</Label>
-                <Input
-                  type="number"
-                  placeholder="Factor"
-                  value={r.factor}
-                  onChange={(e) => updateRow(i, { factor: parseFloat(e.target.value) || 1 })}
-                  className="h-9"
-                />
-              </div>
+                  <div className="md:col-span-3">
+                    <Label className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5 block">Inventory Item</Label>
+                    <Select
+                      value={r.inventory_item_id}
+                      onValueChange={(v) => updateRow(i, { inventory_item_id: v })}
+                    >
+                      <SelectTrigger className="h-11 rounded-xl font-bold border-slate-200 bg-white text-sm">
+                        <SelectValue placeholder="Select item..." />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-xl shadow-2xl">
+                        {inventory.map((item) => (
+                          <SelectItem key={item.id} value={item.id} className="font-bold">
+                            {item.item_name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-              <div className="md:col-span-1">
-                <Label className="text-[10px] md:hidden">Unit</Label>
-                <Select
-                  value={r.unit}
-                  onValueChange={(v) => updateRow(i, { unit: v })}
-                  disabled={!r.inventory_item_id}
-                >
-                  <SelectTrigger className="h-9">
-                    <SelectValue placeholder="Unit" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {units.map((u) => (
-                      <SelectItem key={u} value={u}>
-                        {u}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:col-span-4">
+                    <div>
+                      <Label className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5 block">Quantity</Label>
+                      <Input
+                        type="number"
+                        value={r.quantity || ""}
+                        className="h-11 rounded-xl font-bold border-slate-200"
+                        onChange={(e) => updateRow(i, { quantity: parseFloat(e.target.value) || 0 })}
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5 block">Unit</Label>
+                      <Select
+                        value={r.unit}
+                        onValueChange={(v) => updateRow(i, { unit: v })}
+                        disabled={!r.inventory_item_id}
+                      >
+                        <SelectTrigger className="h-11 rounded-xl font-bold border-slate-200 bg-white">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-xl">
+                          {units.map((u) => (
+                            <SelectItem key={u} value={u}>{u}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="col-span-2 md:col-span-1">
+                      <Label className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5 block">Unit Cost (रु)</Label>
+                      <Input
+                        type="number"
+                        value={r.unit_cost || ""}
+                        className="h-11 rounded-xl font-bold border-slate-200"
+                        onChange={(e) => updateRow(i, { unit_cost: parseFloat(e.target.value) || 0 })}
+                      />
+                    </div>
+                  </div>
 
-              <div className="md:col-span-1">
-                <Label className="text-[10px] md:hidden">Qty</Label>
-                <Input
-                  type="number"
-                  placeholder="Qty"
-                  value={r.quantity || ""}
-                  onChange={(e) => updateRow(i, { quantity: parseFloat(e.target.value) || 0 })}
-                  className="h-9"
-                />
-              </div>
+                  <div className="md:col-span-2">
+                    <Label className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5 block">Payment Mode</Label>
+                    <Select
+                      value={r.payment_mode}
+                      onValueChange={(v) => updateRow(i, { payment_mode: v })}
+                    >
+                      <SelectTrigger className="h-11 rounded-xl font-bold border-slate-200 bg-white text-sm">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-xl shadow-2xl">
+                        {paymentModes.map((p) => (
+                          <SelectItem key={p} value={p} className="font-bold">
+                            {p}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-              <div className="md:col-span-1">
-                <Label className="text-[10px] md:hidden">Unit Cost</Label>
-                <Input
-                  type="number"
-                  placeholder="Cost"
-                  value={r.unit_cost || ""}
-                  onChange={(e) => updateRow(i, { unit_cost: parseFloat(e.target.value) || 0 })}
-                  className="h-9"
-                />
-              </div>
+                  <div className="flex items-center justify-between md:col-span-1">
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="text-rose-500 hover:text-rose-600 hover:bg-rose-50 rounded-full md:mb-1 w-11 h-11"
+                      onClick={() => removeRow(i)}
+                      disabled={rows.length === 1}
+                    >
+                      <Trash2 className="h-5 w-5" />
+                    </Button>
+                  </div>
+                </div>
 
-              <div className="md:col-span-1 text-right pr-1 font-medium text-sm hidden md:block">
-                {total(r).toLocaleString()}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1">
+                  <div>
+                    <Label className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5 block">Supplier</Label>
+                    <Input
+                      value={r.supplier}
+                      className="h-10 rounded-xl font-medium border-slate-200"
+                      onChange={(e) => updateRow(i, { supplier: e.target.value })}
+                      placeholder="Vendor name..."
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5 block">Category</Label>
+                    <Select
+                      value={r.category}
+                      onValueChange={(v) => updateRow(i, { category: v })}
+                    >
+                      <SelectTrigger className="h-10 rounded-xl font-medium border-slate-200 bg-white">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-xl">
+                        {categories.map((c) => (
+                          <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex items-center justify-between bg-white px-4 py-1.5 rounded-xl border border-slate-100">
+                    <span className="text-[10px] font-black uppercase text-slate-400">Subtotal</span>
+                    <span className="text-lg font-black text-primary">रु {total(r).toLocaleString()}</span>
+                  </div>
+                </div>
               </div>
-
-              <div className="md:col-span-1">
-                <Label className="text-[10px] md:hidden">Category</Label>
-                <Select
-                  value={r.category}
-                  onValueChange={(v) => updateRow(i, { category: v })}
-                >
-                  <SelectTrigger className="h-9">
-                    <SelectValue placeholder="Category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.map((c) => (
-                      <SelectItem key={c.id} value={c.name}>
-                        {c.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="md:col-span-1">
-                <Label className="text-[10px] md:hidden">Payment</Label>
-                <Select
-                  value={r.payment_mode}
-                  onValueChange={(v) => updateRow(i, { payment_mode: v })}
-                >
-                  <SelectTrigger className="h-9 text-xs">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {paymentModes.map((p) => (
-                      <SelectItem key={p} value={p}>
-                        {p}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="md:col-span-1">
-                <Label className="text-[10px] md:hidden">Supplier</Label>
-                <Input
-                  placeholder="Supplier"
-                  value={r.supplier}
-                  onChange={(e) => updateRow(i, { supplier: e.target.value })}
-                  className="h-9"
-                />
-              </div>
-
-              <div className="absolute right-2 top-2 md:static md:col-span-1 flex justify-end">
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  onClick={() => removeRow(i)}
-                  disabled={rows.length === 1}
-                  className="h-8 w-8 text-destructive"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-
-              <div className="md:hidden flex justify-between items-center px-1 pt-1 border-t mt-1">
-                <span className="text-xs text-muted-foreground">Total:</span>
-                <span className="font-bold">NRs. {total(r).toLocaleString()}</span>
-              </div>
-            </div>
             );
           })}
 
-          <Button variant="outline" size="sm" onClick={addRow} className="gap-2 w-full md:w-auto">
-            <Plus className="h-4 w-4" />
-            Add Row
+          <Button
+            variant="secondary"
+            onClick={addRow}
+            className="w-full h-12 rounded-2xl font-black uppercase text-xs tracking-widest bg-slate-100 hover:bg-slate-200 text-slate-600"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add Another Item
           </Button>
         </div>
 
-        <DialogFooter className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t pt-4">
-          <div className="text-sm text-center sm:text-left">
-            <span className="text-muted-foreground">Grand Total: </span>
-            <span className="font-bold text-lg">NRs. {grandTotal.toLocaleString()}</span>
-            <span className="text-muted-foreground ml-2 text-xs">({rows.length} items)</span>
+        <DialogFooter className="mt-8 flex flex-col sm:flex-row items-center gap-4 border-t border-slate-100 pt-6">
+          <div className="flex-1 text-center sm:text-left">
+            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Batch Grand Total</p>
+            <div className="text-2xl font-black text-primary">
+              रु {grandTotal.toLocaleString()}
+            </div>
           </div>
-          <div className="flex gap-2 w-full sm:w-auto">
-            <Button variant="outline" onClick={() => setOpen(false)} className="flex-1 sm:flex-none">
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            <Button
+              variant="ghost"
+              onClick={() => setOpen(false)}
+              className="rounded-xl font-bold h-12 text-slate-500"
+            >
               Cancel
             </Button>
-            <Button onClick={submit} disabled={submitting} className="flex-1 sm:flex-none">
+            <Button
+              onClick={submit}
+              disabled={submitting}
+              className="rounded-xl font-black uppercase tracking-widest text-xs h-12 px-8 bg-primary shadow-lg shadow-primary/20"
+            >
               {submitting ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
                   Saving...
                 </>
-              ) : (
-                `Save ${rows.length} Entries`
-              )}
+              ) : `Save ${rows.length} Stock-ins`}
             </Button>
           </div>
         </DialogFooter>
