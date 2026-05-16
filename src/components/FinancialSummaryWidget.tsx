@@ -461,7 +461,7 @@ const FinancialSummaryWidget: React.FC<FinancialSummaryWidgetProps> = ({
 
       {/* Today's Summary Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <Card className="rounded-3xl border-none shadow-sm bg-emerald-500 text-white overflow-hidden">
+        <Card className="rounded-3xl border-none shadow-sm bg-primary text-white overflow-hidden">
           <CardHeader className="p-4 pb-0">
             <CardTitle className="text-[10px] font-black uppercase tracking-widest opacity-80 flex items-center gap-1.5">
               <TrendingUp className="h-3 w-3" />
@@ -481,7 +481,7 @@ const FinancialSummaryWidget: React.FC<FinancialSummaryWidgetProps> = ({
           </CardContent>
         </Card>
 
-        <Card className="rounded-3xl border-none shadow-sm bg-rose-500 text-white overflow-hidden">
+        <Card className="rounded-3xl border-none shadow-sm bg-destructive text-white overflow-hidden">
           <CardHeader className="p-4 pb-0">
             <CardTitle className="text-[10px] font-black uppercase tracking-widest opacity-80 flex items-center gap-1.5">
               <TrendingDown className="h-3 w-3" />
@@ -519,7 +519,7 @@ const FinancialSummaryWidget: React.FC<FinancialSummaryWidgetProps> = ({
           </CardContent>
         </Card>
 
-        <Card className="rounded-3xl border-none shadow-sm bg-violet-600 text-white overflow-hidden">
+        <Card className="rounded-3xl border-none shadow-sm bg-secondary text-white overflow-hidden">
           <CardHeader className="p-4 pb-0">
             <CardTitle className="text-[10px] font-black uppercase tracking-widest opacity-80 flex items-center gap-1.5">
               <PiggyBank className="h-3 w-3" />

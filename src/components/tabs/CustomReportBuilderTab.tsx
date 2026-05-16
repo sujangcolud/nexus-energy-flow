@@ -152,7 +152,7 @@ const CustomReportBuilderTab = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <Card className="border border-border lg:col-span-1">
+        <Card className="border border-border lg:col-span-1 rounded-2xl sm:rounded-3xl shadow-sm overflow-hidden">
           <CardHeader className="pb-2">
             <CardTitle className="text-base">Source &amp; Range</CardTitle>
           </CardHeader>
@@ -176,7 +176,7 @@ const CustomReportBuilderTab = () => {
           </CardContent>
         </Card>
 
-        <Card className="border border-border lg:col-span-1">
+        <Card className="border border-border lg:col-span-1 rounded-2xl sm:rounded-3xl shadow-sm overflow-hidden">
           <CardHeader className="pb-2 flex flex-row items-center justify-between">
             <CardTitle className="text-base">Fields (drag to reorder)</CardTitle>
             <Badge variant="secondary">{selectedFields.length}</Badge>
@@ -218,7 +218,7 @@ const CustomReportBuilderTab = () => {
           </CardContent>
         </Card>
 
-        <Card className="border border-border lg:col-span-1">
+        <Card className="border border-border lg:col-span-1 rounded-2xl sm:rounded-3xl shadow-sm overflow-hidden">
           <CardHeader className="pb-2 flex flex-row items-center justify-between">
             <CardTitle className="text-base">Filters</CardTitle>
             <Button
@@ -272,8 +272,8 @@ const CustomReportBuilderTab = () => {
         </Card>
       </div>
 
-      <Card className="border border-border">
-        <CardHeader className="pb-2 flex flex-row items-center justify-between">
+      <Card className="border border-border rounded-2xl sm:rounded-3xl shadow-sm overflow-hidden mt-6">
+        <CardHeader className="pb-2 flex flex-row items-center justify-between bg-slate-50/50">
           <div>
             <CardTitle className="text-base">Results</CardTitle>
             <CardDescription>

@@ -23,6 +23,7 @@ import {
 import { ChefHat, Plus, Trash2, Save, CheckCircle2, Copy } from "lucide-react";
 import { extractErrorMessage, logError } from "@/utils/errorHandling";
 import { Badge } from "@/components/ui/badge";
+import MobileTable from "@/components/ui/mobile-table";
 
 interface MenuItem {
   id: string;
@@ -269,7 +270,7 @@ const RecipeManagementTab = () => {
                     <SelectItem key={m.id} value={m.id}>
                       <div className="flex items-center justify-between w-full gap-2">
                         <span>{m.name} — NRs. {m.price}</span>
-                        {m.hasRecipe && <CheckCircle2 className="h-3 w-3 text-green-500 shrink-0" />}
+                        {m.hasRecipe && <CheckCircle2 className="h-3 w-3 text-primary shrink-0" />}
                       </div>
                     </SelectItem>
                   ))}
@@ -277,12 +278,12 @@ const RecipeManagementTab = () => {
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs font-bold uppercase tracking-wider text-amber-600">Servings per Batch</Label>
+              <Label className="text-xs font-bold uppercase tracking-wider text-secondary">Servings per Batch</Label>
               <Input
                 type="number"
                 step="1"
                 min="1"
-                className="h-11 rounded-xl border-amber-100 focus:border-amber-500"
+                className="h-11 rounded-xl border-secondary/20 focus:border-secondary"
                 value={selectedMenu?.recipe_yield || 1}
                 onChange={(e) => handleYieldChange(e.target.value)}
                 placeholder="e.g. 10"
@@ -296,16 +297,16 @@ const RecipeManagementTab = () => {
                   <div className="text-sm font-bold">NRs. {selectedMenu.price.toFixed(0)}</div>
                 </div>
                 <div className="space-y-1">
-                  <div className="text-[10px] font-black uppercase text-amber-600">Batch Cost</div>
+                  <div className="text-[10px] font-black uppercase text-secondary">Batch Cost</div>
                   <div className="text-sm font-bold">NRs. {totalCost.toFixed(0)}</div>
                 </div>
                 <div className="space-y-1">
-                  <div className="text-[10px] font-black uppercase text-blue-600">Unit Cost</div>
-                  <div className="text-sm font-bold text-blue-700">NRs. {unitCostVal.toFixed(0)}</div>
+                  <div className="text-[10px] font-black uppercase text-primary">Unit Cost</div>
+                  <div className="text-sm font-bold text-primary/80">NRs. {unitCostVal.toFixed(0)}</div>
                 </div>
                 <div className="space-y-1">
-                  <div className="text-[10px] font-black uppercase text-green-600">Unit Profit</div>
-                  <div className="text-sm font-bold text-green-700">NRs. {profit.toFixed(0)}</div>
+                  <div className="text-[10px] font-black uppercase text-primary">Unit Profit</div>
+                  <div className="text-sm font-bold text-primary">NRs. {profit.toFixed(0)}</div>
                 </div>
               </div>
             )}
@@ -346,57 +347,69 @@ const RecipeManagementTab = () => {
                 </div>
               </CardHeader>
               <CardContent className="p-0">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Inventory item</TableHead>
-                  <TableHead className="w-28">Batch Qty</TableHead>
-                      <TableHead className="w-28">Unit</TableHead>
-                      <TableHead className="w-24">Waste %</TableHead>
-                      <TableHead>Stock</TableHead>
-                      <TableHead className="w-12"></TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {rows.length === 0 && (
-                      <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-6">No ingredients yet — click Add</TableCell></TableRow>
-                    )}
-                    {rows.map((r, idx) => {
-                      const inv = invMap[r.inventory_item_id];
-                      return (
-                        <TableRow key={idx}>
-                          <TableCell>
-                            <Select value={r.inventory_item_id} onValueChange={(v) => {
-                              const inv = invMap[v];
-                              updateRow(idx, { inventory_item_id: v, unit_type: inv?.base_unit || r.unit_type });
-                            }}>
-                              <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
-                              <SelectContent>
-                                {inventory.map((i) => (
-                                  <SelectItem key={i.id} value={i.id}>{i.item_name} ({i.base_unit})</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </TableCell>
-                          <TableCell><Input type="number" step="0.01" value={r.quantity_used} onChange={(e) => updateRow(idx, { quantity_used: parseFloat(e.target.value) || 0 })} /></TableCell>
-                          <TableCell>
-                            <Select value={r.unit_type} onValueChange={(v) => updateRow(idx, { unit_type: v })}>
-                              <SelectTrigger><SelectValue /></SelectTrigger>
-                              <SelectContent>
-                                {BASE_UNITS.map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}
-                                {inv?.unit_conversions?.map((u) => <SelectItem key={u.unit_name} value={u.unit_name}>{u.unit_name}</SelectItem>)}
-                                {inv && !BASE_UNITS.includes(inv.base_unit) && <SelectItem value={inv.base_unit}>{inv.base_unit}</SelectItem>}
-                              </SelectContent>
-                            </Select>
-                          </TableCell>
-                          <TableCell><Input type="number" step="0.1" value={r.waste_percentage} onChange={(e) => updateRow(idx, { waste_percentage: parseFloat(e.target.value) || 0 })} /></TableCell>
-                          <TableCell className="text-xs text-muted-foreground">{inv ? `${(inv.current_stock_base ?? inv.quantity).toFixed(2)} ${inv.base_unit}` : "-"}</TableCell>
-                          <TableCell><Button size="icon" variant="ghost" onClick={() => removeRow(idx)}><Trash2 className="h-4 w-4" /></Button></TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
+                <MobileTable
+                  columns={[
+                    {
+                      key: "inventory_item_id",
+                      label: "Ingredient",
+                      render: (val, r) => {
+                        const idx = rows.indexOf(r);
+                        return (
+                          <Select value={val} onValueChange={(v) => {
+                            const inv = invMap[v];
+                            updateRow(idx, { inventory_item_id: v, unit_type: inv?.base_unit || r.unit_type });
+                          }}>
+                            <SelectTrigger className="h-9"><SelectValue placeholder="Select" /></SelectTrigger>
+                            <SelectContent>
+                              {inventory.map((i) => (
+                                <SelectItem key={i.id} value={i.id}>{i.item_name}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        );
+                      },
+                    },
+                    {
+                      key: "quantity_used",
+                      label: "Qty",
+                      className: "w-20",
+                      render: (val, r) => {
+                        const idx = rows.indexOf(r);
+                        return <Input className="h-9 px-2" type="number" step="0.01" value={val} onChange={(e) => updateRow(idx, { quantity_used: parseFloat(e.target.value) || 0 })} />;
+                      },
+                    },
+                    {
+                      key: "unit_type",
+                      label: "Unit",
+                      className: "w-20",
+                      render: (val, r) => {
+                        const idx = rows.indexOf(r);
+                        const inv = invMap[r.inventory_item_id];
+                        return (
+                          <Select value={val} onValueChange={(v) => updateRow(idx, { unit_type: v })}>
+                            <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              {BASE_UNITS.map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}
+                              {inv?.unit_conversions?.map((u) => <SelectItem key={u.unit_name} value={u.unit_name}>{u.unit_name}</SelectItem>)}
+                              {inv && !BASE_UNITS.includes(inv.base_unit) && <SelectItem value={inv.base_unit}>{inv.base_unit}</SelectItem>}
+                            </SelectContent>
+                          </Select>
+                        );
+                      },
+                    },
+                    {
+                      key: "actions",
+                      label: "",
+                      className: "w-10",
+                      render: (_, r) => {
+                        const idx = rows.indexOf(r);
+                        return <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => removeRow(idx)}><Trash2 className="h-4 w-4" /></Button>;
+                      },
+                    },
+                  ]}
+                  data={rows}
+                  emptyMessage="No ingredients yet — click Add"
+                />
               </CardContent>
             </Card>
           )}
@@ -404,8 +417,8 @@ const RecipeManagementTab = () => {
 
         <div className="space-y-4 md:space-y-6">
           <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden">
-            <CardHeader className="bg-emerald-50 border-b border-emerald-100 px-4 md:px-6 py-4">
-              <CardTitle className="text-base font-bold flex items-center gap-2 text-emerald-700">
+            <CardHeader className="bg-primary/5 border-b border-primary/10 px-4 md:px-6 py-4">
+              <CardTitle className="text-base font-bold flex items-center gap-2 text-primary">
                 <CheckCircle2 className="h-5 w-5" />
                 Recipe-Ready
               </CardTitle>
@@ -418,11 +431,11 @@ const RecipeManagementTab = () => {
                   menu.filter(m => m.hasRecipe).map(m => (
                     <div
                       key={m.id}
-                      className={`flex items-center justify-between p-2 rounded-md border hover:bg-muted/50 cursor-pointer transition-colors ${selectedMenuId === m.id ? 'bg-muted border-primary/50' : 'bg-muted/30'}`}
+                      className={`flex items-center justify-between p-2 rounded-md border hover:bg-primary/5 cursor-pointer transition-colors ${selectedMenuId === m.id ? 'bg-primary/10 border-primary/30' : 'border-transparent'}`}
                       onClick={() => setSelectedMenuId(m.id)}
                     >
                       <div className="text-sm font-medium">{m.name}</div>
-                      <Badge variant="secondary" className="text-[10px] uppercase text-green-600 bg-green-50 border-green-200">Ready</Badge>
+                      <Badge variant="secondary" className="text-[10px] uppercase text-primary bg-primary/10 border-primary/20">Ready</Badge>
                     </div>
                   ))
                 )}

@@ -54,19 +54,19 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 10%;
 
-    --primary: 0 0% 15%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 210 40% 98%;
 
-    --secondary: 0 0% 96%;
-    --secondary-foreground: 0 0% 15%;
+    --secondary: 35 92% 51%;
+    --secondary-foreground: 210 40% 98%;
 
-    --muted: 0 0% 96%;
-    --muted-foreground: 0 0% 45%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 0 0% 96%;
-    --accent-foreground: 0 0% 15%;
+    --accent: 35 92% 51%;
+    --accent-foreground: 210 40% 98%;
 
-    --destructive: 0 70% 50%;
+    --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 100%;
 
     --border: 0 0% 90%;
@@ -203,6 +203,18 @@ All colors MUST be HSL.
   }
   .responsive-text-3xl {
     @apply text-3xl sm:text-4xl;
+  }
+
+  .mobile-card-header {
+    @apply bg-primary text-primary-foreground p-4 rounded-t-3xl;
+  }
+
+  .mobile-input-standard {
+    @apply h-11 sm:h-12 rounded-xl text-base;
+  }
+
+  .mobile-form-spacing {
+    @apply space-y-4 sm:space-y-6;
   }
 }
 

@@ -91,32 +91,32 @@ const Index = () => {
       title: "Business Management",
       description:
         "Comprehensive tools for managing orders, expenses, and financial data",
-      color: "bg-blue-600",
+      color: "bg-primary",
     },
     {
       icon: Zap,
       title: "Energy Tracking",
       description:
         "Monitor charging sessions and energy consumption with detailed analytics",
-      color: "bg-yellow-600",
+      color: "bg-secondary",
     },
     {
       icon: Shield,
       title: "Role-Based Access",
       description:
         "Secure access control with different permission levels for team members",
-      color: "bg-green-600",
+      color: "bg-primary/80",
     },
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100">
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-white to-secondary/5">
       <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 lg:p-8">
         <div className="w-full max-w-6xl mx-auto">
           {/* Header */}
           <div className="text-center mb-12">
             <div className="inline-flex items-center gap-3 mb-6">
-              <div className="p-3 bg-slate-600 rounded-lg shadow-lg">
+              <div className="p-3 bg-primary rounded-lg shadow-lg">
                 <Building2 className="h-8 w-8 text-white" />
               </div>
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-800">
@@ -132,7 +132,7 @@ const Index = () => {
                 {Array.from({ length: 5 }).map((_, i) => (
                   <Star
                     key={i}
-                    className="h-4 w-4 text-yellow-500 fill-current"
+                    className="h-4 w-4 text-secondary fill-current"
                   />
                 ))}
                 <span className="ml-2 text-slate-600 text-sm">
@@ -233,7 +233,7 @@ const Index = () => {
                         </div>
                         <Button
                           type="submit"
-                          className="w-full h-12 bg-slate-800 hover:bg-slate-700 text-white font-medium transition-colors"
+                          className="w-full h-12 bg-primary hover:bg-primary/90 text-white font-medium transition-colors"
                           disabled={loading}
                         >
                           {loading ? (
@@ -339,7 +339,7 @@ const Index = () => {
                         </div>
                         <Button
                           type="submit"
-                          className="w-full h-12 bg-slate-800 hover:bg-slate-700 text-white font-medium transition-colors"
+                          className="w-full h-12 bg-primary hover:bg-primary/90 text-white font-medium transition-colors"
                           disabled={loading}
                         >
                           {loading ? (

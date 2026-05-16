@@ -152,13 +152,13 @@ const DashboardStudio: React.FC = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        <Card className="bg-card border"><CardContent className="p-4"><div className="flex items-center gap-2"><ShoppingCart className="h-4 w-4 text-muted-foreground" /><div><p className="text-xs text-muted-foreground">Orders</p><p className="text-lg font-bold">Rs. {summaryStats.totalOrders.toLocaleString()}</p></div></div></CardContent></Card>
-        <Card className="bg-card border"><CardContent className="p-4"><div className="flex items-center gap-2"><Zap className="h-4 w-4 text-muted-foreground" /><div><p className="text-xs text-muted-foreground">Income</p><p className="text-lg font-bold">Rs. {summaryStats.totalIncome.toLocaleString()}</p></div></div></CardContent></Card>
-        <Card className="bg-card border"><CardContent className="p-4"><div className="flex items-center gap-2"><Wallet className="h-4 w-4 text-muted-foreground" /><div><p className="text-xs text-muted-foreground">Expenses</p><p className="text-lg font-bold">Rs. {summaryStats.totalExpenses.toLocaleString()}</p></div></div></CardContent></Card>
-        <Card className="bg-card border"><CardContent className="p-4"><div className="flex items-center gap-2"><TrendingUp className="h-4 w-4 text-muted-foreground" /><div><p className="text-xs text-muted-foreground">Deposits</p><p className="text-lg font-bold">Rs. {summaryStats.totalDeposits.toLocaleString()}</p></div></div></CardContent></Card>
-        <Card className="bg-card border"><CardContent className="p-4"><div className="flex items-center gap-2"><ArrowUpDown className="h-4 w-4 text-muted-foreground" /><div><p className="text-xs text-muted-foreground">Withdrawals</p><p className="text-lg font-bold">Rs. {summaryStats.totalWithdrawals.toLocaleString()}</p></div></div></CardContent></Card>
-        <Card className="bg-card border"><CardContent className="p-4"><div className="flex items-center gap-2"><PiggyBank className="h-4 w-4 text-muted-foreground" /><div><p className="text-xs text-muted-foreground">Savings</p><p className="text-lg font-bold">Rs. {summaryStats.totalSavings.toLocaleString()}</p></div></div></CardContent></Card>
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+        <Card className="bg-card border shadow-sm rounded-2xl sm:rounded-3xl overflow-hidden"><CardContent className="p-3 sm:p-4"><div className="flex items-center gap-2"><ShoppingCart className="h-4 w-4 text-muted-foreground" /><div><p className="text-[10px] sm:text-xs text-muted-foreground uppercase font-bold">Orders</p><p className="text-sm sm:text-lg font-bold">Rs. {summaryStats.totalOrders.toLocaleString()}</p></div></div></CardContent></Card>
+        <Card className="bg-card border shadow-sm rounded-2xl sm:rounded-3xl overflow-hidden"><CardContent className="p-3 sm:p-4"><div className="flex items-center gap-2"><Zap className="h-4 w-4 text-muted-foreground" /><div><p className="text-[10px] sm:text-xs text-muted-foreground uppercase font-bold">Income</p><p className="text-sm sm:text-lg font-bold">Rs. {summaryStats.totalIncome.toLocaleString()}</p></div></div></CardContent></Card>
+        <Card className="bg-card border shadow-sm rounded-2xl sm:rounded-3xl overflow-hidden"><CardContent className="p-3 sm:p-4"><div className="flex items-center gap-2"><Wallet className="h-4 w-4 text-muted-foreground" /><div><p className="text-[10px] sm:text-xs text-muted-foreground uppercase font-bold">Expenses</p><p className="text-sm sm:text-lg font-bold">Rs. {summaryStats.totalExpenses.toLocaleString()}</p></div></div></CardContent></Card>
+        <Card className="bg-card border shadow-sm rounded-2xl sm:rounded-3xl overflow-hidden"><CardContent className="p-3 sm:p-4"><div className="flex items-center gap-2"><TrendingUp className="h-4 w-4 text-muted-foreground" /><div><p className="text-[10px] sm:text-xs text-muted-foreground uppercase font-bold">Deposits</p><p className="text-sm sm:text-lg font-bold">Rs. {summaryStats.totalDeposits.toLocaleString()}</p></div></div></CardContent></Card>
+        <Card className="bg-card border shadow-sm rounded-2xl sm:rounded-3xl overflow-hidden"><CardContent className="p-3 sm:p-4"><div className="flex items-center gap-2"><ArrowUpDown className="h-4 w-4 text-muted-foreground" /><div><p className="text-[10px] sm:text-xs text-muted-foreground uppercase font-bold">Withdrawals</p><p className="text-sm sm:text-lg font-bold">Rs. {summaryStats.totalWithdrawals.toLocaleString()}</p></div></div></CardContent></Card>
+        <Card className="bg-card border shadow-sm rounded-2xl sm:rounded-3xl overflow-hidden"><CardContent className="p-3 sm:p-4"><div className="flex items-center gap-2"><PiggyBank className="h-4 w-4 text-muted-foreground" /><div><p className="text-[10px] sm:text-xs text-muted-foreground uppercase font-bold">Savings</p><p className="text-sm sm:text-lg font-bold">Rs. {summaryStats.totalSavings.toLocaleString()}</p></div></div></CardContent></Card>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -194,18 +194,18 @@ const DashboardStudio: React.FC = () => {
         </Card>
       </div>
 
-      <Card className="bg-card border">
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-base">Data Explorer</CardTitle>
-            <div className="flex gap-2">
+      <Card className="bg-card border rounded-3xl overflow-hidden shadow-sm">
+        <CardHeader className="pb-3 border-b border-border bg-slate-50/50">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <CardTitle className="text-base font-bold">Data Explorer</CardTitle>
+            <div className="flex flex-wrap gap-2">
               <Select value={selectedTable} onValueChange={setSelectedTable}>
-                <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="w-full sm:w-40 h-10 rounded-xl"><SelectValue /></SelectTrigger>
                 <SelectContent>{TABLE_CONFIG.map((t) => <SelectItem key={t.name} value={t.name}>{t.name}</SelectItem>)}</SelectContent>
               </Select>
-              <div className="relative">
-                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Search..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-8 w-48" />
+              <div className="relative flex-grow sm:flex-grow-0">
+                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input placeholder="Search..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-9 h-10 rounded-xl w-full sm:w-48" />
               </div>
             </div>
           </div>

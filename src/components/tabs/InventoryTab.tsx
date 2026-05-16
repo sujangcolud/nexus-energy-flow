@@ -34,6 +34,7 @@ import { Package, Plus, Minus, AlertTriangle, CheckCircle, Edit, Trash2, Layers 
 import { format } from "date-fns";
 import MultiInventoryEntry from "../MultiInventoryEntry";
 import TransactionDatePicker from "@/components/ui/transaction-date-picker";
+import MobileTable from "@/components/ui/mobile-table";
 
 interface Category {
   id: string;
@@ -511,7 +512,7 @@ const InventoryTab = () => {
           <Card className="rounded-3xl border-none bg-white shadow-sm overflow-hidden">
             <CardContent className="p-4 md:p-6">
               <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Low Stock</p>
-              <p className="text-sm md:text-xl font-bold text-amber-500">{lowStock.length}</p>
+              <p className="text-sm md:text-xl font-bold text-secondary">{lowStock.length}</p>
             </CardContent>
           </Card>
           <Card className="rounded-3xl border-none bg-white shadow-sm overflow-hidden">
@@ -527,65 +528,95 @@ const InventoryTab = () => {
             <CardTitle className="text-base md:text-lg font-bold">Inventory List</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Item</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead className="text-right">Stock (Base)</TableHead>
-                  <TableHead>Base Unit</TableHead>
-                  <TableHead className="text-right">Avg Cost/Base</TableHead>
-                  <TableHead className="text-right">Valuation</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {inventory.map((item) => {
-                  const status = getStockStatus(item);
-                  return (
-                    <TableRow key={item.id}>
-                      <TableCell className="font-medium">{item.item_name}</TableCell>
-                      <TableCell>{item.category || "-"}</TableCell>
-                      <TableCell className="font-bold text-right">{(item.current_stock_base ?? 0).toFixed(2)}</TableCell>
-                      <TableCell>{item.base_unit}</TableCell>
-                      <TableCell className="text-right">NPR {(item.average_cost_per_base_unit ?? item.unit_cost ?? 0).toFixed(2)}</TableCell>
-                      <TableCell className="text-right font-semibold">NPR {((item.current_stock_base ?? 0) * (item.average_cost_per_base_unit ?? item.unit_cost ?? 0)).toFixed(2)}</TableCell>
-                      <TableCell><Badge variant={status.status === "in-stock" ? "default" : "secondary"}>{status.status}</Badge></TableCell>
-                      <TableCell>
-                        <div className="flex gap-2">
-                          <Button variant="outline" size="sm" title="Unit Conversions" onClick={() => { setSelectedItem(item); setConversionDialogOpen(true); }}>
-                             <Layers className="h-3 w-3" />
-                          </Button>
-                          <Button variant="outline" size="sm" onClick={() => {
-                            setEditForm({
-                              id: item.id,
-                              item_name: item.item_name,
-                              description: item.description || "",
-                              category: item.category || "",
-                              quantity: (item.current_stock_base ?? 0).toString(),
-                              base_unit: item.base_unit || "",
-                              unit_category: item.unit_category || "count",
-                              unit_cost: (item.unit_cost || 0).toString(),
-                              supplier: item.supplier || "",
-                              location: item.location || "",
-                              minimum_stock: item.minimum_stock.toString(),
-                              expiry_date: item.expiry_date || "",
-                            });
-                            setIsEditDialogOpen(true);
-                          }}>
-                            <Edit className="h-3 w-3 mr-1" />Edit
-                          </Button>
-                          <Button variant="outline" size="sm" onClick={() => { setSelectedItem(item); setStockOutDialogOpen(true); }}>
-                            <Minus className="h-3 w-3 mr-1" />Stock Out
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+            <MobileTable
+              columns={[
+                {
+                  key: "item_name",
+                  label: "Item",
+                  render: (val, item) => (
+                    <div className="flex flex-col">
+                      <span className="font-bold">{val}</span>
+                      <span className="text-[10px] text-muted-foreground">{item.category || "No Category"}</span>
+                    </div>
+                  ),
+                },
+                {
+                  key: "current_stock_base",
+                  label: "Stock",
+                  className: "text-right",
+                  render: (val, item) => (
+                    <div className="text-right">
+                      <span className="font-bold">{(val ?? item.quantity).toFixed(1)}</span>
+                      <span className="ml-1 text-[10px]">{item.base_unit}</span>
+                    </div>
+                  ),
+                },
+                {
+                  key: "valuation",
+                  label: "Value",
+                  className: "text-right hidden sm:table-cell",
+                  render: (_, item) => {
+                    const val = (item.current_stock_base ?? item.quantity) * (item.average_cost_per_base_unit ?? item.unit_cost ?? 0);
+                    return `रु ${val.toFixed(0)}`;
+                  },
+                },
+                {
+                  key: "status",
+                  label: "Status",
+                  render: (_, item) => {
+                    const status = getStockStatus(item);
+                    return (
+                      <Badge variant={status.status === "in-stock" ? "default" : "secondary"} className="text-[10px] h-5">
+                        {status.status}
+                      </Badge>
+                    );
+                  },
+                },
+                {
+                  key: "actions",
+                  label: "Actions",
+                  className: "text-right",
+                  render: (_, item) => (
+                    <div className="flex justify-end gap-1">
+                      <Button variant="outline" size="sm" className="h-8 w-8 p-0" onClick={() => { setSelectedItem(item); setConversionDialogOpen(true); }}>
+                        <Layers className="h-4 w-4" />
+                      </Button>
+                      <Button variant="outline" size="sm" className="h-8 w-8 p-0" onClick={() => {
+                        setEditForm({
+                          id: item.id,
+                          item_name: item.item_name,
+                          description: item.description || "",
+                          category: item.category || "",
+                          quantity: (item.current_stock_base ?? 0).toString(),
+                          base_unit: item.base_unit || "",
+                          unit_category: item.unit_category || "count",
+                          unit_cost: (item.unit_cost || 0).toString(),
+                          supplier: item.supplier || "",
+                          location: item.location || "",
+                          minimum_stock: item.minimum_stock.toString(),
+                          expiry_date: item.expiry_date || "",
+                        });
+                        setIsEditDialogOpen(true);
+                      }}>
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button variant="outline" size="sm" className="h-8 w-8 p-0" onClick={() => { setSelectedItem(item); setStockOutDialogOpen(true); }}>
+                        <Minus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ),
+                },
+              ]}
+              data={inventory}
+              footer={
+                <div className="flex justify-between items-center font-bold text-lg">
+                  <span>Page Inventory Value</span>
+                  <span className="text-primary">
+                    रु {totalValue.toFixed(2)}
+                  </span>
+                </div>
+              }
+            />
           </CardContent>
         </Card>
       </div>

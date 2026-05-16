@@ -25,6 +25,7 @@ import { toast } from "sonner";
 import { extractErrorMessage, logError } from "@/utils/errorHandling";
 import { Receipt, Download } from "lucide-react";
 import { format } from "date-fns";
+import MobileTable from "@/components/ui/mobile-table";
 
 interface VATEntry {
   id: string;
@@ -250,38 +251,76 @@ const VATEntryTab = () => {
               <CardTitle className="text-base md:text-lg font-bold">Income Entries</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
-              <Table>
-                <TableHeader><TableRow><TableHead>Date</TableHead><TableHead>Item</TableHead><TableHead>Amount</TableHead><TableHead>Actions</TableHead></TableRow></TableHeader>
-                <TableBody>
-                  {incomeEntries.slice(0, 20).map((e) => (
-                    <TableRow key={e.id}>
-                      <TableCell>{format(new Date(e.date), "MMM dd")}</TableCell>
-                      <TableCell>{e.item_name}</TableCell>
-                      <TableCell>NPR {e.amount.toFixed(2)}</TableCell>
-                      <TableCell><Button size="sm" variant="outline" onClick={() => { setSelectedEntry(e); setVatDialogOpen(true); }}>Add VAT</Button></TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+              <MobileTable
+                columns={[
+                  {
+                    key: "date",
+                    label: "Date",
+                    render: (val) => format(new Date(val), "MMM dd"),
+                  },
+                  {
+                    key: "item_name",
+                    label: "Item",
+                    render: (val) => <span className="font-bold">{val}</span>,
+                  },
+                  {
+                    key: "amount",
+                    label: "Amount",
+                    className: "text-right",
+                    render: (val) => `रु ${val.toFixed(0)}`,
+                  },
+                  {
+                    key: "actions",
+                    label: "Actions",
+                    className: "text-right",
+                    render: (_, e) => (
+                      <Button size="sm" variant="outline" onClick={() => { setSelectedEntry(e); setVatDialogOpen(true); }}>
+                        Add VAT
+                      </Button>
+                    ),
+                  },
+                ]}
+                data={incomeEntries.slice(0, 20)}
+              />
             </CardContent>
           </Card>
 
-          <Card className="bg-card border">
-            <CardHeader className="pb-3"><CardTitle className="text-base">VAT Entries</CardTitle></CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader><TableRow><TableHead>Invoice</TableHead><TableHead>Item</TableHead><TableHead>VAT</TableHead><TableHead>Actions</TableHead></TableRow></TableHeader>
-                <TableBody>
-                  {vatEntries.map((e) => (
-                    <TableRow key={e.id}>
-                      <TableCell>{e.invoice_number}</TableCell>
-                      <TableCell>{e.item_name}</TableCell>
-                      <TableCell>NPR {e.vat_amount.toFixed(2)}</TableCell>
-                      <TableCell><Button size="sm" variant="outline" onClick={() => { setSelectedVATEntry(e); setBillDialogOpen(true); }}><Download className="h-3 w-3" /></Button></TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+          <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden">
+            <CardHeader className="bg-slate-50/50 border-b border-slate-100 px-4 md:px-6 py-4">
+              <CardTitle className="text-base md:text-lg font-bold">VAT Entries</CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <MobileTable
+                columns={[
+                  {
+                    key: "invoice_number",
+                    label: "Invoice",
+                    render: (val) => <span className="font-mono text-[10px]">{val}</span>,
+                  },
+                  {
+                    key: "item_name",
+                    label: "Item",
+                    render: (val) => <span className="font-bold">{val}</span>,
+                  },
+                  {
+                    key: "vat_amount",
+                    label: "VAT",
+                    className: "text-right font-bold text-primary",
+                    render: (val) => `रु ${val.toFixed(0)}`,
+                  },
+                  {
+                    key: "actions",
+                    label: "Actions",
+                    className: "text-right",
+                    render: (_, e) => (
+                      <Button size="sm" variant="outline" className="h-8 w-8 p-0" onClick={() => { setSelectedVATEntry(e); setBillDialogOpen(true); }}>
+                        <Download className="h-4 w-4" />
+                      </Button>
+                    ),
+                  },
+                ]}
+                data={vatEntries}
+              />
             </CardContent>
           </Card>
         </div>

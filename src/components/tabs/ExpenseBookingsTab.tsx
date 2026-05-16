@@ -52,6 +52,7 @@ import {
 import TransactionDatePicker from "@/components/ui/transaction-date-picker";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import MobileTable from "@/components/ui/mobile-table";
 
 interface ExpenseBooking {
   id: string;
@@ -524,69 +525,62 @@ const ExpenseBookingsTab = () => {
 
                         {isExpanded && (
                           <div className="border-t border-slate-100 p-0 animate-in slide-in-from-top-2 duration-200">
-                            <div className="overflow-x-auto">
-                              <Table>
-                                <TableHeader className="bg-slate-50/50">
-                                  <TableRow>
-                                    <TableHead className="text-[10px] font-black uppercase">Details</TableHead>
-                                    <TableHead className="text-[10px] font-black uppercase">Amount</TableHead>
-                                    <TableHead className="text-[10px] font-black uppercase text-right">Actions</TableHead>
-                                  </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                  {partyBookings.map((b) => (
-                                    <TableRow key={b.id} className="hover:bg-slate-50/50">
-                                      <TableCell>
-                                        <div className="space-y-1">
-                                          <div className="flex items-center gap-1.5">
-                                            {b.is_inventory_purchase && <Package className="h-3 w-3 text-amber-500" />}
-                                            <span className="font-bold text-sm text-slate-700">{b.description}</span>
-                                          </div>
-                                          <div className="flex flex-wrap gap-1">
-                                            <Badge variant="secondary" className="text-[9px] h-4 px-1.5 rounded-md font-bold">{b.category}</Badge>
-                                            {b.payment_date && (
-                                              <Badge variant="outline" className="text-[9px] h-4 px-1.5 rounded-md font-bold text-orange-600 border-orange-100 bg-orange-50/30">
-                                                Due: {format(new Date(b.payment_date), "MMM dd")}
-                                              </Badge>
-                                            )}
-                                          </div>
-                                        </div>
-                                      </TableCell>
-                                      <TableCell>
-                                        <span className="font-black text-slate-800">NRs. {b.amount.toLocaleString()}</span>
-                                      </TableCell>
-                                      <TableCell className="text-right">
-                                        <div className="flex justify-end gap-1">
-                                          <Button size="icon" variant="ghost" className="h-8 w-8 text-green-600 hover:bg-green-50 rounded-lg" onClick={() => handlePaid(b)}>
-                                            <CheckCircle2 className="h-4 w-4" />
+                            <MobileTable
+                              columns={[
+                                {
+                                  key: "description",
+                                  label: "Details",
+                                  render: (val, b) => (
+                                    <div className="flex flex-col">
+                                      <div className="flex items-center gap-1.5">
+                                        {b.is_inventory_purchase && <Package className="h-3 w-3 text-amber-500" />}
+                                        <span className="font-bold text-sm">{val}</span>
+                                      </div>
+                                      <div className="text-[10px] text-muted-foreground">{b.category}</div>
+                                    </div>
+                                  ),
+                                },
+                                {
+                                  key: "amount",
+                                  label: "Amount",
+                                  className: "text-right font-black",
+                                  render: (val) => `रु ${Number(val).toFixed(0)}`,
+                                },
+                                {
+                                  key: "actions",
+                                  label: "Actions",
+                                  className: "text-right",
+                                  render: (_, b) => (
+                                    <div className="flex justify-end gap-1">
+                                              <Button size="sm" variant="outline" className="h-8 w-8 p-0 text-primary" onClick={() => handlePaid(b)}>
+                                        <CheckCircle2 className="h-4 w-4" />
+                                      </Button>
+                                      <Button size="sm" variant="outline" className="h-8 w-8 p-0 text-blue-600" onClick={() => handleEdit(b)}>
+                                        <Edit className="h-4 w-4" />
+                                      </Button>
+                                      <AlertDialog>
+                                        <AlertDialogTrigger asChild>
+                                          <Button size="sm" variant="outline" className="h-8 w-8 p-0 text-destructive">
+                                            <Trash2 className="h-4 w-4" />
                                           </Button>
-                                          <Button size="icon" variant="ghost" className="h-8 w-8 text-blue-600 hover:bg-blue-50 rounded-lg" onClick={() => handleEdit(b)}>
-                                            <Edit className="h-4 w-4" />
-                                          </Button>
-                                          <AlertDialog>
-                                            <AlertDialogTrigger asChild>
-                                              <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive hover:bg-destructive/10 rounded-lg">
-                                                <Trash2 className="h-4 w-4" />
-                                              </Button>
-                                            </AlertDialogTrigger>
-                                            <AlertDialogContent className="rounded-3xl">
-                                              <AlertDialogHeader>
-                                                <AlertDialogTitle>Delete Booking?</AlertDialogTitle>
-                                                <AlertDialogDescription>This will permanently remove this liability.</AlertDialogDescription>
-                                              </AlertDialogHeader>
-                                              <AlertDialogFooter>
-                                                <AlertDialogCancel className="rounded-xl">Cancel</AlertDialogCancel>
-                                                <AlertDialogAction onClick={() => handleDelete(b.id)} className="bg-destructive hover:bg-destructive/90 rounded-xl">Delete</AlertDialogAction>
-                                              </AlertDialogFooter>
-                                            </AlertDialogContent>
-                                          </AlertDialog>
-                                        </div>
-                                      </TableCell>
-                                    </TableRow>
-                                  ))}
-                                </TableBody>
-                              </Table>
-                            </div>
+                                        </AlertDialogTrigger>
+                                        <AlertDialogContent className="rounded-3xl">
+                                          <AlertDialogHeader>
+                                            <AlertDialogTitle>Delete Booking?</AlertDialogTitle>
+                                            <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
+                                          </AlertDialogHeader>
+                                          <AlertDialogFooter>
+                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                            <AlertDialogAction onClick={() => handleDelete(b.id)}>Delete</AlertDialogAction>
+                                          </AlertDialogFooter>
+                                        </AlertDialogContent>
+                                      </AlertDialog>
+                                    </div>
+                                  ),
+                                },
+                              ]}
+                              data={partyBookings}
+                            />
                           </div>
                         )}
                       </div>

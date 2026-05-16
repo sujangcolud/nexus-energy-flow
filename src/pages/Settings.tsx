@@ -188,8 +188,8 @@ const Settings = () => {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2">
-        <SettingsIcon className="h-6 w-6 text-blue-600" />
-        <h2 className="text-2xl font-bold text-gray-800">Application Settings</h2>
+        <SettingsIcon className="h-6 w-6 text-primary" />
+        <h2 className="text-2xl font-bold text-gray-800 uppercase tracking-tight">Application Settings</h2>
       </div>
 
       {/* Tab Visibility Settings */}
@@ -313,7 +313,7 @@ const Settings = () => {
 
       {/* Save Settings Button */}
       <div className="flex justify-end">
-        <Button onClick={saveSettings} className="bg-blue-600 hover:bg-blue-700">
+        <Button onClick={saveSettings} className="bg-primary hover:bg-primary/90 h-11 px-8 rounded-xl font-bold uppercase text-xs">
           <SettingsIcon className="h-4 w-4 mr-2" />
           Save All Settings
         </Button>
@@ -321,8 +321,8 @@ const Settings = () => {
 
       {/* User Management Section */}
       <div className="flex items-center gap-2 mt-8">
-        <Users className="h-6 w-6 text-blue-600" />
-        <h2 className="text-2xl font-bold text-gray-800">User Management</h2>
+        <Users className="h-6 w-6 text-primary" />
+        <h2 className="text-2xl font-bold text-gray-800 uppercase tracking-tight">User Management</h2>
       </div>
 
       <Card>

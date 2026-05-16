@@ -26,6 +26,7 @@ import { Plus, TrendingUp, TrendingDown, DollarSign, Trash2, ArrowUpDown, Minus,
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import RecordAttachments, { type AttachmentRecordType } from "@/components/RecordAttachments";
+import MobileTable from "@/components/ui/mobile-table";
 
 interface ShareInvestment {
   id: string;
@@ -425,7 +426,7 @@ const ShareInvestmentsTab = () => {
               </div>
             </div>
           ) : (
-            <div className="mb-6 p-4 bg-amber-50 border border-amber-100 rounded-2xl">
+            <div className="mb-6 p-4 bg-secondary/5 border border-secondary/20 rounded-2xl">
               <p className="text-xs text-amber-800">No opening balance set. Please set the cutoff date and opening balance amount.</p>
             </div>
           )}
@@ -566,65 +567,62 @@ const ShareInvestmentsTab = () => {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Investment History</CardTitle>
+          <Card className="rounded-3xl border-none shadow-sm overflow-hidden">
+            <CardHeader className="bg-slate-50 border-b border-slate-100 p-4">
+              <CardTitle className="text-base font-bold">Investment History</CardTitle>
             </CardHeader>
-            <CardContent>
-              {loading ? (
-                <div className="text-center py-4">Loading investments...</div>
-              ) : investments.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <TrendingUp className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>No share investments recorded yet.</p>
-                </div>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Shareholder Name</TableHead>
-                      <TableHead>Amount</TableHead>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Payment Mode</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {investments.map((investment) => (
-                      <TableRow key={investment.id}>
-                        <TableCell className="font-medium">
-                          <div className="flex items-center gap-1.5">
-                            {investment.attachment_count && investment.attachment_count > 0 ? (
-                              <span title={`${investment.attachment_count} attachment(s)`}><Paperclip className="h-3.5 w-3.5 text-muted-foreground shrink-0" /></span>
-                            ) : null}
-                            <div>
-                              <div>{investment.shareholder_name}</div>
-                              {investment.remarks && (
-                                <div className="text-xs text-muted-foreground font-normal italic mt-0.5">
-                                  {investment.remarks}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-chart-2 font-semibold">₹{investment.contribution_amount.toLocaleString()}</TableCell>
-                        <TableCell>{format(new Date(investment.investment_date), "dd/MM/yyyy")}</TableCell>
-                        <TableCell className="capitalize">{investment.payment_mode.replace("_", " ")}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-1">
-                            <Button variant="ghost" size="sm" onClick={() => setAttachmentTarget({ type: "share_investment", id: investment.id, title: `Investment - ${investment.shareholder_name}` })}>
-                              <Paperclip className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="sm" onClick={() => handleDeleteInvestment(investment.id)} className="text-destructive hover:text-destructive">
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              )}
+            <CardContent className="p-0">
+              <MobileTable
+                columns={[
+                  {
+                    key: "shareholder_name",
+                    label: "Shareholder",
+                    render: (val, inv) => (
+                      <div className="flex items-center gap-1.5">
+                        {inv.attachment_count > 0 && <Paperclip className="h-3 w-3 text-muted-foreground" />}
+                        <span className="font-bold">{val}</span>
+                      </div>
+                    ),
+                  },
+                  {
+                    key: "contribution_amount",
+                    label: "Amount",
+                    className: "text-right font-bold text-chart-2",
+                    render: (val) => `रु ${Number(val).toLocaleString()}`,
+                  },
+                  {
+                    key: "investment_date",
+                    label: "Date",
+                    render: (val) => format(new Date(val), "dd/MM/yyyy"),
+                  },
+                  {
+                    key: "actions",
+                    label: "Actions",
+                    className: "text-right",
+                    render: (_, inv) => (
+                      <div className="flex justify-end gap-1">
+                        <Button variant="outline" size="sm" className="h-8 w-8 p-0" onClick={() => setAttachmentTarget({ type: "share_investment", id: inv.id, title: `Investment - ${inv.shareholder_name}` })}>
+                          <Paperclip className="h-4 w-4" />
+                        </Button>
+                        <Button variant="outline" size="sm" className="h-8 w-8 p-0 text-destructive" onClick={() => handleDeleteInvestment(inv.id)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ),
+                  },
+                ]}
+                data={investments}
+                loading={loading}
+                emptyMessage="No share investments recorded yet."
+                footer={
+                  <div className="flex justify-between items-center font-bold text-lg">
+                    <span>Total Investments</span>
+                    <span className="text-chart-2">
+                      रु {totalInvestments.toLocaleString()}
+                    </span>
+                  </div>
+                }
+              />
             </CardContent>
           </Card>
         </TabsContent>
@@ -735,67 +733,62 @@ const ShareInvestmentsTab = () => {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Share Expense History</CardTitle>
+          <Card className="rounded-3xl border-none shadow-sm overflow-hidden">
+            <CardHeader className="bg-slate-50 border-b border-slate-100 p-4">
+              <CardTitle className="text-base font-bold">Share Expense History</CardTitle>
             </CardHeader>
-            <CardContent>
-              {loading ? (
-                <div className="text-center py-4">Loading expenses...</div>
-              ) : expenses.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <TrendingDown className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>No share expenses recorded yet.</p>
-                </div>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Description</TableHead>
-                      <TableHead>Amount</TableHead>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Category</TableHead>
-                      <TableHead>Payment Mode</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {expenses.map((expense) => (
-                      <TableRow key={expense.id}>
-                        <TableCell className="font-medium">
-                          <div className="flex items-center gap-1.5">
-                            {expense.attachment_count && expense.attachment_count > 0 ? (
-                              <span title={`${expense.attachment_count} attachment(s)`}><Paperclip className="h-3.5 w-3.5 text-muted-foreground shrink-0" /></span>
-                            ) : null}
-                            <div>
-                              <div>{expense.description}</div>
-                              {expense.remarks && (
-                                <div className="text-xs text-muted-foreground font-normal italic mt-0.5">
-                                  {expense.remarks}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-destructive font-semibold">₹{expense.amount.toLocaleString()}</TableCell>
-                        <TableCell>{format(new Date(expense.expense_date), "dd/MM/yyyy")}</TableCell>
-                        <TableCell className="capitalize">{expense.category}</TableCell>
-                        <TableCell className="capitalize">{expense.payment_mode.replace("_", " ")}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-1">
-                            <Button variant="ghost" size="sm" onClick={() => setAttachmentTarget({ type: "share_expense", id: expense.id, title: `Expense - ${expense.description}` })}>
-                              <Paperclip className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="sm" onClick={() => handleDeleteExpense(expense.id)} className="text-destructive hover:text-destructive">
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              )}
+            <CardContent className="p-0">
+              <MobileTable
+                columns={[
+                  {
+                    key: "description",
+                    label: "Description",
+                    render: (val, exp) => (
+                      <div className="flex items-center gap-1.5">
+                        {exp.attachment_count > 0 && <Paperclip className="h-3 w-3 text-muted-foreground" />}
+                        <span className="font-bold">{val}</span>
+                      </div>
+                    ),
+                  },
+                  {
+                    key: "amount",
+                    label: "Amount",
+                    className: "text-right font-bold text-destructive",
+                    render: (val) => `रु ${Number(val).toLocaleString()}`,
+                  },
+                  {
+                    key: "expense_date",
+                    label: "Date",
+                    render: (val) => format(new Date(val), "dd/MM/yyyy"),
+                  },
+                  {
+                    key: "actions",
+                    label: "Actions",
+                    className: "text-right",
+                    render: (_, exp) => (
+                      <div className="flex justify-end gap-1">
+                        <Button variant="outline" size="sm" className="h-8 w-8 p-0" onClick={() => setAttachmentTarget({ type: "share_expense", id: exp.id, title: `Expense - ${exp.description}` })}>
+                          <Paperclip className="h-4 w-4" />
+                        </Button>
+                        <Button variant="outline" size="sm" className="h-8 w-8 p-0 text-destructive" onClick={() => handleDeleteExpense(exp.id)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ),
+                  },
+                ]}
+                data={expenses}
+                loading={loading}
+                emptyMessage="No share expenses recorded yet."
+                footer={
+                  <div className="flex justify-between items-center font-bold text-lg">
+                    <span>Total Expenses</span>
+                    <span className="text-destructive">
+                      रु {totalExpenses.toLocaleString()}
+                    </span>
+                  </div>
+                }
+              />
             </CardContent>
           </Card>
         </TabsContent>

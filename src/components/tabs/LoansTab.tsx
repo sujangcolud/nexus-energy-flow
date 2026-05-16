@@ -54,6 +54,7 @@ import {
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { LoanSummary, LoanType, RepaymentFrequency } from "@/types/database";
+import MobileTable from "@/components/ui/mobile-table";
 
 const LoansTab = () => {
   const { user } = useAuth();
@@ -453,46 +454,46 @@ const LoansTab = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-        <Card className="rounded-3xl bg-gradient-to-br from-red-50 to-white border-red-100 shadow-sm">
+        <Card className="rounded-3xl bg-white border-none shadow-sm">
           <CardContent className="p-5 md:p-6">
             <div className="flex justify-between items-center">
               <div>
-                <p className="text-xs font-bold uppercase tracking-wider text-red-600 mb-1">Total Outstanding</p>
-                <h3 className="text-xl md:text-2xl font-bold text-red-900">NRs. {totalOutstanding.toLocaleString()}</h3>
+                <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Total Outstanding</p>
+                <h3 className="text-xl md:text-2xl font-bold text-destructive">NRs. {totalOutstanding.toLocaleString()}</h3>
               </div>
-              <div className="h-10 w-10 md:h-12 md:w-12 bg-red-100 rounded-2xl flex items-center justify-center text-red-600">
+              <div className="h-10 w-10 md:h-12 md:w-12 bg-destructive/10 rounded-2xl flex items-center justify-center text-destructive">
                 <TrendingDown className="h-5 w-5 md:h-6 md:w-6" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="rounded-3xl bg-gradient-to-br from-blue-50 to-white border-blue-100 shadow-sm">
+        <Card className="rounded-3xl bg-white border-none shadow-sm">
           <CardContent className="p-5 md:p-6">
             <div className="flex justify-between items-center">
               <div>
-                <p className="text-xs font-bold uppercase tracking-wider text-blue-600 mb-1">Active Loans</p>
-                <h3 className="text-xl md:text-2xl font-bold text-blue-900">
+                <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Active Loans</p>
+                <h3 className="text-xl md:text-2xl font-bold text-primary">
                   {loans.filter((l) => l.status === "active").length}
                 </h3>
               </div>
-              <div className="h-10 w-10 md:h-12 md:w-12 bg-blue-100 rounded-2xl flex items-center justify-center text-blue-600">
+              <div className="h-10 w-10 md:h-12 md:w-12 bg-primary/10 rounded-2xl flex items-center justify-center text-primary">
                 <Landmark className="h-5 w-5 md:h-6 md:w-6" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="rounded-3xl bg-gradient-to-br from-green-50 to-white border-green-100 shadow-sm">
+        <Card className="rounded-3xl bg-white border-none shadow-sm">
           <CardContent className="p-5 md:p-6">
             <div className="flex justify-between items-center">
               <div>
-                <p className="text-xs font-bold uppercase tracking-wider text-green-600 mb-1">Total Interest Paid</p>
-                <h3 className="text-xl md:text-2xl font-bold text-green-900">
+                <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Total Interest Paid</p>
+                <h3 className="text-xl md:text-2xl font-bold text-foreground">
                   NRs. {loans.reduce((sum, l) => sum + Number(l.interest_paid), 0).toLocaleString()}
                 </h3>
               </div>
-              <div className="h-10 w-10 md:h-12 md:w-12 bg-green-100 rounded-2xl flex items-center justify-center text-green-600">
+              <div className="h-10 w-10 md:h-12 md:w-12 bg-secondary/10 rounded-2xl flex items-center justify-center text-secondary">
                 <Percent className="h-5 w-5 md:h-6 md:w-6" />
               </div>
             </div>
@@ -508,105 +509,70 @@ const LoansTab = () => {
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Loan Details</TableHead>
-                  <TableHead>Type/Freq</TableHead>
-                  <TableHead>Principal</TableHead>
-                  <TableHead>Outstanding</TableHead>
-                  <TableHead>Next Due</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {loading ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8">
-                      Loading loans...
-                    </TableCell>
-                  </TableRow>
-                ) : loans.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                      No loans found.
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  loans.map((loan) => (
-                    <TableRow key={loan.id}>
-                      <TableCell>
-                        <div className="font-medium">{loan.loan_name}</div>
-                        <div className="text-xs text-muted-foreground">{loan.lender_name}</div>
-                        <div className="text-[10px] text-muted-foreground">
-                          Started: {format(new Date(loan.loan_date), "MMM dd, yyyy")}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className="capitalize text-[10px] mb-1 block w-fit">
-                          {loan.loan_type}
-                        </Badge>
-                        <div className="text-xs capitalize">{loan.repayment_frequency}</div>
-                      </TableCell>
-                      <TableCell className="font-medium">
-                        {Number(loan.principal_amount).toLocaleString()}
-                      </TableCell>
-                      <TableCell className="font-bold text-red-600">
-                        {Number(loan.outstanding_principal).toLocaleString()}
-                      </TableCell>
-                      <TableCell>
-                        {loan.status === 'active' && (
-                          <div className="flex flex-col gap-1">
-                            <span className={cn(
-                              "text-xs font-medium",
-                              isBefore(calculateNextDueDate(loan), startOfDay(new Date())) ? "text-red-600 animate-pulse" : "text-muted-foreground"
-                            )}>
-                              {format(calculateNextDueDate(loan), "MMM dd")}
-                            </span>
-                            {isBefore(calculateNextDueDate(loan), startOfDay(new Date())) && (
-                              <Badge variant="destructive" className="text-[8px] h-4 px-1 w-fit">Overdue</Badge>
-                            )}
-                          </div>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={loan.status === "active" ? "default" : "secondary"}
-                          className="capitalize"
-                        >
-                          {loan.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => openEditModal(loan)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            disabled={loan.status !== "active"}
-                            onClick={() => {
-                              setSelectedLoan(loan);
-                              setIsRepayOpen(true);
-                            }}
-                          >
-                            Repay
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
+          <MobileTable
+            columns={[
+              {
+                key: "loan_name",
+                label: "Loan Details",
+                render: (_, loan) => (
+                  <div>
+                    <div className="font-bold">{loan.loan_name}</div>
+                    <div className="text-[10px] text-muted-foreground">{loan.lender_name}</div>
+                  </div>
+                ),
+              },
+              {
+                key: "loan_type",
+                label: "Type",
+                render: (val) => <Badge variant="outline" className="text-[10px]">{val}</Badge>,
+              },
+              {
+                key: "outstanding_principal",
+                label: "Outstanding",
+                className: "text-right font-bold text-destructive",
+                render: (val) => `रु ${Number(val).toLocaleString()}`,
+              },
+              {
+                key: "status",
+                label: "Status",
+                render: (val) => <Badge variant={val === "active" ? "default" : "secondary"}>{val}</Badge>,
+              },
+              {
+                key: "actions",
+                label: "Actions",
+                className: "text-right",
+                render: (_, loan) => (
+                  <div className="flex justify-end gap-2">
+                    <Button variant="outline" size="sm" className="h-8 w-8 p-0" onClick={() => openEditModal(loan)}>
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 px-2 text-[10px] font-bold"
+                      disabled={loan.status !== "active"}
+                      onClick={() => {
+                        setSelectedLoan(loan);
+                        setIsRepayOpen(true);
+                      }}
+                    >
+                      Repay
+                    </Button>
+                  </div>
+                ),
+              },
+            ]}
+            data={loans}
+            loading={loading}
+            footer={
+              <div className="flex justify-between items-center font-bold text-lg">
+                <span>Total Outstanding</span>
+                <span className="text-destructive">
+                  रु {totalOutstanding.toLocaleString()}
+                </span>
+              </div>
+            }
+          />
         </CardContent>
       </Card>
 

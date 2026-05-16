@@ -66,6 +66,8 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import useTableControls from "@/hooks/useTableControls";
 import MultiChargingEntry from "@/components/MultiChargingEntry";
+import MobileTable from "@/components/ui/mobile-table";
+import { Edit } from "lucide-react";
 
 interface ChargingSession {
   id: string;
@@ -543,7 +545,7 @@ const ChargingTab = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-8">
           {/* Charging Session Form */}
           <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden">
-            <CardHeader className="bg-amber-500 text-white p-4 md:p-6">
+            <CardHeader className="bg-primary text-white p-4 md:p-6">
               <CardTitle className="flex items-center gap-3 text-lg md:text-xl font-bold">
                 <div className="p-2 bg-white/20 rounded-xl">
                   <Zap className="h-5 w-5 md:h-6 md:w-6" />
@@ -721,7 +723,7 @@ const ChargingTab = () => {
                 <Button
                   type="submit"
                   disabled={submitting}
-                  className="w-full h-12 md:h-14 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white font-black text-lg shadow-lg shadow-amber-500/20 transition-all active:scale-[0.98]"
+                  className="w-full h-12 md:h-14 rounded-2xl bg-primary hover:bg-primary/90 text-white font-black text-lg shadow-lg shadow-primary/20 transition-all active:scale-[0.98]"
                 >
                   {submitting ? (
                     <div className="flex items-center gap-2">
@@ -740,10 +742,10 @@ const ChargingTab = () => {
           </Card>
 
           {/* Recent Sessions Preview */}
-          <Card className="bg-gradient-to-br from-white/90 to-blue-50/90 backdrop-blur-sm border-0 shadow-2xl hover:shadow-3xl transition-all duration-300">
-            <CardHeader className="bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-t-lg">
-              <CardTitle className="flex items-center gap-3 text-xl">
-                <div className="p-2 bg-white/20 rounded-lg">
+          <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden transition-all duration-300">
+            <CardHeader className="bg-secondary text-white">
+              <CardTitle className="flex items-center gap-3 text-xl font-bold">
+                <div className="p-2 bg-white/20 rounded-xl">
                   <Activity className="h-6 w-6" />
                 </div>
                 Recent Sessions
@@ -909,153 +911,96 @@ const ChargingTab = () => {
             </div>
           </CardHeader>
           <CardContent className="p-0">
-            {loading ? (
-              <div className="text-center py-10">
-                <div className="w-16 h-16 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full animate-spin mx-auto flex items-center justify-center mb-4">
-                  <Zap className="h-8 w-8 text-white" />
-                </div>
-                <p className="text-gray-600">Loading charging sessions...</p>
-              </div>
-            ) : sessions.length === 0 ? (
-              <div className="text-center py-12">
-                <BatteryCharging className="h-16 w-16 mx-auto text-gray-300 mb-4" />
-                <p className="text-xl font-semibold text-gray-700 mb-2">
-                  No sessions found
-                </p>
-                <p className="text-gray-500">
-                  Start recording your charging sessions to see them here.
-                </p>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-gradient-to-r from-gray-50 to-blue-50">
-                      <TableHead className="font-semibold text-gray-700">
-                        Date
-                      </TableHead>
-                      <TableHead className="font-semibold text-gray-700">
-                        Battery Range
-                      </TableHead>
-                      <TableHead className="font-semibold text-gray-700">
-                        Energy (kCal)
-                      </TableHead>
-                      <TableHead className="font-semibold text-gray-700">
-                        Rates
-                      </TableHead>
-                      <TableHead className="font-semibold text-gray-700">
-                        Total Amount
-                      </TableHead>
-                      <TableHead className="font-semibold text-gray-700">
-                        Payment
-                      </TableHead>
-                      <TableHead className="font-semibold text-gray-700">
-                        Actions
-                      </TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    <TableRow>
-                      <TableCell colSpan={4} className="font-bold">
-                        Total
-                      </TableCell>
-                      <TableCell colSpan={2} className="font-bold text-right">
-                        NRs. {totalSessionCost.toFixed(2)}
-                      </TableCell>
-                    </TableRow>
-                    {sessions.map((session, index) => (
-                      <TableRow
-                        key={session.id}
-                        className="hover:bg-gradient-to-r hover:from-yellow-50 hover:to-orange-50 transition-all duration-200"
-                        style={{ animationDelay: `${index * 50}ms` }}
+            <MobileTable
+              columns={[
+                {
+                  key: "session_date",
+                  label: "Date",
+                  render: (val) => format(new Date(val), "MMM dd, yyyy"),
+                  mobileLabel: "Date",
+                },
+                {
+                  key: "battery",
+                  label: "Range",
+                  render: (_, session) => (
+                    <div className="flex items-center gap-1.5">
+                      <Battery className="h-3 w-3 text-destructive" />
+                      <span className="text-[10px]">{session.start_percentage}%</span>
+                      <span className="text-muted-foreground">→</span>
+                      <BatteryCharging className="h-3 w-3 text-green-600" />
+                      <span className="text-[10px] font-bold">{session.end_percentage}%</span>
+                    </div>
+                  ),
+                },
+                {
+                  key: "total_amount",
+                  label: "Total",
+                  className: "text-right font-bold",
+                  render: (val) => <span className="text-primary">रु {Number(val).toFixed(0)}</span>,
+                },
+                {
+                  key: "payment_mode",
+                  label: "Mode",
+                  render: (val) => <Badge variant="secondary" className="text-[10px] h-5">{val}</Badge>,
+                },
+                {
+                  key: "actions",
+                  label: "Actions",
+                  className: "text-right",
+                  render: (_, session) => (
+                    <div className="flex justify-end gap-1">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedSession(session);
+                          setIsEditDialogOpen(true);
+                        }}
+                        className="h-8 w-8 p-0"
                       >
-                        <TableCell className="font-medium">
-                          {format(
-                            new Date(session.session_date),
-                            "MMM dd, yyyy",
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Battery className="h-4 w-4 text-red-500" />
-                            <span>{session.start_percentage}%</span>
-                            <span className="text-gray-400">→</span>
-                            <BatteryCharging className="h-4 w-4 text-green-500" />
-                            <span>{session.end_percentage}%</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>{session.kcal} kCal</TableCell>
-                        <TableCell>
-                          <div className="text-sm">
-                            <div>Per %: NRs. {session.per_percent_rate}</div>
-                            <div>Per kCal: NRs. {session.per_unit_rate}</div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <span className="font-bold text-lg bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">
-                            NRs. {session.total_amount.toFixed(2)}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          <Badge
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
                             variant="outline"
-                            className="bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200"
+                            size="sm"
+                            className="h-8 w-8 p-0 text-destructive"
                           >
-                            {session.payment_mode}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                setSelectedSession(session);
-                                setIsEditDialogOpen(true);
-                              }}
-                            >
-                              Edit
-                            </Button>
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>
-                                    Are you sure?
-                                  </AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    This action cannot be undone. This will
-                                    permanently delete the session.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>
-                                    Cancel
-                                  </AlertDialogCancel>
-                                  <AlertDialogAction
-                                    onClick={() => handleDelete(session.id)}
-                                  >
-                                    Continue
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This action cannot be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => handleDelete(session.id)}>
+                              Continue
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+                  ),
+                },
+              ]}
+              data={sessions}
+              loading={loading}
+              emptyMessage="No charging sessions found."
+              footer={
+                <div className="flex justify-between items-center font-bold text-lg">
+                  <span>Page Total</span>
+                  <span className="text-primary">
+                    रु {totalSessionCost.toFixed(2)}
+                  </span>
+                </div>
+              }
+            />
           </CardContent>
           {sessions.length > 0 && (
             <div className="flex justify-center p-4 border-t border-gray-200">

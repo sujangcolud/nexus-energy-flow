@@ -72,6 +72,8 @@ import { cn } from "@/lib/utils";
 import useTableControls from "@/hooks/useTableControls";
 import MultiWithdrawalEntry from "@/components/MultiWithdrawalEntry";
 import HistoryDateRangeFilter from "@/components/HistoryDateRangeFilter";
+import MobileTable from "@/components/ui/mobile-table";
+import { Edit } from "lucide-react";
 
 interface Withdrawal {
   id: string;
@@ -121,15 +123,15 @@ const WithdrawalsTab = () => {
   ];
 
   const purposeColors = {
-    "Salary Payment": "from-green-500 to-emerald-500",
-    "Vendor Payment": "from-blue-500 to-cyan-500",
-    "Utility Bills": "from-yellow-500 to-orange-500",
-    "Office Rent": "from-purple-500 to-pink-500",
-    "Equipment Purchase": "from-indigo-500 to-blue-500",
-    "Marketing Expenses": "from-red-500 to-pink-500",
-    "Travel Expenses": "from-teal-500 to-cyan-500",
-    Maintenance: "from-orange-500 to-red-500",
-    "Emergency Fund": "from-violet-500 to-purple-500",
+    "Salary Payment": "from-primary to-primary/80",
+    "Vendor Payment": "from-secondary to-secondary/80",
+    "Utility Bills": "from-primary to-primary/80",
+    "Office Rent": "from-secondary to-secondary/80",
+    "Equipment Purchase": "from-primary to-primary/80",
+    "Marketing Expenses": "from-secondary to-secondary/80",
+    "Travel Expenses": "from-primary to-primary/80",
+    Maintenance: "from-secondary to-secondary/80",
+    "Emergency Fund": "from-primary to-primary/80",
     Other: "from-gray-500 to-slate-500",
   };
 
@@ -457,7 +459,7 @@ const WithdrawalsTab = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-8">
           {/* Add Withdrawal Form */}
           <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden">
-            <CardHeader className="bg-rose-500 text-white p-4 md:p-6">
+            <CardHeader className="bg-primary text-white p-4 md:p-6">
               <CardTitle className="flex items-center gap-3 text-lg md:text-xl font-bold">
                 <div className="p-2 bg-white/20 rounded-xl">
                   <ArrowDownCircle className="h-5 w-5 md:h-6 md:w-6" />
@@ -603,7 +605,7 @@ const WithdrawalsTab = () => {
                 <Button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full h-12 md:h-14 rounded-2xl bg-rose-500 hover:bg-rose-600 text-white font-black text-lg shadow-lg shadow-rose-500/20 transition-all active:scale-[0.98]"
+                  className="w-full h-12 md:h-14 rounded-2xl bg-primary hover:bg-primary/90 text-white font-black text-lg shadow-lg shadow-primary/20 transition-all active:scale-[0.98]"
                 >
                   {isSubmitting ? (
                     <div className="flex items-center gap-2">
@@ -622,10 +624,10 @@ const WithdrawalsTab = () => {
           </Card>
 
           {/* Purpose Breakdown */}
-          <Card className="bg-gradient-to-br from-white/90 to-purple-50/90 backdrop-blur-sm border-0 shadow-2xl hover:shadow-3xl transition-all duration-300">
-            <CardHeader className="bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-t-lg">
-              <CardTitle className="flex items-center gap-3 text-xl">
-                <div className="p-2 bg-white/20 rounded-lg">
+          <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden transition-all duration-300">
+            <CardHeader className="bg-secondary text-white">
+              <CardTitle className="flex items-center gap-3 text-xl font-bold">
+                <div className="p-2 bg-white/20 rounded-xl">
                   <Target className="h-6 w-6" />
                 </div>
                 Purpose Breakdown
@@ -732,191 +734,93 @@ const WithdrawalsTab = () => {
             </div>
           </CardHeader>
           <CardContent className="p-0">
-            {loading ? (
-              <div className="text-center py-10">
-                <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full animate-spin mx-auto flex items-center justify-center mb-4">
-                  <Banknote className="h-8 w-8 text-white" />
-                </div>
-                <p className="text-gray-600">Loading withdrawals...</p>
-              </div>
-            ) : withdrawals.length === 0 ? (
-              <div className="text-center py-12">
-                <Banknote className="h-16 w-16 mx-auto text-gray-300 mb-4" />
-                <p className="text-xl font-semibold text-gray-700 mb-2">
-                  No withdrawals found
-                </p>
-                <p className="text-gray-500">
-                  Start recording your withdrawals to see them here.
-                </p>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-gradient-to-r from-gray-50 to-purple-50">
-                      <TableHead className="font-semibold text-gray-700">
-                        Date
-                      </TableHead>
-                      <TableHead className="font-semibold text-gray-700">
-                        Amount
-                      </TableHead>
-                      <TableHead className="font-semibold text-gray-700">
-                        Purpose
-                      </TableHead>
-                      <TableHead className="font-semibold text-gray-700">
-                        Source/Coop
-                      </TableHead>
-                      <TableHead className="font-semibold text-gray-700">
-                        Recipient
-                      </TableHead>
-                      <TableHead className="font-semibold text-gray-700">
-                        Reference
-                      </TableHead>
-                      <TableHead className="font-semibold text-gray-700">
-                        Remarks
-                      </TableHead>
-                      <TableHead className="font-semibold text-gray-700">
-                        Actions
-                      </TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    <TableRow>
-                      <TableCell colSpan={1} className="font-bold">
-                        Total
-                      </TableCell>
-                      <TableCell colSpan={6} className="font-bold">
-                        NRs. {totalWithdrawals.toFixed(2)}
-                      </TableCell>
-                    </TableRow>
-                    {withdrawals.map((withdrawal, index) => (
-                      <TableRow
-                        key={withdrawal.id}
-                        className="hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-200"
-                        style={{ animationDelay: `${index * 50}ms` }}
+            <MobileTable
+              columns={[
+                {
+                  key: "withdrawal_date",
+                  label: "Date",
+                  render: (val) => format(new Date(val), "MMM dd, yyyy"),
+                  mobileLabel: "Date",
+                },
+                {
+                  key: "amount",
+                  label: "Amount",
+                  className: "text-right font-bold",
+                  render: (val) => <span className="text-destructive">रु {Number(val).toFixed(0)}</span>,
+                },
+                {
+                  key: "purpose",
+                  label: "Purpose",
+                  render: (val) => (
+                    <Badge className={cn("bg-gradient-to-r text-white border-0", purposeColors[val as keyof typeof purposeColors] || "from-gray-400 to-gray-500")}>
+                      {val}
+                    </Badge>
+                  ),
+                },
+                {
+                  key: "source_cooperative",
+                  label: "Source",
+                  hideOnMobile: true,
+                  render: (val) => val || "-",
+                },
+                {
+                  key: "actions",
+                  label: "Actions",
+                  className: "text-right",
+                  render: (_, withdrawal) => (
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedWithdrawal(withdrawal);
+                          setIsEditDialogOpen(true);
+                        }}
+                        className="h-8 w-8 p-0"
                       >
-                        <TableCell className="font-medium">
-                          {format(
-                            new Date(withdrawal.withdrawal_date),
-                            "MMM dd, yyyy",
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <span className="font-bold text-xl bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                            NRs. {withdrawal.amount.toFixed(2)}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          <Badge
-                            className={`bg-gradient-to-r ${purposeColors[withdrawal.purpose as keyof typeof purposeColors] || "from-gray-500 to-slate-500"} text-white border-0`}
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 w-8 p-0 text-destructive"
                           >
-                            {withdrawal.purpose}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="font-medium text-gray-800">
-                          {withdrawal.source_cooperative ? (
-                            <div className="flex items-center gap-2">
-                              <Landmark className="h-4 w-4 text-indigo-500" />
-                              {withdrawal.source_cooperative}
-                            </div>
-                          ) : (
-                            <span className="text-gray-400">-</span>
-                          )}
-                        </TableCell>
-                        <TableCell className="font-medium text-gray-800">
-                          {withdrawal.recipient ? (
-                            <div className="flex items-center gap-2">
-                              <User className="h-4 w-4 text-gray-500" />
-                              {withdrawal.recipient}
-                            </div>
-                          ) : (
-                            <span className="text-gray-400">-</span>
-                          )}
-                        </TableCell>
-                        <TableCell className="font-mono text-sm">
-                          {withdrawal.reference_number ? (
-                            <Badge
-                              variant="outline"
-                              className="bg-gradient-to-r from-orange-50 to-yellow-50 border-orange-200"
-                            >
-                              {withdrawal.reference_number}
-                            </Badge>
-                          ) : (
-                            <span className="text-gray-400">-</span>
-                          )}
-                        </TableCell>
-                        <TableCell className="max-w-xs">
-                          <span
-                            className="text-sm text-gray-600 truncate"
-                            title={withdrawal.remarks || ""}
-                          >
-                            {withdrawal.remarks || "-"}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex gap-2">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                setSelectedWithdrawal(withdrawal);
-                                setIsEditDialogOpen(true);
-                              }}
-                            >
-                              <Paperclip className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                setSelectedWithdrawal(withdrawal);
-                                setIsEditDialogOpen(true);
-                              }}
-                            >
-                              Edit
-                            </Button>
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>
-                                    Are you sure?
-                                  </AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    This action cannot be undone. This will
-                                    permanently delete the withdrawal.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>
-                                    Cancel
-                                  </AlertDialogCancel>
-                                  <AlertDialogAction
-                                    onClick={() =>
-                                      handleDelete(withdrawal.id)
-                                    }
-                                  >
-                                    Continue
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This action cannot be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => handleDelete(withdrawal.id)}>
+                              Continue
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+                  ),
+                },
+              ]}
+              data={withdrawals}
+              loading={loading}
+              emptyMessage="No withdrawals found."
+              footer={
+                <div className="flex justify-between items-center font-bold text-lg">
+                  <span>Page Total</span>
+                  <span className="text-destructive">
+                    रु {totalWithdrawals.toFixed(2)}
+                  </span>
+                </div>
+              }
+            />
           </CardContent>
           {withdrawals.length > 0 && (
             <div className="flex justify-center p-4 border-t border-gray-200">
@@ -925,18 +829,18 @@ const WithdrawalsTab = () => {
                   onClick={() => onPageChange(page - 1)}
                   disabled={page === 1}
                   variant="outline"
-                  className="hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50"
+                  className="hover:bg-primary/5"
                 >
                   Previous
                 </Button>
-                <span className="px-4 py-2 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg font-medium">
+                <span className="px-4 py-2 bg-primary/5 rounded-lg font-medium">
                   Page {page}
                 </span>
                 <Button
                   onClick={() => onPageChange(page + 1)}
                   disabled={withdrawals.length < itemsPerPage}
                   variant="outline"
-                  className="hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50"
+                  className="hover:bg-primary/5"
                 >
                   Next
                 </Button>

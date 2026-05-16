@@ -18,6 +18,7 @@ import { DateRange } from "react-day-picker";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import DayEntriesEditor from "@/components/DayEntriesEditor";
+import MobileTable from "@/components/ui/mobile-table";
 
 interface DailySummaryRow {
   summary_date: string;
@@ -352,41 +353,41 @@ const DailySummaryReport = () => {
         const isProfit = netProfit >= 0;
         const StatusIcon = isProfit ? TrendingUp : TrendingDown;
         return (
-          <Card className={cn("border-2", isProfit ? "border-foreground/20" : "border-destructive/40")}>
-            <CardContent className="p-5">
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <div className="flex items-center gap-4">
-                  <div className={cn("p-3 rounded-md", isProfit ? "bg-muted" : "bg-destructive/10")}>
-                    <StatusIcon className={cn("h-6 w-6", isProfit ? "text-foreground" : "text-destructive")} />
+          <Card className={cn("border-none shadow-xl rounded-3xl overflow-hidden", isProfit ? "bg-primary text-white" : "bg-destructive text-white")}>
+            <CardContent className="p-6 md:p-8">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+                <div className="flex items-center gap-5">
+                  <div className={cn("p-4 rounded-2xl bg-white/20 backdrop-blur-sm")}>
+                    <StatusIcon className={cn("h-8 w-8 text-white")} />
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground uppercase tracking-wide">
-                      {isProfit ? "Net Profit" : "Net Loss"} (Income − Expenses)
+                    <p className="text-xs font-black uppercase tracking-widest opacity-80">
+                      {isProfit ? "Net Profit" : "Net Loss"}
                     </p>
-                    <p className={cn("text-2xl md:text-3xl font-bold mt-1", isProfit ? "text-foreground" : "text-destructive")}>
+                    <p className={cn("text-3xl md:text-4xl font-black mt-1")}>
                       {fmtCurrency(Math.abs(netProfit))}
                     </p>
-                    <p className="text-xs text-muted-foreground mt-1">
+                    <p className="text-xs opacity-70 mt-1 font-medium">
                       {range?.from && range?.to
-                        ? `${format(range.from, "LLL dd, y")} – ${format(range.to, "LLL dd, y")}`
+                        ? `${format(range.from, "MMM dd, y")} – ${format(range.to, "MMM dd, y")}`
                         : "Selected range"}
                     </p>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-4 md:gap-6 text-sm">
+                <div className="grid grid-cols-3 gap-6 md:gap-12 bg-black/10 p-5 rounded-2xl backdrop-blur-sm">
                   <div>
-                    <p className="text-xs text-muted-foreground">Total Income</p>
-                    <p className="font-semibold text-foreground">{fmtCurrency(totalIncome)}</p>
+                    <p className="text-[10px] font-black uppercase tracking-wider opacity-70 mb-1">Income</p>
+                    <p className="text-sm md:text-lg font-bold">{fmtCurrency(totalIncome)}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground">Total Expenses</p>
-                    <p className="font-semibold text-foreground">{fmtCurrency(totals.expenses)}</p>
+                    <p className="text-[10px] font-black uppercase tracking-wider opacity-70 mb-1">Expenses</p>
+                    <p className="text-sm md:text-lg font-bold">{fmtCurrency(totals.expenses)}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground">Margin</p>
-                    <p className="font-semibold text-foreground">
-                      {totalIncome > 0 ? `${((netProfit / totalIncome) * 100).toFixed(2)}%` : "—"}
+                    <p className="text-[10px] font-black uppercase tracking-wider opacity-70 mb-1">Margin</p>
+                    <p className="text-sm md:text-lg font-bold">
+                      {totalIncome > 0 ? `${((netProfit / totalIncome) * 100).toFixed(1)}%` : "—"}
                     </p>
                   </div>
                 </div>
@@ -404,55 +405,43 @@ const DailySummaryReport = () => {
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  {COLUMNS.map((c) => (
-                    <TableHead key={c.key} className="whitespace-nowrap text-xs">
-                      {c.label}
-                    </TableHead>
-                  ))}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {loading ? (
-                  <TableRow>
-                    <TableCell colSpan={COLUMNS.length} className="text-center py-8 text-muted-foreground">
-                      Loading...
-                    </TableCell>
-                  </TableRow>
-                ) : rows.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={COLUMNS.length} className="text-center py-8 text-muted-foreground">
-                      No daily summary data found for the selected range.
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  rows.map((r) => (
-                    <TableRow key={r.summary_date}>
-                      {COLUMNS.map((c) => {
-                        const val = r[c.key];
-                        let display: string;
-                        if (c.key === "summary_date") {
-                          display = String(val ?? "");
-                        } else if (c.key === "created_at" || c.key === "updated_at") {
-                          display = val ? format(new Date(val as string), "yyyy-MM-dd HH:mm") : "";
-                        } else {
-                          display = fmtNum(val as number | null);
-                        }
-                        return (
-                          <TableCell key={c.key} className="whitespace-nowrap text-xs">
-                            {display}
-                          </TableCell>
-                        );
-                      })}
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
+          <MobileTable
+            columns={COLUMNS.map(col => ({
+              key: col.key,
+              label: col.label,
+              mobileLabel: col.label,
+              hideOnMobile: !["summary_date", "total_income", "total_expenses", "total_balance"].includes(col.key),
+              render: (val, r) => {
+                if (col.key === "summary_date") return String(val ?? "");
+                if (col.key === "created_at" || col.key === "updated_at") {
+                  return val ? format(new Date(val as string), "yyyy-MM-dd HH:mm") : "";
+                }
+                return fmtNum(val as number | null);
+              }
+            }))}
+            data={rows}
+            loading={loading}
+            emptyMessage="No daily summary data found for the selected range."
+            cardKey="summary_date"
+            footer={
+              <div className="space-y-2">
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-muted-foreground">Total Income</span>
+                  <span className="font-bold text-green-600">{fmtCurrency(totals.orders + totals.charging)}</span>
+                </div>
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-muted-foreground">Total Expenses</span>
+                  <span className="font-bold text-destructive">{fmtCurrency(totals.expenses)}</span>
+                </div>
+                <div className="pt-2 border-t flex justify-between items-center font-bold text-lg">
+                  <span>Net Total</span>
+                  <span className={cn(totals.orders + totals.charging - totals.expenses >= 0 ? "text-primary" : "text-destructive")}>
+                    {fmtCurrency(totals.orders + totals.charging - totals.expenses)}
+                  </span>
+                </div>
+              </div>
+            }
+          />
         </CardContent>
       </Card>
 

@@ -115,8 +115,8 @@ const MobileDashboard = () => {
         label: "Orders",
         icon: ShoppingCart,
         roles: ["user", "data_entry", "reports_viewer", "super_admin"],
-        color: "from-orange-500 to-orange-600",
-        bgColor: "bg-orange-50",
+        color: "from-primary to-primary/80",
+        bgColor: "bg-primary/5",
         description: "Manage food orders",
         category: "transactions",
       },
@@ -126,8 +126,8 @@ const MobileDashboard = () => {
         label: "Charging",
         icon: Zap,
         roles: ["user", "data_entry", "reports_viewer", "super_admin"],
-        color: "from-yellow-500 to-yellow-600",
-        bgColor: "bg-yellow-50",
+        color: "from-secondary to-secondary/80",
+        bgColor: "bg-secondary/5",
         description: "Track energy consumption",
         category: "transactions",
       },
@@ -137,8 +137,8 @@ const MobileDashboard = () => {
         label: "Expenses",
         icon: Receipt,
         roles: ["user", "data_entry", "reports_viewer", "super_admin"],
-        color: "from-red-500 to-red-600",
-        bgColor: "bg-red-50",
+        color: "from-primary to-primary/80",
+        bgColor: "bg-primary/5",
         description: "Monitor business expenses",
         category: "transactions",
       },
@@ -148,8 +148,8 @@ const MobileDashboard = () => {
         label: "Deposits",
         icon: CreditCard,
         roles: ["user", "data_entry", "reports_viewer", "super_admin"],
-        color: "from-green-500 to-green-600",
-        bgColor: "bg-green-50",
+        color: "from-secondary to-secondary/80",
+        bgColor: "bg-secondary/5",
         description: "Handle financial deposits",
         category: "financial",
       },
@@ -159,8 +159,8 @@ const MobileDashboard = () => {
         label: "Savings & Withdrawals",
         icon: Banknote,
         roles: ["user", "data_entry", "reports_viewer", "super_admin"],
-        color: "from-blue-500 to-blue-600",
-        bgColor: "bg-blue-50",
+        color: "from-primary to-primary/80",
+        bgColor: "bg-primary/5",
         description: "Savings & withdrawals",
         category: "financial",
       },
@@ -170,8 +170,8 @@ const MobileDashboard = () => {
         label: "Loans",
         icon: Landmark,
         roles: ["user", "data_entry", "reports_viewer", "super_admin"],
-        color: "from-indigo-500 to-indigo-600",
-        bgColor: "bg-indigo-50",
+        color: "from-secondary to-secondary/80",
+        bgColor: "bg-secondary/5",
         description: "Loans & Repayments",
         category: "financial",
       },
@@ -181,8 +181,8 @@ const MobileDashboard = () => {
         label: "Investments",
         icon: TrendingUp,
         roles: ["user", "data_entry", "reports_viewer", "super_admin"],
-        color: "from-emerald-500 to-emerald-600",
-        bgColor: "bg-emerald-50",
+        color: "from-primary to-primary/80",
+        bgColor: "bg-primary/5",
         description: "Share investments",
         category: "financial",
       },
@@ -192,8 +192,8 @@ const MobileDashboard = () => {
         label: "Expense Bookings",
         icon: FileText,
         roles: ["user", "data_entry", "reports_viewer", "super_admin"],
-        color: "from-rose-500 to-rose-600",
-        bgColor: "bg-rose-50",
+        color: "from-secondary to-secondary/80",
+        bgColor: "bg-secondary/5",
         description: "Manage expense bookings",
         category: "financial",
       },
@@ -203,8 +203,8 @@ const MobileDashboard = () => {
         label: "Inventory",
         icon: Package,
         roles: ["user", "data_entry", "reports_viewer", "super_admin"],
-        color: "from-purple-500 to-purple-600",
-        bgColor: "bg-purple-50",
+        color: "from-primary to-primary/80",
+        bgColor: "bg-primary/5",
         description: "Inventory management",
         category: "management",
       },
@@ -215,8 +215,8 @@ const MobileDashboard = () => {
         label: "Import",
         icon: Upload,
         roles: ["reports_viewer", "super_admin"],
-        color: "from-indigo-500 to-indigo-600",
-        bgColor: "bg-indigo-50",
+        color: "from-secondary to-secondary/80",
+        bgColor: "bg-secondary/5",
         description: "Data import",
         category: "management",
       },
@@ -226,8 +226,8 @@ const MobileDashboard = () => {
         label: "Menu",
         icon: UtensilsCrossed,
         roles: ["super_admin"],
-        color: "from-amber-500 to-amber-600",
-        bgColor: "bg-amber-50",
+        color: "from-primary to-primary/80",
+        bgColor: "bg-primary/5",
         description: "Menu management",
         category: "management",
       },
@@ -237,8 +237,8 @@ const MobileDashboard = () => {
         label: "Recipes",
         icon: ChefHat,
         roles: ["super_admin"],
-        color: "from-orange-500 to-orange-600",
-        bgColor: "bg-orange-50",
+        color: "from-secondary to-secondary/80",
+        bgColor: "bg-secondary/5",
         description: "Link menu items to inventory ingredients",
         category: "management",
       },
@@ -248,8 +248,8 @@ const MobileDashboard = () => {
         label: "Users",
         icon: UserCog,
         roles: ["super_admin"],
-        color: "from-pink-500 to-pink-600",
-        bgColor: "bg-pink-50",
+        color: "from-primary to-primary/80",
+        bgColor: "bg-primary/5",
         description: "User management",
         category: "management",
       },
@@ -259,8 +259,8 @@ const MobileDashboard = () => {
         label: "VAT",
         icon: FileText,
         roles: ["user", "data_entry", "reports_viewer", "super_admin"],
-        color: "from-lime-500 to-lime-600",
-        bgColor: "bg-lime-50",
+        color: "from-secondary to-secondary/80",
+        bgColor: "bg-secondary/5",
         description: "VAT entries",
         category: "transactions",
       },
@@ -270,8 +270,8 @@ const MobileDashboard = () => {
         label: "Dashboard Studio",
         icon: BarChart3,
         roles: ["user", "reports_viewer", "super_admin"],
-        color: "from-purple-500 to-purple-600",
-        bgColor: "bg-purple-50",
+        color: "from-primary to-primary/80",
+        bgColor: "bg-primary/5",
         description: "Custom dashboards",
         category: "analytics",
       },
@@ -281,8 +281,8 @@ const MobileDashboard = () => {
         label: "Daily Summary",
         icon: FileText,
         roles: ["user", "data_entry", "reports_viewer", "super_admin"],
-        color: "from-sky-500 to-sky-600",
-        bgColor: "bg-sky-50",
+        color: "from-secondary to-secondary/80",
+        bgColor: "bg-secondary/5",
         description: "Daily summary with date range",
         category: "analytics",
       },
@@ -292,8 +292,8 @@ const MobileDashboard = () => {
         label: "Command Center",
         icon: Activity,
         roles: ["user", "data_entry", "reports_viewer", "super_admin"],
-        color: "from-fuchsia-500 to-fuchsia-600",
-        bgColor: "bg-fuchsia-50",
+        color: "from-primary to-primary/80",
+        bgColor: "bg-primary/5",
         description: "KPIs, cashflow & forecast",
         category: "analytics",
       },
@@ -303,8 +303,8 @@ const MobileDashboard = () => {
         label: "Report Builder",
         icon: FileSpreadsheet,
         roles: ["user", "data_entry", "reports_viewer", "super_admin"],
-        color: "from-cyan-500 to-cyan-600",
-        bgColor: "bg-cyan-50",
+        color: "from-secondary to-secondary/80",
+        bgColor: "bg-secondary/5",
         description: "Custom reports + CSV",
         category: "analytics",
       },
@@ -314,8 +314,8 @@ const MobileDashboard = () => {
         label: "Closing Wizard",
         icon: Lock,
         roles: ["super_admin"],
-        color: "from-slate-500 to-slate-600",
-        bgColor: "bg-slate-50",
+        color: "from-primary to-primary/80",
+        bgColor: "bg-primary/5",
         description: "Reconcile & lock the day",
         category: "management",
       },
@@ -325,8 +325,8 @@ const MobileDashboard = () => {
         label: "Inventory Bridge",
         icon: Boxes,
         roles: ["user", "data_entry", "reports_viewer", "super_admin"],
-        color: "from-violet-500 to-violet-600",
-        bgColor: "bg-violet-50",
+        color: "from-secondary to-secondary/80",
+        bgColor: "bg-secondary/5",
         description: "Auto stock-out from sales",
         category: "management",
       },
@@ -336,8 +336,8 @@ const MobileDashboard = () => {
         label: "BI & Correlation Suite",
         icon: Activity,
         roles: ["user", "data_entry", "reports_viewer", "super_admin"],
-        color: "from-indigo-500 to-indigo-600",
-        bgColor: "bg-indigo-50",
+        color: "from-primary to-primary/80",
+        bgColor: "bg-primary/5",
         description: "Date-aligned correlations, audit & recommendations",
         category: "analytics",
       },
@@ -399,7 +399,7 @@ const MobileDashboard = () => {
 
   // Mobile app header
   const MobileHeader = () => (
-    <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-4">
+    <div className="bg-primary text-primary-foreground px-4 py-4 sticky top-0 z-50 shadow-md">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           {isSubPageActive ? (
@@ -407,9 +407,9 @@ const MobileDashboard = () => {
               variant="ghost"
               size="sm"
               onClick={() => navigate("/dashboard")}
-              className="text-white hover:bg-white/20 h-8 w-8 p-0"
+              className="text-primary-foreground hover:bg-white/10 h-10 w-10 p-0 rounded-full"
             >
-              <ArrowLeft className="h-4 w-4" />
+              <ArrowLeft className="h-5 w-5" />
             </Button>
           ) : (
             <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
@@ -417,24 +417,24 @@ const MobileDashboard = () => {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="text-white hover:bg-white/20 h-8 w-8 p-0"
+                  className="text-primary-foreground hover:bg-white/10 h-10 w-10 p-0 rounded-full"
                 >
-                  <Menu className="h-4 w-4" />
+                  <Menu className="h-5 w-5" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-80 p-0">
-                <div className="bg-gradient-to-b from-blue-600 to-purple-600 text-white p-6">
+              <SheetContent side="left" className="w-[85vw] p-0 border-r-0">
+                <div className="bg-primary text-primary-foreground p-8">
                   <SheetHeader>
-                    <SheetTitle className="text-white text-left">
-                      <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-full bg-white/20 flex items-center justify-center">
-                          <User className="h-5 w-5" />
+                    <SheetTitle className="text-primary-foreground text-left">
+                      <div className="flex items-center gap-4">
+                        <div className="h-14 w-14 rounded-2xl bg-white/20 flex items-center justify-center shadow-inner">
+                          <User className="h-7 w-7" />
                         </div>
                         <div>
-                          <div className="font-semibold">
-                            {user?.name || user?.email}
+                          <div className="font-bold text-lg leading-tight">
+                            {user?.name || user?.email?.split('@')[0]}
                           </div>
-                          <div className="text-sm opacity-90 capitalize">
+                          <div className="text-xs opacity-80 uppercase tracking-widest font-black mt-1">
                             {userRole?.replace("_", " ")}
                           </div>
                         </div>
@@ -443,73 +443,80 @@ const MobileDashboard = () => {
                   </SheetHeader>
                 </div>
 
-                <div className="p-4 space-y-4">
-                  <div className="space-y-2">
+                <div className="p-4 space-y-6">
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground px-4 mb-2">Actions</p>
                     <Button
                       variant="ghost"
                       onClick={handleDailyClosing}
-                      className="w-full justify-start gap-3 h-12"
+                      className="w-full justify-start gap-4 h-14 rounded-2xl px-4 hover:bg-primary/5 active:scale-[0.98] transition-all"
                     >
-                      <Database className="h-5 w-5" />
-                      Daily Closing
+                      <div className="p-2 bg-primary/10 rounded-xl text-primary"><Database className="h-5 w-5" /></div>
+                      <span className="font-bold">Daily Closing</span>
                     </Button>
                     {showBatchClosing && (
                       <Button
                         variant="ghost"
                         onClick={() => setIsBatchClosingOpen(true)}
-                        className="w-full justify-start gap-3 h-12"
+                        className="w-full justify-start gap-4 h-14 rounded-2xl px-4 hover:bg-primary/5 active:scale-[0.98] transition-all"
                       >
-                        <Calendar className="h-5 w-5" />
-                        Batch Closing
+                        <div className="p-2 bg-primary/10 rounded-xl text-primary"><Calendar className="h-5 w-5" /></div>
+                        <span className="font-bold">Batch Closing</span>
                       </Button>
                     )}
                     <Button
                       variant="ghost"
-                      onClick={() => navigate("/dashboard/settings")}
-                      className="w-full justify-start gap-3 h-12"
+                      onClick={() => {
+                        navigate("/dashboard/settings");
+                        setIsMenuOpen(false);
+                      }}
+                      className="w-full justify-start gap-4 h-14 rounded-2xl px-4 hover:bg-primary/5 active:scale-[0.98] transition-all"
                     >
-                      <SettingsIcon className="h-5 w-5" />
-                      Settings
+                      <div className="p-2 bg-primary/10 rounded-xl text-primary"><SettingsIcon className="h-5 w-5" /></div>
+                      <span className="font-bold">Settings</span>
                     </Button>
+                  </div>
+
+                  <div className="pt-4 border-t border-slate-100">
                     <Button
                       variant="ghost"
                       onClick={handleSignOut}
-                      className="w-full justify-start gap-3 h-12 text-red-600 hover:text-red-700 hover:bg-red-50"
+                      className="w-full justify-start gap-4 h-14 rounded-2xl px-4 text-rose-600 hover:text-rose-700 hover:bg-rose-50 active:scale-[0.98] transition-all"
                     >
-                      <LogOut className="h-5 w-5" />
-                      Sign Out
+                      <div className="p-2 bg-rose-100 rounded-xl text-rose-600"><LogOut className="h-5 w-5" /></div>
+                      <span className="font-bold">Sign Out</span>
                     </Button>
                   </div>
                 </div>
               </SheetContent>
             </Sheet>
           )}
-          <div>
-            <h1 className="text-lg font-bold">
-              {isSubPageActive ? currentPage?.label : "EcoSoft Pro"}
+          <div className="flex flex-col">
+            <h1 className="text-lg font-black tracking-tight leading-none uppercase">
+              {isSubPageActive ? currentPage?.label : "Energy Palace"}
             </h1>
-            <p className="text-xs opacity-90">
+            <p className="text-[10px] opacity-80 font-bold tracking-wider uppercase mt-1">
               {isSubPageActive
                 ? currentPage?.description
-                : "Business Management"}
+                : "Business Nexus"}
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           <Button
             variant="ghost"
             size="sm"
-            className="text-white hover:bg-white/20 h-8 w-8 p-0"
+            className="text-primary-foreground hover:bg-white/10 h-10 w-10 p-0 rounded-full"
           >
-            <Bell className="h-4 w-4" />
+            <Bell className="h-5 w-5" />
           </Button>
           <Button
             variant="ghost"
             size="sm"
-            className="text-white hover:bg-white/20 h-8 w-8 p-0"
+            className="text-primary-foreground hover:bg-white/10 h-10 w-10 p-0 rounded-full"
           >
-            <Search className="h-4 w-4" />
+            <Search className="h-5 w-5" />
           </Button>
         </div>
       </div>
@@ -518,16 +525,19 @@ const MobileDashboard = () => {
 
   // Mobile app grid
   const MobileAppGrid = () => (
-    <div className="p-4 space-y-6">
+    <div className="p-4 space-y-8">
       {Object.entries(groupedItems).map(([category, items]) => {
         const CategoryIcon = getCategoryIcon(category);
         return (
-          <div key={category} className="space-y-3">
-            <div className="flex items-center gap-2 text-sm font-semibold text-gray-600 px-2">
-              <CategoryIcon className="h-4 w-4" />
-              {getCategoryTitle(category)}
+          <div key={category} className="space-y-4">
+            <div className="flex items-center justify-between px-2">
+              <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-muted-foreground">
+                <CategoryIcon className="h-3.5 w-3.5" />
+                {getCategoryTitle(category)}
+              </div>
+              <div className="h-[1px] flex-grow ml-4 bg-slate-100"></div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-4">
               {items.map((item) => {
                 const Icon = item.icon;
                 return (
@@ -537,19 +547,19 @@ const MobileDashboard = () => {
                       navigate(item.path);
                       setIsMenuOpen(false);
                     }}
-                    className="cursor-pointer transition-all duration-200 hover:scale-105 active:scale-95 border-0 shadow-lg"
+                    className="group cursor-pointer transition-all duration-300 hover:shadow-xl active:scale-[0.96] border-none shadow-sm bg-white rounded-3xl overflow-hidden"
                   >
-                    <CardContent className="p-4 flex flex-col items-center text-center space-y-3">
+                    <CardContent className="p-5 flex flex-col items-center text-center space-y-4">
                       <div
-                        className={`h-12 w-12 rounded-2xl bg-gradient-to-br ${item.color} flex items-center justify-center shadow-lg`}
+                        className={`h-14 w-14 rounded-2xl bg-gradient-to-br ${item.color} flex items-center justify-center shadow-lg transform group-hover:rotate-6 transition-transform`}
                       >
-                        <Icon className="h-6 w-6 text-white" />
+                        <Icon className="h-7 w-7 text-white" />
                       </div>
-                      <div>
-                        <p className="font-semibold text-sm text-gray-800">
+                      <div className="space-y-1">
+                        <p className="font-black text-xs uppercase tracking-tight text-slate-800">
                           {item.label}
                         </p>
-                        <p className="text-xs text-gray-500 mt-1">
+                        <p className="text-[10px] font-bold text-muted-foreground leading-tight px-2">
                           {item.description}
                         </p>
                       </div>
@@ -575,26 +585,45 @@ const MobileDashboard = () => {
           <div className="space-y-6">
             {/* Welcome Section */}
             <div className="px-4 pt-6">
-              <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl p-6 border border-blue-100">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h2 className="text-xl font-bold text-gray-800">
-                      Welcome back!
+              <div className="bg-slate-900 rounded-[2.5rem] p-8 shadow-2xl relative overflow-hidden group border border-white/5">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-primary/30 transition-all"></div>
+                <div className="absolute bottom-0 left-0 w-24 h-24 bg-secondary/10 rounded-full blur-2xl -ml-12 -mb-12"></div>
+
+                <div className="relative z-10 flex items-center justify-between">
+                  <div className="space-y-1">
+                    <h2 className="text-2xl font-black text-white tracking-tight">
+                      Hello, {user?.name || user?.email?.split('@')[0]}!
                     </h2>
-                    <p className="text-sm text-gray-600 mt-1">
+                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
                       {new Date().toLocaleDateString("en-US", {
-                        weekday: "long",
-                        year: "numeric",
-                        month: "long",
+                        weekday: "short",
+                        month: "short",
                         day: "numeric",
                       })}
                     </p>
                   </div>
-                  <div className="h-12 w-12 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center">
-                    <User className="h-6 w-6 text-white" />
+                  <div className="h-16 w-16 rounded-[1.25rem] bg-gradient-to-br from-primary to-secondary p-[2px] shadow-xl transform rotate-3 hover:rotate-0 transition-transform">
+                    <div className="w-full h-full bg-slate-900 rounded-[1.15rem] flex items-center justify-center">
+                      <User className="h-8 w-8 text-primary" />
+                    </div>
                   </div>
                 </div>
 
+                <div className="mt-8 grid grid-cols-2 gap-4 relative z-10">
+                  <div className="bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/10">
+                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Status</p>
+                    <p className="text-sm font-bold text-primary mt-1 flex items-center gap-1.5">
+                      <span className="h-1.5 w-1.5 bg-primary rounded-full animate-pulse"></span>
+                      Online
+                    </p>
+                  </div>
+                  <div className="bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/10">
+                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Role</p>
+                    <p className="text-sm font-bold text-primary mt-1 truncate">
+                      {userRole?.replace('_', ' ')}
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
 

@@ -73,6 +73,8 @@ import useTableControls from "@/hooks/useTableControls";
 import BalanceDisplay from "@/components/ui/balance-display";
 import AllTimeTotalDisplay from "@/components/AllTimeTotalDisplay";
 import MultiOrderEntry from "@/components/MultiOrderEntry";
+import MobileTable from "@/components/ui/mobile-table";
+import { Edit } from "lucide-react";
 
 interface Order {
   id: string;
@@ -124,12 +126,12 @@ const OrdersTab = () => {
   const paymentModes = ["Cash", "Esewa", "Fonepay", "Bank", "Cheque", "Credit"];
 
   const categoryColors = {
-    Appetizers: "from-orange-500 to-red-500",
-    "Main Course": "from-blue-500 to-indigo-600",
-    Desserts: "from-pink-500 to-purple-600",
-    Beverages: "from-green-500 to-teal-600",
-    Snacks: "from-yellow-500 to-orange-500",
-    Specials: "from-purple-500 to-pink-500",
+    Appetizers: "from-primary to-primary/80",
+    "Main Course": "from-primary to-primary/80",
+    Desserts: "from-primary to-primary/80",
+    Beverages: "from-primary to-primary/80",
+    Snacks: "from-primary to-primary/80",
+    Specials: "from-primary to-primary/80",
   };
 
   const fetchOrders = async () => {
@@ -539,14 +541,10 @@ const OrdersTab = () => {
       </Dialog>
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-20 w-64 h-64 bg-gradient-to-r from-orange-400/20 to-red-500/20 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute top-20 left-20 w-64 h-64 bg-primary/5 rounded-full blur-3xl animate-pulse"></div>
         <div
-          className="absolute top-1/3 right-20 w-80 h-80 bg-gradient-to-r from-pink-400/20 to-purple-500/20 rounded-full blur-3xl animate-pulse"
+            className="absolute top-1/3 right-20 w-80 h-80 bg-secondary/5 rounded-full blur-3xl animate-pulse"
           style={{ animationDelay: "1s" }}
-        ></div>
-        <div
-          className="absolute bottom-20 left-1/4 w-72 h-72 bg-gradient-to-r from-red-400/20 to-pink-500/20 rounded-full blur-3xl animate-pulse"
-          style={{ animationDelay: "2s" }}
         ></div>
       </div>
 
@@ -572,72 +570,72 @@ const OrdersTab = () => {
 
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card className="bg-gradient-to-br from-orange-50 to-red-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
+          <Card className="bg-white border-none shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 rounded-3xl overflow-hidden">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-orange-600 font-medium">
+                  <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">
                     Cart Items
                   </p>
-                  <p className="text-2xl font-bold text-orange-800">
+                  <p className="text-2xl font-bold text-foreground">
                     {cart.length}
                   </p>
                 </div>
-                <div className="p-3 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl text-white">
+                <div className="p-3 bg-primary rounded-2xl text-white shadow-lg shadow-primary/20">
                   <ShoppingCart className="h-6 w-6" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-pink-50 to-purple-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
+          <Card className="bg-white border-none shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 rounded-3xl overflow-hidden">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-pink-600 font-medium">
+                  <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">
                     Cart Total
                   </p>
-                  <p className="text-2xl font-bold text-pink-800">
+                  <p className="text-2xl font-bold text-primary">
                     NRs. {getCartTotal().toFixed(2)}
                   </p>
                 </div>
-                <div className="p-3 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl text-white">
+                <div className="p-3 bg-secondary rounded-2xl text-white shadow-lg shadow-secondary/20">
                   <DollarSign className="h-6 w-6" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-purple-50 to-indigo-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
+          <Card className="bg-white border-none shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 rounded-3xl overflow-hidden">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-purple-600 font-medium">
+                  <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">
                     Total Orders
                   </p>
-                  <p className="text-2xl font-bold text-purple-800">
+                  <p className="text-2xl font-bold text-foreground">
                     {totalOrdersCount}
                   </p>
                 </div>
-                <div className="p-3 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-xl text-white">
+                <div className="p-3 bg-primary rounded-2xl text-white shadow-lg shadow-primary/20">
                   <Package className="h-6 w-6" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-indigo-50 to-blue-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
+          <Card className="bg-white border-none shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 rounded-3xl overflow-hidden">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-indigo-600 font-medium">
+                  <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">
                     Total Spent
                   </p>
-                  <p className="text-2xl font-bold text-indigo-800">
+                  <p className="text-2xl font-bold text-foreground">
                     NRs. {totalOrders.toFixed(2)}
                   </p>
                 </div>
-                <div className="p-3 bg-gradient-to-r from-indigo-500 to-blue-500 rounded-xl text-white">
+                <div className="p-3 bg-primary rounded-2xl text-white shadow-lg shadow-primary/20">
                   <TrendingUp className="h-6 w-6" />
                 </div>
               </div>
@@ -648,14 +646,14 @@ const OrdersTab = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Menu Items Section */}
           <div className="lg:col-span-2 space-y-6">
-            <Card className="bg-gradient-to-br from-white/90 to-orange-50/90 backdrop-blur-sm border-0 shadow-2xl">
-              <CardHeader className="bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-t-lg">
+            <Card className="bg-white border-none shadow-2xl rounded-3xl overflow-hidden">
+              <CardHeader className="bg-primary text-white">
                 <CardTitle className="flex items-center gap-3 text-xl">
-                  <div className="p-2 bg-white/20 rounded-lg">
+                  <div className="p-2 bg-white/20 rounded-xl">
                     <Utensils className="h-6 w-6" />
                   </div>
                   Our Delicious Menu
-                  <Star className="h-5 w-5 animate-pulse text-yellow-300" />
+                  <Star className="h-5 w-5 animate-pulse text-secondary" />
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6 space-y-6">
@@ -666,7 +664,7 @@ const OrdersTab = () => {
                       placeholder="Search delicious items... 🔍"
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="border-orange-200 focus:border-orange-500 focus:ring-orange-500 h-10 sm:h-12 text-sm sm:text-base"
+                      className="border-primary/20 focus:border-primary focus:ring-primary h-10 sm:h-12 text-sm sm:text-base rounded-xl"
                     />
                   </div>
                 </div>
@@ -674,8 +672,8 @@ const OrdersTab = () => {
                 {/* Category Filters */}
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
-                    <Filter className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600" />
-                    <span className="text-sm font-medium text-gray-700">
+                    <Filter className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
+                    <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                       Filter by Category
                     </span>
                   </div>
@@ -687,7 +685,7 @@ const OrdersTab = () => {
                         selectedCategory === null ? "default" : "outline"
                       }
                       size="sm"
-                      className={`transition-all duration-150 text-xs sm:text-sm px-2 sm:px-3 ${selectedCategory === null ? "bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-md" : "hover:bg-orange-50"}`}
+                      className={`transition-all duration-150 text-xs sm:text-sm px-3 sm:px-4 h-10 rounded-xl ${selectedCategory === null ? "bg-primary text-white shadow-md shadow-primary/20" : "hover:bg-primary/5"}`}
                     >
                       All
                     </Button>
@@ -699,7 +697,7 @@ const OrdersTab = () => {
                           selectedCategory === category ? "default" : "outline"
                         }
                         size="sm"
-                        className={`transition-all duration-150 text-xs sm:text-sm px-2 sm:px-3 ${selectedCategory === category ? `bg-gradient-to-r ${categoryColors[category as keyof typeof categoryColors] || "from-gray-500 to-slate-500"} text-white shadow-md` : "hover:bg-orange-50"}`}
+                        className={`transition-all duration-150 text-xs sm:text-sm px-3 sm:px-4 h-10 rounded-xl ${selectedCategory === category ? `bg-secondary text-white shadow-md shadow-secondary/20` : "hover:bg-secondary/5"}`}
                       >
                         {category}
                       </Button>
@@ -803,7 +801,7 @@ const OrdersTab = () => {
             </div>
 
             <Card id="shopping-cart-section" className="rounded-3xl border-none shadow-xl bg-white overflow-hidden sticky top-6">
-              <CardHeader className="bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-t-lg">
+              <CardHeader className="bg-secondary text-white">
                 <CardTitle className="flex items-center justify-between text-lg">
                   <span className="flex items-center gap-2">
                     <div className="p-2 bg-white/20 rounded-lg">
@@ -861,9 +859,9 @@ const OrdersTab = () => {
                               onClick={() =>
                                 updateCartQuantity(item.id, item.quantity - 1)
                               }
-                              className="h-6 w-6 hover:bg-red-50 hover:border-red-300 flex-shrink-0"
+                              className="h-6 w-6 hover:bg-destructive/5 hover:border-destructive/30 flex-shrink-0"
                             >
-                              <Minus className="h-3 w-3" />
+                              <Minus className="h-3 w-3 text-destructive" />
                             </Button>
                             <span className="text-xs sm:text-sm font-semibold w-6 sm:w-8 text-center flex-shrink-0">
                               {item.quantity}
@@ -874,15 +872,15 @@ const OrdersTab = () => {
                               onClick={() =>
                                 updateCartQuantity(item.id, item.quantity + 1)
                               }
-                              className="h-6 w-6 hover:bg-green-50 hover:border-green-300 flex-shrink-0"
+                              className="h-6 w-6 hover:bg-primary/5 hover:border-primary/30 flex-shrink-0"
                             >
-                              <Plus className="h-3 w-3" />
+                              <Plus className="h-3 w-3 text-primary" />
                             </Button>
                             <Button
                               variant="ghost"
                               size="icon"
                               onClick={() => removeFromCart(item.id)}
-                              className="h-6 w-6 text-red-500 hover:text-red-700 hover:bg-red-50 flex-shrink-0"
+                              className="h-6 w-6 text-destructive hover:text-destructive/80 hover:bg-destructive/5 flex-shrink-0"
                             >
                               <Trash2 className="h-3 w-3" />
                             </Button>
@@ -896,7 +894,7 @@ const OrdersTab = () => {
                     <div className="space-y-4">
                       <div className="flex justify-between items-center font-bold text-lg">
                         <span>Total:</span>
-                        <span className="bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
+                        <span className="text-primary">
                           NRs. {getCartTotal().toFixed(2)}
                         </span>
                       </div>
@@ -904,7 +902,7 @@ const OrdersTab = () => {
                       <div className="space-y-2">
                         <Label
                           htmlFor="payment-mode"
-                          className="text-sm font-medium"
+                          className="text-xs font-bold uppercase tracking-wider text-muted-foreground"
                         >
                           Payment Mode
                         </Label>
@@ -913,7 +911,7 @@ const OrdersTab = () => {
                           onValueChange={setPaymentMode}
                           disabled={submitting || cart.length === 0}
                         >
-                          <SelectTrigger className="border-pink-200 focus:border-pink-500 focus:ring-pink-500">
+                          <SelectTrigger className="border-primary/20 focus:border-primary focus:ring-primary rounded-xl h-11">
                             <SelectValue placeholder="Choose payment method" />
                           </SelectTrigger>
                           <SelectContent>
@@ -940,7 +938,7 @@ const OrdersTab = () => {
                         disabled={
                           submitting || !paymentMode || cart.length === 0
                         }
-                        className="w-full h-12 bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 hover:from-pink-600 hover:via-purple-600 hover:to-indigo-600 text-white font-semibold shadow-lg transition-all duration-300 transform hover:scale-105"
+                        className="w-full h-14 bg-primary hover:bg-primary/90 text-white font-black text-lg shadow-xl shadow-primary/20 transition-all duration-300 transform rounded-2xl"
                       >
                         {submitting ? (
                           <div className="flex items-center gap-2">
@@ -976,7 +974,7 @@ const OrdersTab = () => {
                     <Button
                       variant="outline"
                       className={cn(
-                        "w-full sm:w-[280px] justify-start text-left font-normal hover:bg-gradient-to-r hover:from-orange-50 hover:to-pink-50 text-xs sm:text-sm",
+                      "w-full sm:w-[280px] justify-start text-left font-normal hover:bg-primary/5 text-xs sm:text-sm",
                         !range && "text-muted-foreground",
                       )}
                     >
@@ -1016,7 +1014,7 @@ const OrdersTab = () => {
           <CardContent className="p-0">
             {loading ? (
               <div className="text-center py-10">
-                <div className="w-16 h-16 bg-gradient-to-r from-orange-500 to-red-500 rounded-full animate-spin mx-auto flex items-center justify-center mb-4">
+                <div className="w-16 h-16 bg-primary rounded-full animate-spin mx-auto flex items-center justify-center mb-4">
                   <Package className="h-8 w-8 text-white" />
                 </div>
                 <p className="text-gray-600">Loading orders...</p>
@@ -1032,171 +1030,103 @@ const OrdersTab = () => {
                 </p>
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-gradient-to-r from-gray-50 to-orange-50">
-                      <TableHead className="font-semibold text-gray-700 text-xs sm:text-sm px-2 sm:px-4">
-                        Date
-                      </TableHead>
-                      <TableHead className="font-semibold text-gray-700 text-xs sm:text-sm px-2 sm:px-4">
-                        Item
-                      </TableHead>
-                      <TableHead className="font-semibold text-gray-700 text-center text-xs sm:text-sm px-1 sm:px-4">
-                        Qty
-                      </TableHead>
-                      <TableHead className="font-semibold text-gray-700 text-right text-xs sm:text-sm px-1 sm:px-4">
-                        Rate
-                      </TableHead>
-                      <TableHead className="font-semibold text-gray-700 text-right text-xs sm:text-sm px-1 sm:px-4">
-                        Total
-                      </TableHead>
-                      <TableHead className="font-semibold text-gray-700 text-xs sm:text-sm px-1 sm:px-4 hidden sm:table-cell">
-                        Payment
-                      </TableHead>
-                      <TableHead className="font-semibold text-gray-700 text-xs sm:text-sm px-1 sm:px-4 hidden sm:table-cell">
-                        Actions
-                      </TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    <TableRow>
-                      <TableCell
-                        colSpan={4}
-                        className="font-bold text-xs sm:text-sm px-2 sm:px-4"
-                      >
-                        Total
-                      </TableCell>
-                      <TableCell
-                        colSpan={3}
-                        className="font-bold text-right text-xs sm:text-sm px-1 sm:px-4"
-                      >
-                        NRs. {totalOrders.toFixed(2)}
-                      </TableCell>
-                    </TableRow>
-                    {orders.map((order, index) => (
-                      <TableRow
-                        key={order.id}
-                        className="hover:bg-gradient-to-r hover:from-orange-50 hover:to-pink-50 transition-all duration-200"
-                        style={{ animationDelay: `${index * 50}ms` }}
-                      >
-                        <TableCell className="font-medium text-xs sm:text-sm px-2 sm:px-4">
-                          <div className="sm:hidden">
-                            {format(new Date(order.order_date), "MMM dd")}
-                          </div>
-                          <div className="hidden sm:block">
-                            {format(new Date(order.order_date), "MMM dd, yyyy")}
-                          </div>
-                        </TableCell>
-                        <TableCell className="font-medium text-xs sm:text-sm px-2 sm:px-4">
-                          <div
-                            className="truncate max-w-24 sm:max-w-none"
-                            title={order.item_name}
-                          >
-                            {order.item_name}
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-center px-1 sm:px-4">
-                          <Badge
-                            variant="outline"
-                            className="bg-blue-50 border-blue-200 text-xs px-1 sm:px-2"
-                          >
-                            {order.quantity}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-right text-xs sm:text-sm px-1 sm:px-4">
-                          <div className="sm:hidden">
-                            रु {Number(order.rate).toFixed(0)}
-                          </div>
-                          <div className="hidden sm:block">
-                            NRs. {Number(order.rate).toFixed(2)}
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-right px-1 sm:px-4">
-                          <span className="font-bold text-sm sm:text-lg bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
-                            <div className="sm:hidden">
-                              रु {Number(order.total).toFixed(0)}
-                            </div>
-                            <div className="hidden sm:block">
-                              NRs. {Number(order.total).toFixed(2)}
-                            </div>
-                          </span>
-                        </TableCell>
-                        <TableCell className="hidden sm:table-cell px-1 sm:px-4">
-                          <Badge
-                            variant="outline"
-                            className="bg-green-50 border-green-200 text-xs"
-                          >
-                            {order.payment_mode}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="hidden sm:table-cell px-1 sm:px-4">
-                          <div className="flex gap-1 sm:gap-2">
+              <MobileTable
+                columns={[
+                  {
+                    key: "order_date",
+                    label: "Date",
+                    render: (val) => format(new Date(val), "MMM dd, yyyy"),
+                    mobileLabel: "Date",
+                  },
+                  {
+                    key: "item_name",
+                    label: "Item",
+                    mobileLabel: "Item",
+                  },
+                  {
+                    key: "quantity",
+                    label: "Qty",
+                    className: "text-center",
+                    render: (val) => <Badge variant="outline">{val}</Badge>,
+                  },
+                  {
+                    key: "rate",
+                    label: "Rate",
+                    className: "text-right",
+                    render: (val) => `रु ${Number(val).toFixed(0)}`,
+                  },
+                  {
+                    key: "total",
+                    label: "Total",
+                    className: "text-right font-bold",
+                    render: (val) => (
+                      <span className="text-primary">
+                        रु {Number(val).toFixed(0)}
+                      </span>
+                    ),
+                  },
+                  {
+                    key: "payment_mode",
+                    label: "Payment",
+                    hideOnMobile: true,
+                    render: (val) => <Badge variant="secondary">{val}</Badge>,
+                  },
+                  {
+                    key: "actions",
+                    label: "Actions",
+                    className: "text-right",
+                    render: (_, order) => (
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedOrder(order);
+                            setIsEditDialogOpen(true);
+                          }}
+                          className="h-8 w-8 p-0"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => {
-                                setSelectedOrder(order);
-                                setIsEditDialogOpen(true);
-                              }}
-                              className="text-xs px-2"
+                              className="h-8 w-8 p-0 text-destructive"
                             >
-                              Edit
+                              <Trash2 className="h-4 w-4" />
                             </Button>
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="text-red-500 hover:text-red-700 hover:bg-red-50 px-2"
-                                >
-                                  <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>
-                                    Are you sure?
-                                  </AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    This action cannot be undone. This will
-                                    permanently delete the order.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>
-                                    Cancel
-                                  </AlertDialogCancel>
-                                  <AlertDialogAction
-                                    onClick={() => handleDelete(order.id)}
-                                  >
-                                    Continue
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                    <TableRow className="bg-gradient-to-r from-orange-100 to-red-100 font-bold">
-                      <TableCell
-                        colSpan={4}
-                        className="text-right font-bold text-lg"
-                      >
-                        Grand Total:
-                      </TableCell>
-                      <TableCell className="text-right font-bold text-xl bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
-                        NRs.{" "}
-                        {orders
-                          .reduce((acc, order) => acc + Number(order.total), 0)
-                          .toFixed(2)}
-                      </TableCell>
-                      <TableCell></TableCell>
-                    </TableRow>
-                  </TableBody>
-                </Table>
-              </div>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This action cannot be undone.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDelete(order.id)}>
+                                Continue
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                    ),
+                  },
+                ]}
+                data={orders}
+                footer={
+                  <div className="flex justify-between items-center font-bold text-lg">
+                    <span>Page Total</span>
+                    <span className="text-primary">
+                      रु {totalOrders.toFixed(2)}
+                    </span>
+                  </div>
+                }
+              />
             )}
           </CardContent>
           {orders.length > 0 && (
@@ -1206,18 +1136,18 @@ const OrdersTab = () => {
                   onClick={() => onPageChange(page - 1)}
                   disabled={page === 1}
                   variant="outline"
-                  className="hover:bg-gradient-to-r hover:from-orange-50 hover:to-red-50"
+                  className="hover:bg-primary/5"
                 >
                   Previous
                 </Button>
-                <span className="px-4 py-2 bg-gradient-to-r from-orange-50 to-red-50 rounded-lg font-medium">
+                <span className="px-4 py-2 bg-primary/5 rounded-lg font-medium">
                   Page {page}
                 </span>
                 <Button
                   onClick={() => onPageChange(page + 1)}
                   disabled={orders.length < itemsPerPage}
                   variant="outline"
-                  className="hover:bg-gradient-to-r hover:from-orange-50 hover:to-red-50"
+                  className="hover:bg-primary/5"
                 >
                   Next
                 </Button>

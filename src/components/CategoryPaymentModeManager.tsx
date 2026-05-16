@@ -226,7 +226,7 @@ const CategoryPaymentModeManager: React.FC<CategoryPaymentModeManagerProps> = ({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+          <DialogTitle className="flex items-center gap-2 text-primary uppercase font-black tracking-tight">
             <Settings className="h-6 w-6" />
             Category & Payment Mode Manager
           </DialogTitle>
@@ -390,7 +390,7 @@ const CategoryPaymentModeManager: React.FC<CategoryPaymentModeManagerProps> = ({
                       className="flex items-center justify-between p-4 border rounded-lg"
                     >
                       <div className="flex items-center gap-3">
-                        <CreditCard className="h-5 w-5 text-blue-600" />
+                    <CreditCard className="h-5 w-5 text-primary" />
                         <div>
                           <p className="font-medium">{mode.name}</p>
                           <p className="text-sm text-gray-500">
@@ -405,8 +405,8 @@ const CategoryPaymentModeManager: React.FC<CategoryPaymentModeManagerProps> = ({
                   ))}
                 </div>
                 
-                <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-                  <p className="text-sm text-blue-800">
+                <div className="mt-6 p-4 bg-primary/5 rounded-lg border border-primary/10">
+                  <p className="text-sm text-primary">
                     <strong>Note:</strong> Payment modes are standardized across the system. 
                     They include Cash, eSewa, Fonepay, and Bank Transfer options that are 
                     used throughout all transaction forms.

@@ -832,7 +832,7 @@ I'm continuously learning and can provide deeper insights with more specific que
     return (
       <Button
         onClick={onToggle}
-        className="fixed bottom-4 right-4 rounded-full w-14 h-14 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-300 z-50"
+        className="fixed bottom-4 right-4 rounded-full w-14 h-14 bg-primary hover:bg-primary/90 shadow-lg hover:shadow-xl transition-all duration-300 z-50"
       >
         <MessageCircle className="h-6 w-6" />
       </Button>
@@ -840,10 +840,10 @@ I'm continuously learning and can provide deeper insights with more specific que
   }
 
   return (
-    <Card className="fixed bottom-4 right-4 w-96 h-[600px] shadow-2xl z-50 border-2 border-blue-200 bg-gradient-to-b from-white to-blue-50">
-      <CardHeader className="p-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-t-lg">
+    <Card className="fixed bottom-4 right-4 w-96 h-[600px] shadow-2xl z-50 border-2 border-primary/20 bg-gradient-to-b from-white to-primary/5">
+      <CardHeader className="p-3 bg-primary text-white rounded-t-lg">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg flex items-center gap-2">
+          <CardTitle className="text-lg flex items-center gap-2 uppercase font-black tracking-tight">
             <Brain className="h-5 w-5" />
             AI Business Assistant
           </CardTitle>
@@ -866,7 +866,7 @@ I'm continuously learning and can provide deeper insights with more specific que
           </div>
         </div>
         <div className="flex items-center gap-2 text-sm">
-          <Badge variant="secondary" className="bg-green-100 text-green-800">
+          <Badge variant="secondary" className="bg-white/20 text-white border-none">
             <Database className="h-3 w-3 mr-1" />
             Live Data Connected
           </Badge>
@@ -893,27 +893,27 @@ I'm continuously learning and can provide deeper insights with more specific que
                     className={`flex gap-3 ${message.type === "user" ? "justify-end" : "justify-start"}`}
                   >
                     {message.type === "bot" && (
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center flex-shrink-0">
+                      <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
                         <Bot className="h-4 w-4 text-white" />
                       </div>
                     )}
                     <div
-                      className={`max-w-[80%] p-3 rounded-lg ${
+                      className={`max-w-[80%] p-3 rounded-2xl ${
                         message.type === "user"
-                          ? "bg-blue-600 text-white rounded-br-none"
-                          : "bg-gray-100 text-gray-800 rounded-bl-none"
+                          ? "bg-primary text-white rounded-br-none"
+                          : "bg-muted text-foreground rounded-bl-none"
                       }`}
                     >
                       <div className="text-sm whitespace-pre-wrap">
                         {message.content}
                       </div>
-                      <div className="text-xs opacity-70 mt-1">
+                      <div className="text-[10px] font-bold opacity-70 mt-1 uppercase tracking-widest text-right">
                         {format(message.timestamp, "HH:mm")}
                       </div>
                     </div>
                     {message.type === "user" && (
-                      <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                        <User className="h-4 w-4 text-blue-600" />
+                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                        <User className="h-4 w-4 text-primary" />
                       </div>
                     )}
                   </div>
@@ -969,7 +969,7 @@ I'm continuously learning and can provide deeper insights with more specific que
                     <button
                       key={queryIndex}
                       onClick={() => setInputValue(query)}
-                      className="block w-full text-left text-xs p-2 bg-gray-50 hover:bg-blue-50 rounded border text-gray-700 hover:text-blue-700 transition-colors"
+                      className="block w-full text-left text-xs p-3 bg-muted/50 hover:bg-primary/5 rounded-xl border border-transparent hover:border-primary/20 text-muted-foreground hover:text-primary transition-all font-medium"
                     >
                       {query}
                     </button>

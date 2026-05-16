@@ -61,6 +61,7 @@ import {
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import useTableControls from "@/hooks/useTableControls";
+import MobileTable from "@/components/ui/mobile-table";
 
 interface Saving {
   id: string;
@@ -367,32 +368,64 @@ const SavingsWithdrawalsTab = () => {
                 </form>
               </CardContent>
             </Card>
-            <Card className="bg-card border">
-              <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
-                <CardTitle className="text-base">Savings History</CardTitle>
+            <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden">
+              <CardHeader className="bg-slate-50/50 border-b border-slate-100 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <CardTitle className="text-base font-bold">Savings History</CardTitle>
                 <HistoryDateRangeFilter range={range} onChange={onRangeChange} />
               </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader><TableRow><TableHead>Date</TableHead><TableHead>Amount</TableHead><TableHead>Member</TableHead><TableHead>Mode</TableHead><TableHead>To</TableHead><TableHead>Actions</TableHead></TableRow></TableHeader>
-                  <TableBody>
-                    {savings.map((s) => (
-                      <TableRow key={s.id}>
-                        <TableCell>{format(new Date(s.contribution_date), "MMM dd, yyyy")}</TableCell>
-                        <TableCell className="font-medium">NRs. {s.contribution_amount.toFixed(2)}</TableCell>
-                        <TableCell>{s.member_id}</TableCell>
-                        <TableCell><Badge variant="outline">{s.payment_mode}</Badge></TableCell>
-                        <TableCell>{s.savings_to}</TableCell>
-                        <TableCell>
-                          <div className="flex gap-2">
-                            {canEditTransactions && <Button variant="outline" size="sm" onClick={() => { setSelectedItem(s); setEditType("saving"); setIsEditDialogOpen(true); }}>Edit</Button>}
-                            <AlertDialog><AlertDialogTrigger asChild><Button variant="outline" size="sm"><Trash2 className="h-3 w-3" /></Button></AlertDialogTrigger><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Delete?</AlertDialogTitle><AlertDialogDescription>This cannot be undone.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={() => handleDelete(s.id, "saving")}>Delete</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+              <CardContent className="p-0">
+                <MobileTable
+                  columns={[
+                    {
+                      key: "contribution_date",
+                      label: "Date",
+                      render: (val) => format(new Date(val), "MMM dd, yyyy"),
+                    },
+                    {
+                      key: "contribution_amount",
+                      label: "Amount",
+                      className: "text-right font-bold text-primary",
+                      render: (val) => `रु ${Number(val).toFixed(0)}`,
+                    },
+                    {
+                      key: "member_id",
+                      label: "Member",
+                      render: (val) => <span className="font-mono">{val}</span>,
+                    },
+                    {
+                      key: "actions",
+                      label: "Actions",
+                      className: "text-right",
+                      render: (_, s) => (
+                        <div className="flex justify-end gap-1">
+                          {canEditTransactions && (
+                            <Button variant="outline" size="sm" className="h-8 w-8 p-0" onClick={() => { setSelectedItem(s); setEditType("saving"); setIsEditDialogOpen(true); }}>
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          )}
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="outline" size="sm" className="h-8 w-8 p-0 text-destructive">
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete Saving?</AlertDialogTitle>
+                                <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleDelete(s.id, "saving")}>Delete</AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
+                      ),
+                    },
+                  ]}
+                  data={savings}
+                />
               </CardContent>
             </Card>
           </TabsContent>
@@ -413,36 +446,68 @@ const SavingsWithdrawalsTab = () => {
                   <div className="space-y-1.5"><Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Payment Mode *</Label><Select value={withdrawalsFormData.paymentMode} onValueChange={(v) => setWithdrawalsFormData({ ...withdrawalsFormData, paymentMode: v })}><SelectTrigger className="h-11 rounded-xl"><SelectValue placeholder="Select" /></SelectTrigger><SelectContent>{paymentModes.map((m) => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent></Select></div>
                   <div className="space-y-1.5"><Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Recipient</Label><Input value={withdrawalsFormData.recipient} onChange={(e) => setWithdrawalsFormData({ ...withdrawalsFormData, recipient: e.target.value })} className="h-11 rounded-xl" /></div>
                   <div className="space-y-1.5"><Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Date</Label><Input type="date" value={transactionDate} onChange={(e) => setTransactionDate(e.target.value)} className="h-11 rounded-xl" /></div>
-                  <div className="md:col-span-3 pt-2"><Button type="submit" disabled={isSubmitting} className="w-full h-12 rounded-xl text-lg font-bold shadow-lg shadow-destructive/20 variant-destructive">{isSubmitting ? "Saving..." : "Add Withdrawal"}</Button></div>
+                  <div className="md:col-span-3 pt-2"><Button type="submit" disabled={isSubmitting} className="w-full h-12 rounded-xl text-lg font-bold shadow-lg shadow-destructive/20" variant="destructive">{isSubmitting ? "Saving..." : "Add Withdrawal"}</Button></div>
                 </form>
               </CardContent>
             </Card>
-            <Card className="bg-card border">
-              <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
-                <CardTitle className="text-base">Withdrawals History</CardTitle>
+            <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden">
+              <CardHeader className="bg-slate-50/50 border-b border-slate-100 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <CardTitle className="text-base font-bold">Withdrawals History</CardTitle>
                 <HistoryDateRangeFilter range={range} onChange={onRangeChange} />
               </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader><TableRow><TableHead>Date</TableHead><TableHead>Amount</TableHead><TableHead>Purpose</TableHead><TableHead>From</TableHead><TableHead>Mode</TableHead><TableHead>Actions</TableHead></TableRow></TableHeader>
-                  <TableBody>
-                    {withdrawals.map((w) => (
-                      <TableRow key={w.id}>
-                        <TableCell>{format(new Date(w.withdrawal_date), "MMM dd, yyyy")}</TableCell>
-                        <TableCell className="font-medium">NRs. {w.amount.toFixed(2)}</TableCell>
-                        <TableCell>{w.purpose}</TableCell>
-                        <TableCell>{w.withdrawal_from}</TableCell>
-                        <TableCell><Badge variant="outline">{w.payment_mode}</Badge></TableCell>
-                        <TableCell>
-                          <div className="flex gap-2">
-                            {canEditTransactions && <Button variant="outline" size="sm" onClick={() => { setSelectedItem(w); setEditType("withdrawal"); setIsEditDialogOpen(true); }}>Edit</Button>}
-                            <AlertDialog><AlertDialogTrigger asChild><Button variant="outline" size="sm"><Trash2 className="h-3 w-3" /></Button></AlertDialogTrigger><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Delete?</AlertDialogTitle><AlertDialogDescription>This cannot be undone.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={() => handleDelete(w.id, "withdrawal")}>Delete</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+              <CardContent className="p-0">
+                <MobileTable
+                  columns={[
+                    {
+                      key: "withdrawal_date",
+                      label: "Date",
+                      render: (val) => format(new Date(val), "MMM dd, yyyy"),
+                    },
+                    {
+                      key: "amount",
+                      label: "Amount",
+                      className: "text-right font-bold text-destructive",
+                      render: (val) => `रु ${Number(val).toFixed(0)}`,
+                    },
+                    {
+                      key: "purpose",
+                      label: "Purpose",
+                      render: (val) => <span className="truncate">{val}</span>,
+                    },
+                    {
+                      key: "actions",
+                      label: "Actions",
+                      className: "text-right",
+                      render: (_, w) => (
+                        <div className="flex justify-end gap-1">
+                          {canEditTransactions && (
+                            <Button variant="outline" size="sm" className="h-8 w-8 p-0" onClick={() => { setSelectedItem(w); setEditType("withdrawal"); setIsEditDialogOpen(true); }}>
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          )}
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="outline" size="sm" className="h-8 w-8 p-0 text-destructive">
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete Withdrawal?</AlertDialogTitle>
+                                <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleDelete(w.id, "withdrawal")}>Delete</AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
+                      ),
+                    },
+                  ]}
+                  data={withdrawals}
+                />
               </CardContent>
             </Card>
           </TabsContent>
