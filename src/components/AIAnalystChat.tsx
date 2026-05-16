@@ -41,7 +41,7 @@ const SUGGESTIONS = [
   "Total revenue this month broken down by payment mode",
   "Top 5 selling menu items in the last 30 days",
   "Charging session revenue last week vs the week before",
-  "Show all expenses above NRs. 5000 this month",
+  "Show all expenses above ₹ 5000 this month",
   "Inventory items below minimum stock",
 ];
 

@@ -104,7 +104,7 @@ const MobileOrdersTab: React.FC = () => {
       setOrderItems([]);
       setPaymentMode("cash");
       
-      toast.success(`Order submitted successfully! Total: NRs. ${getOrderTotal().toFixed(2)}`);
+      toast.success(`Order submitted successfully! Total: ₹ ${getOrderTotal().toFixed(2)}`);
       
       const today = new Date().toISOString().split('T')[0];
       await supabase.rpc("update_enhanced_daily_summary", {
@@ -167,7 +167,7 @@ const MobileOrdersTab: React.FC = () => {
             </div>
 
             <div>
-              <Label htmlFor="rate" className="text-foreground">Rate (NRs.)</Label>
+              <Label htmlFor="rate" className="text-foreground">Rate (₹)</Label>
               <Input
                 id="rate"
                 type="number"
@@ -208,11 +208,11 @@ const MobileOrdersTab: React.FC = () => {
                 <div className="flex-1">
                   <div className="font-medium text-foreground">{item.item_name}</div>
                   <div className="text-sm text-muted-foreground">
-                    {item.quantity} × NRs. {item.rate.toFixed(2)}
+                    {item.quantity} × ₹ {item.rate.toFixed(2)}
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <div className="font-semibold text-foreground">NRs. {item.total.toFixed(2)}</div>
+                  <div className="font-semibold text-foreground">₹ {item.total.toFixed(2)}</div>
                   <Button
                     size="sm"
                     variant="outline"
@@ -227,7 +227,7 @@ const MobileOrdersTab: React.FC = () => {
             <div className="border-t pt-3 mt-4">
               <div className="flex justify-between items-center font-bold text-lg text-foreground">
                 <span>Total:</span>
-                <span>NRs. {getOrderTotal().toFixed(2)}</span>
+                <span>₹ {getOrderTotal().toFixed(2)}</span>
               </div>
             </div>
           </CardContent>
@@ -276,7 +276,7 @@ const MobileOrdersTab: React.FC = () => {
         ) : (
           <>
             <ShoppingCart className="h-4 w-4 mr-2" />
-            Submit Order (NRs. {getOrderTotal().toFixed(2)})
+            Submit Order (₹ {getOrderTotal().toFixed(2)})
           </>
         )}
       </Button>

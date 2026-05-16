@@ -125,7 +125,7 @@ const WithdrawalsTab = () => {
     "Vendor Payment": "from-blue-500 to-cyan-500",
     "Utility Bills": "from-yellow-500 to-orange-500",
     "Office Rent": "from-purple-500 to-pink-500",
-    "Equipment Purchase": "from-indigo-500 to-blue-500",
+    "Equipment Purchase": "from-indigo-500 to-primary/50",
     "Marketing Expenses": "from-red-500 to-pink-500",
     "Travel Expenses": "from-teal-500 to-cyan-500",
     Maintenance: "from-orange-500 to-red-500",
@@ -429,7 +429,7 @@ const WithdrawalsTab = () => {
           <Card className="rounded-3xl border-none bg-white shadow-sm overflow-hidden">
             <CardContent className="p-4 md:p-6">
               <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Total</p>
-              <p className="text-sm md:text-xl font-bold text-destructive">NRs. {totalWithdrawals.toFixed(2)}</p>
+              <p className="text-sm md:text-xl font-bold text-destructive">₹ {totalWithdrawals.toFixed(2)}</p>
             </CardContent>
           </Card>
           <Card className="rounded-3xl border-none bg-white shadow-sm overflow-hidden">
@@ -441,7 +441,7 @@ const WithdrawalsTab = () => {
           <Card className="rounded-3xl border-none bg-white shadow-sm overflow-hidden hidden md:block">
             <CardContent className="p-4 md:p-6">
               <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Avg Amount</p>
-              <p className="text-sm md:text-xl font-bold text-foreground">NRs. {averageWithdrawal.toFixed(2)}</p>
+              <p className="text-sm md:text-xl font-bold text-foreground">₹ {averageWithdrawal.toFixed(2)}</p>
             </CardContent>
           </Card>
           <Card className="rounded-3xl border-none bg-white shadow-sm overflow-hidden">
@@ -457,7 +457,7 @@ const WithdrawalsTab = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-8">
           {/* Add Withdrawal Form */}
           <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden">
-            <CardHeader className="bg-rose-500 text-white p-4 md:p-6">
+            <CardHeader className="bg-destructive text-white p-4 md:p-6">
               <CardTitle className="flex items-center gap-3 text-lg md:text-xl font-bold">
                 <div className="p-2 bg-white/20 rounded-xl">
                   <ArrowDownCircle className="h-5 w-5 md:h-6 md:w-6" />
@@ -473,8 +473,8 @@ const WithdrawalsTab = () => {
                     htmlFor="amount"
                     className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2"
                   >
-                    <DollarSign className="h-3.5 w-3.5 text-rose-600" />
-                    Amount (NRs.) *
+                    <DollarSign className="h-3.5 w-3.5 text-destructive" />
+                    Amount (₹) *
                   </Label>
                   <Input
                     id="amount"
@@ -495,7 +495,7 @@ const WithdrawalsTab = () => {
                     htmlFor="purpose"
                     className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2"
                   >
-                    <Target className="h-3.5 w-3.5 text-indigo-600" />
+                    <Target className="h-3.5 w-3.5 text-primary" />
                     Purpose *
                   </Label>
                   <Select
@@ -557,7 +557,7 @@ const WithdrawalsTab = () => {
                     htmlFor="sourceCooperative"
                     className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2"
                   >
-                    <Landmark className="h-3.5 w-3.5 text-indigo-600" />
+                    <Landmark className="h-3.5 w-3.5 text-primary" />
                     Source/Cooperative
                   </Label>
                   <Input
@@ -603,7 +603,7 @@ const WithdrawalsTab = () => {
                 <Button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full h-12 md:h-14 rounded-2xl bg-rose-500 hover:bg-rose-600 text-white font-black text-lg shadow-lg shadow-rose-500/20 transition-all active:scale-[0.98]"
+                  className="w-full h-12 md:h-14 rounded-2xl bg-destructive hover:bg-destructive text-white font-black text-lg shadow-lg shadow-destructive/20 transition-all active:scale-[0.98]"
                 >
                   {isSubmitting ? (
                     <div className="flex items-center gap-2">
@@ -635,10 +635,10 @@ const WithdrawalsTab = () => {
               {Object.keys(purposeBreakdown).length === 0 ? (
                 <div className="text-center py-8">
                   <Target className="h-16 w-16 mx-auto text-gray-300 mb-4" />
-                  <p className="text-gray-500 text-lg font-medium">
+                  <p className="text-muted-foreground text-lg font-medium">
                     No withdrawals yet
                   </p>
-                  <p className="text-gray-400">
+                  <p className="text-muted-foreground">
                     Record your first withdrawal to see purpose breakdown!
                   </p>
                 </div>
@@ -659,20 +659,20 @@ const WithdrawalsTab = () => {
                               <div
                                 className={`w-4 h-4 rounded-full bg-gradient-to-r ${purposeColors[purpose as keyof typeof purposeColors] || "from-gray-500 to-slate-500"}`}
                               ></div>
-                              <span className="font-medium text-gray-800">
+                              <span className="font-medium text-foreground">
                                 {purpose}
                               </span>
                             </div>
                             <div className="text-right">
-                              <span className="font-bold text-purple-600">
-                                NRs. {amount.toFixed(2)}
+                              <span className="font-bold text-primary">
+                                ₹ {amount.toFixed(2)}
                               </span>
-                              <div className="text-sm text-gray-500">
+                              <div className="text-sm text-muted-foreground">
                                 {percentage.toFixed(1)}%
                               </div>
                             </div>
                           </div>
-                          <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div className="w-full bg-muted rounded-full h-2">
                             <div
                               className={`bg-gradient-to-r ${purposeColors[purpose as keyof typeof purposeColors] || "from-gray-500 to-slate-500"} h-2 rounded-full transition-all duration-500`}
                               style={{ width: `${percentage}%` }}
@@ -689,7 +689,7 @@ const WithdrawalsTab = () => {
 
         {/* Withdrawal History */}
         <Card className="bg-gradient-to-br from-white/90 to-gray-50/90 backdrop-blur-sm border-0 shadow-2xl">
-          <CardHeader className="border-b border-gray-200/50 flex flex-row items-center justify-between">
+          <CardHeader className="border-b border-border/50 flex flex-row items-center justify-between">
             <CardTitle className="text-2xl font-bold bg-gradient-to-r from-gray-700 to-gray-900 bg-clip-text text-transparent">
               Withdrawal History
             </CardTitle>
@@ -737,15 +737,15 @@ const WithdrawalsTab = () => {
                 <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full animate-spin mx-auto flex items-center justify-center mb-4">
                   <Banknote className="h-8 w-8 text-white" />
                 </div>
-                <p className="text-gray-600">Loading withdrawals...</p>
+                <p className="text-muted-foreground">Loading withdrawals...</p>
               </div>
             ) : withdrawals.length === 0 ? (
               <div className="text-center py-12">
                 <Banknote className="h-16 w-16 mx-auto text-gray-300 mb-4" />
-                <p className="text-xl font-semibold text-gray-700 mb-2">
+                <p className="text-xl font-semibold text-foreground mb-2">
                   No withdrawals found
                 </p>
-                <p className="text-gray-500">
+                <p className="text-muted-foreground">
                   Start recording your withdrawals to see them here.
                 </p>
               </div>
@@ -754,28 +754,28 @@ const WithdrawalsTab = () => {
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-gradient-to-r from-gray-50 to-purple-50">
-                      <TableHead className="font-semibold text-gray-700">
+                      <TableHead className="font-semibold text-foreground">
                         Date
                       </TableHead>
-                      <TableHead className="font-semibold text-gray-700">
+                      <TableHead className="font-semibold text-foreground">
                         Amount
                       </TableHead>
-                      <TableHead className="font-semibold text-gray-700">
+                      <TableHead className="font-semibold text-foreground">
                         Purpose
                       </TableHead>
-                      <TableHead className="font-semibold text-gray-700">
+                      <TableHead className="font-semibold text-foreground">
                         Source/Coop
                       </TableHead>
-                      <TableHead className="font-semibold text-gray-700">
+                      <TableHead className="font-semibold text-foreground">
                         Recipient
                       </TableHead>
-                      <TableHead className="font-semibold text-gray-700">
+                      <TableHead className="font-semibold text-foreground">
                         Reference
                       </TableHead>
-                      <TableHead className="font-semibold text-gray-700">
+                      <TableHead className="font-semibold text-foreground">
                         Remarks
                       </TableHead>
-                      <TableHead className="font-semibold text-gray-700">
+                      <TableHead className="font-semibold text-foreground">
                         Actions
                       </TableHead>
                     </TableRow>
@@ -786,7 +786,7 @@ const WithdrawalsTab = () => {
                         Total
                       </TableCell>
                       <TableCell colSpan={6} className="font-bold">
-                        NRs. {totalWithdrawals.toFixed(2)}
+                        ₹ {totalWithdrawals.toFixed(2)}
                       </TableCell>
                     </TableRow>
                     {withdrawals.map((withdrawal, index) => (
@@ -803,7 +803,7 @@ const WithdrawalsTab = () => {
                         </TableCell>
                         <TableCell>
                           <span className="font-bold text-xl bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                            NRs. {withdrawal.amount.toFixed(2)}
+                            ₹ {withdrawal.amount.toFixed(2)}
                           </span>
                         </TableCell>
                         <TableCell>
@@ -813,24 +813,24 @@ const WithdrawalsTab = () => {
                             {withdrawal.purpose}
                           </Badge>
                         </TableCell>
-                        <TableCell className="font-medium text-gray-800">
+                        <TableCell className="font-medium text-foreground">
                           {withdrawal.source_cooperative ? (
                             <div className="flex items-center gap-2">
                               <Landmark className="h-4 w-4 text-indigo-500" />
                               {withdrawal.source_cooperative}
                             </div>
                           ) : (
-                            <span className="text-gray-400">-</span>
+                            <span className="text-muted-foreground">-</span>
                           )}
                         </TableCell>
-                        <TableCell className="font-medium text-gray-800">
+                        <TableCell className="font-medium text-foreground">
                           {withdrawal.recipient ? (
                             <div className="flex items-center gap-2">
-                              <User className="h-4 w-4 text-gray-500" />
+                              <User className="h-4 w-4 text-muted-foreground" />
                               {withdrawal.recipient}
                             </div>
                           ) : (
-                            <span className="text-gray-400">-</span>
+                            <span className="text-muted-foreground">-</span>
                           )}
                         </TableCell>
                         <TableCell className="font-mono text-sm">
@@ -842,12 +842,12 @@ const WithdrawalsTab = () => {
                               {withdrawal.reference_number}
                             </Badge>
                           ) : (
-                            <span className="text-gray-400">-</span>
+                            <span className="text-muted-foreground">-</span>
                           )}
                         </TableCell>
                         <TableCell className="max-w-xs">
                           <span
-                            className="text-sm text-gray-600 truncate"
+                            className="text-sm text-muted-foreground truncate"
                             title={withdrawal.remarks || ""}
                           >
                             {withdrawal.remarks || "-"}
@@ -880,7 +880,7 @@ const WithdrawalsTab = () => {
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                                  className="text-destructive hover:text-red-700 hover:bg-destructive/5"
                                 >
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
@@ -919,7 +919,7 @@ const WithdrawalsTab = () => {
             )}
           </CardContent>
           {withdrawals.length > 0 && (
-            <div className="flex justify-center p-4 border-t border-gray-200">
+            <div className="flex justify-center p-4 border-t border-border">
               <div className="flex items-center gap-4">
                 <Button
                   onClick={() => onPageChange(page - 1)}

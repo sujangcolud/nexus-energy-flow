@@ -372,7 +372,7 @@ const MultiExpenseEntry = ({ categories, inventory, onComplete }: Props) => {
                       </Select>
                     </div>
                     <div>
-                      <Label className="text-[9px] font-black uppercase tracking-wider text-muted-foreground mb-1 block">Rate (रु)</Label>
+                      <Label className="text-[9px] font-black uppercase tracking-wider text-muted-foreground mb-1 block">Rate (₹)</Label>
                       <Input
                         type="number"
                         value={r.unit_cost || ""}
@@ -392,7 +392,7 @@ const MultiExpenseEntry = ({ categories, inventory, onComplete }: Props) => {
                       <Input
                         type="number"
                         value={r.factor}
-                        className="h-10 rounded-lg font-bold border-border bg-slate-50"
+                        className="h-10 rounded-lg font-bold border-border bg-muted/50"
                         onChange={(e) => updateRow(i, { factor: parseFloat(e.target.value) || 1 })}
                       />
                     </div>
@@ -404,7 +404,7 @@ const MultiExpenseEntry = ({ categories, inventory, onComplete }: Props) => {
                     <div className="bg-muted px-3 py-1.5 rounded-lg border border-border">
                       <Label className="text-[9px] font-black uppercase text-muted-foreground block mb-0.5">Total Amount</Label>
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-muted-foreground">रु</span>
+                        <span className="text-xs font-bold text-muted-foreground">₹</span>
                         <Input
                           type="number"
                           value={r.amount || ""}
@@ -417,7 +417,7 @@ const MultiExpenseEntry = ({ categories, inventory, onComplete }: Props) => {
                   <Button
                     size="icon"
                     variant="ghost"
-                    className="text-rose-500 hover:text-rose-600 hover:bg-rose-50 rounded-full"
+                    className="text-destructive hover:text-destructive hover:bg-destructive/5 rounded-full"
                     onClick={() => removeRow(i)}
                     disabled={rows.length === 1}
                   >
@@ -442,7 +442,7 @@ const MultiExpenseEntry = ({ categories, inventory, onComplete }: Props) => {
           <div className="flex-1 text-center sm:text-left">
             <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Batch Total Amount</p>
             <div className="text-2xl font-black text-primary">
-              रु {grandTotal.toLocaleString()}
+              ₹ {grandTotal.toLocaleString()}
             </div>
           </div>
           <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">

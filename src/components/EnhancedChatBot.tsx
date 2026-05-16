@@ -95,7 +95,7 @@ Welcome to your comprehensive business analytics companion! I have deep knowledg
 • "Which menu items have the highest profit margins?"
 • "What's my cash flow pattern for the last 30 days?"
 • "Compare this month's performance with last month"
-• "Find all transactions over NRs. 1000 in the last week"
+• "Find all transactions over ₹ 1000 in the last week"
 • "Analyze my VAT entries and suggest optimizations"
 
 Just ask naturally - I understand business context!`,
@@ -134,7 +134,7 @@ Just ask naturally - I understand business context!`,
       category: "Detailed Analytics",
       icon: Brain,
       queries: [
-        "Find all transactions with cash payments over NRs. 500",
+        "Find all transactions with cash payments over ₹ 500",
         "Show me customers who made multiple orders today",
         "What's the correlation between weather and sales?",
         "Analyze my inventory turnover rate",
@@ -413,21 +413,21 @@ Just ask naturally - I understand business context!`,
     return `📊 **Comprehensive Financial Analysis**
 
 💰 **Overall Performance:**
-• Total Revenue: **NRs. ${totalRevenue.toLocaleString()}**
-• Total Expenses: **NRs. ${totalExpenses.toLocaleString()}**
-• Net Profit: **NRs. ${netProfit.toLocaleString()}** (${profitMargin.toFixed(1)}% margin)
+• Total Revenue: **₹ ${totalRevenue.toLocaleString()}**
+• Total Expenses: **₹ ${totalExpenses.toLocaleString()}**
+• Net Profit: **₹ ${netProfit.toLocaleString()}** (${profitMargin.toFixed(1)}% margin)
 
 💳 **Payment Method Distribution:**
 ${Object.entries(paymentBreakdown)
   .map(
     ([mode, amount]) =>
-      `• ${mode.charAt(0).toUpperCase() + mode.slice(1)}: NRs. ${amount.toLocaleString()}`,
+      `• ${mode.charAt(0).toUpperCase() + mode.slice(1)}: ₹ ${amount.toLocaleString()}`,
   )
   .join("\n")}
 
 📈 **Recent Performance (Last 7 Days):**
-• Revenue: **NRs. ${recentRevenue.toLocaleString()}**
-• Daily Average: **NRs. ${(recentRevenue / 7).toLocaleString()}**
+• Revenue: **₹ ${recentRevenue.toLocaleString()}**
+• Daily Average: **₹ ${(recentRevenue / 7).toLocaleString()}**
 • Orders Count: **${recentTransactions.filter((t) => t.total).length}**
 • Charging Sessions: **${recentTransactions.filter((t) => t.total_amount).length}**
 
@@ -498,13 +498,13 @@ ${profitMargin > 20 ? "🎯 Excellent profit margins!" : profitMargin > 10 ? "�
     return `📊 **Monthly Performance Comparison**
 
 💰 **Revenue Comparison:**
-• This Month: **NRs. ${thisMonthRevenue.toLocaleString()}**
-• Last Month: **NRs. ${lastMonthRevenue.toLocaleString()}**
+• This Month: **₹ ${thisMonthRevenue.toLocaleString()}**
+• Last Month: **₹ ${lastMonthRevenue.toLocaleString()}**
 • Change: **${revenueChange >= 0 ? "+" : ""}${revenueChange.toFixed(1)}%** ${revenueChange >= 0 ? "📈" : "📉"}
 
 💸 **Expense Comparison:**
-• This Month: **NRs. ${thisMonthExpenses.toLocaleString()}**
-• Last Month: **NRs. ${lastMonthExpenses.toLocaleString()}**
+• This Month: **₹ ${thisMonthExpenses.toLocaleString()}**
+• Last Month: **₹ ${lastMonthExpenses.toLocaleString()}**
 • Change: **${expenseChange >= 0 ? "+" : ""}${expenseChange.toFixed(1)}%** ${expenseChange >= 0 ? "📈" : "📉"}
 
 📈 **Transaction Volume:**
@@ -543,9 +543,9 @@ ${expenseChange < -5 ? "💰 Great expense control!" : expenseChange > 10 ? "⚠
       return `📅 **Today's Performance (${format(today, "MMM dd, yyyy")})**
 
 💰 **Financial Summary:**
-• Revenue: **NRs. ${todayRevenue.toLocaleString()}**
-• Expenses: **NRs. ${todayExpenses.toLocaleString()}**
-• Net Profit: **NRs. ${(todayRevenue - todayExpenses).toLocaleString()}**
+• Revenue: **₹ ${todayRevenue.toLocaleString()}**
+• Expenses: **₹ ${todayExpenses.toLocaleString()}**
+• Net Profit: **₹ ${(todayRevenue - todayExpenses).toLocaleString()}**
 
 📊 **Transaction Details:**
 • Orders: **${todayData.filter((t) => t.total).length}**
@@ -574,8 +574,8 @@ ${todayRevenue > 1000 ? "🎯 Strong sales day!" : todayRevenue > 500 ? "👍 Go
     return `📅 **This Week's Analysis**
 
 💰 **Weekly Performance:**
-• Total Revenue: **NRs. ${weekRevenue.toLocaleString()}**
-• Daily Average: **NRs. ${(weekRevenue / 7).toLocaleString()}**
+• Total Revenue: **₹ ${weekRevenue.toLocaleString()}**
+• Daily Average: **₹ ${(weekRevenue / 7).toLocaleString()}**
 • Total Transactions: **${weekData.length}**
 
 📊 **Daily Breakdown:**
@@ -591,7 +591,7 @@ ${["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
       (sum, item) => sum + (item.total || item.total_amount || 0),
       0,
     );
-    return `• ${day}: NRs. ${dayRevenue.toLocaleString()} (${dayData.length} transactions)`;
+    return `• ${day}: ₹ ${dayRevenue.toLocaleString()} (${dayData.length} transactions)`;
   })
   .join("\n")}
 `;
@@ -613,16 +613,16 @@ ${["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
       return `🧾 **VAT Entries Analysis**
 
 💰 **VAT Summary:**
-• Total VAT Collected: **NRs. ${totalVAT.toLocaleString()}**
+• Total VAT Collected: **₹ ${totalVAT.toLocaleString()}**
 • Number of Entries: **${vatEntries}**
-• Average VAT per Entry: **NRs. ${vatEntries > 0 ? (totalVAT / vatEntries).toFixed(2) : "0"}**
+• Average VAT per Entry: **₹ ${vatEntries > 0 ? (totalVAT / vatEntries).toFixed(2) : "0"}**
 
 📊 **Recent VAT Entries:**
 ${vat_entries
   .slice(0, 5)
   .map(
     (entry) =>
-      `• ${entry.item_name}: NRs. ${entry.vat_amount} (${entry.vat_rate}%)`,
+      `• ${entry.item_name}: ₹ ${entry.vat_amount} (${entry.vat_rate}%)`,
   )
   .join("\n")}
 `;
@@ -644,7 +644,7 @@ ${vat_entries
 ${Object.entries(expensesByCategory)
   .map(
     ([category, amount]) =>
-      `• ${category}: **NRs. ${amount.toLocaleString()}**`,
+      `• ${category}: **₹ ${amount.toLocaleString()}**`,
   )
   .join("\n")}
 
@@ -653,7 +653,7 @@ ${expenses
   .slice(0, 5)
   .map(
     (exp) =>
-      `• ${exp.description || "Expense"}: NRs. ${exp.amount} (${exp.category || "General"})`,
+      `• ${exp.description || "Expense"}: ₹ ${exp.amount} (${exp.category || "General"})`,
   )
   .join("\n")}
 `;
@@ -685,9 +685,9 @@ ${expenses
       return `🧮 **Average Value Calculations**
 
 📊 **Transaction Averages:**
-• Average Order Value: **NRs. ${avgOrderValue.toFixed(2)}**
-• Average Charging Session: **NRs. ${avgChargingValue.toFixed(2)}**
-• Average Expense: **NRs. ${expenses.length > 0 ? (expenses.reduce((sum, exp) => sum + (exp.amount || 0), 0) / expenses.length).toFixed(2) : "0"}**
+• Average Order Value: **₹ ${avgOrderValue.toFixed(2)}**
+• Average Charging Session: **₹ ${avgChargingValue.toFixed(2)}**
+• Average Expense: **₹ ${expenses.length > 0 ? (expenses.reduce((sum, exp) => sum + (exp.amount || 0), 0) / expenses.length).toFixed(2) : "0"}**
 
 💡 **Insights:**
 • Higher order values indicate better customer spend
@@ -711,18 +711,18 @@ ${expenses
     return `🧮 **Business Totals Calculation**
 
 💰 **Revenue Streams:**
-• Orders Total: **NRs. ${totals.orders.toLocaleString()}**
-• Charging Total: **NRs. ${totals.charging.toLocaleString()}**
-• **Combined Revenue: NRs. ${(totals.orders + totals.charging).toLocaleString()}**
+• Orders Total: **₹ ${totals.orders.toLocaleString()}**
+• Charging Total: **₹ ${totals.charging.toLocaleString()}**
+• **Combined Revenue: ₹ ${(totals.orders + totals.charging).toLocaleString()}**
 
 💸 **Cash Flow:**
-• Total Expenses: **NRs. ${totals.expenses.toLocaleString()}**
-• Total Deposits: **NRs. ${totals.deposits.toLocaleString()}**
-• Total Withdrawals: **NRs. ${totals.withdrawals.toLocaleString()}**
+• Total Expenses: **₹ ${totals.expenses.toLocaleString()}**
+• Total Deposits: **₹ ${totals.deposits.toLocaleString()}**
+• Total Withdrawals: **₹ ${totals.withdrawals.toLocaleString()}**
 
 📊 **Net Position:**
-• Gross Profit: **NRs. ${(totals.orders + totals.charging - totals.expenses).toLocaleString()}**
-• Cash Position: **NRs. ${(totals.orders + totals.charging + totals.deposits - totals.expenses - totals.withdrawals).toLocaleString()}**
+• Gross Profit: **₹ ${(totals.orders + totals.charging - totals.expenses).toLocaleString()}**
+• Cash Position: **₹ ${(totals.orders + totals.charging + totals.deposits - totals.expenses - totals.withdrawals).toLocaleString()}**
 `;
   };
 
@@ -766,7 +766,7 @@ Just ask me anything about your business data!`;
 📊 **Quick Business Overview:**
 • Total Orders: **${orders.length}**
 • Charging Sessions: **${charging.length}**
-• Total Revenue: **NRs. ${(orders.reduce((s, o) => s + (o.total || 0), 0) + charging.reduce((s, c) => s + (c.total_amount || 0), 0)).toLocaleString()}**
+• Total Revenue: **₹ ${(orders.reduce((s, o) => s + (o.total || 0), 0) + charging.reduce((s, c) => s + (c.total_amount || 0), 0)).toLocaleString()}**
 
 💡 **Try asking more specific questions like:**
 • "What's my best-selling menu item?"
@@ -832,7 +832,7 @@ I'm continuously learning and can provide deeper insights with more specific que
     return (
       <Button
         onClick={onToggle}
-        className="fixed bottom-4 right-4 rounded-full w-14 h-14 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-300 z-50"
+        className="fixed bottom-4 right-4 rounded-full w-14 h-14 bg-gradient-to-r from-primary to-primary-dark hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-300 z-50"
       >
         <MessageCircle className="h-6 w-6" />
       </Button>
@@ -840,8 +840,8 @@ I'm continuously learning and can provide deeper insights with more specific que
   }
 
   return (
-    <Card className="fixed bottom-4 right-4 w-96 h-[600px] shadow-2xl z-50 border-2 border-blue-200 bg-gradient-to-b from-white to-blue-50">
-      <CardHeader className="p-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-t-lg">
+    <Card className="fixed bottom-4 right-4 w-96 h-[600px] shadow-2xl z-50 border-2 border-primary/10 bg-gradient-to-b from-white to-primary/5">
+      <CardHeader className="p-3 bg-gradient-to-r from-primary to-primary-dark text-white rounded-t-lg">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg flex items-center gap-2">
             <Brain className="h-5 w-5" />
@@ -866,7 +866,7 @@ I'm continuously learning and can provide deeper insights with more specific que
           </div>
         </div>
         <div className="flex items-center gap-2 text-sm">
-          <Badge variant="secondary" className="bg-green-100 text-green-800">
+          <Badge variant="secondary" className="bg-success/10 text-success">
             <Database className="h-3 w-3 mr-1" />
             Live Data Connected
           </Badge>
@@ -893,15 +893,15 @@ I'm continuously learning and can provide deeper insights with more specific que
                     className={`flex gap-3 ${message.type === "user" ? "justify-end" : "justify-start"}`}
                   >
                     {message.type === "bot" && (
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center flex-shrink-0">
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-r from-primary to-primary-dark flex items-center justify-center flex-shrink-0">
                         <Bot className="h-4 w-4 text-white" />
                       </div>
                     )}
                     <div
                       className={`max-w-[80%] p-3 rounded-lg ${
                         message.type === "user"
-                          ? "bg-blue-600 text-white rounded-br-none"
-                          : "bg-gray-100 text-gray-800 rounded-bl-none"
+                          ? "bg-primary text-white rounded-br-none"
+                          : "bg-muted text-foreground rounded-bl-none"
                       }`}
                     >
                       <div className="text-sm whitespace-pre-wrap">
@@ -912,18 +912,18 @@ I'm continuously learning and can provide deeper insights with more specific que
                       </div>
                     </div>
                     {message.type === "user" && (
-                      <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                        <User className="h-4 w-4 text-blue-600" />
+                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                        <User className="h-4 w-4 text-primary" />
                       </div>
                     )}
                   </div>
                 ))}
                 {isLoading && (
                   <div className="flex gap-3 justify-start">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-r from-primary to-primary-dark flex items-center justify-center">
                       <Bot className="h-4 w-4 text-white" />
                     </div>
-                    <div className="bg-gray-100 p-3 rounded-lg rounded-bl-none">
+                    <div className="bg-muted p-3 rounded-lg rounded-bl-none">
                       <div className="flex items-center gap-2">
                         <RefreshCw className="h-4 w-4 animate-spin" />
                         <span className="text-sm">Analyzing your query...</span>
@@ -934,7 +934,7 @@ I'm continuously learning and can provide deeper insights with more specific que
               </div>
             </ScrollArea>
 
-            <div className="p-4 border-t border-gray-200">
+            <div className="p-4 border-t border-border">
               <div className="flex gap-2">
                 <Input
                   placeholder="Ask me anything about your business..."
@@ -960,7 +960,7 @@ I'm continuously learning and can provide deeper insights with more specific que
           >
             {smartQueries.map((category, index) => (
               <div key={index} className="space-y-2">
-                <div className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
                   <category.icon className="h-4 w-4" />
                   {category.category}
                 </div>
@@ -969,7 +969,7 @@ I'm continuously learning and can provide deeper insights with more specific que
                     <button
                       key={queryIndex}
                       onClick={() => setInputValue(query)}
-                      className="block w-full text-left text-xs p-2 bg-gray-50 hover:bg-blue-50 rounded border text-gray-700 hover:text-blue-700 transition-colors"
+                      className="block w-full text-left text-xs p-2 bg-muted/50 hover:bg-primary/5 rounded border text-foreground hover:text-blue-700 transition-colors"
                     >
                       {query}
                     </button>

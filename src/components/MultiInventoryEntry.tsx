@@ -292,7 +292,7 @@ const MultiInventoryEntry = ({ inventory, categories, onComplete }: Props) => {
                       </Select>
                     </div>
                     <div className="col-span-2 md:col-span-1">
-                      <Label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground mb-1.5 block">Unit Cost (रु)</Label>
+                      <Label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground mb-1.5 block">Unit Cost (₹)</Label>
                       <Input
                         type="number"
                         value={r.unit_cost || ""}
@@ -325,7 +325,7 @@ const MultiInventoryEntry = ({ inventory, categories, onComplete }: Props) => {
                     <Button
                       size="icon"
                       variant="ghost"
-                      className="text-rose-500 hover:text-rose-600 hover:bg-rose-50 rounded-full md:mb-1 w-11 h-11"
+                      className="text-destructive hover:text-destructive hover:bg-destructive/5 rounded-full md:mb-1 w-11 h-11"
                       onClick={() => removeRow(i)}
                       disabled={rows.length === 1}
                     >
@@ -362,7 +362,7 @@ const MultiInventoryEntry = ({ inventory, categories, onComplete }: Props) => {
                   </div>
                   <div className="flex items-center justify-between bg-white px-4 py-1.5 rounded-xl border border-border">
                     <span className="text-[10px] font-black uppercase text-muted-foreground">Subtotal</span>
-                    <span className="text-lg font-black text-primary">रु {total(r).toLocaleString()}</span>
+                    <span className="text-lg font-black text-primary">₹ {total(r).toLocaleString()}</span>
                   </div>
                 </div>
               </div>
@@ -383,7 +383,7 @@ const MultiInventoryEntry = ({ inventory, categories, onComplete }: Props) => {
           <div className="flex-1 text-center sm:text-left">
             <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Batch Grand Total</p>
             <div className="text-2xl font-black text-primary">
-              रु {grandTotal.toLocaleString()}
+              ₹ {grandTotal.toLocaleString()}
             </div>
           </div>
           <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">

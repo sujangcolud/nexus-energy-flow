@@ -312,10 +312,10 @@ const InventoryTab = () => {
             </div>
             <div className="space-y-2">
               <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Existing Conversions</Label>
-              <div className="border rounded-2xl divide-y overflow-hidden bg-slate-50/50">
+              <div className="border rounded-2xl divide-y overflow-hidden bg-muted/50/50">
                 {selectedItem?.unit_conversions?.map((conv) => (
                   <div key={conv.id} className="p-3 flex justify-between items-center text-sm">
-                    <span className="font-medium text-slate-700">1 {conv.unit_name} = {conv.conversion_to_base} {selectedItem?.base_unit}</span>
+                    <span className="font-medium text-foreground">1 {conv.unit_name} = {conv.conversion_to_base} {selectedItem?.base_unit}</span>
                     <Button variant="ghost" size="sm" onClick={() => deleteConversion(conv.id)} className="h-8 w-8 p-0 text-destructive"><Trash2 className="h-4 w-4" /></Button>
                   </div>
                 ))}
@@ -523,7 +523,7 @@ const InventoryTab = () => {
         </div>
 
         <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden">
-          <CardHeader className="bg-slate-50/50 border-b border-slate-100 px-4 md:px-6 py-4">
+          <CardHeader className="bg-muted/50/50 border-b border-border px-4 md:px-6 py-4">
             <CardTitle className="text-base md:text-lg font-bold">Inventory List</CardTitle>
           </CardHeader>
           <CardContent className="p-0">

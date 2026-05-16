@@ -474,7 +474,7 @@ const MobileDashboard = () => {
                     <Button
                       variant="ghost"
                       onClick={handleSignOut}
-                      className="w-full justify-start gap-3 h-12 text-red-600 hover:text-red-700 hover:bg-red-50"
+                      className="w-full justify-start gap-3 h-12 text-destructive hover:text-red-700 hover:bg-destructive/5"
                     >
                       <LogOut className="h-5 w-5" />
                       Sign Out

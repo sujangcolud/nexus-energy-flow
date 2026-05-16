@@ -112,7 +112,7 @@ const COLUMNS: { key: keyof DailySummaryRow; label: string }[] = [
 const fmtNum = (v: number | null | undefined) =>
   v === null || v === undefined ? "0.00" : Number(v).toFixed(2);
 
-const fmtCurrency = (v: number) => `NRs. ${v.toFixed(2)}`;
+const fmtCurrency = (v: number) => `₹ ${v.toFixed(2)}`;
 
 const DailySummaryReport = () => {
   const yesterday = subDays(new Date(), 1);

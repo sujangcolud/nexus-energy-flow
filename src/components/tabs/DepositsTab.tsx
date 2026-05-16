@@ -125,23 +125,23 @@ const DepositsTab = () => {
     {
       key: "deposit_date",
       label: "Date",
-      className: "font-semibold text-gray-700",
+      className: "font-semibold text-foreground",
       render: (value: string) => format(new Date(value), "MMM dd, yyyy"),
     },
     {
       key: "amount",
       label: "Amount",
-      className: "font-semibold text-gray-700",
+      className: "font-semibold text-foreground",
       render: (value: number) => (
-        <span className="font-bold text-xl bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
-          NRs. {value.toFixed(2)}
+        <span className="font-bold text-xl bg-gradient-to-r from-success to-success bg-clip-text text-transparent">
+          ₹ {value.toFixed(2)}
         </span>
       ),
     },
     {
       key: "mode",
       label: "Mode",
-      className: "font-semibold text-gray-700",
+      className: "font-semibold text-foreground",
       render: (value: string) => (
         <Badge
           className={`bg-gradient-to-r ${modeColors[value as keyof typeof modeColors]} text-white border-0`}
@@ -153,14 +153,14 @@ const DepositsTab = () => {
     {
       key: "deposited_by",
       label: "Deposited By",
-      className: "font-semibold text-gray-700",
+      className: "font-semibold text-foreground",
       render: (value: string, deposit: Deposit) => (
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <User className="h-4 w-4 text-gray-500" />
+            <User className="h-4 w-4 text-muted-foreground" />
             {value}
           </div>
-          <div className="text-xs text-gray-500">
+          <div className="text-xs text-muted-foreground">
             ({(deposit as any).deposited_by_type || "N/A"})
           </div>
         </div>
@@ -170,10 +170,10 @@ const DepositsTab = () => {
     {
       key: "remarks",
       label: "Remarks",
-      className: "font-semibold text-gray-700 max-w-xs",
+      className: "font-semibold text-foreground max-w-xs",
       hideOnMobile: true,
       render: (value: string) => (
-        <span className="text-sm text-gray-600 truncate" title={value}>
+        <span className="text-sm text-muted-foreground truncate" title={value}>
           {value || "-"}
         </span>
       ),
@@ -181,7 +181,7 @@ const DepositsTab = () => {
     {
       key: "actions",
       label: "Actions",
-      className: "font-semibold text-gray-700",
+      className: "font-semibold text-foreground",
       render: (_: any, deposit: Deposit) => (
           <div className="flex gap-2">
             <Button
@@ -199,7 +199,7 @@ const DepositsTab = () => {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                  className="text-destructive hover:text-red-700 hover:bg-destructive/5"
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
@@ -244,7 +244,7 @@ const DepositsTab = () => {
     Cash: "from-green-500 to-emerald-500",
     Esewa: "from-blue-500 to-cyan-500",
     Fonepay: "from-purple-500 to-pink-500",
-    "Bank Transfer": "from-indigo-500 to-blue-500",
+    "Bank Transfer": "from-indigo-500 to-primary/50",
     Cheque: "from-orange-500 to-red-500",
     "Credit Card": "from-violet-500 to-purple-500",
     "Mobile Banking": "from-teal-500 to-cyan-500",
@@ -639,7 +639,7 @@ const DepositsTab = () => {
           <Card className="rounded-3xl border-none bg-white shadow-sm overflow-hidden">
             <CardContent className="p-4 md:p-6">
               <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Total Deposits</p>
-              <p className="text-sm md:text-xl font-bold text-primary">NRs. {totalDeposits.toFixed(2)}</p>
+              <p className="text-sm md:text-xl font-bold text-primary">₹ {totalDeposits.toFixed(2)}</p>
             </CardContent>
           </Card>
           <Card className="rounded-3xl border-none bg-white shadow-sm overflow-hidden">
@@ -651,7 +651,7 @@ const DepositsTab = () => {
           <Card className="rounded-3xl border-none bg-white shadow-sm overflow-hidden hidden md:block">
             <CardContent className="p-4 md:p-6">
               <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Avg Deposit</p>
-              <p className="text-sm md:text-xl font-bold text-foreground">NRs. {averageDeposit.toFixed(2)}</p>
+              <p className="text-sm md:text-xl font-bold text-foreground">₹ {averageDeposit.toFixed(2)}</p>
             </CardContent>
           </Card>
           <Card className="rounded-3xl border-none bg-white shadow-sm overflow-hidden">
@@ -667,7 +667,7 @@ const DepositsTab = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-8">
           {/* Add Deposit Form */}
           <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden">
-            <CardHeader className="bg-emerald-500 text-white p-4 md:p-6">
+            <CardHeader className="bg-success text-white p-4 md:p-6">
               <CardTitle className="flex items-center gap-3 text-lg md:text-xl font-bold">
                 <div className="p-2 bg-white/20 rounded-xl">
                   <ArrowUpCircle className="h-5 w-5 md:h-6 md:w-6" />
@@ -683,8 +683,8 @@ const DepositsTab = () => {
                     htmlFor="amount"
                     className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2"
                   >
-                    <DollarSign className="h-3.5 w-3.5 text-emerald-600" />
-                    Amount (NRs.) *
+                    <DollarSign className="h-3.5 w-3.5 text-success" />
+                    Amount (₹) *
                   </Label>
                   <Input
                     id="amount"
@@ -696,7 +696,7 @@ const DepositsTab = () => {
                     }
                     placeholder="0.00"
                     required
-                    className="h-12 text-xl font-bold rounded-xl border-emerald-100 focus:border-emerald-500"
+                    className="h-12 text-xl font-bold rounded-xl border-success/10 focus:border-emerald-500"
                   />
                 </div>
 
@@ -706,7 +706,7 @@ const DepositsTab = () => {
                       htmlFor="mode"
                       className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2"
                     >
-                      <CreditCard className="h-3.5 w-3.5 text-blue-600" />
+                      <CreditCard className="h-3.5 w-3.5 text-primary" />
                       Mode *
                     </Label>
                     <Select
@@ -734,7 +734,7 @@ const DepositsTab = () => {
                       htmlFor="depositedByType"
                       className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2"
                     >
-                      <User className="h-3.5 w-3.5 text-purple-600" />
+                      <User className="h-3.5 w-3.5 text-primary" />
                       By *
                     </Label>
                     <Select
@@ -763,7 +763,7 @@ const DepositsTab = () => {
                     htmlFor="depositedBy"
                     className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2"
                   >
-                    <User className="h-3.5 w-3.5 text-indigo-600" />
+                    <User className="h-3.5 w-3.5 text-primary" />
                     Depositor Name *
                   </Label>
                   <Input
@@ -837,7 +837,7 @@ const DepositsTab = () => {
                 <Button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full h-12 md:h-14 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-black text-lg shadow-lg shadow-emerald-500/20 transition-all active:scale-[0.98]"
+                  className="w-full h-12 md:h-14 rounded-2xl bg-success hover:bg-success text-white font-black text-lg shadow-lg shadow-emerald-500/20 transition-all active:scale-[0.98]"
                 >
                   {isSubmitting ? (
                     <div className="flex items-center gap-2">
@@ -869,10 +869,10 @@ const DepositsTab = () => {
               {Object.keys(modeBreakdown).length === 0 ? (
                 <div className="text-center py-8">
                   <CreditCard className="h-16 w-16 mx-auto text-gray-300 mb-4" />
-                  <p className="text-gray-500 text-lg font-medium">
+                  <p className="text-muted-foreground text-lg font-medium">
                     No deposits yet
                   </p>
-                  <p className="text-gray-400">
+                  <p className="text-muted-foreground">
                     Record your first deposit to see method breakdown!
                   </p>
                 </div>
@@ -893,20 +893,20 @@ const DepositsTab = () => {
                               <div
                                 className={`w-4 h-4 rounded-full bg-gradient-to-r ${modeColors[mode as keyof typeof modeColors]}`}
                               ></div>
-                              <span className="font-medium text-gray-800">
+                              <span className="font-medium text-foreground">
                                 {mode}
                               </span>
                             </div>
                             <div className="text-right">
                               <span className="font-bold text-teal-600">
-                                NRs. {amount.toFixed(2)}
+                                ₹ {amount.toFixed(2)}
                               </span>
-                              <div className="text-sm text-gray-500">
+                              <div className="text-sm text-muted-foreground">
                                 {percentage.toFixed(1)}%
                               </div>
                             </div>
                           </div>
-                          <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div className="w-full bg-muted rounded-full h-2">
                             <div
                               className={`bg-gradient-to-r ${modeColors[mode as keyof typeof modeColors]} h-2 rounded-full transition-all duration-500`}
                               style={{ width: `${percentage}%` }}
@@ -960,7 +960,7 @@ const DepositsTab = () => {
                         size="sm"
                         onClick={() => handleDeleteCategory(cat.id)}
                       >
-                        <Trash2 className="h-4 w-4 text-red-500" />
+                        <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
                     </div>
                   ))}
@@ -972,7 +972,7 @@ const DepositsTab = () => {
 
         {/* Deposit History */}
         <Card className="bg-gradient-to-br from-white/90 to-gray-50/90 backdrop-blur-sm border-0 shadow-2xl">
-          <CardHeader className="border-b border-gray-200/50 flex flex-row items-center justify-between">
+          <CardHeader className="border-b border-border/50 flex flex-row items-center justify-between">
             <CardTitle className="text-2xl font-bold bg-gradient-to-r from-gray-700 to-gray-900 bg-clip-text text-transparent">
               Deposit History
             </CardTitle>
@@ -988,12 +988,12 @@ const DepositsTab = () => {
             {/* Total row for mobile */}
             {!loading && deposits.length > 0 && (
               <div
-                className={`${isMobile ? "bg-gray-50 p-3 rounded-lg mb-3" : ""}`}
+                className={`${isMobile ? "bg-muted/50 p-3 rounded-lg mb-3" : ""}`}
               >
                 <div className="flex justify-between items-center">
-                  <span className="font-bold text-gray-700">Total:</span>
-                  <span className="font-bold text-green-600">
-                    NRs. {totalDeposits.toFixed(2)}
+                  <span className="font-bold text-foreground">Total:</span>
+                  <span className="font-bold text-success">
+                    ₹ {totalDeposits.toFixed(2)}
                   </span>
                 </div>
               </div>
@@ -1009,7 +1009,7 @@ const DepositsTab = () => {
             />
           </CardContent>
           {deposits.length > 0 && (
-            <div className="flex justify-center p-4 border-t border-gray-200">
+            <div className="flex justify-center p-4 border-t border-border">
               <div className="flex items-center gap-4">
                 <Button
                   onClick={() => onPageChange(page - 1)}

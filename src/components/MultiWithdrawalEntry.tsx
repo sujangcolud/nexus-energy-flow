@@ -141,7 +141,7 @@ const MultiWithdrawalEntry = ({ onComplete }: Props) => {
                   />
                 </div>
                 <div className="md:col-span-2">
-                  <Label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground mb-1.5 block">Amount (रु)</Label>
+                  <Label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground mb-1.5 block">Amount (₹)</Label>
                   <Input
                     type="number"
                     value={r.amount}
@@ -207,7 +207,7 @@ const MultiWithdrawalEntry = ({ onComplete }: Props) => {
                   <Button
                     size="icon"
                     variant="ghost"
-                    className="text-rose-500 hover:text-rose-600 hover:bg-rose-50 rounded-full md:mb-1 w-11 h-11"
+                    className="text-destructive hover:text-destructive hover:bg-destructive/5 rounded-full md:mb-1 w-11 h-11"
                     onClick={() => removeRow(i)}
                     disabled={rows.length === 1}
                   >
@@ -232,7 +232,7 @@ const MultiWithdrawalEntry = ({ onComplete }: Props) => {
           <div className="flex-1 text-center sm:text-left">
             <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Batch Total Withdrawals</p>
             <div className="text-2xl font-black text-primary">
-              रु {grandTotal.toLocaleString()}
+              ₹ {grandTotal.toLocaleString()}
             </div>
           </div>
           <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">

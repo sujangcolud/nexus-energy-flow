@@ -550,13 +550,13 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
             <Loader2 className="h-8 w-8 animate-spin text-primary opacity-20" />
           </div>
         ) : connectionError ? (
-          <Card className="rounded-3xl border-none bg-rose-50 p-6 text-center">
-            <AlertCircle className="h-8 w-8 text-rose-500 mx-auto mb-3" />
+          <Card className="rounded-3xl border-none bg-destructive/5 p-6 text-center">
+            <AlertCircle className="h-8 w-8 text-destructive mx-auto mb-3" />
             <p className="text-xs font-black uppercase text-rose-800 mb-4">Sync Error</p>
-            <Button onClick={retryFetch} size="sm" className="rounded-full bg-rose-600 font-bold uppercase text-[10px]">Retry</Button>
+            <Button onClick={retryFetch} size="sm" className="rounded-full bg-destructive font-bold uppercase text-[10px]">Retry</Button>
           </Card>
         ) : summaryData.dataPoints === 0 ? (
-          <div className="text-center py-12 bg-slate-50 rounded-3xl border border-dashed border-slate-200">
+          <div className="text-center py-12 bg-muted/50 rounded-3xl border border-dashed border-border">
             <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">No historical data available</p>
           </div>
         ) : (

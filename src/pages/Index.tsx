@@ -187,7 +187,7 @@ const Index = () => {
                         <div className="space-y-3">
                           <Label
                             htmlFor="login-email"
-                            className="text-slate-700 font-medium"
+                            className="text-foreground font-medium"
                           >
                             Email Address
                           </Label>
@@ -204,7 +204,7 @@ const Index = () => {
                         <div className="space-y-3">
                           <Label
                             htmlFor="login-password"
-                            className="text-slate-700 font-medium"
+                            className="text-foreground font-medium"
                           >
                             Password
                           </Label>
@@ -221,7 +221,7 @@ const Index = () => {
                             <button
                               type="button"
                               onClick={() => setShowPassword(!showPassword)}
-                              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700 transition-colors"
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                             >
                               {showPassword ? (
                                 <EyeOff className="h-5 w-5" />
@@ -257,7 +257,7 @@ const Index = () => {
                           <div className="space-y-3">
                             <Label
                               htmlFor="firstName"
-                              className="text-slate-700 font-medium"
+                              className="text-foreground font-medium"
                             >
                               First Name
                             </Label>
@@ -274,7 +274,7 @@ const Index = () => {
                           <div className="space-y-3">
                             <Label
                               htmlFor="lastName"
-                              className="text-slate-700 font-medium"
+                              className="text-foreground font-medium"
                             >
                               Last Name
                             </Label>
@@ -292,7 +292,7 @@ const Index = () => {
                         <div className="space-y-3">
                           <Label
                             htmlFor="signup-email"
-                            className="text-slate-700 font-medium"
+                            className="text-foreground font-medium"
                           >
                             Email Address
                           </Label>
@@ -309,7 +309,7 @@ const Index = () => {
                         <div className="space-y-3">
                           <Label
                             htmlFor="signup-password"
-                            className="text-slate-700 font-medium"
+                            className="text-foreground font-medium"
                           >
                             Password
                           </Label>
@@ -327,7 +327,7 @@ const Index = () => {
                             <button
                               type="button"
                               onClick={() => setShowPassword(!showPassword)}
-                              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700 transition-colors"
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                             >
                               {showPassword ? (
                                 <EyeOff className="h-5 w-5" />

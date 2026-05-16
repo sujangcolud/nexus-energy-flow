@@ -412,8 +412,8 @@ const Dashboard = () => {
   // Show access denied message if user has no accessible items
   if (userRole && navItems.length === 0) {
     return (
-      <div className="min-h-screen bg-slate-50">
-        <header className="bg-white shadow-sm border-b border-slate-200 sticky top-0 z-50">
+      <div className="min-h-screen bg-muted/50">
+        <header className="bg-white shadow-sm border-b border-border sticky top-0 z-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center py-4">
               <div className="flex items-center gap-3">
@@ -431,11 +431,11 @@ const Dashboard = () => {
               </div>
 
               <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2 text-sm text-slate-700">
+                <div className="flex items-center gap-2 text-sm text-foreground">
                   <User className="h-4 w-4" />
                   <span>{user?.email}</span>
                   {userRole && (
-                    <span className="bg-slate-100 text-slate-700 px-3 py-1 rounded-full text-xs font-medium">
+                    <span className="bg-muted text-foreground px-3 py-1 rounded-full text-xs font-medium">
                       {userRole.replace("_", " ")}
                     </span>
                   )}
@@ -445,7 +445,7 @@ const Dashboard = () => {
                   variant="outline"
                   size="sm"
                   onClick={handleSignOut}
-                  className="flex items-center gap-2 hover:bg-red-50 hover:border-red-300"
+                  className="flex items-center gap-2 hover:bg-destructive/5 hover:border-red-300"
                 >
                   <LogOut className="h-4 w-4" />
                   Sign Out
@@ -454,7 +454,7 @@ const Dashboard = () => {
                   <Button
                     variant="outline"
                     size="icon"
-                    className="hover:bg-slate-100 hover:border-slate-300"
+                    className="hover:bg-muted hover:border-slate-300"
                   >
                     <SettingsIcon className="h-4 w-4" />
                   </Button>
@@ -465,12 +465,12 @@ const Dashboard = () => {
         </header>
 
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <Card className="max-w-md mx-auto shadow-lg border border-slate-200 bg-white">
+          <Card className="max-w-md mx-auto shadow-lg border border-border bg-white">
             <CardContent className="flex flex-col items-center justify-center p-8 space-y-4">
               <div className="p-4 rounded-full bg-slate-600 text-white">
                 <User className="h-8 w-8" />
               </div>
-              <h2 className="text-xl font-semibold text-slate-900">
+              <h2 className="text-xl font-semibold text-foreground">
                 Access Pending
               </h2>
               <p className="text-center text-muted-foreground">

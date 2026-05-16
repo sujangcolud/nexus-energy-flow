@@ -42,7 +42,7 @@ const MobileTable: React.FC<MobileTableProps> = ({
     return (
       <div className="text-center py-10">
         <div className="w-8 h-8 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin mx-auto"></div>
-        <p className="text-gray-600 mt-2">Loading...</p>
+        <p className="text-muted-foreground mt-2">Loading...</p>
       </div>
     );
   }
@@ -50,7 +50,7 @@ const MobileTable: React.FC<MobileTableProps> = ({
   if (data.length === 0) {
     return (
       <div className="text-center py-12">
-        <p className="text-gray-500">{emptyMessage}</p>
+        <p className="text-muted-foreground">{emptyMessage}</p>
       </div>
     );
   }
@@ -76,10 +76,10 @@ const MobileTable: React.FC<MobileTableProps> = ({
                         key={column.key}
                         className="flex justify-between items-start"
                       >
-                        <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                           {column.mobileLabel || column.label}
                         </span>
-                        <div className="text-sm text-gray-900 text-right max-w-[60%]">
+                        <div className="text-sm text-foreground text-right max-w-[60%]">
                           {displayValue}
                         </div>
                       </div>

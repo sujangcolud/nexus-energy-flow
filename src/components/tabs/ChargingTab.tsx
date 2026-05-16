@@ -517,7 +517,7 @@ const ChargingTab = () => {
           <Card className="rounded-3xl border-none bg-white shadow-sm overflow-hidden">
             <CardContent className="p-4 md:p-6">
               <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Total Revenue</p>
-              <p className="text-sm md:text-xl font-bold text-primary">NRs. {totalSessionCost.toFixed(2)}</p>
+              <p className="text-sm md:text-xl font-bold text-primary">₹ {totalSessionCost.toFixed(2)}</p>
             </CardContent>
           </Card>
           <Card className="rounded-3xl border-none bg-white shadow-sm overflow-hidden">
@@ -529,7 +529,7 @@ const ChargingTab = () => {
           <Card className="rounded-3xl border-none bg-white shadow-sm overflow-hidden hidden md:block">
             <CardContent className="p-4 md:p-6">
               <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Avg. Cost</p>
-              <p className="text-sm md:text-xl font-bold text-foreground">NRs. {averageSessionCost.toFixed(2)}</p>
+              <p className="text-sm md:text-xl font-bold text-foreground">₹ {averageSessionCost.toFixed(2)}</p>
             </CardContent>
           </Card>
           <Card className="rounded-3xl border-none bg-white shadow-sm overflow-hidden hidden md:block">
@@ -543,7 +543,7 @@ const ChargingTab = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-8">
           {/* Charging Session Form */}
           <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden">
-            <CardHeader className="bg-amber-500 text-white p-4 md:p-6">
+            <CardHeader className="bg-accent text-white p-4 md:p-6">
               <CardTitle className="flex items-center gap-3 text-lg md:text-xl font-bold">
                 <div className="p-2 bg-white/20 rounded-xl">
                   <Zap className="h-5 w-5 md:h-6 md:w-6" />
@@ -558,7 +558,7 @@ const ChargingTab = () => {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                      <Battery className="h-3.5 w-3.5 text-amber-600" />
+                      <Battery className="h-3.5 w-3.5 text-accent" />
                       Start %
                     </label>
                     <Input
@@ -576,7 +576,7 @@ const ChargingTab = () => {
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                      <BatteryCharging className="h-3.5 w-3.5 text-green-600" />
+                      <BatteryCharging className="h-3.5 w-3.5 text-success" />
                       End %
                     </label>
                     <Input
@@ -699,19 +699,19 @@ const ChargingTab = () => {
                       <div className="flex justify-between items-center">
                         <span className="text-muted-foreground">Percentage Cost:</span>
                         <span className="font-bold">
-                          NRs. {calculatePercentageCost().toFixed(2)}
+                          ₹ {calculatePercentageCost().toFixed(2)}
                         </span>
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-muted-foreground">kCal Cost:</span>
                         <span className="font-bold">
-                          NRs. {calculateKcalCost().toFixed(2)}
+                          ₹ {calculateKcalCost().toFixed(2)}
                         </span>
                       </div>
                       <div className="border-t border-primary/10 pt-2 flex justify-between items-center">
                         <span className="font-bold uppercase tracking-wider text-xs">Total Amount</span>
                         <span className="font-black text-xl text-primary">
-                          NRs. {calculateTotalAmount().toFixed(2)}
+                          ₹ {calculateTotalAmount().toFixed(2)}
                         </span>
                       </div>
                     </div>
@@ -721,7 +721,7 @@ const ChargingTab = () => {
                 <Button
                   type="submit"
                   disabled={submitting}
-                  className="w-full h-12 md:h-14 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white font-black text-lg shadow-lg shadow-amber-500/20 transition-all active:scale-[0.98]"
+                  className="w-full h-12 md:h-14 rounded-2xl bg-accent hover:bg-accent text-white font-black text-lg shadow-lg shadow-amber-500/20 transition-all active:scale-[0.98]"
                 >
                   {submitting ? (
                     <div className="flex items-center gap-2">
@@ -740,7 +740,7 @@ const ChargingTab = () => {
           </Card>
 
           {/* Recent Sessions Preview */}
-          <Card className="bg-gradient-to-br from-white/90 to-blue-50/90 backdrop-blur-sm border-0 shadow-2xl hover:shadow-3xl transition-all duration-300">
+          <Card className="bg-gradient-to-br from-white/90 to-primary/5/90 backdrop-blur-sm border-0 shadow-2xl hover:shadow-3xl transition-all duration-300">
             <CardHeader className="bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-t-lg">
               <CardTitle className="flex items-center gap-3 text-xl">
                 <div className="p-2 bg-white/20 rounded-lg">
@@ -753,10 +753,10 @@ const ChargingTab = () => {
               {sessions.length === 0 ? (
                 <div className="text-center py-8">
                   <BatteryCharging className="h-16 w-16 mx-auto text-gray-300 mb-4" />
-                  <p className="text-gray-500 text-lg font-medium">
+                  <p className="text-muted-foreground text-lg font-medium">
                     No charging sessions yet
                   </p>
-                  <p className="text-gray-400">
+                  <p className="text-muted-foreground">
                     Record your first session to get started!
                   </p>
                 </div>
@@ -765,20 +765,20 @@ const ChargingTab = () => {
                   {sessions.slice(0, 5).map((session, index) => (
                     <div
                       key={session.id}
-                      className="p-4 bg-gradient-to-r from-white to-blue-50 rounded-lg border border-blue-100 hover:shadow-md transition-all duration-200"
+                      className="p-4 bg-gradient-to-r from-white to-primary/5 rounded-lg border border-blue-100 hover:shadow-md transition-all duration-200"
                       style={{ animationDelay: `${index * 100}ms` }}
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg text-white">
+                          <div className="p-2 bg-gradient-to-r from-primary to-primary-dark rounded-lg text-white">
                             <Zap className="h-4 w-4" />
                           </div>
                           <div>
-                            <p className="font-medium text-gray-800">
+                            <p className="font-medium text-foreground">
                               {session.start_percentage}% →{" "}
                               {session.end_percentage}%
                             </p>
-                            <p className="text-sm text-gray-500">
+                            <p className="text-sm text-muted-foreground">
                               {format(
                                 new Date(session.session_date),
                                 "MMM dd, yyyy",
@@ -787,8 +787,8 @@ const ChargingTab = () => {
                           </div>
                         </div>
                         <div className="text-right">
-                          <p className="font-bold text-blue-600">
-                            NRs. {session.total_amount.toFixed(2)}
+                          <p className="font-bold text-primary">
+                            ₹ {session.total_amount.toFixed(2)}
                           </p>
                           <Badge variant="outline" className="text-xs">
                             {session.payment_mode}
@@ -842,7 +842,7 @@ const ChargingTab = () => {
                         size="sm"
                         onClick={() => handleDeleteCategory(cat.id)}
                       >
-                        <Trash2 className="h-4 w-4 text-red-500" />
+                        <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
                     </div>
                   ))}
@@ -854,7 +854,7 @@ const ChargingTab = () => {
 
         {/* Charging History */}
         <Card className="bg-gradient-to-br from-white/90 to-gray-50/90 backdrop-blur-sm border-0 shadow-2xl">
-          <CardHeader className="border-b border-gray-200/50 space-y-4">
+          <CardHeader className="border-b border-border/50 space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <CardTitle className="text-lg sm:text-2xl font-bold bg-gradient-to-r from-gray-700 to-gray-900 bg-clip-text text-transparent">
                 Charging History
@@ -914,15 +914,15 @@ const ChargingTab = () => {
                 <div className="w-16 h-16 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full animate-spin mx-auto flex items-center justify-center mb-4">
                   <Zap className="h-8 w-8 text-white" />
                 </div>
-                <p className="text-gray-600">Loading charging sessions...</p>
+                <p className="text-muted-foreground">Loading charging sessions...</p>
               </div>
             ) : sessions.length === 0 ? (
               <div className="text-center py-12">
                 <BatteryCharging className="h-16 w-16 mx-auto text-gray-300 mb-4" />
-                <p className="text-xl font-semibold text-gray-700 mb-2">
+                <p className="text-xl font-semibold text-foreground mb-2">
                   No sessions found
                 </p>
-                <p className="text-gray-500">
+                <p className="text-muted-foreground">
                   Start recording your charging sessions to see them here.
                 </p>
               </div>
@@ -930,26 +930,26 @@ const ChargingTab = () => {
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
-                    <TableRow className="bg-gradient-to-r from-gray-50 to-blue-50">
-                      <TableHead className="font-semibold text-gray-700">
+                    <TableRow className="bg-gradient-to-r from-gray-50 to-primary/5">
+                      <TableHead className="font-semibold text-foreground">
                         Date
                       </TableHead>
-                      <TableHead className="font-semibold text-gray-700">
+                      <TableHead className="font-semibold text-foreground">
                         Battery Range
                       </TableHead>
-                      <TableHead className="font-semibold text-gray-700">
+                      <TableHead className="font-semibold text-foreground">
                         Energy (kCal)
                       </TableHead>
-                      <TableHead className="font-semibold text-gray-700">
+                      <TableHead className="font-semibold text-foreground">
                         Rates
                       </TableHead>
-                      <TableHead className="font-semibold text-gray-700">
+                      <TableHead className="font-semibold text-foreground">
                         Total Amount
                       </TableHead>
-                      <TableHead className="font-semibold text-gray-700">
+                      <TableHead className="font-semibold text-foreground">
                         Payment
                       </TableHead>
-                      <TableHead className="font-semibold text-gray-700">
+                      <TableHead className="font-semibold text-foreground">
                         Actions
                       </TableHead>
                     </TableRow>
@@ -960,7 +960,7 @@ const ChargingTab = () => {
                         Total
                       </TableCell>
                       <TableCell colSpan={2} className="font-bold text-right">
-                        NRs. {totalSessionCost.toFixed(2)}
+                        ₹ {totalSessionCost.toFixed(2)}
                       </TableCell>
                     </TableRow>
                     {sessions.map((session, index) => (
@@ -977,9 +977,9 @@ const ChargingTab = () => {
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
-                            <Battery className="h-4 w-4 text-red-500" />
+                            <Battery className="h-4 w-4 text-destructive" />
                             <span>{session.start_percentage}%</span>
-                            <span className="text-gray-400">→</span>
+                            <span className="text-muted-foreground">→</span>
                             <BatteryCharging className="h-4 w-4 text-green-500" />
                             <span>{session.end_percentage}%</span>
                           </div>
@@ -987,19 +987,19 @@ const ChargingTab = () => {
                         <TableCell>{session.kcal} kCal</TableCell>
                         <TableCell>
                           <div className="text-sm">
-                            <div>Per %: NRs. {session.per_percent_rate}</div>
-                            <div>Per kCal: NRs. {session.per_unit_rate}</div>
+                            <div>Per %: ₹ {session.per_percent_rate}</div>
+                            <div>Per kCal: ₹ {session.per_unit_rate}</div>
                           </div>
                         </TableCell>
                         <TableCell>
                           <span className="font-bold text-lg bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">
-                            NRs. {session.total_amount.toFixed(2)}
+                            ₹ {session.total_amount.toFixed(2)}
                           </span>
                         </TableCell>
                         <TableCell>
                           <Badge
                             variant="outline"
-                            className="bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200"
+                            className="bg-gradient-to-r from-blue-50 to-purple-50 border-primary/10"
                           >
                             {session.payment_mode}
                           </Badge>
@@ -1021,7 +1021,7 @@ const ChargingTab = () => {
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                                  className="text-destructive hover:text-red-700 hover:bg-destructive/5"
                                 >
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
@@ -1058,7 +1058,7 @@ const ChargingTab = () => {
             )}
           </CardContent>
           {sessions.length > 0 && (
-            <div className="flex justify-center p-4 border-t border-gray-200">
+            <div className="flex justify-center p-4 border-t border-border">
               <div className="flex items-center gap-4">
                 <Button
                   onClick={() => onPageChange(page - 1)}

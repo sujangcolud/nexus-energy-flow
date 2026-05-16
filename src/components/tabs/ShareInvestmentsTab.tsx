@@ -348,11 +348,11 @@ const ShareInvestmentsTab = () => {
           <CardContent className="p-4 md:p-6">
             <div className="flex flex-col gap-2">
               <div className="p-2 bg-chart-2/10 w-fit rounded-xl">
-                <TrendingUp className="h-4 w-4 md:h-5 md:w-5 text-chart-2" />
+                <TrendingUp className="h-4 w-4 md:h-5 md:w-5 text-accent" />
               </div>
               <div>
                 <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground">Investments</p>
-                <p className="text-sm md:text-xl font-bold text-chart-2">₹{totalInvestments.toLocaleString()}</p>
+                <p className="text-sm md:text-xl font-bold text-accent">₹{totalInvestments.toLocaleString()}</p>
               </div>
             </div>
           </CardContent>
@@ -374,11 +374,11 @@ const ShareInvestmentsTab = () => {
           <CardContent className="p-4 md:p-6">
             <div className="flex flex-col gap-2">
               <div className={`p-2 w-fit rounded-xl ${netBalance >= 0 ? "bg-primary/10" : "bg-chart-3/10"}`}>
-                <ArrowUpDown className={`h-4 w-4 md:h-5 md:w-5 ${netBalance >= 0 ? "text-primary" : "text-chart-3"}`} />
+                <ArrowUpDown className={`h-4 w-4 md:h-5 md:w-5 ${netBalance >= 0 ? "text-primary" : "text-success"}`} />
               </div>
               <div>
                 <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground">Net Balance</p>
-                <p className={`text-sm md:text-xl font-bold ${netBalance >= 0 ? "text-primary" : "text-chart-3"}`}>
+                <p className={`text-sm md:text-xl font-bold ${netBalance >= 0 ? "text-primary" : "text-success"}`}>
                   ₹{netBalance.toLocaleString()}
                 </p>
               </div>
@@ -404,7 +404,7 @@ const ShareInvestmentsTab = () => {
 
       {/* Opening Balance Section */}
       <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden">
-        <CardHeader className="bg-slate-50/50 border-b border-slate-100 px-4 md:px-6 py-4">
+        <CardHeader className="bg-muted/50/50 border-b border-border px-4 md:px-6 py-4">
           <CardTitle className="flex items-center gap-2 text-base md:text-lg font-bold">
             <DollarSign className="h-5 w-5 text-primary" />
             Opening Balance
@@ -481,7 +481,7 @@ const ShareInvestmentsTab = () => {
         {/* Investments Tab */}
         <TabsContent value="investments" className="space-y-4">
           <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden">
-            <CardHeader className="bg-slate-50/50 border-b border-slate-100 px-4 md:px-6 py-4">
+            <CardHeader className="bg-muted/50/50 border-b border-border px-4 md:px-6 py-4">
               <CardTitle className="flex items-center gap-2 text-base md:text-lg font-bold">
                 <Plus className="h-5 w-5 text-primary" />
                 Add Share Investment
@@ -607,7 +607,7 @@ const ShareInvestmentsTab = () => {
                             </div>
                           </div>
                         </TableCell>
-                        <TableCell className="text-chart-2 font-semibold">₹{investment.contribution_amount.toLocaleString()}</TableCell>
+                        <TableCell className="text-accent font-semibold">₹{investment.contribution_amount.toLocaleString()}</TableCell>
                         <TableCell>{format(new Date(investment.investment_date), "dd/MM/yyyy")}</TableCell>
                         <TableCell className="capitalize">{investment.payment_mode.replace("_", " ")}</TableCell>
                         <TableCell>
@@ -632,7 +632,7 @@ const ShareInvestmentsTab = () => {
         {/* Expenses Tab */}
         <TabsContent value="expenses" className="space-y-4">
           <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden">
-            <CardHeader className="bg-slate-50/50 border-b border-slate-100 px-4 md:px-6 py-4">
+            <CardHeader className="bg-muted/50/50 border-b border-border px-4 md:px-6 py-4">
               <CardTitle className="flex items-center gap-2 text-base md:text-lg font-bold">
                 <Minus className="h-5 w-5 text-primary" />
                 Add Share Expense

@@ -287,13 +287,13 @@ const FinancialInsightsWidget: React.FC<FinancialInsightsWidgetProps> = ({
     return (
       <Card className={`${className} animate-pulse`}>
         <CardHeader>
-          <div className="h-6 bg-gray-200 rounded w-1/3"></div>
+          <div className="h-6 bg-muted rounded w-1/3"></div>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <div className="h-4 bg-gray-200 rounded w-full"></div>
-            <div className="h-4 bg-gray-200 rounded w-2/3"></div>
-            <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+            <div className="h-4 bg-muted rounded w-full"></div>
+            <div className="h-4 bg-muted rounded w-2/3"></div>
+            <div className="h-4 bg-muted rounded w-1/2"></div>
           </div>
         </CardContent>
       </Card>
@@ -305,8 +305,8 @@ const FinancialInsightsWidget: React.FC<FinancialInsightsWidgetProps> = ({
       {/* Header with Refresh Button */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <BarChart3 className="h-6 w-6 text-purple-600" />
-          <h2 className="text-2xl font-bold text-gray-800">
+          <BarChart3 className="h-6 w-6 text-primary" />
+          <h2 className="text-2xl font-bold text-foreground">
             Financial Insights
           </h2>
         </div>
@@ -327,21 +327,21 @@ const FinancialInsightsWidget: React.FC<FinancialInsightsWidgetProps> = ({
       {/* Monthly Performance Cards */}
       {monthlyTotals && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200">
+          <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-primary/10">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-blue-600 flex items-center gap-2">
+              <CardTitle className="text-sm font-medium text-primary flex items-center gap-2">
                 <DollarSign className="h-4 w-4" />
                 Monthly Income
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-blue-800">
-                NRs. {monthlyTotals.income.toLocaleString()}
+              <div className="text-2xl font-bold text-primary">
+                ₹ {monthlyTotals.income.toLocaleString()}
               </div>
               <div className="mt-2">
                 <Badge
                   variant="secondary"
-                  className="text-xs bg-blue-100 text-blue-700"
+                  className="text-xs bg-primary/10 text-blue-700"
                 >
                   This Month
                 </Badge>
@@ -351,19 +351,19 @@ const FinancialInsightsWidget: React.FC<FinancialInsightsWidgetProps> = ({
 
           <Card className="bg-gradient-to-br from-red-50 to-rose-50 border-red-200">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-red-600 flex items-center gap-2">
+              <CardTitle className="text-sm font-medium text-destructive flex items-center gap-2">
                 <TrendingDown className="h-4 w-4" />
                 Monthly Expenses
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-red-800">
-                NRs. {monthlyTotals.expenses.toLocaleString()}
+              <div className="text-2xl font-bold text-destructive">
+                ₹ {monthlyTotals.expenses.toLocaleString()}
               </div>
               <div className="mt-2">
                 <Badge
                   variant="secondary"
-                  className="text-xs bg-red-100 text-red-700"
+                  className="text-xs bg-destructive/10 text-red-700"
                 >
                   This Month
                 </Badge>
@@ -373,14 +373,14 @@ const FinancialInsightsWidget: React.FC<FinancialInsightsWidgetProps> = ({
 
           <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-green-600 flex items-center gap-2">
+              <CardTitle className="text-sm font-medium text-success flex items-center gap-2">
                 <Target className="h-4 w-4" />
                 Net Profit
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-800">
-                NRs. {monthlyTotals.netProfit.toLocaleString()}
+              <div className="text-2xl font-bold text-success">
+                ₹ {monthlyTotals.netProfit.toLocaleString()}
               </div>
               <div className="mt-2">
                 <Badge
@@ -397,14 +397,14 @@ const FinancialInsightsWidget: React.FC<FinancialInsightsWidgetProps> = ({
 
           <Card className="bg-gradient-to-br from-purple-50 to-violet-50 border-purple-200">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-purple-600 flex items-center gap-2">
+              <CardTitle className="text-sm font-medium text-primary flex items-center gap-2">
                 <Activity className="h-4 w-4" />
                 Cash Flow
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-purple-800">
-                NRs.{" "}
+                ₹{" "}
                 {(
                   monthlyTotals.income +
                   monthlyTotals.deposits -
@@ -431,25 +431,25 @@ const FinancialInsightsWidget: React.FC<FinancialInsightsWidgetProps> = ({
         {performanceMetrics && (
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-gray-700">
+              <CardTitle className="flex items-center gap-2 text-foreground">
                 <Star className="h-5 w-5" />
                 Weekly Performance
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Income Growth</span>
+                <span className="text-sm text-muted-foreground">Income Growth</span>
                 <div className="flex items-center gap-2">
                   {performanceMetrics.incomeGrowth >= 0 ? (
-                    <ArrowUp className="h-4 w-4 text-green-600" />
+                    <ArrowUp className="h-4 w-4 text-success" />
                   ) : (
-                    <ArrowDown className="h-4 w-4 text-red-600" />
+                    <ArrowDown className="h-4 w-4 text-destructive" />
                   )}
                   <span
                     className={`font-semibold ${
                       performanceMetrics.incomeGrowth >= 0
-                        ? "text-green-600"
-                        : "text-red-600"
+                        ? "text-success"
+                        : "text-destructive"
                     }`}
                   >
                     {Math.abs(performanceMetrics.incomeGrowth).toFixed(1)}%
@@ -458,18 +458,18 @@ const FinancialInsightsWidget: React.FC<FinancialInsightsWidgetProps> = ({
               </div>
 
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Expense Growth</span>
+                <span className="text-sm text-muted-foreground">Expense Growth</span>
                 <div className="flex items-center gap-2">
                   {performanceMetrics.expenseGrowth >= 0 ? (
-                    <ArrowUp className="h-4 w-4 text-red-600" />
+                    <ArrowUp className="h-4 w-4 text-destructive" />
                   ) : (
-                    <ArrowDown className="h-4 w-4 text-green-600" />
+                    <ArrowDown className="h-4 w-4 text-success" />
                   )}
                   <span
                     className={`font-semibold ${
                       performanceMetrics.expenseGrowth >= 0
-                        ? "text-red-600"
-                        : "text-green-600"
+                        ? "text-destructive"
+                        : "text-success"
                     }`}
                   >
                     {Math.abs(performanceMetrics.expenseGrowth).toFixed(1)}%
@@ -478,14 +478,14 @@ const FinancialInsightsWidget: React.FC<FinancialInsightsWidgetProps> = ({
               </div>
 
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Avg Daily Profit</span>
-                <span className="font-semibold text-blue-600">
-                  NRs. {performanceMetrics.avgDailyProfit.toFixed(0)}
+                <span className="text-sm text-muted-foreground">Avg Daily Profit</span>
+                <span className="font-semibold text-primary">
+                  ₹ {performanceMetrics.avgDailyProfit.toFixed(0)}
                 </span>
               </div>
 
               <div className="border-t pt-4">
-                <div className="text-xs text-gray-500 mb-2">Best Day</div>
+                <div className="text-xs text-muted-foreground mb-2">Best Day</div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm">
                     {format(
@@ -493,8 +493,8 @@ const FinancialInsightsWidget: React.FC<FinancialInsightsWidgetProps> = ({
                       "MMM dd",
                     )}
                   </span>
-                  <span className="font-semibold text-green-600">
-                    NRs.{" "}
+                  <span className="font-semibold text-success">
+                    ₹{" "}
                     {performanceMetrics.bestPerformingDay.profit.toFixed(0)}
                   </span>
                 </div>
@@ -507,7 +507,7 @@ const FinancialInsightsWidget: React.FC<FinancialInsightsWidgetProps> = ({
         {paymentBreakdown && (
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-gray-700">
+              <CardTitle className="flex items-center gap-2 text-foreground">
                 <PieChart className="h-5 w-5" />
                 Payment Method Analysis
               </CardTitle>
@@ -516,7 +516,7 @@ const FinancialInsightsWidget: React.FC<FinancialInsightsWidgetProps> = ({
               <div className="space-y-3">
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm text-gray-600">Cash</span>
+                    <span className="text-sm text-muted-foreground">Cash</span>
                     <span className="text-sm font-semibold">
                       {paymentBreakdown.cash.percentage.toFixed(1)}%
                     </span>
@@ -525,14 +525,14 @@ const FinancialInsightsWidget: React.FC<FinancialInsightsWidgetProps> = ({
                     value={paymentBreakdown.cash.percentage}
                     className="h-2"
                   />
-                  <div className="text-xs text-gray-500 mt-1">
-                    NRs. {paymentBreakdown.cash.income.toFixed(0)}
+                  <div className="text-xs text-muted-foreground mt-1">
+                    ₹ {paymentBreakdown.cash.income.toFixed(0)}
                   </div>
                 </div>
 
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm text-gray-600">eSewa</span>
+                    <span className="text-sm text-muted-foreground">eSewa</span>
                     <span className="text-sm font-semibold">
                       {paymentBreakdown.esewa.percentage.toFixed(1)}%
                     </span>
@@ -541,14 +541,14 @@ const FinancialInsightsWidget: React.FC<FinancialInsightsWidgetProps> = ({
                     value={paymentBreakdown.esewa.percentage}
                     className="h-2"
                   />
-                  <div className="text-xs text-gray-500 mt-1">
-                    NRs. {paymentBreakdown.esewa.income.toFixed(0)}
+                  <div className="text-xs text-muted-foreground mt-1">
+                    ₹ {paymentBreakdown.esewa.income.toFixed(0)}
                   </div>
                 </div>
 
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm text-gray-600">Fonepay</span>
+                    <span className="text-sm text-muted-foreground">Fonepay</span>
                     <span className="text-sm font-semibold">
                       {paymentBreakdown.fonepay.percentage.toFixed(1)}%
                     </span>
@@ -557,8 +557,8 @@ const FinancialInsightsWidget: React.FC<FinancialInsightsWidgetProps> = ({
                     value={paymentBreakdown.fonepay.percentage}
                     className="h-2"
                   />
-                  <div className="text-xs text-gray-500 mt-1">
-                    NRs. {paymentBreakdown.fonepay.income.toFixed(0)}
+                  <div className="text-xs text-muted-foreground mt-1">
+                    ₹ {paymentBreakdown.fonepay.income.toFixed(0)}
                   </div>
                 </div>
               </div>
@@ -571,7 +571,7 @@ const FinancialInsightsWidget: React.FC<FinancialInsightsWidgetProps> = ({
       {weeklyTrends.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-gray-700">
+            <CardTitle className="flex items-center gap-2 text-foreground">
               <Calendar className="h-5 w-5" />
               7-Day Trend
             </CardTitle>
@@ -584,15 +584,15 @@ const FinancialInsightsWidget: React.FC<FinancialInsightsWidgetProps> = ({
                   className="flex items-center justify-between"
                 >
                   <div className="flex items-center gap-3">
-                    <span className="text-sm font-medium text-gray-700 w-16">
+                    <span className="text-sm font-medium text-foreground w-16">
                       {format(new Date(trend.date), "MMM dd")}
                     </span>
                     <div className="flex items-center gap-4">
-                      <div className="text-xs text-green-600">
-                        ↑ NRs. {trend.income.toFixed(0)}
+                      <div className="text-xs text-success">
+                        ↑ ₹ {trend.income.toFixed(0)}
                       </div>
-                      <div className="text-xs text-red-600">
-                        ↓ NRs. {trend.expenses.toFixed(0)}
+                      <div className="text-xs text-destructive">
+                        ↓ ₹ {trend.expenses.toFixed(0)}
                       </div>
                     </div>
                   </div>
@@ -600,7 +600,7 @@ const FinancialInsightsWidget: React.FC<FinancialInsightsWidgetProps> = ({
                     variant={trend.netProfit >= 0 ? "default" : "destructive"}
                     className="text-xs"
                   >
-                    NRs. {trend.netProfit.toFixed(0)}
+                    ₹ {trend.netProfit.toFixed(0)}
                   </Badge>
                 </div>
               ))}

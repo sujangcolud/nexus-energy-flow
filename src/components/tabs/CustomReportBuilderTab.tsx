@@ -197,7 +197,7 @@ const CustomReportBuilderTab = () => {
                     <span>{f}</span>
                   </div>
                   <button
-                    className="text-muted-foreground hover:text-rose-600"
+                    className="text-muted-foreground hover:text-destructive"
                     onClick={() => toggleField(f)}
                   >
                     <Trash2 className="h-3.5 w-3.5" />

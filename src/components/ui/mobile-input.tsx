@@ -29,14 +29,14 @@ const MobileInput = React.forwardRef<HTMLInputElement, MobileInputProps>(
         )}
         <div className="relative">
           {icon && (
-            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
               {icon}
             </div>
           )}
           <input
             type={type}
             className={cn(
-              "flex w-full rounded-xl border border-gray-200 bg-white px-3 py-3 text-sm ring-offset-white file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+              "flex w-full rounded-xl border border-border bg-white px-3 py-3 text-sm ring-offset-white file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
               icon && "pl-10",
               rightElement && "pr-10",
               isMobile && "py-4 text-base rounded-2xl", // Larger touch targets on mobile
@@ -55,7 +55,7 @@ const MobileInput = React.forwardRef<HTMLInputElement, MobileInputProps>(
         {error && (
           <p
             className={cn(
-              "text-red-500 font-medium",
+              "text-destructive font-medium",
               isMobile ? "text-sm" : "text-xs",
             )}
           >

@@ -212,7 +212,7 @@ const MenuManagementTab = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-4 md:space-y-6">
             <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden">
-              <CardHeader className="bg-slate-50/50 border-b border-slate-100 px-4 md:px-6 py-4">
+              <CardHeader className="bg-muted/50/50 border-b border-border px-4 md:px-6 py-4">
                 <CardTitle className="text-base md:text-lg font-bold">{editingItem ? "Edit Item" : "Add Item"}</CardTitle>
               </CardHeader>
               <CardContent className="p-4 md:p-6">
@@ -221,7 +221,7 @@ const MenuManagementTab = () => {
                   <div className="space-y-1.5"><label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Category *</label><Select value={category} onValueChange={setCategory}><SelectTrigger className="h-11 rounded-xl"><SelectValue placeholder="Select" /></SelectTrigger><SelectContent>{categories.map((c) => <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>)}</SelectContent></Select></div>
                   <div className="space-y-1.5"><label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Price *</label><Input type="number" value={price} onChange={(e) => setPrice(parseFloat(e.target.value) || 0)} required className="h-11 rounded-xl" /></div>
                   <div className="md:col-span-2 space-y-1.5"><label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Description</label><Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2} className="rounded-xl" /></div>
-                  <div className="space-y-1.5"><label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Available</label><div className="flex items-center gap-3 mt-2 bg-slate-50 w-fit p-2 rounded-xl border border-slate-100"><Switch checked={isAvailable} onCheckedChange={setIsAvailable} /><span className="text-sm font-medium">{isAvailable ? "Yes" : "No"}</span></div></div>
+                  <div className="space-y-1.5"><label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Available</label><div className="flex items-center gap-3 mt-2 bg-muted/50 w-fit p-2 rounded-xl border border-border"><Switch checked={isAvailable} onCheckedChange={setIsAvailable} /><span className="text-sm font-medium">{isAvailable ? "Yes" : "No"}</span></div></div>
                   <div className="md:col-span-3 flex gap-2 pt-2">
                     <Button type="submit" disabled={submitting} className="h-11 rounded-xl px-8 font-bold shadow-lg shadow-primary/20">{submitting ? "Saving..." : editingItem ? "Update Item" : "Add Item"}</Button>
                     {editingItem && <Button type="button" variant="outline" onClick={resetForm} className="h-11 rounded-xl font-bold">Cancel</Button>}
@@ -231,7 +231,7 @@ const MenuManagementTab = () => {
             </Card>
 
             <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden">
-              <CardHeader className="bg-slate-50/50 border-b border-slate-100 px-4 md:px-6 py-4">
+              <CardHeader className="bg-muted/50/50 border-b border-border px-4 md:px-6 py-4">
                 <CardTitle className="text-base md:text-lg font-bold">Menu Items</CardTitle>
               </CardHeader>
               <CardContent className="p-0">
@@ -270,7 +270,7 @@ const MenuManagementTab = () => {
 
           <div>
             <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden">
-              <CardHeader className="bg-slate-50/50 border-b border-slate-100 px-4 md:px-6 py-4">
+              <CardHeader className="bg-muted/50/50 border-b border-border px-4 md:px-6 py-4">
                 <CardTitle className="text-base md:text-lg font-bold">Categories</CardTitle>
               </CardHeader>
               <CardContent className="p-4 md:p-6">
@@ -280,7 +280,7 @@ const MenuManagementTab = () => {
                 </form>
                 <div className="space-y-2">
                   {categories.map((c) => (
-                    <div key={c.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-2xl border border-slate-100">
+                    <div key={c.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-2xl border border-border">
                       <span className="text-sm font-medium">{c.name}</span>
                       <Badge variant="secondary" className="rounded-lg">{menuItems.filter(i => i.category === c.name).length}</Badge>
                     </div>

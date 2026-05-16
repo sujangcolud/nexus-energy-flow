@@ -421,7 +421,7 @@ const UnifiedBulkImportTab = () => {
 
         {/* Shared data-type selector + template download */}
         <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden">
-          <CardHeader className="bg-slate-50/50 border-b border-slate-100 px-4 md:px-6 py-4">
+          <CardHeader className="bg-muted/50/50 border-b border-border px-4 md:px-6 py-4">
             <CardTitle className="text-base md:text-lg font-bold">Import Configuration</CardTitle>
           </CardHeader>
           <CardContent className="p-4 md:p-6">
@@ -439,10 +439,10 @@ const UnifiedBulkImportTab = () => {
                   </SelectContent>
                 </Select>
               </div>
-              <Button variant="outline" onClick={() => handleDownloadTemplate("xlsx")} disabled={!dataType} className="h-11 rounded-xl font-bold border-slate-200">
+              <Button variant="outline" onClick={() => handleDownloadTemplate("xlsx")} disabled={!dataType} className="h-11 rounded-xl font-bold border-border">
                 <Download className="h-4 w-4 mr-2" />Excel Template
               </Button>
-              <Button variant="outline" onClick={() => handleDownloadTemplate("csv")} disabled={!dataType} className="h-11 rounded-xl font-bold border-slate-200">
+              <Button variant="outline" onClick={() => handleDownloadTemplate("csv")} disabled={!dataType} className="h-11 rounded-xl font-bold border-border">
                 <Download className="h-4 w-4 mr-2" />CSV Template
               </Button>
             </div>
@@ -450,7 +450,7 @@ const UnifiedBulkImportTab = () => {
         </Card>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 bg-slate-100 p-1 rounded-2xl h-12 mb-6">
+          <TabsList className="grid w-full grid-cols-2 bg-muted p-1 rounded-2xl h-12 mb-6">
             <TabsTrigger value="data-import" className="flex items-center gap-2">
               <Database className="h-4 w-4" />Paste Data
             </TabsTrigger>
@@ -461,7 +461,7 @@ const UnifiedBulkImportTab = () => {
 
           <TabsContent value="data-import">
             <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden">
-              <CardHeader className="bg-slate-50/50 border-b border-slate-100 px-4 md:px-6 py-4">
+              <CardHeader className="bg-muted/50/50 border-b border-border px-4 md:px-6 py-4">
                 <CardTitle className="text-base md:text-lg font-bold">Paste from Spreadsheet</CardTitle>
               </CardHeader>
               <CardContent className="p-4 md:p-6 space-y-6">
@@ -475,11 +475,11 @@ const UnifiedBulkImportTab = () => {
                     onChange={(e) => setPasteData(e.target.value)}
                     rows={10}
                     disabled={!dataType}
-                    className="rounded-2xl border-slate-200 focus:border-primary resize-none p-4"
+                    className="rounded-2xl border-border focus:border-primary resize-none p-4"
                   />
                   {!dataType && (
-                    <div className="absolute inset-0 bg-slate-50/80 backdrop-blur-[1px] rounded-2xl flex items-center justify-center border-2 border-dashed border-slate-200">
-                      <p className="text-slate-400 font-bold uppercase tracking-wider text-xs">Pick Category Above</p>
+                    <div className="absolute inset-0 bg-muted/50/80 backdrop-blur-[1px] rounded-2xl flex items-center justify-center border-2 border-dashed border-border">
+                      <p className="text-muted-foreground font-bold uppercase tracking-wider text-xs">Pick Category Above</p>
                     </div>
                   )}
                 </div>
@@ -495,11 +495,11 @@ const UnifiedBulkImportTab = () => {
 
           <TabsContent value="file-upload">
             <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden">
-              <CardHeader className="bg-slate-50/50 border-b border-slate-100 px-4 md:px-6 py-4">
+              <CardHeader className="bg-muted/50/50 border-b border-border px-4 md:px-6 py-4">
                 <CardTitle className="text-base md:text-lg font-bold">Select File</CardTitle>
               </CardHeader>
               <CardContent className="p-4 md:p-6 space-y-6">
-                <div className="border-2 border-dashed border-slate-200 rounded-2xl p-8 text-center bg-slate-50/50 relative overflow-hidden group hover:border-primary/50 transition-colors">
+                <div className="border-2 border-dashed border-border rounded-2xl p-8 text-center bg-muted/50/50 relative overflow-hidden group hover:border-primary/50 transition-colors">
                   <input
                     type="file"
                     accept=".csv,.json,.xlsx,.xls"
@@ -509,8 +509,8 @@ const UnifiedBulkImportTab = () => {
                   />
                   <div className="flex flex-col items-center">
                     <Cloud className="h-10 w-10 text-slate-300 group-hover:text-primary transition-colors mb-4" />
-                    <p className="text-sm font-bold text-slate-600">Click or drag file to upload</p>
-                    <p className="text-[10px] uppercase font-bold text-slate-400 mt-1">XLSX, CSV, or JSON</p>
+                    <p className="text-sm font-bold text-muted-foreground">Click or drag file to upload</p>
+                    <p className="text-[10px] uppercase font-bold text-muted-foreground mt-1">XLSX, CSV, or JSON</p>
                   </div>
                 </div>
 
@@ -520,8 +520,8 @@ const UnifiedBulkImportTab = () => {
                       <FileText className="h-5 w-5" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-slate-800 truncate">{file.name}</p>
-                      <p className="text-[10px] text-slate-500">{(file.size / 1024).toFixed(1)} KB</p>
+                      <p className="text-sm font-bold text-foreground truncate">{file.name}</p>
+                      <p className="text-[10px] text-muted-foreground">{(file.size / 1024).toFixed(1)} KB</p>
                     </div>
                   </div>
                 )}
@@ -535,7 +535,7 @@ const UnifiedBulkImportTab = () => {
                   </div>
                 )}
                 {uploadStatus === "success" && (
-                  <div className="flex items-center gap-2 text-emerald-600 bg-emerald-50 p-4 rounded-2xl border border-emerald-100">
+                  <div className="flex items-center gap-2 text-success bg-success/5 p-4 rounded-2xl border border-success/10">
                     <CheckCircle className="h-5 w-5" />
                     <span className="text-sm font-bold">Import successful!</span>
                   </div>
@@ -556,8 +556,8 @@ const UnifiedBulkImportTab = () => {
 
         {currentSchema && (
           <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden">
-            <CardHeader className="bg-slate-50 border-b border-slate-100 px-4 md:px-6 py-4">
-              <CardTitle className="text-sm font-bold uppercase text-slate-600 flex items-center gap-2">
+            <CardHeader className="bg-muted/50 border-b border-border px-4 md:px-6 py-4">
+              <CardTitle className="text-sm font-bold uppercase text-muted-foreground flex items-center gap-2">
                 <Database className="h-4 w-4" />
                 Required Template Structure: {currentSchema.label}
               </CardTitle>
@@ -565,7 +565,7 @@ const UnifiedBulkImportTab = () => {
             <CardContent className="p-0">
               <div className="overflow-x-auto">
                 <table className="w-full text-xs">
-                  <thead className="bg-slate-50/50">
+                  <thead className="bg-muted/50/50">
                     <tr>
                       <th className="text-left py-3 px-4 font-black uppercase text-muted-foreground">Column</th>
                       <th className="text-left py-3 px-4 font-black uppercase text-muted-foreground">Type</th>
@@ -575,16 +575,16 @@ const UnifiedBulkImportTab = () => {
                   </thead>
                   <tbody className="divide-y divide-slate-50">
                     {currentSchema.fields.map((f) => (
-                      <tr key={f.name} className="hover:bg-slate-50/30 transition-colors">
-                        <td className="py-3 px-4 font-bold text-slate-700">{f.name}</td>
-                        <td className="py-3 px-4 text-slate-500 font-medium">{f.type}</td>
+                      <tr key={f.name} className="hover:bg-muted/50/30 transition-colors">
+                        <td className="py-3 px-4 font-bold text-foreground">{f.name}</td>
+                        <td className="py-3 px-4 text-muted-foreground font-medium">{f.type}</td>
                         <td className="py-3 px-4">
                           {f.required ?
                             <Badge variant="destructive" className="h-5 px-1.5 text-[10px] uppercase font-bold rounded-md">Yes</Badge> :
-                            <Badge variant="secondary" className="h-5 px-1.5 text-[10px] uppercase font-normal rounded-md text-slate-400 bg-slate-100">No</Badge>
+                            <Badge variant="secondary" className="h-5 px-1.5 text-[10px] uppercase font-normal rounded-md text-muted-foreground bg-muted">No</Badge>
                           }
                         </td>
-                        <td className="py-3 px-4 text-slate-400 italic font-medium">{f.example}</td>
+                        <td className="py-3 px-4 text-muted-foreground italic font-medium">{f.example}</td>
                       </tr>
                     ))}
                   </tbody>

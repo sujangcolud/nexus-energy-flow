@@ -74,10 +74,10 @@ const Analytics = () => {
     return (
       <div className="container mx-auto p-6">
         <div className="space-y-6 animate-pulse">
-          <div className="h-8 bg-gray-200 rounded w-1/4"></div>
+          <div className="h-8 bg-muted rounded w-1/4"></div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="h-64 bg-gray-200 rounded"></div>
-            <div className="h-64 bg-gray-200 rounded"></div>
+            <div className="h-64 bg-muted rounded"></div>
+            <div className="h-64 bg-muted rounded"></div>
           </div>
         </div>
       </div>
@@ -192,7 +192,7 @@ const Analytics = () => {
                 <CardTitle className="text-sm font-medium">Total Expenses</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-red-600">
+                <div className="text-2xl font-bold text-destructive">
                   Rs. {data.monthly_summary.reduce((sum, item) => sum + Number(item.expenses), 0).toLocaleString()}
                 </div>
               </CardContent>
@@ -203,7 +203,7 @@ const Analytics = () => {
                 <CardTitle className="text-sm font-medium">Total Profit</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-green-600">
+                <div className="text-2xl font-bold text-success">
                   Rs. {data.monthly_summary.reduce((sum, item) => sum + Number(item.profit), 0).toLocaleString()}
                 </div>
               </CardContent>

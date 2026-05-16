@@ -416,33 +416,33 @@ const BatchDailyClosingSystem: React.FC<BatchDailyClosingSystemProps> = ({
     };
   };
 
-  const formatCurrency = (amount: number) => `NRs. ${amount.toFixed(2)}`;
+  const formatCurrency = (amount: number) => `₹ ${amount.toFixed(2)}`;
 
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "completed":
         return (
-          <Badge className="bg-green-100 text-green-800">
+          <Badge className="bg-success/10 text-success">
             <CheckCircle className="h-3 w-3 mr-1" />
             Completed
           </Badge>
         );
       case "processing":
         return (
-          <Badge className="bg-blue-100 text-blue-800">
+          <Badge className="bg-primary/10 text-primary">
             <Clock className="h-3 w-3 mr-1" />
             Processing
           </Badge>
         );
       case "error":
         return (
-          <Badge className="bg-red-100 text-red-800">
+          <Badge className="bg-destructive/10 text-destructive">
             <AlertTriangle className="h-3 w-3 mr-1" />
             Error
           </Badge>
         );
       default:
-        return <Badge className="bg-gray-100 text-gray-800">Pending</Badge>;
+        return <Badge className="bg-muted text-foreground">Pending</Badge>;
     }
   };
 
@@ -508,26 +508,26 @@ const BatchDailyClosingSystem: React.FC<BatchDailyClosingSystemProps> = ({
 
         <div className="space-y-6">
           {/* Date Range Selector */}
-          <div className="flex flex-col md:flex-row items-center gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+          <div className="flex flex-col md:flex-row items-center gap-4 p-4 bg-muted/50 rounded-2xl border border-border">
             <div className="flex flex-1 w-full gap-2">
               <div className="flex-1">
-                <label className="text-[9px] font-black uppercase text-slate-400 mb-1 block">Start Date</label>
+                <label className="text-[9px] font-black uppercase text-muted-foreground mb-1 block">Start Date</label>
                 <input
                   type="date"
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
                   disabled={processing}
-                  className="w-full border-slate-200 rounded-xl h-11 px-3 text-sm font-bold focus:ring-primary"
+                  className="w-full border-border rounded-xl h-11 px-3 text-sm font-bold focus:ring-primary"
                 />
               </div>
               <div className="flex-1">
-                <label className="text-[9px] font-black uppercase text-slate-400 mb-1 block">End Date</label>
+                <label className="text-[9px] font-black uppercase text-muted-foreground mb-1 block">End Date</label>
                 <input
                   type="date"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
                   disabled={processing}
-                  className="w-full border-slate-200 rounded-xl h-11 px-3 text-sm font-bold focus:ring-primary"
+                  className="w-full border-border rounded-xl h-11 px-3 text-sm font-bold focus:ring-primary"
                 />
               </div>
             </div>
@@ -535,7 +535,7 @@ const BatchDailyClosingSystem: React.FC<BatchDailyClosingSystemProps> = ({
               onClick={initializeDateRange}
               disabled={processing}
               variant="outline"
-              className="w-full md:w-auto h-11 rounded-xl font-bold text-xs uppercase border-slate-200"
+              className="w-full md:w-auto h-11 rounded-xl font-bold text-xs uppercase border-border"
             >
               <RotateCcw className="h-3.5 w-3.5 mr-2" />
               Reset
@@ -569,45 +569,45 @@ const BatchDailyClosingSystem: React.FC<BatchDailyClosingSystemProps> = ({
 
           {/* Summary Cards */}
           <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-            <Card className="rounded-2xl border-none shadow-sm bg-emerald-50/50">
+            <Card className="rounded-2xl border-none shadow-sm bg-success/5">
               <CardContent className="p-3">
-                <p className="text-[9px] font-black text-emerald-600 uppercase mb-1">Total Income</p>
+                <p className="text-[9px] font-black text-success uppercase mb-1">Total Income</p>
                 <p className="text-sm font-black text-emerald-800 truncate">
                   {formatCurrency(totalIncome)}
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="rounded-2xl border-none shadow-sm bg-rose-50/50">
+            <Card className="rounded-2xl border-none shadow-sm bg-destructive/5">
               <CardContent className="p-3">
-                <p className="text-[9px] font-black text-rose-600 uppercase mb-1">Total Expense</p>
+                <p className="text-[9px] font-black text-destructive uppercase mb-1">Total Expense</p>
                 <p className="text-sm font-black text-rose-800 truncate">
                   {formatCurrency(totalExpenses)}
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="rounded-2xl border-none shadow-sm bg-blue-50/50">
+            <Card className="rounded-2xl border-none shadow-sm bg-primary/5/50">
               <CardContent className="p-3">
-                <p className="text-[9px] font-black text-blue-600 uppercase mb-1">Net Profit</p>
+                <p className="text-[9px] font-black text-primary uppercase mb-1">Net Profit</p>
                 <p className={cn("text-sm font-black truncate", totalProfit >= 0 ? "text-emerald-700" : "text-rose-700")}>
                   {formatCurrency(totalProfit)}
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="rounded-2xl border-none shadow-sm bg-slate-50/50">
+            <Card className="rounded-2xl border-none shadow-sm bg-muted/50/50">
               <CardContent className="p-3 text-center">
-                <p className="text-[9px] font-black text-slate-400 uppercase mb-1">Done</p>
-                <p className="text-sm font-black text-slate-700">
+                <p className="text-[9px] font-black text-muted-foreground uppercase mb-1">Done</p>
+                <p className="text-sm font-black text-foreground">
                   {completedDays} <span className="text-[10px]">Days</span>
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="rounded-2xl border-none shadow-sm bg-amber-50/50">
+            <Card className="rounded-2xl border-none shadow-sm bg-accent/5">
               <CardContent className="p-3 text-center">
-                <p className="text-[9px] font-black text-amber-600 uppercase mb-1">Errors</p>
+                <p className="text-[9px] font-black text-accent uppercase mb-1">Errors</p>
                 <p className="text-sm font-black text-amber-700">
                   {errorDays}
                 </p>
@@ -617,25 +617,25 @@ const BatchDailyClosingSystem: React.FC<BatchDailyClosingSystemProps> = ({
 
           {/* Detailed Data */}
           <Tabs value={selectedTab} onValueChange={setSelectedTab}>
-            <TabsList className="flex w-full overflow-x-auto h-auto bg-slate-50 p-1 rounded-xl mb-4 scrollbar-hide">
+            <TabsList className="flex w-full overflow-x-auto h-auto bg-muted/50 p-1 rounded-xl mb-4 scrollbar-hide">
               <TabsTrigger value="overview" className="flex-1 font-bold text-[10px] uppercase py-2.5 rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">Overview</TabsTrigger>
               <TabsTrigger value="daily" className="flex-1 font-bold text-[10px] uppercase py-2.5 rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">Cards</TabsTrigger>
               <TabsTrigger value="trends" className="flex-1 font-bold text-[10px] uppercase py-2.5 rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">Trends</TabsTrigger>
             </TabsList>
 
             <TabsContent value="overview" className="space-y-4">
-              <div className="rounded-2xl border border-slate-100 overflow-hidden">
+              <div className="rounded-2xl border border-border overflow-hidden">
                 <Table>
-                  <TableHeader className="bg-slate-50/50">
-                    <TableRow className="hover:bg-transparent border-slate-100">
-                      <TableHead className="text-[10px] font-black uppercase text-slate-500 h-10 px-4">Date</TableHead>
-                      <TableHead className="text-[10px] font-black uppercase text-slate-500 h-10 px-4">Status</TableHead>
-                      <TableHead className="text-right text-[10px] font-black uppercase text-slate-500 h-10 px-4">Profit</TableHead>
+                  <TableHeader className="bg-muted/50/50">
+                    <TableRow className="hover:bg-transparent border-border">
+                      <TableHead className="text-[10px] font-black uppercase text-muted-foreground h-10 px-4">Date</TableHead>
+                      <TableHead className="text-[10px] font-black uppercase text-muted-foreground h-10 px-4">Status</TableHead>
+                      <TableHead className="text-right text-[10px] font-black uppercase text-muted-foreground h-10 px-4">Profit</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {dailySummaries.map((summary) => (
-                      <TableRow key={summary.summary_date} className="border-slate-100 hover:bg-slate-50/30">
+                      <TableRow key={summary.summary_date} className="border-border hover:bg-muted/50/30">
                         <TableCell className="py-3 px-4">
                           <span className="text-[11px] font-bold block">
                             {format(parseISO(summary.summary_date), "MMM dd")}
@@ -647,7 +647,7 @@ const BatchDailyClosingSystem: React.FC<BatchDailyClosingSystemProps> = ({
                         <TableCell className="py-3 px-4">{getStatusBadge(summary.status)}</TableCell>
                         <TableCell className={cn(
                           "text-right py-3 px-4 text-[11px] font-black",
-                          summary.total_income - summary.total_expenses >= 0 ? "text-emerald-600" : "text-rose-600"
+                          summary.total_income - summary.total_expenses >= 0 ? "text-success" : "text-destructive"
                         )}>
                           {formatCurrency(summary.total_income - summary.total_expenses)}
                         </TableCell>
@@ -679,13 +679,13 @@ const BatchDailyClosingSystem: React.FC<BatchDailyClosingSystemProps> = ({
                       <CardContent className="space-y-2">
                         <div className="grid grid-cols-2 gap-2 text-xs">
                           <div>
-                            <span className="text-gray-600">Orders:</span>
+                            <span className="text-muted-foreground">Orders:</span>
                             <span className="font-semibold ml-1">
                               {formatCurrency(summary.total_income_from_orders)}
                             </span>
                           </div>
                           <div>
-                            <span className="text-gray-600">Charging:</span>
+                            <span className="text-muted-foreground">Charging:</span>
                             <span className="font-semibold ml-1">
                               {formatCurrency(
                                 summary.total_income_from_charging,
@@ -693,22 +693,22 @@ const BatchDailyClosingSystem: React.FC<BatchDailyClosingSystemProps> = ({
                             </span>
                           </div>
                           <div>
-                            <span className="text-gray-600">Expenses:</span>
-                            <span className="font-semibold ml-1 text-red-600">
+                            <span className="text-muted-foreground">Expenses:</span>
+                            <span className="font-semibold ml-1 text-destructive">
                               {formatCurrency(summary.total_expenses)}
                             </span>
                           </div>
                           <div>
-                            <span className="text-gray-600">Savings:</span>
+                            <span className="text-muted-foreground">Savings:</span>
                             <span className="font-semibold ml-1">
                               {formatCurrency(summary.total_savings)}
                             </span>
                           </div>
                         </div>
                         <div className="pt-2 border-t">
-                          <span className="text-gray-600 text-xs">Net:</span>
+                          <span className="text-muted-foreground text-xs">Net:</span>
                           <span
-                            className={`font-bold ml-1 ${summary.total_income - summary.total_expenses >= 0 ? "text-green-600" : "text-red-600"}`}
+                            className={`font-bold ml-1 ${summary.total_income - summary.total_expenses >= 0 ? "text-success" : "text-destructive"}`}
                           >
                             {formatCurrency(
                               summary.total_income - summary.total_expenses,
@@ -730,7 +730,7 @@ const BatchDailyClosingSystem: React.FC<BatchDailyClosingSystemProps> = ({
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-2xl font-bold text-green-600">
+                    <p className="text-2xl font-bold text-success">
                       {formatCurrency(
                         totalIncome / (dailySummaries.length || 1),
                       )}
@@ -744,7 +744,7 @@ const BatchDailyClosingSystem: React.FC<BatchDailyClosingSystemProps> = ({
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-2xl font-bold text-red-600">
+                    <p className="text-2xl font-bold text-destructive">
                       {formatCurrency(
                         totalExpenses / (dailySummaries.length || 1),
                       )}
@@ -759,7 +759,7 @@ const BatchDailyClosingSystem: React.FC<BatchDailyClosingSystemProps> = ({
                   </CardHeader>
                   <CardContent>
                     <p
-                      className={`text-2xl font-bold ${totalProfit >= 0 ? "text-green-600" : "text-red-600"}`}
+                      className={`text-2xl font-bold ${totalProfit >= 0 ? "text-success" : "text-destructive"}`}
                     >
                       {formatCurrency(
                         totalProfit / (dailySummaries.length || 1),
@@ -790,7 +790,7 @@ const BatchDailyClosingSystem: React.FC<BatchDailyClosingSystemProps> = ({
             <Button
               onClick={processDateRange}
               disabled={processing || !user}
-              className="bg-blue-600 hover:bg-blue-700"
+              className="bg-primary hover:bg-blue-700"
             >
               {processing ? (
                 <>
