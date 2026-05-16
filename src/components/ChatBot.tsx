@@ -111,7 +111,7 @@ const ChatBot = () => {
     return (
       <Button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 h-14 w-14 rounded-full bg-blue-600 hover:bg-blue-700 shadow-lg z-50"
+        className="fixed bottom-6 right-6 h-14 w-14 rounded-full bg-primary hover:bg-blue-700 shadow-lg z-50"
       >
         <MessageCircle className="h-6 w-6 text-white" />
       </Button>
@@ -122,9 +122,9 @@ const ChatBot = () => {
     <Card className="fixed bottom-6 right-6 w-80 h-96 shadow-xl z-50 flex flex-col">
       <CardHeader className="flex flex-row items-center justify-between py-3">
         <CardTitle className="text-sm flex items-center gap-2">
-          <Bot className="h-5 w-5 text-blue-600" />
+          <Bot className="h-5 w-5 text-primary" />
           Financial Assistant
-          <Badge className="bg-green-100 text-green-800 text-xs">Online</Badge>
+          <Badge className="bg-success/10 text-success text-xs">Online</Badge>
         </CardTitle>
         <Button
           variant="ghost"
@@ -146,16 +146,16 @@ const ChatBot = () => {
               <div
                 className={`max-w-[80%] rounded-lg p-2 text-sm ${
                   message.sender === 'user'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 text-gray-800'
+                    ? 'bg-primary text-white'
+                    : 'bg-muted text-foreground'
                 }`}
               >
                 <div className="flex items-start gap-2">
-                  {message.sender === 'bot' && <Bot className="h-4 w-4 mt-0.5 text-blue-600" />}
+                  {message.sender === 'bot' && <Bot className="h-4 w-4 mt-0.5 text-primary" />}
                   <div className="flex-1">
                     <p>{message.content}</p>
                     <p className={`text-xs mt-1 ${
-                      message.sender === 'user' ? 'text-blue-100' : 'text-gray-500'
+                      message.sender === 'user' ? 'text-blue-100' : 'text-muted-foreground'
                     }`}>
                       {message.timestamp.toLocaleTimeString([], { 
                         hour: '2-digit', 
@@ -171,11 +171,11 @@ const ChatBot = () => {
           
           {isTyping && (
             <div className="flex justify-start">
-              <div className="bg-gray-100 rounded-lg p-2 text-sm">
+              <div className="bg-muted rounded-lg p-2 text-sm">
                 <div className="flex items-center gap-2">
-                  <Bot className="h-4 w-4 text-blue-600" />
-                  <Loader2 className="h-4 w-4 animate-spin text-gray-500" />
-                  <span className="text-gray-500">Typing...</span>
+                  <Bot className="h-4 w-4 text-primary" />
+                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                  <span className="text-muted-foreground">Typing...</span>
                 </div>
               </div>
             </div>

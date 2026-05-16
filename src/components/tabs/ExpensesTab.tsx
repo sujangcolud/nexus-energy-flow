@@ -167,7 +167,7 @@ const ExpensesTab = () => {
     Marketing: "from-purple-500 to-pink-500",
     Equipment: "from-gray-500 to-slate-500",
     Maintenance: "from-red-500 to-pink-500",
-    Insurance: "from-indigo-500 to-blue-500",
+    Insurance: "from-indigo-500 to-primary/50",
     "Legal & Professional": "from-violet-500 to-purple-500",
     Other: "from-teal-500 to-cyan-500",
   };
@@ -544,7 +544,7 @@ const ExpensesTab = () => {
                     }
                   />
                   <Label htmlFor="edit-inventory-purchase" className="text-[10px] font-black uppercase flex items-center gap-1.5 cursor-pointer">
-                    <Package className={cn("h-3.5 w-3.5", selectedExpense.is_inventory_purchase ? "text-amber-600" : "text-muted-foreground")} />
+                    <Package className={cn("h-3.5 w-3.5", selectedExpense.is_inventory_purchase ? "text-accent" : "text-muted-foreground")} />
                     Stock Update?
                   </Label>
                 </div>
@@ -557,14 +557,14 @@ const ExpensesTab = () => {
                     }
                   />
                   <Label htmlFor="edit-is-credit" className="text-[10px] font-black uppercase flex items-center gap-1.5 cursor-pointer">
-                    <CreditCard className={cn("h-3.5 w-3.5", selectedExpense.is_credit ? "text-blue-600" : "text-muted-foreground")} />
+                    <CreditCard className={cn("h-3.5 w-3.5", selectedExpense.is_credit ? "text-primary" : "text-muted-foreground")} />
                     Credit?
                   </Label>
                 </div>
               </div>
 
               {(selectedExpense.is_inventory_purchase || selectedExpense.is_credit) && (
-                <div className="space-y-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                <div className="space-y-4 p-4 bg-muted/50 rounded-2xl border border-border">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1.5">
                       <Label className="text-[10px] font-bold uppercase text-muted-foreground">Supplier</Label>
@@ -680,7 +680,7 @@ const ExpensesTab = () => {
           <Card className="rounded-3xl border-none bg-white shadow-sm overflow-hidden">
             <CardContent className="p-4 md:p-6">
               <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Total</p>
-              <p className="text-sm md:text-xl font-bold text-destructive">NRs. {totalExpenses.toFixed(2)}</p>
+              <p className="text-sm md:text-xl font-bold text-destructive">₹ {totalExpenses.toFixed(2)}</p>
             </CardContent>
           </Card>
           <Card className="rounded-3xl border-none bg-white shadow-sm overflow-hidden">
@@ -692,7 +692,7 @@ const ExpensesTab = () => {
           <Card className="rounded-3xl border-none bg-white shadow-sm overflow-hidden hidden md:block">
             <CardContent className="p-4 md:p-6">
               <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Avg Expense</p>
-              <p className="text-sm md:text-xl font-bold text-foreground">NRs. {(totalExpenses / Math.max(1, expenses.length)).toFixed(0)}</p>
+              <p className="text-sm md:text-xl font-bold text-foreground">₹ {(totalExpenses / Math.max(1, expenses.length)).toFixed(0)}</p>
             </CardContent>
           </Card>
           <Card className="rounded-3xl border-none bg-white shadow-sm overflow-hidden">
@@ -708,7 +708,7 @@ const ExpensesTab = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-8">
           {/* Add Expense Form */}
           <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden">
-            <CardHeader className="bg-rose-500 text-white p-4 md:p-6">
+            <CardHeader className="bg-destructive text-white p-4 md:p-6">
               <CardTitle className="flex items-center gap-3 text-lg md:text-xl font-bold">
                 <div className="p-2 bg-white/20 rounded-xl">
                   <PlusCircle className="h-5 w-5 md:h-6 md:w-6" />
@@ -719,32 +719,32 @@ const ExpensesTab = () => {
             </CardHeader>
             <CardContent className="p-4 md:p-6 space-y-6">
               <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
-                <div className="flex items-center justify-between py-2 bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                <div className="flex items-center justify-between py-2 bg-muted/50 p-3 rounded-2xl border border-border">
                   <div className="flex items-center space-x-2">
                     <Switch
                       id="inventory-purchase"
-                      className="data-[state=checked]:bg-amber-500"
+                      className="data-[state=checked]:bg-accent"
                       checked={formData.isInventoryPurchase}
                       onCheckedChange={(checked) =>
                         setFormData({ ...formData, isInventoryPurchase: checked })
                       }
                     />
                     <Label htmlFor="inventory-purchase" className="text-[10px] font-black uppercase flex items-center gap-1 cursor-pointer">
-                      <Package className={cn("h-3.5 w-3.5", formData.isInventoryPurchase ? "text-amber-600" : "text-muted-foreground")} />
+                      <Package className={cn("h-3.5 w-3.5", formData.isInventoryPurchase ? "text-accent" : "text-muted-foreground")} />
                       Stock?
                     </Label>
                   </div>
-                  <div className="flex items-center space-x-2 border-l border-slate-200 pl-4">
+                  <div className="flex items-center space-x-2 border-l border-border pl-4">
                     <Switch
                       id="is-credit"
-                      className="data-[state=checked]:bg-blue-600"
+                      className="data-[state=checked]:bg-primary"
                       checked={formData.isCredit}
                       onCheckedChange={(checked) =>
                         setFormData({ ...formData, isCredit: checked })
                       }
                     />
                     <Label htmlFor="is-credit" className="text-[10px] font-black uppercase flex items-center gap-1 cursor-pointer">
-                      <CreditCard className={cn("h-3.5 w-3.5", formData.isCredit ? "text-blue-600" : "text-muted-foreground")} />
+                      <CreditCard className={cn("h-3.5 w-3.5", formData.isCredit ? "text-primary" : "text-muted-foreground")} />
                       Credit?
                     </Label>
                   </div>
@@ -755,7 +755,7 @@ const ExpensesTab = () => {
                     {formData.isInventoryPurchase && (
                     <div className="space-y-2">
                       <Label htmlFor="inventoryItemId" className="text-sm font-medium flex items-center gap-2">
-                        <ShoppingCart className="h-4 w-4 text-amber-600" />
+                        <ShoppingCart className="h-4 w-4 text-accent" />
                         Select Inventory Item *
                       </Label>
                       <Select
@@ -797,7 +797,7 @@ const ExpensesTab = () => {
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="quantity" className="text-sm font-medium flex items-center gap-2">
-                          <Scale className="h-4 w-4 text-amber-600" />
+                          <Scale className="h-4 w-4 text-accent" />
                           Quantity *
                         </Label>
                         <Input
@@ -897,7 +897,7 @@ const ExpensesTab = () => {
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="supplier" className="text-sm font-medium flex items-center gap-2">
-                          <ShoppingCart className="h-4 w-4 text-blue-600" />
+                          <ShoppingCart className="h-4 w-4 text-primary" />
                           Supplier (Party Name) *
                         </Label>
                         <Input
@@ -911,7 +911,7 @@ const ExpensesTab = () => {
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="invoiceNumber" className="text-sm font-medium flex items-center gap-2">
-                          <Hash className="h-4 w-4 text-amber-600" />
+                          <Hash className="h-4 w-4 text-accent" />
                           Invoice #
                         </Label>
                         <Input
@@ -927,9 +927,9 @@ const ExpensesTab = () => {
                     <div className="space-y-2">
                       <Label
                         htmlFor="description"
-                        className="text-sm font-medium text-gray-700 flex items-center gap-2"
+                        className="text-sm font-medium text-foreground flex items-center gap-2"
                       >
-                        <FileText className="h-4 w-4 text-red-600" />
+                        <FileText className="h-4 w-4 text-destructive" />
                         Description *
                       </Label>
                       <Input
@@ -948,9 +948,9 @@ const ExpensesTab = () => {
                   <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
                     <Label
                       htmlFor="description"
-                      className="text-sm font-medium text-gray-700 flex items-center gap-2"
+                      className="text-sm font-medium text-foreground flex items-center gap-2"
                     >
-                      <FileText className="h-4 w-4 text-red-600" />
+                      <FileText className="h-4 w-4 text-destructive" />
                       Description *
                     </Label>
                     <Input
@@ -969,10 +969,10 @@ const ExpensesTab = () => {
                 <div className="space-y-2">
                   <Label
                     htmlFor="amount"
-                    className="text-sm font-medium text-gray-700 flex items-center gap-2"
+                    className="text-sm font-medium text-foreground flex items-center gap-2"
                   >
-                    <DollarSign className="h-4 w-4 text-green-600" />
-                    Total Amount (NRs.) *
+                    <DollarSign className="h-4 w-4 text-success" />
+                    Total Amount (₹) *
                   </Label>
                   <Input
                     id="amount"
@@ -986,7 +986,7 @@ const ExpensesTab = () => {
                     required
                     className={cn(
                       "text-lg font-bold border-green-200 focus:border-green-500",
-                      formData.isInventoryPurchase && "bg-green-50/50"
+                      formData.isInventoryPurchase && "bg-success/5/50"
                     )}
                   />
                 </div>
@@ -995,9 +995,9 @@ const ExpensesTab = () => {
                   <div className="space-y-2">
                     <Label
                       htmlFor="category"
-                      className="text-sm font-medium text-gray-700 flex items-center gap-2"
+                      className="text-sm font-medium text-foreground flex items-center gap-2"
                     >
-                      <Tag className="h-4 w-4 text-blue-600" />
+                      <Tag className="h-4 w-4 text-primary" />
                       Category *
                     </Label>
                     <Select
@@ -1007,7 +1007,7 @@ const ExpensesTab = () => {
                       }
                       required
                     >
-                      <SelectTrigger className="border-blue-200 focus:border-blue-500">
+                      <SelectTrigger className="border-primary/10 focus:border-blue-500">
                         <SelectValue placeholder="Select category" />
                       </SelectTrigger>
                       <SelectContent>
@@ -1028,7 +1028,7 @@ const ExpensesTab = () => {
                   <div className="space-y-2">
                     <Label
                       htmlFor="paymentMode"
-                      className="text-sm font-medium text-gray-700"
+                      className="text-sm font-medium text-foreground"
                     >
                       Payment Mode *
                     </Label>
@@ -1060,7 +1060,7 @@ const ExpensesTab = () => {
                 <div className="space-y-2">
                   <Label
                     htmlFor="remarks"
-                    className="text-sm font-medium text-gray-700"
+                    className="text-sm font-medium text-foreground"
                   >
                     Remarks (Optional)
                   </Label>
@@ -1072,7 +1072,7 @@ const ExpensesTab = () => {
                     }
                     placeholder="Additional notes or remarks"
                     rows={3}
-                    className="border-gray-200 focus:border-gray-500 focus:ring-gray-500"
+                    className="border-border focus:border-gray-500 focus:ring-gray-500"
                   />
                 </div>
 
@@ -1119,10 +1119,10 @@ const ExpensesTab = () => {
               {Object.keys(categoryBreakdown).length === 0 ? (
                 <div className="text-center py-8">
                   <Tag className="h-16 w-16 mx-auto text-gray-300 mb-4" />
-                  <p className="text-gray-500 text-lg font-medium">
+                  <p className="text-muted-foreground text-lg font-medium">
                     No expenses yet
                   </p>
-                  <p className="text-gray-400">
+                  <p className="text-muted-foreground">
                     Add your first expense to see category breakdown!
                   </p>
                 </div>
@@ -1143,20 +1143,20 @@ const ExpensesTab = () => {
                               <div
                                 className={`w-4 h-4 rounded-full bg-gradient-to-r ${categoryColors[category as keyof typeof categoryColors]}`}
                               ></div>
-                              <span className="font-medium text-gray-800">
+                              <span className="font-medium text-foreground">
                                 {category}
                               </span>
                             </div>
                             <div className="text-right">
-                              <span className="font-bold text-purple-600">
-                                NRs. {amount.toFixed(2)}
+                              <span className="font-bold text-primary">
+                                ₹ {amount.toFixed(2)}
                               </span>
-                              <div className="text-sm text-gray-500">
+                              <div className="text-sm text-muted-foreground">
                                 {percentage.toFixed(1)}%
                               </div>
                             </div>
                           </div>
-                          <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div className="w-full bg-muted rounded-full h-2">
                             <div
                               className={`bg-gradient-to-r ${categoryColors[category as keyof typeof categoryColors]} h-2 rounded-full transition-all duration-500`}
                               style={{ width: `${percentage}%` }}
@@ -1209,7 +1209,7 @@ const ExpensesTab = () => {
                         size="sm"
                         onClick={() => handleDeleteCategory(cat.id)}
                       >
-                        <Trash2 className="h-4 w-4 text-red-500" />
+                        <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
                     </div>
                   ))}
@@ -1221,7 +1221,7 @@ const ExpensesTab = () => {
 
         {/* Expense History */}
         <Card className="bg-gradient-to-br from-white/90 to-gray-50/90 backdrop-blur-sm border-0 shadow-2xl">
-          <CardHeader className="border-b border-gray-200/50 flex flex-row items-center justify-between">
+          <CardHeader className="border-b border-border/50 flex flex-row items-center justify-between">
             <CardTitle className="text-2xl font-bold bg-gradient-to-r from-gray-700 to-gray-900 bg-clip-text text-transparent">
               Expense History
             </CardTitle>
@@ -1269,15 +1269,15 @@ const ExpensesTab = () => {
                 <div className="w-16 h-16 bg-gradient-to-r from-red-500 to-pink-500 rounded-full animate-spin mx-auto flex items-center justify-center mb-4">
                   <Receipt className="h-8 w-8 text-white" />
                 </div>
-                <p className="text-gray-600">Loading expenses...</p>
+                <p className="text-muted-foreground">Loading expenses...</p>
               </div>
             ) : expenses.length === 0 ? (
               <div className="text-center py-12">
                 <Receipt className="h-16 w-16 mx-auto text-gray-300 mb-4" />
-                <p className="text-xl font-semibold text-gray-700 mb-2">
+                <p className="text-xl font-semibold text-foreground mb-2">
                   No expenses found
                 </p>
-                <p className="text-gray-500">
+                <p className="text-muted-foreground">
                   Start tracking your expenses to see them here.
                 </p>
               </div>
@@ -1286,25 +1286,25 @@ const ExpensesTab = () => {
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-gradient-to-r from-gray-50 to-purple-50">
-                      <TableHead className="font-semibold text-gray-700">
+                      <TableHead className="font-semibold text-foreground">
                         Date
                       </TableHead>
-                      <TableHead className="font-semibold text-gray-700">
+                      <TableHead className="font-semibold text-foreground">
                         Description
                       </TableHead>
-                      <TableHead className="font-semibold text-gray-700">
+                      <TableHead className="font-semibold text-foreground">
                         Category
                       </TableHead>
-                      <TableHead className="font-semibold text-gray-700">
+                      <TableHead className="font-semibold text-foreground">
                         Amount
                       </TableHead>
-                      <TableHead className="font-semibold text-gray-700">
+                      <TableHead className="font-semibold text-foreground">
                         Payment
                       </TableHead>
-                      <TableHead className="font-semibold text-gray-700">
+                      <TableHead className="font-semibold text-foreground">
                         Remarks
                       </TableHead>
-                      <TableHead className="font-semibold text-gray-700">
+                      <TableHead className="font-semibold text-foreground">
                         Actions
                       </TableHead>
                     </TableRow>
@@ -1315,7 +1315,7 @@ const ExpensesTab = () => {
                         Total
                       </TableCell>
                       <TableCell colSpan={3} className="font-bold text-right">
-                        NRs. {totalExpenses.toFixed(2)}
+                        ₹ {totalExpenses.toFixed(2)}
                       </TableCell>
                     </TableRow>
                     {expenses.map((expense, index) => (
@@ -1332,11 +1332,11 @@ const ExpensesTab = () => {
                         </TableCell>
                         <TableCell className="max-w-xs">
                           <div
-                            className="font-medium text-gray-800 truncate flex items-center gap-2"
+                            className="font-medium text-foreground truncate flex items-center gap-2"
                             title={expense.description}
                           >
                             {expense.is_inventory_purchase && (
-                              <Package className="h-3 w-3 text-amber-600 shrink-0" />
+                              <Package className="h-3 w-3 text-accent shrink-0" />
                             )}
                             {expense.description}
                           </div>
@@ -1350,20 +1350,20 @@ const ExpensesTab = () => {
                         </TableCell>
                         <TableCell>
                           <span className="font-bold text-lg bg-gradient-to-r from-red-600 to-pink-600 bg-clip-text text-transparent">
-                            NRs. {expense.amount.toFixed(2)}
+                            ₹ {expense.amount.toFixed(2)}
                           </span>
                         </TableCell>
                         <TableCell>
                           <Badge
                             variant="outline"
-                            className="bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200"
+                            className="bg-gradient-to-r from-blue-50 to-purple-50 border-primary/10"
                           >
                             {expense.payment_mode}
                           </Badge>
                         </TableCell>
                         <TableCell className="max-w-xs">
                           <span
-                            className="text-sm text-gray-600 truncate"
+                            className="text-sm text-muted-foreground truncate"
                             title={expense.remarks || ""}
                           >
                             {expense.remarks || "-"}
@@ -1386,7 +1386,7 @@ const ExpensesTab = () => {
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                                  className="text-destructive hover:text-red-700 hover:bg-destructive/5"
                                 >
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
@@ -1423,7 +1423,7 @@ const ExpensesTab = () => {
             )}
           </CardContent>
           {expenses.length > 0 && (
-            <div className="flex justify-center p-4 border-t border-gray-200">
+            <div className="flex justify-center p-4 border-t border-border">
               <div className="flex items-center gap-4">
                 <Button
                   onClick={() => onPageChange(page - 1)}

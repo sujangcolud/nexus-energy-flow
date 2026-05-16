@@ -516,10 +516,10 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Clock className="h-5 w-5 text-primary" />
-          <h2 className="text-xl font-black text-slate-800 tracking-tight uppercase">
+          <h2 className="text-xl font-black text-foreground tracking-tight uppercase">
             Lifetime Stats
           </h2>
-          <Badge variant="secondary" className="rounded-full text-[10px] font-black uppercase bg-slate-100 text-slate-500 border-none">
+          <Badge variant="secondary" className="rounded-full text-[10px] font-black uppercase bg-muted text-muted-foreground border-none">
             {summaryData.dataPoints} DAYS
           </Badge>
         </div>
@@ -550,50 +550,50 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
             <Loader2 className="h-8 w-8 animate-spin text-primary opacity-20" />
           </div>
         ) : connectionError ? (
-          <Card className="rounded-3xl border-none bg-rose-50 p-6 text-center">
-            <AlertCircle className="h-8 w-8 text-rose-500 mx-auto mb-3" />
+          <Card className="rounded-3xl border-none bg-destructive/5 p-6 text-center">
+            <AlertCircle className="h-8 w-8 text-destructive mx-auto mb-3" />
             <p className="text-xs font-black uppercase text-rose-800 mb-4">Sync Error</p>
-            <Button onClick={retryFetch} size="sm" className="rounded-full bg-rose-600 font-bold uppercase text-[10px]">Retry</Button>
+            <Button onClick={retryFetch} size="sm" className="rounded-full bg-destructive font-bold uppercase text-[10px]">Retry</Button>
           </Card>
         ) : summaryData.dataPoints === 0 ? (
-          <div className="text-center py-12 bg-slate-50 rounded-3xl border border-dashed border-slate-200">
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">No historical data available</p>
+          <div className="text-center py-12 bg-muted/50 rounded-3xl border border-dashed border-border">
+            <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">No historical data available</p>
           </div>
         ) : (
           <>
             {/* Quick Stats Row */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-              <Card className="rounded-3xl border-none shadow-sm bg-slate-900 text-white overflow-hidden">
+              <Card className="rounded-3xl border-none shadow-sm bg-primary text-primary-foreground overflow-hidden">
                 <CardContent className="p-4">
-                  <p className="text-[9px] font-black text-slate-500 uppercase mb-1">Total Income</p>
-                  <p className="text-lg font-black text-emerald-400 truncate">
+                  <p className="text-[9px] font-black text-primary-foreground/60 uppercase mb-1">Total Income</p>
+                  <p className="text-lg font-black text-success truncate">
                     {formatCurrency(summaryData.totalIncome)}
                   </p>
                 </CardContent>
               </Card>
 
-              <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden">
+              <Card className="rounded-3xl border-none shadow-sm bg-card overflow-hidden">
                 <CardContent className="p-4">
-                  <p className="text-[9px] font-black text-slate-400 uppercase mb-1">Total Burn</p>
-                  <p className="text-lg font-black text-rose-500 truncate">
+                  <p className="text-[9px] font-black text-muted-foreground uppercase mb-1">Total Burn</p>
+                  <p className="text-lg font-black text-destructive truncate">
                     {formatCurrency(summaryData.totalExpenses)}
                   </p>
                 </CardContent>
               </Card>
 
-              <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden">
+              <Card className="rounded-3xl border-none shadow-sm bg-card overflow-hidden">
                 <CardContent className="p-4">
-                  <p className="text-[9px] font-black text-slate-400 uppercase mb-1">Net Flow</p>
-                  <p className={cn("text-lg font-black truncate", summaryData.netProfit >= 0 ? "text-emerald-600" : "text-rose-600")}>
+                  <p className="text-[9px] font-black text-muted-foreground uppercase mb-1">Net Flow</p>
+                  <p className={cn("text-lg font-black truncate", summaryData.netProfit >= 0 ? "text-success" : "text-destructive")}>
                     {formatCurrency(summaryData.netProfit)}
                   </p>
                 </CardContent>
               </Card>
 
-              <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden">
+              <Card className="rounded-3xl border-none shadow-sm bg-card overflow-hidden">
                 <CardContent className="p-4">
-                  <p className="text-[9px] font-black text-slate-400 uppercase mb-1">Savings</p>
-                  <p className="text-lg font-black text-violet-600 truncate">
+                  <p className="text-[9px] font-black text-muted-foreground uppercase mb-1">Savings</p>
+                  <p className="text-lg font-black text-accent truncate">
                     {formatCurrency(summaryData.cooperativeSavings)}
                   </p>
                 </CardContent>
@@ -601,9 +601,9 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
             </div>
 
             {/* Current Balances */}
-            <Card className="rounded-3xl border-none shadow-2xl bg-white overflow-hidden">
-              <CardHeader className="bg-slate-50/50 border-b border-slate-100 p-4 flex flex-row items-center justify-between">
-                <CardTitle className="text-[10px] font-black uppercase tracking-widest text-slate-500 flex items-center gap-2">
+            <Card className="rounded-3xl border-none shadow-2xl bg-card overflow-hidden">
+              <CardHeader className="bg-muted/50 border-b border-border p-4 flex flex-row items-center justify-between">
+                <CardTitle className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
                   <Banknote className="h-3 w-3" />
                   Live Balances
                 </CardTitle>
@@ -614,20 +614,20 @@ const AllTimeSummaryWidget: React.FC<AllTimeSummaryWidgetProps> = ({
               <CardContent className="p-4">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div>
-                    <p className="text-[9px] font-bold text-slate-400 uppercase mb-0.5">Cash</p>
-                    <p className="text-sm font-black text-slate-800">{formatCurrency(summaryData.currentBalances.cash)}</p>
+                    <p className="text-[9px] font-bold text-muted-foreground uppercase mb-0.5">Cash</p>
+                    <p className="text-sm font-black text-foreground">{formatCurrency(summaryData.currentBalances.cash)}</p>
                   </div>
                   <div>
-                    <p className="text-[9px] font-bold text-slate-400 uppercase mb-0.5">eSewa</p>
-                    <p className="text-sm font-black text-slate-800">{formatCurrency(summaryData.currentBalances.esewa)}</p>
+                    <p className="text-[9px] font-bold text-muted-foreground uppercase mb-0.5">eSewa</p>
+                    <p className="text-sm font-black text-foreground">{formatCurrency(summaryData.currentBalances.esewa)}</p>
                   </div>
                   <div>
-                    <p className="text-[9px] font-bold text-slate-400 uppercase mb-0.5">Fonepay</p>
-                    <p className="text-sm font-black text-slate-800">{formatCurrency(summaryData.currentBalances.fonepay)}</p>
+                    <p className="text-[9px] font-bold text-muted-foreground uppercase mb-0.5">Fonepay</p>
+                    <p className="text-sm font-black text-foreground">{formatCurrency(summaryData.currentBalances.fonepay)}</p>
                   </div>
                   <div>
-                    <p className="text-[9px] font-bold text-slate-400 uppercase mb-0.5">Savings</p>
-                    <p className="text-sm font-black text-slate-800">{formatCurrency(summaryData.currentBalances.cooperative)}</p>
+                    <p className="text-[9px] font-bold text-muted-foreground uppercase mb-0.5">Savings</p>
+                    <p className="text-sm font-black text-foreground">{formatCurrency(summaryData.currentBalances.cooperative)}</p>
                   </div>
                 </div>
               </CardContent>

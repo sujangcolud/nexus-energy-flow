@@ -253,7 +253,7 @@ const RecipeManagementTab = () => {
       </div>
 
       <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden mb-4 md:mb-6">
-        <CardHeader className="bg-slate-50/50 border-b border-slate-100 px-4 md:px-6 py-4">
+        <CardHeader className="bg-muted/50/50 border-b border-border px-4 md:px-6 py-4">
           <CardTitle className="text-base md:text-lg font-bold">Menu Item Configuration</CardTitle>
         </CardHeader>
         <CardContent className="p-4 md:p-6 space-y-6">
@@ -268,7 +268,7 @@ const RecipeManagementTab = () => {
                   {menu.map((m) => (
                     <SelectItem key={m.id} value={m.id}>
                       <div className="flex items-center justify-between w-full gap-2">
-                        <span>{m.name} — NRs. {m.price}</span>
+                        <span>{m.name} — ₹ {m.price}</span>
                         {m.hasRecipe && <CheckCircle2 className="h-3 w-3 text-green-500 shrink-0" />}
                       </div>
                     </SelectItem>
@@ -277,7 +277,7 @@ const RecipeManagementTab = () => {
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs font-bold uppercase tracking-wider text-amber-600">Servings per Batch</Label>
+              <Label className="text-xs font-bold uppercase tracking-wider text-accent">Servings per Batch</Label>
               <Input
                 type="number"
                 step="1"
@@ -290,22 +290,22 @@ const RecipeManagementTab = () => {
               />
             </div>
             {selectedMenu && (
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:col-span-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:col-span-4 bg-muted/50 p-4 rounded-2xl border border-border">
                 <div className="space-y-1">
                   <div className="text-[10px] font-black uppercase text-muted-foreground">Sell Price</div>
-                  <div className="text-sm font-bold">NRs. {selectedMenu.price.toFixed(0)}</div>
+                  <div className="text-sm font-bold">₹ {selectedMenu.price.toFixed(0)}</div>
                 </div>
                 <div className="space-y-1">
-                  <div className="text-[10px] font-black uppercase text-amber-600">Batch Cost</div>
-                  <div className="text-sm font-bold">NRs. {totalCost.toFixed(0)}</div>
+                  <div className="text-[10px] font-black uppercase text-accent">Batch Cost</div>
+                  <div className="text-sm font-bold">₹ {totalCost.toFixed(0)}</div>
                 </div>
                 <div className="space-y-1">
-                  <div className="text-[10px] font-black uppercase text-blue-600">Unit Cost</div>
-                  <div className="text-sm font-bold text-blue-700">NRs. {unitCostVal.toFixed(0)}</div>
+                  <div className="text-[10px] font-black uppercase text-primary">Unit Cost</div>
+                  <div className="text-sm font-bold text-blue-700">₹ {unitCostVal.toFixed(0)}</div>
                 </div>
                 <div className="space-y-1">
-                  <div className="text-[10px] font-black uppercase text-green-600">Unit Profit</div>
-                  <div className="text-sm font-bold text-green-700">NRs. {profit.toFixed(0)}</div>
+                  <div className="text-[10px] font-black uppercase text-success">Unit Profit</div>
+                  <div className="text-sm font-bold text-green-700">₹ {profit.toFixed(0)}</div>
                 </div>
               </div>
             )}
@@ -317,7 +317,7 @@ const RecipeManagementTab = () => {
         <div className="lg:col-span-2">
           {selectedMenuId && (
             <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden">
-              <CardHeader className="bg-slate-50/50 border-b border-slate-100 px-4 md:px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <CardHeader className="bg-muted/50/50 border-b border-border px-4 md:px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <CardTitle className="text-base md:text-lg font-bold">Ingredients Breakdown</CardTitle>
                 <div className="flex flex-wrap items-center gap-2">
                   <div className="hidden md:flex items-center gap-2 mr-2">
@@ -404,7 +404,7 @@ const RecipeManagementTab = () => {
 
         <div className="space-y-4 md:space-y-6">
           <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden">
-            <CardHeader className="bg-emerald-50 border-b border-emerald-100 px-4 md:px-6 py-4">
+            <CardHeader className="bg-success/5 border-b border-success/10 px-4 md:px-6 py-4">
               <CardTitle className="text-base font-bold flex items-center gap-2 text-emerald-700">
                 <CheckCircle2 className="h-5 w-5" />
                 Recipe-Ready
@@ -422,7 +422,7 @@ const RecipeManagementTab = () => {
                       onClick={() => setSelectedMenuId(m.id)}
                     >
                       <div className="text-sm font-medium">{m.name}</div>
-                      <Badge variant="secondary" className="text-[10px] uppercase text-green-600 bg-green-50 border-green-200">Ready</Badge>
+                      <Badge variant="secondary" className="text-[10px] uppercase text-success bg-success/5 border-green-200">Ready</Badge>
                     </div>
                   ))
                 )}
@@ -431,8 +431,8 @@ const RecipeManagementTab = () => {
           </Card>
 
           <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden">
-            <CardHeader className="bg-slate-50 border-b border-slate-100 px-4 md:px-6 py-4">
-              <CardTitle className="text-base font-bold text-slate-700">Pending Setup</CardTitle>
+            <CardHeader className="bg-muted/50 border-b border-border px-4 md:px-6 py-4">
+              <CardTitle className="text-base font-bold text-foreground">Pending Setup</CardTitle>
             </CardHeader>
             <CardContent className="p-4 md:p-6">
               <div className="space-y-2">

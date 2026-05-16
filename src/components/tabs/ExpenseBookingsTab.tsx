@@ -345,7 +345,7 @@ const ExpenseBookingsTab = () => {
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">Amount:</span>
-                  <span className="font-bold text-primary text-base">NRs. {selectedBooking.amount.toFixed(2)}</span>
+                  <span className="font-bold text-primary text-base">₹ {selectedBooking.amount.toFixed(2)}</span>
                 </div>
                 <div className="pt-2 border-t border-primary/10 flex justify-between items-center">
                   <span className="text-muted-foreground">Details:</span>
@@ -411,9 +411,9 @@ const ExpenseBookingsTab = () => {
             </div>
             <div className="space-y-1.5"><Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Remarks</Label><Textarea value={editFormData.remarks} onChange={(e) => setEditFormData({ ...editFormData, remarks: e.target.value })} className="rounded-xl" /></div>
 
-            <div className="border-t border-slate-100 pt-4 mt-4 space-y-4">
+            <div className="border-t border-border pt-4 mt-4 space-y-4">
               <h3 className="font-bold text-xs uppercase tracking-wider text-muted-foreground">Inventory Details</h3>
-              <div className="flex items-center space-x-3 bg-slate-50 p-3 rounded-xl border border-slate-100">
+              <div className="flex items-center space-x-3 bg-muted/50 p-3 rounded-xl border border-border">
                 <input
                   type="checkbox"
                   id="edit-is-inventory"
@@ -466,7 +466,7 @@ const ExpenseBookingsTab = () => {
           <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden">
             <CardContent className="p-4 md:p-6">
               <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Amount</p>
-              <p className="text-sm md:text-xl font-bold text-primary">NRs. {totalBookings.toFixed(2)}</p>
+              <p className="text-sm md:text-xl font-bold text-primary">₹ {totalBookings.toFixed(2)}</p>
             </CardContent>
           </Card>
           <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden hidden md:block">
@@ -480,13 +480,13 @@ const ExpenseBookingsTab = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-4">
             <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden">
-              <CardHeader className="bg-slate-50/50 border-b border-slate-100 px-4 md:px-6 py-4">
+              <CardHeader className="bg-muted/50/50 border-b border-border px-4 md:px-6 py-4">
                 <CardTitle className="text-base md:text-lg font-bold">Active Liabilities</CardTitle>
               </CardHeader>
               <CardContent className="p-2 md:p-6">
                 <div className="space-y-3">
                   {bookings.length === 0 && (
-                    <div className="text-center py-12 text-muted-foreground bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
+                    <div className="text-center py-12 text-muted-foreground bg-muted/50 rounded-2xl border-2 border-dashed border-border">
                       <BookMarked className="h-10 w-10 mx-auto mb-3 opacity-20" />
                       <p className="font-medium">No pending expense bookings</p>
                     </div>
@@ -496,37 +496,37 @@ const ExpenseBookingsTab = () => {
                     const isExpanded = expandedParties[party];
 
                     return (
-                      <div key={party} className="border border-slate-100 rounded-2xl overflow-hidden bg-white shadow-sm">
+                      <div key={party} className="border border-border rounded-2xl overflow-hidden bg-white shadow-sm">
                         <div
                           className={cn(
                             "p-4 flex items-center justify-between cursor-pointer transition-all",
-                            isExpanded ? "bg-primary/5" : "hover:bg-slate-50"
+                            isExpanded ? "bg-primary/5" : "hover:bg-muted/50"
                           )}
                           onClick={() => toggleParty(party)}
                         >
                           <div className="flex items-center gap-3">
                             <div className={cn(
                               "h-8 w-8 rounded-full flex items-center justify-center transition-transform duration-200",
-                              isExpanded ? "bg-primary text-white rotate-90" : "bg-slate-100 text-slate-500"
+                              isExpanded ? "bg-primary text-white rotate-90" : "bg-muted text-muted-foreground"
                             )}>
                               <ChevronRight className="h-5 w-5" />
                             </div>
                             <div>
-                              <div className="font-bold text-base md:text-lg text-slate-800">{party}</div>
+                              <div className="font-bold text-base md:text-lg text-foreground">{party}</div>
                               <div className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">{partyBookings.length} booking(s)</div>
                             </div>
                           </div>
                           <div className="text-right">
                             <div className="text-xs text-muted-foreground font-bold uppercase tracking-tighter mb-0.5">Pending</div>
-                            <div className="text-lg md:text-xl font-black text-primary">NRs. {partyTotal.toLocaleString()}</div>
+                            <div className="text-lg md:text-xl font-black text-primary">₹ {partyTotal.toLocaleString()}</div>
                           </div>
                         </div>
 
                         {isExpanded && (
-                          <div className="border-t border-slate-100 p-0 animate-in slide-in-from-top-2 duration-200">
+                          <div className="border-t border-border p-0 animate-in slide-in-from-top-2 duration-200">
                             <div className="overflow-x-auto">
                               <Table>
-                                <TableHeader className="bg-slate-50/50">
+                                <TableHeader className="bg-muted/50/50">
                                   <TableRow>
                                     <TableHead className="text-[10px] font-black uppercase">Details</TableHead>
                                     <TableHead className="text-[10px] font-black uppercase">Amount</TableHead>
@@ -535,17 +535,17 @@ const ExpenseBookingsTab = () => {
                                 </TableHeader>
                                 <TableBody>
                                   {partyBookings.map((b) => (
-                                    <TableRow key={b.id} className="hover:bg-slate-50/50">
+                                    <TableRow key={b.id} className="hover:bg-muted/50/50">
                                       <TableCell>
                                         <div className="space-y-1">
                                           <div className="flex items-center gap-1.5">
                                             {b.is_inventory_purchase && <Package className="h-3 w-3 text-amber-500" />}
-                                            <span className="font-bold text-sm text-slate-700">{b.description}</span>
+                                            <span className="font-bold text-sm text-foreground">{b.description}</span>
                                           </div>
                                           <div className="flex flex-wrap gap-1">
                                             <Badge variant="secondary" className="text-[9px] h-4 px-1.5 rounded-md font-bold">{b.category}</Badge>
                                             {b.payment_date && (
-                                              <Badge variant="outline" className="text-[9px] h-4 px-1.5 rounded-md font-bold text-orange-600 border-orange-100 bg-orange-50/30">
+                                              <Badge variant="outline" className="text-[9px] h-4 px-1.5 rounded-md font-bold text-accent border-orange-100 bg-accent/5/30">
                                                 Due: {format(new Date(b.payment_date), "MMM dd")}
                                               </Badge>
                                             )}
@@ -553,14 +553,14 @@ const ExpenseBookingsTab = () => {
                                         </div>
                                       </TableCell>
                                       <TableCell>
-                                        <span className="font-black text-slate-800">NRs. {b.amount.toLocaleString()}</span>
+                                        <span className="font-black text-foreground">₹ {b.amount.toLocaleString()}</span>
                                       </TableCell>
                                       <TableCell className="text-right">
                                         <div className="flex justify-end gap-1">
-                                          <Button size="icon" variant="ghost" className="h-8 w-8 text-green-600 hover:bg-green-50 rounded-lg" onClick={() => handlePaid(b)}>
+                                          <Button size="icon" variant="ghost" className="h-8 w-8 text-success hover:bg-success/5 rounded-lg" onClick={() => handlePaid(b)}>
                                             <CheckCircle2 className="h-4 w-4" />
                                           </Button>
-                                          <Button size="icon" variant="ghost" className="h-8 w-8 text-blue-600 hover:bg-blue-50 rounded-lg" onClick={() => handleEdit(b)}>
+                                          <Button size="icon" variant="ghost" className="h-8 w-8 text-primary hover:bg-primary/5 rounded-lg" onClick={() => handleEdit(b)}>
                                             <Edit className="h-4 w-4" />
                                           </Button>
                                           <AlertDialog>
@@ -632,7 +632,7 @@ const ExpenseBookingsTab = () => {
 
             {canAddCategory && (
               <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden">
-                <CardHeader className="bg-slate-50/50 border-b border-slate-100 px-4 md:px-6 py-4">
+                <CardHeader className="bg-muted/50/50 border-b border-border px-4 md:px-6 py-4">
                   <CardTitle className="text-base md:text-lg font-bold">Categories</CardTitle>
                 </CardHeader>
                 <CardContent className="p-4 md:p-6">
@@ -642,8 +642,8 @@ const ExpenseBookingsTab = () => {
                   </form>
                   <div className="space-y-2">
                     {categories.map((c) => (
-                      <div key={c.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-2xl border border-slate-100 group">
-                        <span className="text-sm font-medium text-slate-700">{c.name}</span>
+                      <div key={c.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-2xl border border-border group">
+                        <span className="text-sm font-medium text-foreground">{c.name}</span>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive hover:bg-destructive/10 rounded-lg">

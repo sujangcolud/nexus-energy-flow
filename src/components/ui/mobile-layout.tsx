@@ -37,11 +37,11 @@ export function MobileLayout({
           <div className="flex items-center justify-between">
             <div>
               {title && (
-                <h1 className="text-3xl font-bold tracking-tight text-gray-900">
+                <h1 className="text-3xl font-bold tracking-tight text-foreground">
                   {title}
                 </h1>
               )}
-              {subtitle && <p className="text-gray-600 mt-1">{subtitle}</p>}
+              {subtitle && <p className="text-muted-foreground mt-1">{subtitle}</p>}
             </div>
             {headerActions && (
               <div className="flex items-center gap-2">{headerActions}</div>
@@ -55,10 +55,10 @@ export function MobileLayout({
 
   // Mobile layout with app-like styling
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-muted/50">
       {/* Mobile Header */}
       {(title || headerActions || showBackButton) && (
-        <div className="bg-white border-b border-gray-200 sticky top-0 z-40">
+        <div className="bg-white border-b border-border sticky top-0 z-40">
           <div className="px-4 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -67,19 +67,19 @@ export function MobileLayout({
                     variant="ghost"
                     size="sm"
                     onClick={() => navigate(-1)}
-                    className="h-10 w-10 p-0 hover:bg-gray-100"
+                    className="h-10 w-10 p-0 hover:bg-muted"
                   >
                     <ArrowLeft className="h-5 w-5" />
                   </Button>
                 )}
                 <div>
                   {title && (
-                    <h1 className="text-lg font-semibold text-gray-900">
+                    <h1 className="text-lg font-semibold text-foreground">
                       {title}
                     </h1>
                   )}
                   {subtitle && (
-                    <p className="text-sm text-gray-600">{subtitle}</p>
+                    <p className="text-sm text-muted-foreground">{subtitle}</p>
                   )}
                 </div>
               </div>
@@ -133,7 +133,7 @@ export function MobileCard({
           {description && (
             <p
               className={cn(
-                "text-gray-600",
+                "text-muted-foreground",
                 isMobile ? "text-base" : "text-sm",
               )}
             >

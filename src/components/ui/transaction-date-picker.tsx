@@ -54,12 +54,12 @@ const TransactionDatePicker: React.FC<TransactionDatePickerProps> = ({
         <CalendarIcon className="h-4 w-4" />
         {label}
         {isBackdated && showBackdateWarning && (
-          <span className="text-amber-600 text-xs bg-amber-50 px-2 py-1 rounded">
+          <span className="text-accent text-xs bg-amber-50 px-2 py-1 rounded">
             {daysDifference} days ago
           </span>
         )}
         {isFutureDate && (
-          <span className="text-red-600 text-xs bg-red-50 px-2 py-1 rounded">
+          <span className="text-destructive text-xs bg-destructive/5 px-2 py-1 rounded">
             Future date
           </span>
         )}
@@ -83,7 +83,7 @@ const TransactionDatePicker: React.FC<TransactionDatePickerProps> = ({
               className={cn(
                 "px-3 hidden sm:flex",
                 isBackdated && "border-amber-300 bg-amber-50",
-                isFutureDate && "border-red-300 bg-red-50",
+                isFutureDate && "border-red-300 bg-destructive/5",
               )}
             >
               <CalendarIcon className="h-4 w-4" />
@@ -107,7 +107,7 @@ const TransactionDatePicker: React.FC<TransactionDatePickerProps> = ({
       {/* Warning for backdated entries */}
       {isBackdated && showBackdateWarning && (
         <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-          <AlertTriangle className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" />
+          <AlertTriangle className="h-4 w-4 text-accent mt-0.5 flex-shrink-0" />
           <div className="text-sm">
             <p className="font-medium text-amber-800">Backdated Entry</p>
             <p className="text-amber-700">
@@ -123,10 +123,10 @@ const TransactionDatePicker: React.FC<TransactionDatePickerProps> = ({
 
       {/* Warning for future dates */}
       {isFutureDate && (
-        <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
-          <AlertTriangle className="h-4 w-4 text-red-600 mt-0.5 flex-shrink-0" />
+        <div className="flex items-start gap-2 p-3 bg-destructive/5 border border-red-200 rounded-lg">
+          <AlertTriangle className="h-4 w-4 text-destructive mt-0.5 flex-shrink-0" />
           <div className="text-sm">
-            <p className="font-medium text-red-800">Future Date Warning</p>
+            <p className="font-medium text-destructive">Future Date Warning</p>
             <p className="text-red-700">
               You're entering data for a future date. This may cause reporting
               issues.

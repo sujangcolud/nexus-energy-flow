@@ -386,14 +386,14 @@ const BusinessIntelligenceSuite = () => {
               label={`${cat} REAL Margin`}
               value={`${margin}%`}
               icon={Utensils}
-              color={margin > 35 ? "text-emerald-600" : margin > 20 ? "text-amber-600" : "text-destructive"}
+              color={margin > 35 ? "text-success" : margin > 20 ? "text-accent" : "text-destructive"}
             />
           );
         })}
-        <Kpi label="Energy Share" value={`${totals.energyShare.toFixed(1)}%`} icon={Flame} color="text-blue-600" />
+        <Kpi label="Energy Share" value={`${totals.energyShare.toFixed(1)}%`} icon={Flame} color="text-primary" />
       </div>
 
-      <Card className="border border-border bg-slate-50/50 overflow-hidden shadow-sm">
+      <Card className="border border-border bg-muted/50/50 overflow-hidden shadow-sm">
         <CardHeader className="pb-3 border-b bg-card">
           <CardTitle className="text-base flex items-center gap-2 text-primary font-bold">
             <Utensils className="h-4 w-4" /> Mero Category Profitability (Sales Income vs. Usage Expenses)
@@ -418,10 +418,10 @@ const BusinessIntelligenceSuite = () => {
                     <td className="px-4 py-3 font-semibold text-foreground">{row.category}</td>
                     <td className="px-4 py-3 text-right text-muted-foreground">{fmt(row.income)}</td>
                     <td className="px-4 py-3 text-right text-muted-foreground">{fmt(row.expense)}</td>
-                    <td className={`px-4 py-3 text-right font-bold ${row.net < 0 ? "text-destructive" : "text-emerald-600"}`}>
+                    <td className={`px-4 py-3 text-right font-bold ${row.net < 0 ? "text-destructive" : "text-success"}`}>
                       {fmt(row.net)}
                     </td>
-                    <td className={`px-4 py-3 text-right font-bold ${row.margin < 0 ? "text-destructive" : "text-emerald-600"}`}>
+                    <td className={`px-4 py-3 text-right font-bold ${row.margin < 0 ? "text-destructive" : "text-success"}`}>
                       {row.margin.toFixed(1)}%
                     </td>
                   </tr>
@@ -432,7 +432,7 @@ const BusinessIntelligenceSuite = () => {
         </CardContent>
       </Card>
 
-      <Card className="border border-border lg:col-span-2 bg-slate-50/50">
+      <Card className="border border-border lg:col-span-2 bg-muted/50/50">
         <CardHeader className="pb-2">
           <CardTitle className="text-base flex items-center gap-2 text-primary">
             <Utensils className="h-4 w-4" /> Real Kitchen Profitability (Shared Ingredient Allocation)
@@ -458,7 +458,7 @@ const BusinessIntelligenceSuite = () => {
                     <td className="p-2 font-semibold">{row.category}</td>
                     <td className="p-2 text-right">{fmt(row.expense)}</td>
                     <td className="p-2 text-right">{fmt(row.sales)}</td>
-                    <td className={`p-2 text-right font-bold ${row.lastMargin < 20 ? "text-destructive" : "text-emerald-600"}`}>
+                    <td className={`p-2 text-right font-bold ${row.lastMargin < 20 ? "text-destructive" : "text-success"}`}>
                       {row.lastMargin.toFixed(1)}%
                     </td>
                     <td className="p-2 text-right font-medium">{row.lastEfficiency}x</td>
@@ -476,7 +476,7 @@ const BusinessIntelligenceSuite = () => {
       </Card>
 
 
-      <Card className="border border-border bg-slate-50/50 overflow-hidden shadow-sm">
+      <Card className="border border-border bg-muted/50/50 overflow-hidden shadow-sm">
         <CardHeader className="pb-3 border-b bg-card">
           <CardTitle className="text-base flex items-center gap-2 text-primary font-bold">
             <Activity className="h-4 w-4" /> Daily Traffic & Revenue Analytics (Day-Wise Flow)
@@ -511,13 +511,13 @@ const BusinessIntelligenceSuite = () => {
                       <td className="px-4 py-3 text-right text-muted-foreground font-semibold">
                         {row.charging_count}
                       </td>
-                      <td className="px-4 py-3 text-right text-blue-600 font-bold">
+                      <td className="px-4 py-3 text-right text-primary font-bold">
                         {fmt(row.charging_revenue)}
                       </td>
                       <td className="px-4 py-3 text-right text-muted-foreground font-semibold">
                         {row.orders_count}
                       </td>
-                      <td className="px-4 py-3 text-right text-emerald-600 font-bold">
+                      <td className="px-4 py-3 text-right text-success font-bold">
                         {fmt(row.orders_revenue)}
                       </td>
                     </tr>
@@ -600,7 +600,7 @@ const BusinessIntelligenceSuite = () => {
 
         <Card className="border border-border lg:col-span-2">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base flex items-center gap-2 text-red-600">
+            <CardTitle className="text-base flex items-center gap-2 text-destructive">
               <AlertCircle className="w-4 h-4" /> Comprehensive AI Auditor & Anomaly Log
             </CardTitle>
             <CardDescription>Detailed list of detected losses (3-day streaks) and weekly cash flow audits.</CardDescription>
@@ -711,7 +711,7 @@ const BusinessIntelligenceSuite = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="border border-border">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base flex items-center gap-2 text-blue-600">
+            <CardTitle className="text-base flex items-center gap-2 text-primary">
               <Lightbulb className="w-4 h-4" /> Sahuji Insights
             </CardTitle>
           </CardHeader>
@@ -719,7 +719,7 @@ const BusinessIntelligenceSuite = () => {
             <ScrollArea className="h-[180px]">
                 <div className="space-y-3">
                 {sahujiIntel.insights.length > 0 ? sahujiIntel.insights.map((a, i) => (
-                    <div key={i} className="flex gap-2 text-sm items-start p-2 rounded bg-blue-50/50">
+                    <div key={i} className="flex gap-2 text-sm items-start p-2 rounded bg-primary/5/50">
                       <Activity className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
                       <p>{a}</p>
                     </div>
@@ -731,7 +731,7 @@ const BusinessIntelligenceSuite = () => {
 
         <Card className="border border-border">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base flex items-center gap-2 text-amber-600">
+            <CardTitle className="text-base flex items-center gap-2 text-accent">
               <Sparkles className="w-4 h-4" /> Sahuji Recommendations
             </CardTitle>
           </CardHeader>
@@ -739,7 +739,7 @@ const BusinessIntelligenceSuite = () => {
             <ScrollArea className="h-[180px]">
                 <div className="space-y-3">
                 {sahujiIntel.recommendations.length > 0 ? sahujiIntel.recommendations.map((a, i) => (
-                    <div key={i} className="flex gap-2 text-sm items-start p-2 rounded bg-amber-50/50">
+                    <div key={i} className="flex gap-2 text-sm items-start p-2 rounded bg-accent/5">
                       <TrendingUp className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
                       <p className="font-medium">{a}</p>
                     </div>
@@ -787,7 +787,7 @@ const BusinessIntelligenceSuite = () => {
             {anomalies.length > 0 ? (
               <span className="ml-2 text-destructive font-medium">{anomalies.length} anomaly flagged</span>
             ) : (
-              <span className="ml-2 text-emerald-600 font-medium">All clean</span>
+              <span className="ml-2 text-success font-medium">All clean</span>
             )}
           </CardDescription>
         </CardHeader>

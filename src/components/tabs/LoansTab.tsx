@@ -457,10 +457,10 @@ const LoansTab = () => {
           <CardContent className="p-5 md:p-6">
             <div className="flex justify-between items-center">
               <div>
-                <p className="text-xs font-bold uppercase tracking-wider text-red-600 mb-1">Total Outstanding</p>
-                <h3 className="text-xl md:text-2xl font-bold text-red-900">NRs. {totalOutstanding.toLocaleString()}</h3>
+                <p className="text-xs font-bold uppercase tracking-wider text-destructive mb-1">Total Outstanding</p>
+                <h3 className="text-xl md:text-2xl font-bold text-foreground">₹ {totalOutstanding.toLocaleString()}</h3>
               </div>
-              <div className="h-10 w-10 md:h-12 md:w-12 bg-red-100 rounded-2xl flex items-center justify-center text-red-600">
+              <div className="h-10 w-10 md:h-12 md:w-12 bg-destructive/10 rounded-2xl flex items-center justify-center text-destructive">
                 <TrendingDown className="h-5 w-5 md:h-6 md:w-6" />
               </div>
             </div>
@@ -471,12 +471,12 @@ const LoansTab = () => {
           <CardContent className="p-5 md:p-6">
             <div className="flex justify-between items-center">
               <div>
-                <p className="text-xs font-bold uppercase tracking-wider text-blue-600 mb-1">Active Loans</p>
-                <h3 className="text-xl md:text-2xl font-bold text-blue-900">
+                <p className="text-xs font-bold uppercase tracking-wider text-primary mb-1">Active Loans</p>
+                <h3 className="text-xl md:text-2xl font-bold text-foreground">
                   {loans.filter((l) => l.status === "active").length}
                 </h3>
               </div>
-              <div className="h-10 w-10 md:h-12 md:w-12 bg-blue-100 rounded-2xl flex items-center justify-center text-blue-600">
+              <div className="h-10 w-10 md:h-12 md:w-12 bg-primary/10 rounded-2xl flex items-center justify-center text-primary">
                 <Landmark className="h-5 w-5 md:h-6 md:w-6" />
               </div>
             </div>
@@ -487,12 +487,12 @@ const LoansTab = () => {
           <CardContent className="p-5 md:p-6">
             <div className="flex justify-between items-center">
               <div>
-                <p className="text-xs font-bold uppercase tracking-wider text-green-600 mb-1">Total Interest Paid</p>
-                <h3 className="text-xl md:text-2xl font-bold text-green-900">
-                  NRs. {loans.reduce((sum, l) => sum + Number(l.interest_paid), 0).toLocaleString()}
+                <p className="text-xs font-bold uppercase tracking-wider text-success mb-1">Total Interest Paid</p>
+                <h3 className="text-xl md:text-2xl font-bold text-foreground">
+                  ₹ {loans.reduce((sum, l) => sum + Number(l.interest_paid), 0).toLocaleString()}
                 </h3>
               </div>
-              <div className="h-10 w-10 md:h-12 md:w-12 bg-green-100 rounded-2xl flex items-center justify-center text-green-600">
+              <div className="h-10 w-10 md:h-12 md:w-12 bg-success/10 rounded-2xl flex items-center justify-center text-success">
                 <Percent className="h-5 w-5 md:h-6 md:w-6" />
               </div>
             </div>
@@ -501,7 +501,7 @@ const LoansTab = () => {
       </div>
 
       <Card className="rounded-3xl border-none shadow-sm overflow-hidden">
-        <CardHeader className="bg-slate-50 border-b border-slate-100 p-4">
+        <CardHeader className="bg-muted/50 border-b border-border p-4">
           <CardTitle className="text-base md:text-lg flex items-center gap-2 font-bold">
             <History className="h-5 w-5 text-primary" />
             Loan List
@@ -553,7 +553,7 @@ const LoansTab = () => {
                       <TableCell className="font-medium">
                         {Number(loan.principal_amount).toLocaleString()}
                       </TableCell>
-                      <TableCell className="font-bold text-red-600">
+                      <TableCell className="font-bold text-destructive">
                         {Number(loan.outstanding_principal).toLocaleString()}
                       </TableCell>
                       <TableCell>
@@ -561,7 +561,7 @@ const LoansTab = () => {
                           <div className="flex flex-col gap-1">
                             <span className={cn(
                               "text-xs font-medium",
-                              isBefore(calculateNextDueDate(loan), startOfDay(new Date())) ? "text-red-600 animate-pulse" : "text-muted-foreground"
+                              isBefore(calculateNextDueDate(loan), startOfDay(new Date())) ? "text-destructive animate-pulse" : "text-muted-foreground"
                             )}>
                               {format(calculateNextDueDate(loan), "MMM dd")}
                             </span>
@@ -627,8 +627,8 @@ const LoansTab = () => {
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">Outstanding:</span>
-                  <span className="font-bold text-red-600 text-base">
-                    NRs. {Number(selectedLoan.outstanding_principal).toLocaleString()}
+                  <span className="font-bold text-destructive text-base">
+                    ₹ {Number(selectedLoan.outstanding_principal).toLocaleString()}
                   </span>
                 </div>
               </div>

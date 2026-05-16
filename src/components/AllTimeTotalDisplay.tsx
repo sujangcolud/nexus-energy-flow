@@ -42,7 +42,7 @@ export const AllTimeTotalDisplay: React.FC<AllTimeTotalDisplayProps> = ({
         return {
           label: 'All-Time Charging Revenue',
           color: 'text-blue-700',
-          bgColor: 'from-blue-50 to-cyan-50 border-blue-200',
+          bgColor: 'from-blue-50 to-cyan-50 border-primary/10',
           field: 'total_income_from_charging'
         };
       case 'expenses':
@@ -56,7 +56,7 @@ export const AllTimeTotalDisplay: React.FC<AllTimeTotalDisplayProps> = ({
         return {
           label: 'All-Time Deposits',
           color: 'text-blue-700',
-          bgColor: 'from-blue-50 to-indigo-50 border-blue-200',
+          bgColor: 'from-blue-50 to-indigo-50 border-primary/10',
           field: 'total_deposits'
         };
       case 'withdrawals':
@@ -76,8 +76,8 @@ export const AllTimeTotalDisplay: React.FC<AllTimeTotalDisplayProps> = ({
       default:
         return {
           label: 'All-Time Total',
-          color: 'text-gray-700',
-          bgColor: 'from-gray-50 to-slate-50 border-gray-200',
+          color: 'text-foreground',
+          bgColor: 'from-gray-50 to-slate-50 border-border',
           field: 'total_income'
         };
     }
@@ -132,11 +132,11 @@ export const AllTimeTotalDisplay: React.FC<AllTimeTotalDisplayProps> = ({
 
   if (loading) {
     return (
-      <Card className={`bg-gradient-to-br from-gray-50 to-slate-50 border-gray-200 ${className}`}>
+      <Card className={`bg-gradient-to-br from-gray-50 to-slate-50 border-border ${className}`}>
         <CardContent className="p-6">
           <div className="flex items-center justify-center">
-            <Loader2 className="h-6 w-6 animate-spin text-gray-500" />
-            <span className="ml-2 text-gray-600">Loading total...</span>
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            <span className="ml-2 text-muted-foreground">Loading total...</span>
           </div>
         </CardContent>
       </Card>
@@ -152,7 +152,7 @@ export const AllTimeTotalDisplay: React.FC<AllTimeTotalDisplayProps> = ({
               <TrendingUp className={`h-6 w-6 ${totalData.color}`} />
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-600 mb-1">
+              <p className="text-sm font-medium text-muted-foreground mb-1">
                 {totalData.label}
               </p>
               <p className={`text-3xl font-bold ${totalData.color}`}>
@@ -161,7 +161,7 @@ export const AllTimeTotalDisplay: React.FC<AllTimeTotalDisplayProps> = ({
             </div>
           </div>
           <div className="text-right">
-            <Badge variant="secondary" className="bg-white/50 text-gray-700">
+            <Badge variant="secondary" className="bg-white/50 text-foreground">
               <DollarSign className="h-4 w-4 mr-1" />
               All Time
             </Badge>

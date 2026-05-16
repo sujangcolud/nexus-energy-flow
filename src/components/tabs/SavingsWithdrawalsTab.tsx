@@ -318,13 +318,13 @@ const SavingsWithdrawalsTab = () => {
           <Card className="rounded-3xl border-none bg-white shadow-sm overflow-hidden">
             <CardContent className="p-4 md:p-6">
               <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Total Savings</p>
-              <p className="text-sm md:text-xl font-bold text-primary">NRs. {totalSavings.toFixed(2)}</p>
+              <p className="text-sm md:text-xl font-bold text-primary">₹ {totalSavings.toFixed(2)}</p>
             </CardContent>
           </Card>
           <Card className="rounded-3xl border-none bg-white shadow-sm overflow-hidden">
             <CardContent className="p-4 md:p-6">
               <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Total Withdrawals</p>
-              <p className="text-sm md:text-xl font-bold text-destructive">NRs. {totalWithdrawals.toFixed(2)}</p>
+              <p className="text-sm md:text-xl font-bold text-destructive">₹ {totalWithdrawals.toFixed(2)}</p>
             </CardContent>
           </Card>
           <Card className="rounded-3xl border-none bg-white shadow-sm overflow-hidden hidden md:block">
@@ -342,14 +342,14 @@ const SavingsWithdrawalsTab = () => {
         </div>
 
         <Tabs defaultValue="savings" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-2 bg-slate-100 p-1 rounded-2xl h-12">
+          <TabsList className="grid w-full grid-cols-2 bg-muted p-1 rounded-2xl h-12">
             <TabsTrigger value="savings" className="flex items-center gap-2 rounded-xl data-[state=active]:bg-white data-[state=active]:shadow-sm"><ArrowUpCircle className="h-4 w-4" />Savings</TabsTrigger>
             <TabsTrigger value="withdrawals" className="flex items-center gap-2 rounded-xl data-[state=active]:bg-white data-[state=active]:shadow-sm"><ArrowDownCircle className="h-4 w-4" />Withdrawals</TabsTrigger>
           </TabsList>
 
           <TabsContent value="savings" className="space-y-4">
             <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden">
-              <CardHeader className="bg-slate-50/50 border-b border-slate-100 px-4 md:px-6 py-4">
+              <CardHeader className="bg-muted/50/50 border-b border-border px-4 md:px-6 py-4">
                 <CardTitle className="text-base md:text-lg font-bold flex items-center gap-2">
                   <ArrowUpCircle className="h-5 w-5 text-primary" />
                   Add Saving
@@ -379,7 +379,7 @@ const SavingsWithdrawalsTab = () => {
                     {savings.map((s) => (
                       <TableRow key={s.id}>
                         <TableCell>{format(new Date(s.contribution_date), "MMM dd, yyyy")}</TableCell>
-                        <TableCell className="font-medium">NRs. {s.contribution_amount.toFixed(2)}</TableCell>
+                        <TableCell className="font-medium">₹ {s.contribution_amount.toFixed(2)}</TableCell>
                         <TableCell>{s.member_id}</TableCell>
                         <TableCell><Badge variant="outline">{s.payment_mode}</Badge></TableCell>
                         <TableCell>{s.savings_to}</TableCell>
@@ -399,7 +399,7 @@ const SavingsWithdrawalsTab = () => {
 
           <TabsContent value="withdrawals" className="space-y-4">
             <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden">
-              <CardHeader className="bg-slate-50/50 border-b border-slate-100 px-4 md:px-6 py-4">
+              <CardHeader className="bg-muted/50/50 border-b border-border px-4 md:px-6 py-4">
                 <CardTitle className="text-base md:text-lg font-bold flex items-center gap-2">
                   <ArrowDownCircle className="h-5 w-5 text-destructive" />
                   Add Withdrawal
@@ -429,7 +429,7 @@ const SavingsWithdrawalsTab = () => {
                     {withdrawals.map((w) => (
                       <TableRow key={w.id}>
                         <TableCell>{format(new Date(w.withdrawal_date), "MMM dd, yyyy")}</TableCell>
-                        <TableCell className="font-medium">NRs. {w.amount.toFixed(2)}</TableCell>
+                        <TableCell className="font-medium">₹ {w.amount.toFixed(2)}</TableCell>
                         <TableCell>{w.purpose}</TableCell>
                         <TableCell>{w.withdrawal_from}</TableCell>
                         <TableCell><Badge variant="outline">{w.payment_mode}</Badge></TableCell>

@@ -91,39 +91,39 @@ const Index = () => {
       title: "Business Management",
       description:
         "Comprehensive tools for managing orders, expenses, and financial data",
-      color: "bg-blue-600",
+      color: "bg-primary",
     },
     {
       icon: Zap,
       title: "Energy Tracking",
       description:
         "Monitor charging sessions and energy consumption with detailed analytics",
-      color: "bg-yellow-600",
+      color: "bg-accent",
     },
     {
       icon: Shield,
       title: "Role-Based Access",
       description:
         "Secure access control with different permission levels for team members",
-      color: "bg-green-600",
+      color: "bg-success",
     },
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100">
+    <div className="min-h-screen bg-gradient-to-br from-background to-muted">
       <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 lg:p-8">
         <div className="w-full max-w-6xl mx-auto">
           {/* Header */}
           <div className="text-center mb-12">
             <div className="inline-flex items-center gap-3 mb-6">
-              <div className="p-3 bg-slate-600 rounded-lg shadow-lg">
+              <div className="p-3 bg-primary rounded-lg shadow-lg">
                 <Building2 className="h-8 w-8 text-white" />
               </div>
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-800">
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground">
                 Energy Palace Nexus
               </h1>
             </div>
-            <p className="text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed">
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
               Professional business management platform for energy operations
               and financial tracking
             </p>
@@ -135,7 +135,7 @@ const Index = () => {
                     className="h-4 w-4 text-yellow-500 fill-current"
                   />
                 ))}
-                <span className="ml-2 text-slate-600 text-sm">
+                <span className="ml-2 text-muted-foreground text-sm">
                   Trusted by businesses worldwide
                 </span>
               </div>
@@ -146,18 +146,18 @@ const Index = () => {
             {/* Auth Form */}
             <div className="order-2 lg:order-1">
               <Card
-                className="shadow-lg border border-slate-200 bg-white hover:shadow-xl transition-shadow duration-300"
+                className="shadow-lg border border-border bg-white hover:shadow-xl transition-shadow duration-300"
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}
               >
                 <CardHeader className="space-y-4">
-                  <CardTitle className="text-2xl font-semibold text-center text-slate-800 flex items-center justify-center gap-2">
+                  <CardTitle className="text-2xl font-semibold text-center text-foreground flex items-center justify-center gap-2">
                     Access Your Dashboard
                     <ArrowRight
-                      className={`h-5 w-5 transition-transform duration-300 text-slate-600 ${isHovered ? "translate-x-1" : ""}`}
+                      className={`h-5 w-5 transition-transform duration-300 text-muted-foreground ${isHovered ? "translate-x-1" : ""}`}
                     />
                   </CardTitle>
-                  <CardDescription className="text-center text-slate-600">
+                  <CardDescription className="text-center text-muted-foreground">
                     Sign in to your account or create a new one
                   </CardDescription>
                 </CardHeader>
@@ -167,16 +167,16 @@ const Index = () => {
                     onValueChange={setActiveTab}
                     className="space-y-6"
                   >
-                    <TabsList className="grid w-full grid-cols-2 bg-slate-100">
+                    <TabsList className="grid w-full grid-cols-2 bg-muted">
                       <TabsTrigger
                         value="login"
-                        className="data-[state=active]:bg-white data-[state=active]:text-slate-800 text-slate-600"
+                        className="data-[state=active]:bg-white data-[state=active]:text-foreground text-muted-foreground"
                       >
                         Sign In
                       </TabsTrigger>
                       <TabsTrigger
                         value="signup"
-                        className="data-[state=active]:bg-white data-[state=active]:text-slate-800 text-slate-600"
+                        className="data-[state=active]:bg-white data-[state=active]:text-foreground text-muted-foreground"
                       >
                         Sign Up
                       </TabsTrigger>
@@ -187,7 +187,7 @@ const Index = () => {
                         <div className="space-y-3">
                           <Label
                             htmlFor="login-email"
-                            className="text-slate-700 font-medium"
+                            className="text-foreground font-medium"
                           >
                             Email Address
                           </Label>
@@ -204,7 +204,7 @@ const Index = () => {
                         <div className="space-y-3">
                           <Label
                             htmlFor="login-password"
-                            className="text-slate-700 font-medium"
+                            className="text-foreground font-medium"
                           >
                             Password
                           </Label>
@@ -221,7 +221,7 @@ const Index = () => {
                             <button
                               type="button"
                               onClick={() => setShowPassword(!showPassword)}
-                              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700 transition-colors"
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                             >
                               {showPassword ? (
                                 <EyeOff className="h-5 w-5" />
@@ -233,7 +233,7 @@ const Index = () => {
                         </div>
                         <Button
                           type="submit"
-                          className="w-full h-12 bg-slate-800 hover:bg-slate-700 text-white font-medium transition-colors"
+                          className="w-full h-12 bg-primary hover:bg-primary-dark text-white font-medium transition-colors"
                           disabled={loading}
                         >
                           {loading ? (
@@ -257,7 +257,7 @@ const Index = () => {
                           <div className="space-y-3">
                             <Label
                               htmlFor="firstName"
-                              className="text-slate-700 font-medium"
+                              className="text-foreground font-medium"
                             >
                               First Name
                             </Label>
@@ -274,7 +274,7 @@ const Index = () => {
                           <div className="space-y-3">
                             <Label
                               htmlFor="lastName"
-                              className="text-slate-700 font-medium"
+                              className="text-foreground font-medium"
                             >
                               Last Name
                             </Label>
@@ -292,7 +292,7 @@ const Index = () => {
                         <div className="space-y-3">
                           <Label
                             htmlFor="signup-email"
-                            className="text-slate-700 font-medium"
+                            className="text-foreground font-medium"
                           >
                             Email Address
                           </Label>
@@ -309,7 +309,7 @@ const Index = () => {
                         <div className="space-y-3">
                           <Label
                             htmlFor="signup-password"
-                            className="text-slate-700 font-medium"
+                            className="text-foreground font-medium"
                           >
                             Password
                           </Label>
@@ -327,7 +327,7 @@ const Index = () => {
                             <button
                               type="button"
                               onClick={() => setShowPassword(!showPassword)}
-                              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700 transition-colors"
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                             >
                               {showPassword ? (
                                 <EyeOff className="h-5 w-5" />
@@ -339,7 +339,7 @@ const Index = () => {
                         </div>
                         <Button
                           type="submit"
-                          className="w-full h-12 bg-slate-800 hover:bg-slate-700 text-white font-medium transition-colors"
+                          className="w-full h-12 bg-primary hover:bg-primary-dark text-white font-medium transition-colors"
                           disabled={loading}
                         >
                           {loading ? (
@@ -364,10 +364,10 @@ const Index = () => {
             {/* Features */}
             <div className="space-y-8 order-1 lg:order-2">
               <div className="text-center lg:text-left">
-                <h2 className="text-3xl font-bold text-slate-800 mb-4">
+                <h2 className="text-3xl font-bold text-foreground mb-4">
                   Business Intelligence Platform
                 </h2>
-                <p className="text-lg text-slate-600 leading-relaxed">
+                <p className="text-lg text-muted-foreground leading-relaxed">
                   Streamline your operations with our comprehensive suite of
                   business tools
                 </p>
@@ -377,7 +377,7 @@ const Index = () => {
                 {features.map((feature, index) => (
                   <div
                     key={index}
-                    className="flex items-start gap-4 p-6 bg-white rounded-lg border border-slate-200 shadow-sm hover:shadow-md transition-shadow duration-300"
+                    className="flex items-start gap-4 p-6 bg-white rounded-lg border border-border shadow-sm hover:shadow-md transition-shadow duration-300"
                   >
                     <div
                       className={`p-3 ${feature.color} rounded-lg shadow-sm`}
@@ -385,10 +385,10 @@ const Index = () => {
                       <feature.icon className="h-6 w-6 text-white" />
                     </div>
                     <div className="flex-1">
-                      <h3 className="font-semibold text-lg text-slate-800 mb-2">
+                      <h3 className="font-semibold text-lg text-foreground mb-2">
                         {feature.title}
                       </h3>
-                      <p className="text-slate-600 leading-relaxed">
+                      <p className="text-muted-foreground leading-relaxed">
                         {feature.description}
                       </p>
                     </div>

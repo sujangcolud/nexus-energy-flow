@@ -258,7 +258,7 @@ const SuperAdminDashboard = () => {
             </h1>
             <Sparkles className="h-8 w-8 text-yellow-500 animate-pulse" />
           </div>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
             Comprehensive business analytics and insights at your fingertips
           </p>
         </div>
@@ -269,11 +269,11 @@ const SuperAdminDashboard = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-blue-600 font-medium">
+                  <p className="text-sm text-primary font-medium">
                     Total Revenue
                   </p>
-                  <p className="text-2xl font-bold text-blue-800">
-                    NRs.
+                  <p className="text-2xl font-bold text-primary">
+                    ₹
                     {monthlyFinancialSummary
                       .reduce((acc, item) => acc + item.revenue, 0)
                       .toLocaleString()}
@@ -290,10 +290,10 @@ const SuperAdminDashboard = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-green-600 font-medium">
+                  <p className="text-sm text-success font-medium">
                     Total Users
                   </p>
-                  <p className="text-2xl font-bold text-green-800">
+                  <p className="text-2xl font-bold text-success">
                     {userRoleDistribution.reduce(
                       (acc, item) => acc + item.user_count,
                       0,
@@ -311,7 +311,7 @@ const SuperAdminDashboard = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-orange-600 font-medium">
+                  <p className="text-sm text-accent font-medium">
                     Total Orders
                   </p>
                   <p className="text-2xl font-bold text-orange-800">
@@ -332,7 +332,7 @@ const SuperAdminDashboard = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-purple-600 font-medium">
+                  <p className="text-sm text-primary font-medium">
                     Growth Rate
                   </p>
                   <p className="text-2xl font-bold text-purple-800">
@@ -349,10 +349,10 @@ const SuperAdminDashboard = () => {
 
         {/* Financial Overview */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2">
-          <Card className="bg-gradient-to-br from-white/80 to-blue-50/80 backdrop-blur-sm border-0 shadow-xl hover:shadow-2xl transition-all duration-300">
+          <Card className="bg-gradient-to-br from-white/80 to-primary/5/80 backdrop-blur-sm border-0 shadow-xl hover:shadow-2xl transition-all duration-300">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-xl bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                <TrendingUp className="h-5 w-5 text-blue-600" />
+              <CardTitle className="flex items-center gap-2 text-xl bg-gradient-to-r from-primary to-primary-dark bg-clip-text text-transparent">
+                <TrendingUp className="h-5 w-5 text-primary" />
                 Revenue vs. Expenses (Last 12 Months)
               </CardTitle>
             </CardHeader>
@@ -384,8 +384,8 @@ const SuperAdminDashboard = () => {
 
           <Card className="bg-gradient-to-br from-white/80 to-green-50/80 backdrop-blur-sm border-0 shadow-xl hover:shadow-2xl transition-all duration-300">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-xl bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
-                <Target className="h-5 w-5 text-green-600" />
+              <CardTitle className="flex items-center gap-2 text-xl bg-gradient-to-r from-success to-success bg-clip-text text-transparent">
+                <Target className="h-5 w-5 text-success" />
                 Profitability Trend (Last 12 Months)
               </CardTitle>
             </CardHeader>
@@ -598,18 +598,18 @@ const SuperAdminDashboard = () => {
                 {topSpenders.map((spender, index) => (
                   <div
                     key={index}
-                    className="flex justify-between items-center p-3 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-lg border border-yellow-200"
+                    className="flex justify-between items-center p-3 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-lg border border-warning/10"
                   >
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
                         {index + 1}
                       </div>
-                      <span className="text-sm font-medium text-gray-700 truncate">
+                      <span className="text-sm font-medium text-foreground truncate">
                         {spender.email}
                       </span>
                     </div>
-                    <span className="font-bold text-orange-600">
-                      NRs. {Number(spender.total_spent).toFixed(2)}
+                    <span className="font-bold text-accent">
+                      ₹ {Number(spender.total_spent).toFixed(2)}
                     </span>
                   </div>
                 ))}

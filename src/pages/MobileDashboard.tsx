@@ -115,8 +115,8 @@ const MobileDashboard = () => {
         label: "Orders",
         icon: ShoppingCart,
         roles: ["user", "data_entry", "reports_viewer", "super_admin"],
-        color: "from-orange-500 to-orange-600",
-        bgColor: "bg-orange-50",
+        color: "bg-primary",
+        bgColor: "bg-primary/5",
         description: "Manage food orders",
         category: "transactions",
       },
@@ -126,8 +126,8 @@ const MobileDashboard = () => {
         label: "Charging",
         icon: Zap,
         roles: ["user", "data_entry", "reports_viewer", "super_admin"],
-        color: "from-yellow-500 to-yellow-600",
-        bgColor: "bg-yellow-50",
+        color: "bg-primary",
+        bgColor: "bg-primary/5",
         description: "Track energy consumption",
         category: "transactions",
       },
@@ -137,8 +137,8 @@ const MobileDashboard = () => {
         label: "Expenses",
         icon: Receipt,
         roles: ["user", "data_entry", "reports_viewer", "super_admin"],
-        color: "from-red-500 to-red-600",
-        bgColor: "bg-red-50",
+        color: "bg-primary",
+        bgColor: "bg-primary/5",
         description: "Monitor business expenses",
         category: "transactions",
       },
@@ -148,8 +148,8 @@ const MobileDashboard = () => {
         label: "Deposits",
         icon: CreditCard,
         roles: ["user", "data_entry", "reports_viewer", "super_admin"],
-        color: "from-green-500 to-green-600",
-        bgColor: "bg-green-50",
+        color: "bg-primary",
+        bgColor: "bg-primary/5",
         description: "Handle financial deposits",
         category: "financial",
       },
@@ -159,8 +159,8 @@ const MobileDashboard = () => {
         label: "Savings & Withdrawals",
         icon: Banknote,
         roles: ["user", "data_entry", "reports_viewer", "super_admin"],
-        color: "from-blue-500 to-blue-600",
-        bgColor: "bg-blue-50",
+        color: "bg-primary",
+        bgColor: "bg-primary/5",
         description: "Savings & withdrawals",
         category: "financial",
       },
@@ -170,8 +170,8 @@ const MobileDashboard = () => {
         label: "Loans",
         icon: Landmark,
         roles: ["user", "data_entry", "reports_viewer", "super_admin"],
-        color: "from-indigo-500 to-indigo-600",
-        bgColor: "bg-indigo-50",
+        color: "bg-primary",
+        bgColor: "bg-primary/5",
         description: "Loans & Repayments",
         category: "financial",
       },
@@ -181,8 +181,8 @@ const MobileDashboard = () => {
         label: "Investments",
         icon: TrendingUp,
         roles: ["user", "data_entry", "reports_viewer", "super_admin"],
-        color: "from-emerald-500 to-emerald-600",
-        bgColor: "bg-emerald-50",
+        color: "bg-primary",
+        bgColor: "bg-primary/5",
         description: "Share investments",
         category: "financial",
       },
@@ -192,8 +192,8 @@ const MobileDashboard = () => {
         label: "Expense Bookings",
         icon: FileText,
         roles: ["user", "data_entry", "reports_viewer", "super_admin"],
-        color: "from-rose-500 to-rose-600",
-        bgColor: "bg-rose-50",
+        color: "bg-primary",
+        bgColor: "bg-primary/5",
         description: "Manage expense bookings",
         category: "financial",
       },
@@ -203,8 +203,8 @@ const MobileDashboard = () => {
         label: "Inventory",
         icon: Package,
         roles: ["user", "data_entry", "reports_viewer", "super_admin"],
-        color: "from-purple-500 to-purple-600",
-        bgColor: "bg-purple-50",
+        color: "bg-primary",
+        bgColor: "bg-primary/5",
         description: "Inventory management",
         category: "management",
       },
@@ -215,8 +215,8 @@ const MobileDashboard = () => {
         label: "Import",
         icon: Upload,
         roles: ["reports_viewer", "super_admin"],
-        color: "from-indigo-500 to-indigo-600",
-        bgColor: "bg-indigo-50",
+        color: "bg-primary",
+        bgColor: "bg-primary/5",
         description: "Data import",
         category: "management",
       },
@@ -226,8 +226,8 @@ const MobileDashboard = () => {
         label: "Menu",
         icon: UtensilsCrossed,
         roles: ["super_admin"],
-        color: "from-amber-500 to-amber-600",
-        bgColor: "bg-amber-50",
+        color: "bg-primary",
+        bgColor: "bg-primary/5",
         description: "Menu management",
         category: "management",
       },
@@ -237,8 +237,8 @@ const MobileDashboard = () => {
         label: "Recipes",
         icon: ChefHat,
         roles: ["super_admin"],
-        color: "from-orange-500 to-orange-600",
-        bgColor: "bg-orange-50",
+        color: "bg-primary",
+        bgColor: "bg-primary/5",
         description: "Link menu items to inventory ingredients",
         category: "management",
       },
@@ -248,8 +248,8 @@ const MobileDashboard = () => {
         label: "Users",
         icon: UserCog,
         roles: ["super_admin"],
-        color: "from-pink-500 to-pink-600",
-        bgColor: "bg-pink-50",
+        color: "bg-primary",
+        bgColor: "bg-primary/5",
         description: "User management",
         category: "management",
       },
@@ -259,8 +259,8 @@ const MobileDashboard = () => {
         label: "VAT",
         icon: FileText,
         roles: ["user", "data_entry", "reports_viewer", "super_admin"],
-        color: "from-lime-500 to-lime-600",
-        bgColor: "bg-lime-50",
+        color: "bg-primary",
+        bgColor: "bg-primary/5",
         description: "VAT entries",
         category: "transactions",
       },
@@ -270,8 +270,8 @@ const MobileDashboard = () => {
         label: "Dashboard Studio",
         icon: BarChart3,
         roles: ["user", "reports_viewer", "super_admin"],
-        color: "from-purple-500 to-purple-600",
-        bgColor: "bg-purple-50",
+        color: "bg-primary",
+        bgColor: "bg-primary/5",
         description: "Custom dashboards",
         category: "analytics",
       },
@@ -281,8 +281,8 @@ const MobileDashboard = () => {
         label: "Daily Summary",
         icon: FileText,
         roles: ["user", "data_entry", "reports_viewer", "super_admin"],
-        color: "from-sky-500 to-sky-600",
-        bgColor: "bg-sky-50",
+        color: "bg-primary",
+        bgColor: "bg-primary/5",
         description: "Daily summary with date range",
         category: "analytics",
       },
@@ -292,8 +292,8 @@ const MobileDashboard = () => {
         label: "Command Center",
         icon: Activity,
         roles: ["user", "data_entry", "reports_viewer", "super_admin"],
-        color: "from-fuchsia-500 to-fuchsia-600",
-        bgColor: "bg-fuchsia-50",
+        color: "bg-primary",
+        bgColor: "bg-primary/5",
         description: "KPIs, cashflow & forecast",
         category: "analytics",
       },
@@ -303,8 +303,8 @@ const MobileDashboard = () => {
         label: "Report Builder",
         icon: FileSpreadsheet,
         roles: ["user", "data_entry", "reports_viewer", "super_admin"],
-        color: "from-cyan-500 to-cyan-600",
-        bgColor: "bg-cyan-50",
+        color: "bg-primary",
+        bgColor: "bg-primary/5",
         description: "Custom reports + CSV",
         category: "analytics",
       },
@@ -314,8 +314,8 @@ const MobileDashboard = () => {
         label: "Closing Wizard",
         icon: Lock,
         roles: ["super_admin"],
-        color: "from-slate-500 to-slate-600",
-        bgColor: "bg-slate-50",
+        color: "bg-primary",
+        bgColor: "bg-primary/5",
         description: "Reconcile & lock the day",
         category: "management",
       },
@@ -325,8 +325,8 @@ const MobileDashboard = () => {
         label: "Inventory Bridge",
         icon: Boxes,
         roles: ["user", "data_entry", "reports_viewer", "super_admin"],
-        color: "from-violet-500 to-violet-600",
-        bgColor: "bg-violet-50",
+        color: "bg-primary",
+        bgColor: "bg-primary/5",
         description: "Auto stock-out from sales",
         category: "management",
       },
@@ -336,8 +336,8 @@ const MobileDashboard = () => {
         label: "BI & Correlation Suite",
         icon: Activity,
         roles: ["user", "data_entry", "reports_viewer", "super_admin"],
-        color: "from-indigo-500 to-indigo-600",
-        bgColor: "bg-indigo-50",
+        color: "bg-primary",
+        bgColor: "bg-primary/5",
         description: "Date-aligned correlations, audit & recommendations",
         category: "analytics",
       },
@@ -399,7 +399,7 @@ const MobileDashboard = () => {
 
   // Mobile app header
   const MobileHeader = () => (
-    <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-4">
+    <div className="bg-primary text-primary-foreground px-4 py-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           {isSubPageActive ? (
@@ -423,7 +423,7 @@ const MobileDashboard = () => {
                 </Button>
               </SheetTrigger>
               <SheetContent side="left" className="w-80 p-0">
-                <div className="bg-gradient-to-b from-blue-600 to-purple-600 text-white p-6">
+                <div className="bg-primary text-primary-foreground p-6">
                   <SheetHeader>
                     <SheetTitle className="text-white text-left">
                       <div className="flex items-center gap-3">
@@ -474,7 +474,7 @@ const MobileDashboard = () => {
                     <Button
                       variant="ghost"
                       onClick={handleSignOut}
-                      className="w-full justify-start gap-3 h-12 text-red-600 hover:text-red-700 hover:bg-red-50"
+                      className="w-full justify-start gap-3 h-12 text-destructive hover:text-red-700 hover:bg-destructive/5"
                     >
                       <LogOut className="h-5 w-5" />
                       Sign Out
@@ -486,7 +486,7 @@ const MobileDashboard = () => {
           )}
           <div>
             <h1 className="text-lg font-bold">
-              {isSubPageActive ? currentPage?.label : "EcoSoft Pro"}
+              {isSubPageActive ? currentPage?.label : "Energy Palace"}
             </h1>
             <p className="text-xs opacity-90">
               {isSubPageActive
@@ -523,7 +523,7 @@ const MobileDashboard = () => {
         const CategoryIcon = getCategoryIcon(category);
         return (
           <div key={category} className="space-y-3">
-            <div className="flex items-center gap-2 text-sm font-semibold text-gray-600 px-2">
+            <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground px-2">
               <CategoryIcon className="h-4 w-4" />
               {getCategoryTitle(category)}
             </div>
@@ -546,10 +546,10 @@ const MobileDashboard = () => {
                         <Icon className="h-6 w-6 text-white" />
                       </div>
                       <div>
-                        <p className="font-semibold text-sm text-gray-800">
+                        <p className="font-semibold text-sm text-foreground">
                           {item.label}
                         </p>
-                        <p className="text-xs text-gray-500 mt-1">
+                        <p className="text-xs text-muted-foreground mt-1">
                           {item.description}
                         </p>
                       </div>
@@ -565,7 +565,7 @@ const MobileDashboard = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       {/* Mobile Header */}
       <MobileHeader />
 
@@ -575,13 +575,13 @@ const MobileDashboard = () => {
           <div className="space-y-6">
             {/* Welcome Section */}
             <div className="px-4 pt-6">
-              <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl p-6 border border-blue-100">
+              <div className="bg-primary/5 rounded-2xl p-6 border border-primary/10">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h2 className="text-xl font-bold text-gray-800">
+                    <h2 className="text-xl font-bold text-foreground">
                       Welcome back!
                     </h2>
-                    <p className="text-sm text-gray-600 mt-1">
+                    <p className="text-sm text-muted-foreground mt-1">
                       {new Date().toLocaleDateString("en-US", {
                         weekday: "long",
                         year: "numeric",
@@ -590,8 +590,8 @@ const MobileDashboard = () => {
                       })}
                     </p>
                   </div>
-                  <div className="h-12 w-12 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center">
-                    <User className="h-6 w-6 text-white" />
+                  <div className="h-12 w-12 rounded-full bg-primary flex items-center justify-center">
+                    <User className="h-6 w-6 text-primary-foreground" />
                   </div>
                 </div>
 

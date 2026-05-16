@@ -138,8 +138,8 @@ const Dashboard = () => {
         icon: ShoppingCart,
         component: OrdersTab,
         roles: ["user", "data_entry", "reports_viewer", "super_admin"],
-        color: "bg-foreground",
-        bgColor: "bg-muted",
+        color: "bg-primary",
+        bgColor: "bg-primary/5",
         description: "Manage food orders",
       },
       {
@@ -149,8 +149,8 @@ const Dashboard = () => {
         icon: Zap,
         component: ChargingTab,
         roles: ["user", "data_entry", "reports_viewer", "super_admin"],
-        color: "bg-foreground",
-        bgColor: "bg-muted",
+        color: "bg-primary",
+        bgColor: "bg-primary/5",
         description: "Track energy consumption",
       },
       {
@@ -160,8 +160,8 @@ const Dashboard = () => {
         icon: Receipt,
         component: ExpensesTab,
         roles: ["user", "data_entry", "reports_viewer", "super_admin"],
-        color: "bg-foreground",
-        bgColor: "bg-muted",
+        color: "bg-primary",
+        bgColor: "bg-primary/5",
         description: "Monitor business expenses",
       },
       {
@@ -171,8 +171,8 @@ const Dashboard = () => {
         icon: CreditCard,
         component: DepositsTab,
         roles: ["user", "data_entry", "reports_viewer", "super_admin"],
-        color: "bg-foreground",
-        bgColor: "bg-muted",
+        color: "bg-primary",
+        bgColor: "bg-primary/5",
         description: "Handle financial deposits",
       },
       {
@@ -182,8 +182,8 @@ const Dashboard = () => {
         icon: Banknote,
         component: SavingsWithdrawalsTab,
         roles: ["user", "data_entry", "reports_viewer", "super_admin"],
-        color: "bg-foreground",
-        bgColor: "bg-muted",
+        color: "bg-primary",
+        bgColor: "bg-primary/5",
         description: "Manage savings and withdrawals",
       },
       {
@@ -193,8 +193,8 @@ const Dashboard = () => {
         icon: Landmark,
         component: LoansTab,
         roles: ["user", "data_entry", "reports_viewer", "super_admin"],
-        color: "bg-foreground",
-        bgColor: "bg-muted",
+        color: "bg-primary",
+        bgColor: "bg-primary/5",
         description: "Manage loans and repayments",
       },
       {
@@ -204,8 +204,8 @@ const Dashboard = () => {
         icon: TrendingUp,
         component: ShareInvestmentsTab,
         roles: ["user", "data_entry", "reports_viewer", "super_admin"],
-        color: "bg-foreground",
-        bgColor: "bg-muted",
+        color: "bg-primary",
+        bgColor: "bg-primary/5",
         description: "Manage share investments",
       },
 
@@ -216,8 +216,8 @@ const Dashboard = () => {
         icon: Package,
         component: InventoryTab,
         roles: ["user", "data_entry", "reports_viewer", "super_admin"],
-        color: "bg-foreground",
-        bgColor: "bg-muted",
+        color: "bg-primary",
+        bgColor: "bg-primary/5",
         description: "Inventory tracking and management",
       },
       // Unified tabs - accessible to appropriate users
@@ -228,8 +228,8 @@ const Dashboard = () => {
         label: "Bulk Import",
         icon: Upload,
         roles: ["reports_viewer", "super_admin"],
-        color: "bg-foreground",
-        bgColor: "bg-muted",
+        color: "bg-primary",
+        bgColor: "bg-primary/5",
         description: "Data import & file upload",
       },
       {
@@ -239,8 +239,8 @@ const Dashboard = () => {
         icon: UtensilsCrossed,
         component: MenuManagementTab,
         roles: ["super_admin"],
-        color: "bg-foreground",
-        bgColor: "bg-muted",
+        color: "bg-primary",
+        bgColor: "bg-primary/5",
         description: "Manage menu items",
       },
       {
@@ -250,8 +250,8 @@ const Dashboard = () => {
         icon: ChefHat,
         component: RecipeManagementTab,
         roles: ["super_admin"],
-        color: "bg-foreground",
-        bgColor: "bg-muted",
+        color: "bg-primary",
+        bgColor: "bg-primary/5",
         description: "Link menu items to inventory ingredients",
       },
       {
@@ -261,8 +261,8 @@ const Dashboard = () => {
         icon: UserCog,
         component: UserManagementTab,
         roles: ["super_admin"],
-        color: "bg-foreground",
-        bgColor: "bg-muted",
+        color: "bg-primary",
+        bgColor: "bg-primary/5",
         description: "Manage users & permissions",
       },
       {
@@ -272,8 +272,8 @@ const Dashboard = () => {
         icon: FileText,
         component: ExpenseBookingsTab,
         roles: ["user", "data_entry", "reports_viewer", "super_admin"],
-        color: "bg-foreground",
-        bgColor: "bg-muted",
+        color: "bg-primary",
+        bgColor: "bg-primary/5",
         description: "Manage expense bookings",
       },
       {
@@ -283,8 +283,8 @@ const Dashboard = () => {
         icon: FileText,
         component: VATEntryTab,
         roles: ["user", "data_entry", "reports_viewer", "super_admin"],
-        color: "bg-foreground",
-        bgColor: "bg-muted",
+        color: "bg-primary",
+        bgColor: "bg-primary/5",
         description: "Manage VAT entries",
       },
       {
@@ -293,8 +293,8 @@ const Dashboard = () => {
         label: "Dashboard Studio",
         icon: BarChart3,
         roles: ["user", "reports_viewer", "super_admin"],
-        color: "bg-foreground",
-        bgColor: "bg-muted",
+        color: "bg-primary",
+        bgColor: "bg-primary/5",
         description: "Create custom dashboards with drag-and-drop",
       },
       {
@@ -303,8 +303,8 @@ const Dashboard = () => {
         label: "Daily Summary Report",
         icon: FileText,
         roles: ["user", "data_entry", "reports_viewer", "super_admin"],
-        color: "bg-foreground",
-        bgColor: "bg-muted",
+        color: "bg-primary",
+        bgColor: "bg-primary/5",
         description: "Daily summary data with date range filter",
       },
       {
@@ -313,8 +313,8 @@ const Dashboard = () => {
         label: "Command Center",
         icon: Activity,
         roles: ["user", "data_entry", "reports_viewer", "super_admin"],
-        color: "bg-foreground",
-        bgColor: "bg-muted",
+        color: "bg-primary",
+        bgColor: "bg-primary/5",
         description: "KPIs, cashflow map, forecast & anomalies",
       },
       {
@@ -323,8 +323,8 @@ const Dashboard = () => {
         label: "Closing Wizard",
         icon: Lock,
         roles: ["super_admin"],
-        color: "bg-foreground",
-        bgColor: "bg-muted",
+        color: "bg-primary",
+        bgColor: "bg-primary/5",
         description: "Reconcile and lock the day",
       },
       {
@@ -333,8 +333,8 @@ const Dashboard = () => {
         label: "Report Builder",
         icon: FileSpreadsheet,
         roles: ["user", "data_entry", "reports_viewer", "super_admin"],
-        color: "bg-foreground",
-        bgColor: "bg-muted",
+        color: "bg-primary",
+        bgColor: "bg-primary/5",
         description: "Drag & drop custom reports + CSV export",
       },
       {
@@ -343,8 +343,8 @@ const Dashboard = () => {
         label: "Inventory Bridge",
         icon: Boxes,
         roles: ["user", "data_entry", "reports_viewer", "super_admin"],
-        color: "bg-foreground",
-        bgColor: "bg-muted",
+        color: "bg-primary",
+        bgColor: "bg-primary/5",
         description: "Auto-suggest stock-outs from sales",
       },
       {
@@ -353,8 +353,8 @@ const Dashboard = () => {
         label: "BI & Correlation Suite",
         icon: Activity,
         roles: ["user", "data_entry", "reports_viewer", "super_admin"],
-        color: "bg-foreground",
-        bgColor: "bg-muted",
+        color: "bg-primary",
+        bgColor: "bg-primary/5",
         description: "Date-aligned correlations, audit & recommendations",
       },
     ];
@@ -412,8 +412,8 @@ const Dashboard = () => {
   // Show access denied message if user has no accessible items
   if (userRole && navItems.length === 0) {
     return (
-      <div className="min-h-screen bg-slate-50">
-        <header className="bg-white shadow-sm border-b border-slate-200 sticky top-0 z-50">
+      <div className="min-h-screen bg-muted/50">
+        <header className="bg-white shadow-sm border-b border-border sticky top-0 z-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center py-4">
               <div className="flex items-center gap-3">
@@ -421,21 +421,21 @@ const Dashboard = () => {
                   <BarChart3 className="h-6 w-6" />
                 </div>
                 <div>
-                  <h1 className="text-xl font-bold text-slate-800">
-                    EcoSoft Pro
+                  <h1 className="text-xl font-bold text-foreground">
+                    Energy Palace
                   </h1>
-                  <p className="text-sm text-slate-600">
+                  <p className="text-sm text-muted-foreground">
                     Business Management System
                   </p>
                 </div>
               </div>
 
               <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2 text-sm text-slate-700">
+                <div className="flex items-center gap-2 text-sm text-foreground">
                   <User className="h-4 w-4" />
                   <span>{user?.email}</span>
                   {userRole && (
-                    <span className="bg-slate-100 text-slate-700 px-3 py-1 rounded-full text-xs font-medium">
+                    <span className="bg-muted text-foreground px-3 py-1 rounded-full text-xs font-medium">
                       {userRole.replace("_", " ")}
                     </span>
                   )}
@@ -445,7 +445,7 @@ const Dashboard = () => {
                   variant="outline"
                   size="sm"
                   onClick={handleSignOut}
-                  className="flex items-center gap-2 hover:bg-red-50 hover:border-red-300"
+                  className="flex items-center gap-2 hover:bg-destructive/5 hover:border-red-300"
                 >
                   <LogOut className="h-4 w-4" />
                   Sign Out
@@ -454,7 +454,7 @@ const Dashboard = () => {
                   <Button
                     variant="outline"
                     size="icon"
-                    className="hover:bg-slate-100 hover:border-slate-300"
+                    className="hover:bg-muted hover:border-slate-300"
                   >
                     <SettingsIcon className="h-4 w-4" />
                   </Button>
@@ -465,15 +465,15 @@ const Dashboard = () => {
         </header>
 
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <Card className="max-w-md mx-auto shadow-lg border border-slate-200 bg-white">
+          <Card className="max-w-md mx-auto shadow-lg border border-border bg-white">
             <CardContent className="flex flex-col items-center justify-center p-8 space-y-4">
               <div className="p-4 rounded-full bg-slate-600 text-white">
                 <User className="h-8 w-8" />
               </div>
-              <h2 className="text-xl font-semibold text-slate-900">
+              <h2 className="text-xl font-semibold text-foreground">
                 Access Pending
               </h2>
-              <p className="text-center text-slate-600">
+              <p className="text-center text-muted-foreground">
                 Your account role ({userRole.replace("_", " ")}) is being
                 configured. Please contact your administrator for access.
               </p>
@@ -517,7 +517,7 @@ const Dashboard = () => {
                       <h1
                         className={`text-lg font-semibold transition-colors ${isActive ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"}`}
                       >
-                        EcoSoft Pro
+                        Energy Palace
                       </h1>
                       <p className="text-xs text-muted-foreground">
                         Business Management
@@ -642,10 +642,10 @@ const Dashboard = () => {
                         <Icon className="h-8 w-8" />
                       </div>
                       <div className="text-center space-y-2">
-                        <p className="font-semibold text-lg text-slate-800">
+                        <p className="font-semibold text-lg text-foreground">
                           {item.label}
                         </p>
-                        <p className="text-sm text-slate-600">
+                        <p className="text-sm text-muted-foreground">
                           {item.description}
                         </p>
                       </div>
@@ -660,54 +660,54 @@ const Dashboard = () => {
 
             {/* Quick Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
-              <Card className="bg-blue-50 border border-blue-200 shadow-sm hover:shadow-md transition-shadow">
+              <Card className="bg-primary/5 border border-primary/10 shadow-sm hover:shadow-md transition-shadow">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-blue-600 font-medium">
+                      <p className="text-sm text-primary font-medium">
                         Total Modules
                       </p>
-                      <p className="text-2xl font-bold text-blue-800">
+                      <p className="text-2xl font-bold text-foreground">
                         {navItems.length}
                       </p>
                     </div>
-                    <div className="p-3 bg-blue-600 rounded-lg text-white">
+                    <div className="p-3 bg-primary rounded-lg text-primary-foreground">
                       <LayoutDashboard className="h-6 w-6" />
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="bg-green-50 border border-green-200 shadow-sm hover:shadow-md transition-shadow">
+              <Card className="bg-success/5 border border-success/10 shadow-sm hover:shadow-md transition-shadow">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-green-600 font-medium">
+                      <p className="text-sm text-success font-medium">
                         Your Role
                       </p>
-                      <p className="text-2xl font-bold text-green-800 capitalize">
+                      <p className="text-2xl font-bold text-foreground capitalize">
                         {userRole?.replace("_", " ")}
                       </p>
                     </div>
-                    <div className="p-3 bg-green-600 rounded-lg text-white">
+                    <div className="p-3 bg-success rounded-lg text-success-foreground">
                       <User className="h-6 w-6" />
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="bg-slate-50 border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+              <Card className="bg-muted border border-border shadow-sm hover:shadow-md transition-shadow">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-slate-600 font-medium">
+                      <p className="text-sm text-muted-foreground font-medium">
                         System Status
                       </p>
-                      <p className="text-2xl font-bold text-slate-800">
+                      <p className="text-2xl font-bold text-foreground">
                         Online
                       </p>
                     </div>
-                    <div className="p-3 bg-slate-600 rounded-lg text-white">
+                    <div className="p-3 bg-primary/20 rounded-lg text-primary">
                       <BarChart3 className="h-6 w-6" />
                     </div>
                   </div>

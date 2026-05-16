@@ -173,14 +173,14 @@ const HistoricalDataFixAdmin: React.FC<HistoricalDataFixAdminProps> = ({ classNa
             </div>
 
             {schemaValid && (
-              <Alert className={schemaValid.success ? "border-green-200 bg-green-50" : "border-red-200 bg-red-50"}>
+              <Alert className={schemaValid.success ? "border-green-200 bg-success/5" : "border-red-200 bg-destructive/5"}>
                 {schemaValid.success ? (
-                  <CheckCircle className="h-4 w-4 text-green-600" />
+                  <CheckCircle className="h-4 w-4 text-success" />
                 ) : (
-                  <AlertTriangle className="h-4 w-4 text-red-600" />
+                  <AlertTriangle className="h-4 w-4 text-destructive" />
                 )}
                 <AlertDescription>
-                  <div className={schemaValid.success ? "text-green-800" : "text-red-800"}>
+                  <div className={schemaValid.success ? "text-success" : "text-destructive"}>
                     <p className="font-medium">
                       {schemaValid.success ? "✅ Database schema is valid" : "❌ Schema issues detected"}
                     </p>
@@ -279,7 +279,7 @@ const HistoricalDataFixAdmin: React.FC<HistoricalDataFixAdminProps> = ({ classNa
             </div>
 
             {previewData && (
-              <Card className="bg-blue-50 border-blue-200">
+              <Card className="bg-primary/5 border-primary/10">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm text-blue-700">
                     Preview for {previewDate}
@@ -296,7 +296,7 @@ const HistoricalDataFixAdmin: React.FC<HistoricalDataFixAdminProps> = ({ classNa
                       ))}
                     </div>
                   ) : (
-                    <p className="text-sm text-green-600">No changes needed for this date.</p>
+                    <p className="text-sm text-success">No changes needed for this date.</p>
                   )}
                 </CardContent>
               </Card>
@@ -317,9 +317,9 @@ const HistoricalDataFixAdmin: React.FC<HistoricalDataFixAdminProps> = ({ classNa
               </div>
             )}
 
-            <Alert className="border-yellow-200 bg-yellow-50">
-              <AlertTriangle className="h-4 w-4 text-yellow-600" />
-              <AlertDescription className="text-yellow-800">
+            <Alert className="border-warning/10 bg-warning/5">
+              <AlertTriangle className="h-4 w-4 text-warning" />
+              <AlertDescription className="text-warning">
                 This will fix payment mode breakdowns for dates before July 19, 2025. 
                 The operation is safe and only updates missing data.
               </AlertDescription>
@@ -328,7 +328,7 @@ const HistoricalDataFixAdmin: React.FC<HistoricalDataFixAdminProps> = ({ classNa
             <Button 
               onClick={handleFix} 
               disabled={loading || !analysisResult || analysisResult.datesNeedingFix.length === 0}
-              className="bg-orange-600 hover:bg-orange-700"
+              className="bg-accent hover:bg-orange-700"
             >
               {loading ? (
                 <>
@@ -348,14 +348,14 @@ const HistoricalDataFixAdmin: React.FC<HistoricalDataFixAdminProps> = ({ classNa
           {fixResult && (
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">4. Results</h3>
-              <Alert className={fixResult.success ? "border-green-200 bg-green-50" : "border-red-200 bg-red-50"}>
+              <Alert className={fixResult.success ? "border-green-200 bg-success/5" : "border-red-200 bg-destructive/5"}>
                 {fixResult.success ? (
-                  <CheckCircle className="h-4 w-4 text-green-600" />
+                  <CheckCircle className="h-4 w-4 text-success" />
                 ) : (
-                  <AlertTriangle className="h-4 w-4 text-red-600" />
+                  <AlertTriangle className="h-4 w-4 text-destructive" />
                 )}
                 <AlertDescription>
-                  <div className={fixResult.success ? "text-green-800" : "text-red-800"}>
+                  <div className={fixResult.success ? "text-success" : "text-destructive"}>
                     <p className="font-medium">
                       {fixResult.success ? "Fix completed successfully!" : "Fix completed with errors"}
                     </p>
@@ -371,12 +371,12 @@ const HistoricalDataFixAdmin: React.FC<HistoricalDataFixAdminProps> = ({ classNa
                         <p className="text-sm font-medium">Successfully updated:</p>
                         <div className="flex flex-wrap gap-1 mt-1">
                           {fixResult.updatedDates.slice(0, 10).map(date => (
-                            <Badge key={date} variant="default" className="text-xs bg-green-100 text-green-800">
+                            <Badge key={date} variant="default" className="text-xs bg-success/10 text-success">
                               {date}
                             </Badge>
                           ))}
                           {fixResult.updatedDates.length > 10 && (
-                            <Badge variant="default" className="text-xs bg-green-100 text-green-800">
+                            <Badge variant="default" className="text-xs bg-success/10 text-success">
                               +{fixResult.updatedDates.length - 10} more
                             </Badge>
                           )}

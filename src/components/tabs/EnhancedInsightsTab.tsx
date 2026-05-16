@@ -193,7 +193,7 @@ const EnhancedInsightsTab: React.FC = () => {
   const formatValue = (value: number, format?: string) => {
     switch (format) {
       case "currency":
-        return `NRs. ${value.toLocaleString()}`;
+        return `₹ ${value.toLocaleString()}`;
       case "percentage":
         return `${value.toFixed(1)}%`;
       default:

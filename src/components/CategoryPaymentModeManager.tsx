@@ -274,7 +274,7 @@ const CategoryPaymentModeManager: React.FC<CategoryPaymentModeManagerProps> = ({
                 {/* Categories by Table */}
                 {Object.entries(groupedCategories).map(([tableName, tableCategories]) => (
                   <div key={tableName} className="space-y-2">
-                    <h3 className="text-lg font-semibold text-gray-800">
+                    <h3 className="text-lg font-semibold text-foreground">
                       {getTableDisplayName(tableName)} Categories
                       <Badge variant="secondary" className="ml-2">
                         {tableCategories.length}
@@ -360,12 +360,12 @@ const CategoryPaymentModeManager: React.FC<CategoryPaymentModeManagerProps> = ({
                 {loading && (
                   <div className="text-center py-4">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
-                    <p className="mt-2 text-gray-600">Loading categories...</p>
+                    <p className="mt-2 text-muted-foreground">Loading categories...</p>
                   </div>
                 )}
 
                 {!loading && categories.length === 0 && (
-                  <div className="text-center py-8 text-gray-500">
+                  <div className="text-center py-8 text-muted-foreground">
                     <Tag className="h-12 w-12 mx-auto mb-4 text-gray-300" />
                     <p>No categories found. Add some categories to get started.</p>
                   </div>
@@ -390,23 +390,23 @@ const CategoryPaymentModeManager: React.FC<CategoryPaymentModeManagerProps> = ({
                       className="flex items-center justify-between p-4 border rounded-lg"
                     >
                       <div className="flex items-center gap-3">
-                        <CreditCard className="h-5 w-5 text-blue-600" />
+                        <CreditCard className="h-5 w-5 text-primary" />
                         <div>
                           <p className="font-medium">{mode.name}</p>
-                          <p className="text-sm text-gray-500">
+                          <p className="text-sm text-muted-foreground">
                             Standard payment method
                           </p>
                         </div>
                       </div>
-                      <Badge className="bg-green-100 text-green-800">
+                      <Badge className="bg-success/10 text-success">
                         Active
                       </Badge>
                     </div>
                   ))}
                 </div>
                 
-                <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-                  <p className="text-sm text-blue-800">
+                <div className="mt-6 p-4 bg-primary/5 rounded-lg">
+                  <p className="text-sm text-primary">
                     <strong>Note:</strong> Payment modes are standardized across the system. 
                     They include Cash, eSewa, Fonepay, and Bank Transfer options that are 
                     used throughout all transaction forms.

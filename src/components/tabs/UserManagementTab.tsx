@@ -80,8 +80,8 @@ const UserManagementTab = () => {
   if (loading) {
     return (
       <div className="space-y-6 animate-pulse">
-        <div className="h-8 bg-gray-200 rounded w-1/4"></div>
-        <div className="h-64 bg-gray-200 rounded"></div>
+        <div className="h-8 bg-muted rounded w-1/4"></div>
+        <div className="h-64 bg-muted rounded"></div>
       </div>
     );
   }
@@ -96,7 +96,7 @@ const UserManagementTab = () => {
       </div>
 
       <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden">
-        <CardHeader className="bg-slate-50/50 border-b border-slate-100 px-4 md:px-6 py-4">
+        <CardHeader className="bg-muted/50/50 border-b border-border px-4 md:px-6 py-4">
           <CardTitle className="text-base md:text-lg font-bold">Change User Role</CardTitle>
         </CardHeader>
         <CardContent className="p-4 md:p-6 space-y-4 md:space-y-6">
@@ -139,7 +139,7 @@ const UserManagementTab = () => {
       </Card>
 
       <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden">
-        <CardHeader className="bg-slate-50/50 border-b border-slate-100 px-4 md:px-6 py-4">
+        <CardHeader className="bg-muted/50/50 border-b border-border px-4 md:px-6 py-4">
           <CardTitle className="text-base md:text-lg font-bold">System Users</CardTitle>
         </CardHeader>
         <CardContent className="p-0">

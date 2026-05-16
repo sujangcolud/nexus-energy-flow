@@ -60,8 +60,8 @@ const KpiCard = ({
           {hint && (
             <p className={cn(
               "text-xs mt-1",
-              positive === true && "text-emerald-600",
-              positive === false && "text-rose-600",
+              positive === true && "text-success",
+              positive === false && "text-destructive",
               positive === undefined && "text-muted-foreground"
             )}>
               {hint}
@@ -362,9 +362,9 @@ const CommandCenterTab = () => {
                   >
                     <div className="flex items-center gap-2 min-w-0">
                       {a.kind === "expense" || a.kind === "withdrawal" ? (
-                        <ArrowDownRight className="h-3.5 w-3.5 text-rose-600 shrink-0" />
+                        <ArrowDownRight className="h-3.5 w-3.5 text-destructive shrink-0" />
                       ) : (
-                        <ArrowUpRight className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                        <ArrowUpRight className="h-3.5 w-3.5 text-success shrink-0" />
                       )}
                       <Badge variant="outline" className="text-[10px] uppercase">
                         {a.kind}

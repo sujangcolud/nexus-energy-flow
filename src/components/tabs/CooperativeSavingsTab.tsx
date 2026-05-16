@@ -125,7 +125,7 @@ const CooperativeSavingsTab = () => {
     "Bi-weekly": "from-blue-500 to-cyan-500",
     Monthly: "from-purple-500 to-pink-500",
     Quarterly: "from-orange-500 to-red-500",
-    "Semi-Annual": "from-indigo-500 to-blue-500",
+    "Semi-Annual": "from-indigo-500 to-primary/50",
     Annual: "from-violet-500 to-purple-500",
     "One-time": "from-gray-500 to-slate-500",
   };
@@ -440,7 +440,7 @@ const CooperativeSavingsTab = () => {
           <Card className="rounded-3xl border-none bg-white shadow-sm overflow-hidden">
             <CardContent className="p-4 md:p-6">
               <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Total</p>
-              <p className="text-sm md:text-xl font-bold text-primary">NRs. {totalSavings.toFixed(2)}</p>
+              <p className="text-sm md:text-xl font-bold text-primary">₹ {totalSavings.toFixed(2)}</p>
             </CardContent>
           </Card>
           <Card className="rounded-3xl border-none bg-white shadow-sm overflow-hidden">
@@ -452,7 +452,7 @@ const CooperativeSavingsTab = () => {
           <Card className="rounded-3xl border-none bg-white shadow-sm overflow-hidden hidden md:block">
             <CardContent className="p-4 md:p-6">
               <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Avg Contribution</p>
-              <p className="text-sm md:text-xl font-bold text-foreground">NRs. {averageContribution.toFixed(0)}</p>
+              <p className="text-sm md:text-xl font-bold text-foreground">₹ {averageContribution.toFixed(0)}</p>
             </CardContent>
           </Card>
           <Card className="rounded-3xl border-none bg-white shadow-sm overflow-hidden">
@@ -468,7 +468,7 @@ const CooperativeSavingsTab = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-8">
           {/* Add Saving Form */}
           <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden">
-            <CardHeader className="bg-teal-500 text-white p-4 md:p-6">
+            <CardHeader className="bg-success text-white p-4 md:p-6">
               <CardTitle className="flex items-center gap-3 text-lg md:text-xl font-bold">
                 <div className="p-2 bg-white/20 rounded-xl">
                   <Plus className="h-5 w-5 md:h-6 md:w-6" />
@@ -485,7 +485,7 @@ const CooperativeSavingsTab = () => {
                     className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2"
                   >
                     <DollarSign className="h-3.5 w-3.5 text-teal-600" />
-                    Amount (NRs.) *
+                    Amount (₹) *
                   </Label>
                   <Input
                     id="contributionAmount"
@@ -510,7 +510,7 @@ const CooperativeSavingsTab = () => {
                       htmlFor="memberId"
                       className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2"
                     >
-                      <Users className="h-3.5 w-3.5 text-blue-600" />
+                      <Users className="h-3.5 w-3.5 text-primary" />
                       Member ID *
                     </Label>
                     <Select
@@ -534,7 +534,7 @@ const CooperativeSavingsTab = () => {
                       htmlFor="cyclePeriod"
                       className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2"
                     >
-                      <Clock className="h-3.5 w-3.5 text-purple-600" />
+                      <Clock className="h-3.5 w-3.5 text-primary" />
                       Cycle *
                     </Label>
                     <Select
@@ -587,7 +587,7 @@ const CooperativeSavingsTab = () => {
                 <Button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full h-12 md:h-14 rounded-2xl bg-teal-500 hover:bg-teal-600 text-white font-black text-lg shadow-lg shadow-teal-500/20 transition-all active:scale-[0.98]"
+                  className="w-full h-12 md:h-14 rounded-2xl bg-success hover:bg-success text-white font-black text-lg shadow-lg shadow-success/20 transition-all active:scale-[0.98]"
                 >
                   {isSubmitting ? (
                     <div className="flex items-center gap-2">
@@ -606,7 +606,7 @@ const CooperativeSavingsTab = () => {
           </Card>
 
           {/* Cycle Period Breakdown */}
-          <Card className="bg-gradient-to-br from-white/90 to-blue-50/90 backdrop-blur-sm border-0 shadow-2xl hover:shadow-3xl transition-all duration-300">
+          <Card className="bg-gradient-to-br from-white/90 to-primary/5/90 backdrop-blur-sm border-0 shadow-2xl hover:shadow-3xl transition-all duration-300">
             <CardHeader className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-t-lg">
               <CardTitle className="flex items-center gap-3 text-xl">
                 <div className="p-2 bg-white/20 rounded-lg">
@@ -619,10 +619,10 @@ const CooperativeSavingsTab = () => {
               {Object.keys(periodBreakdown).length === 0 ? (
                 <div className="text-center py-8">
                   <Clock className="h-16 w-16 mx-auto text-gray-300 mb-4" />
-                  <p className="text-gray-500 text-lg font-medium">
+                  <p className="text-muted-foreground text-lg font-medium">
                     No contributions yet
                   </p>
-                  <p className="text-gray-400">
+                  <p className="text-muted-foreground">
                     Record your first contribution to see cycle breakdown!
                   </p>
                 </div>
@@ -635,7 +635,7 @@ const CooperativeSavingsTab = () => {
                       return (
                         <div
                           key={period}
-                          className="p-4 bg-gradient-to-r from-white to-blue-50 rounded-lg border border-blue-100 hover:shadow-md transition-all duration-200"
+                          className="p-4 bg-gradient-to-r from-white to-primary/5 rounded-lg border border-blue-100 hover:shadow-md transition-all duration-200"
                           style={{ animationDelay: `${index * 100}ms` }}
                         >
                           <div className="flex items-center justify-between mb-2">
@@ -643,20 +643,20 @@ const CooperativeSavingsTab = () => {
                               <div
                                 className={`w-4 h-4 rounded-full bg-gradient-to-r ${periodColors[period as keyof typeof periodColors] || "from-gray-500 to-slate-500"}`}
                               ></div>
-                              <span className="font-medium text-gray-800">
+                              <span className="font-medium text-foreground">
                                 {period}
                               </span>
                             </div>
                             <div className="text-right">
-                              <span className="font-bold text-blue-600">
-                                NRs. {amount.toFixed(2)}
+                              <span className="font-bold text-primary">
+                                ₹ {amount.toFixed(2)}
                               </span>
-                              <div className="text-sm text-gray-500">
+                              <div className="text-sm text-muted-foreground">
                                 {percentage.toFixed(1)}%
                               </div>
                             </div>
                           </div>
-                          <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div className="w-full bg-muted rounded-full h-2">
                             <div
                               className={`bg-gradient-to-r ${periodColors[period as keyof typeof periodColors] || "from-gray-500 to-slate-500"} h-2 rounded-full transition-all duration-500`}
                               style={{ width: `${percentage}%` }}
@@ -710,7 +710,7 @@ const CooperativeSavingsTab = () => {
                         size="sm"
                         onClick={() => handleDeleteCategory(cat.id)}
                       >
-                        <Trash2 className="h-4 w-4 text-red-500" />
+                        <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
                     </div>
                   ))}
@@ -722,7 +722,7 @@ const CooperativeSavingsTab = () => {
 
         {/* Savings History */}
         <Card className="bg-gradient-to-br from-white/90 to-gray-50/90 backdrop-blur-sm border-0 shadow-2xl">
-          <CardHeader className="border-b border-gray-200/50 flex flex-row items-center justify-between">
+          <CardHeader className="border-b border-border/50 flex flex-row items-center justify-between">
             <CardTitle className="text-2xl font-bold bg-gradient-to-r from-gray-700 to-gray-900 bg-clip-text text-transparent">
               Savings History
             </CardTitle>
@@ -732,7 +732,7 @@ const CooperativeSavingsTab = () => {
                   <Button
                     variant="outline"
                     className={cn(
-                      "w-[300px] justify-start text-left font-normal hover:bg-gradient-to-r hover:from-teal-50 hover:to-blue-50",
+                      "w-[300px] justify-start text-left font-normal hover:bg-gradient-to-r hover:from-teal-50 hover:to-primary/5",
                       !range && "text-muted-foreground",
                     )}
                   >
@@ -770,15 +770,15 @@ const CooperativeSavingsTab = () => {
                 <div className="w-16 h-16 bg-gradient-to-r from-teal-500 to-cyan-500 rounded-full animate-spin mx-auto flex items-center justify-center mb-4">
                   <PiggyBank className="h-8 w-8 text-white" />
                 </div>
-                <p className="text-gray-600">Loading cooperative savings...</p>
+                <p className="text-muted-foreground">Loading cooperative savings...</p>
               </div>
             ) : savings.length === 0 ? (
               <div className="text-center py-12">
                 <PiggyBank className="h-16 w-16 mx-auto text-gray-300 mb-4" />
-                <p className="text-xl font-semibold text-gray-700 mb-2">
+                <p className="text-xl font-semibold text-foreground mb-2">
                   No savings found
                 </p>
-                <p className="text-gray-500">
+                <p className="text-muted-foreground">
                   Start recording contributions to see them here.
                 </p>
               </div>
@@ -786,20 +786,20 @@ const CooperativeSavingsTab = () => {
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
-                    <TableRow className="bg-gradient-to-r from-gray-50 to-blue-50">
-                      <TableHead className="font-semibold text-gray-700">
+                    <TableRow className="bg-gradient-to-r from-gray-50 to-primary/5">
+                      <TableHead className="font-semibold text-foreground">
                         Date
                       </TableHead>
-                      <TableHead className="font-semibold text-gray-700">
+                      <TableHead className="font-semibold text-foreground">
                         Member ID
                       </TableHead>
-                      <TableHead className="font-semibold text-gray-700">
+                      <TableHead className="font-semibold text-foreground">
                         Amount
                       </TableHead>
-                      <TableHead className="font-semibold text-gray-700">
+                      <TableHead className="font-semibold text-foreground">
                         Cycle Period
                       </TableHead>
-                      <TableHead className="font-semibold text-gray-700">
+                      <TableHead className="font-semibold text-foreground">
                         Actions
                       </TableHead>
                     </TableRow>
@@ -810,7 +810,7 @@ const CooperativeSavingsTab = () => {
                         Total
                       </TableCell>
                       <TableCell colSpan={2} className="font-bold text-right">
-                        NRs. {totalSavings.toFixed(2)}
+                        ₹ {totalSavings.toFixed(2)}
                       </TableCell>
                     </TableRow>
                     {savings.map((saving, index) => (
@@ -827,15 +827,15 @@ const CooperativeSavingsTab = () => {
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
-                            <Users className="h-4 w-4 text-gray-500" />
-                            <span className="font-medium text-gray-800">
+                            <Users className="h-4 w-4 text-muted-foreground" />
+                            <span className="font-medium text-foreground">
                               {saving.member_id}
                             </span>
                           </div>
                         </TableCell>
                         <TableCell>
                           <span className="font-bold text-xl bg-gradient-to-r from-teal-600 to-cyan-600 bg-clip-text text-transparent">
-                            NRs. {saving.contribution_amount.toFixed(2)}
+                            ₹ {saving.contribution_amount.toFixed(2)}
                           </span>
                         </TableCell>
                         <TableCell>
@@ -862,7 +862,7 @@ const CooperativeSavingsTab = () => {
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                                  className="text-destructive hover:text-red-700 hover:bg-destructive/5"
                                 >
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
@@ -899,7 +899,7 @@ const CooperativeSavingsTab = () => {
             )}
           </CardContent>
           {savings.length > 0 && (
-            <div className="flex justify-center p-4 border-t border-gray-200">
+            <div className="flex justify-center p-4 border-t border-border">
               <div className="flex items-center gap-4">
                 <Button
                   onClick={() => onPageChange(page - 1)}

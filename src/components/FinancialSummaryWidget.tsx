@@ -417,13 +417,13 @@ const FinancialSummaryWidget: React.FC<FinancialSummaryWidgetProps> = ({
     return (
       <Card className={`${className} animate-pulse`}>
         <CardHeader>
-          <div className="h-6 bg-gray-200 rounded w-1/3"></div>
+          <div className="h-6 bg-muted rounded w-1/3"></div>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <div className="h-4 bg-gray-200 rounded w-full"></div>
-            <div className="h-4 bg-gray-200 rounded w-2/3"></div>
-            <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+            <div className="h-4 bg-muted rounded w-full"></div>
+            <div className="h-4 bg-muted rounded w-2/3"></div>
+            <div className="h-4 bg-muted rounded w-1/2"></div>
           </div>
         </CardContent>
       </Card>
@@ -441,7 +441,7 @@ const FinancialSummaryWidget: React.FC<FinancialSummaryWidgetProps> = ({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <BarChart3 className="h-5 w-5 text-primary" />
-          <h2 className="text-xl font-black text-slate-800 tracking-tight uppercase">
+          <h2 className="text-xl font-black text-foreground tracking-tight uppercase">
             Finance Summary
           </h2>
         </div>
@@ -461,7 +461,7 @@ const FinancialSummaryWidget: React.FC<FinancialSummaryWidgetProps> = ({
 
       {/* Today's Summary Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <Card className="rounded-3xl border-none shadow-sm bg-emerald-500 text-white overflow-hidden">
+        <Card className="rounded-3xl border-none shadow-sm bg-success text-success-foreground overflow-hidden">
           <CardHeader className="p-4 pb-0">
             <CardTitle className="text-[10px] font-black uppercase tracking-widest opacity-80 flex items-center gap-1.5">
               <TrendingUp className="h-3 w-3" />
@@ -470,7 +470,7 @@ const FinancialSummaryWidget: React.FC<FinancialSummaryWidgetProps> = ({
           </CardHeader>
           <CardContent className="p-4 pt-2">
             <div className="text-xl font-black truncate">
-              रु {todayIncome.toLocaleString()}
+              ₹ {todayIncome.toLocaleString()}
             </div>
             {todaySummary && (
               <div className="mt-1 flex flex-wrap gap-x-2 text-[9px] font-bold opacity-70">
@@ -481,7 +481,7 @@ const FinancialSummaryWidget: React.FC<FinancialSummaryWidgetProps> = ({
           </CardContent>
         </Card>
 
-        <Card className="rounded-3xl border-none shadow-sm bg-rose-500 text-white overflow-hidden">
+        <Card className="rounded-3xl border-none shadow-sm bg-destructive text-destructive-foreground overflow-hidden">
           <CardHeader className="p-4 pb-0">
             <CardTitle className="text-[10px] font-black uppercase tracking-widest opacity-80 flex items-center gap-1.5">
               <TrendingDown className="h-3 w-3" />
@@ -490,17 +490,17 @@ const FinancialSummaryWidget: React.FC<FinancialSummaryWidgetProps> = ({
           </CardHeader>
           <CardContent className="p-4 pt-2">
             <div className="text-xl font-black truncate">
-              रु {todayExpenses.toLocaleString()}
+              ₹ {todayExpenses.toLocaleString()}
             </div>
             <div className="mt-1">
               <span className="bg-white/20 px-1.5 py-0.5 rounded text-[9px] font-black uppercase">
-                Net: रु {todayNetProfit.toFixed(0)}
+                Net: ₹ {todayNetProfit.toFixed(0)}
               </span>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="rounded-3xl border-none shadow-sm bg-slate-900 text-white overflow-hidden">
+        <Card className="rounded-3xl border-none shadow-sm bg-primary text-primary-foreground overflow-hidden">
           <CardHeader className="p-4 pb-0">
             <CardTitle className="text-[10px] font-black uppercase tracking-widest opacity-80 flex items-center gap-1.5">
               <Wallet className="h-3 w-3" />
@@ -509,17 +509,17 @@ const FinancialSummaryWidget: React.FC<FinancialSummaryWidgetProps> = ({
           </CardHeader>
           <CardContent className="p-4 pt-2">
             <div className="text-xl font-black truncate">
-              रु {todayBalance.toLocaleString()}
+              ₹ {todayBalance.toLocaleString()}
             </div>
             {todaySummary && (
               <div className="mt-1 flex gap-2 text-[9px] font-bold opacity-70">
-                <span>Cash: रु {todaySummary.cash_balance.toFixed(0)}</span>
+                <span>Cash: ₹ {todaySummary.cash_balance.toFixed(0)}</span>
               </div>
             )}
           </CardContent>
         </Card>
 
-        <Card className="rounded-3xl border-none shadow-sm bg-violet-600 text-white overflow-hidden">
+        <Card className="rounded-3xl border-none shadow-sm bg-accent text-accent-foreground overflow-hidden">
           <CardHeader className="p-4 pb-0">
             <CardTitle className="text-[10px] font-black uppercase tracking-widest opacity-80 flex items-center gap-1.5">
               <PiggyBank className="h-3 w-3" />
@@ -528,10 +528,10 @@ const FinancialSummaryWidget: React.FC<FinancialSummaryWidgetProps> = ({
           </CardHeader>
           <CardContent className="p-4 pt-2">
             <div className="text-xl font-black truncate">
-              रु {(todaySummary?.total_savings || 0).toLocaleString()}
+              ₹ {(todaySummary?.total_savings || 0).toLocaleString()}
             </div>
             <div className="mt-1 text-[9px] font-bold opacity-70">
-              Withdraw: रु {(todaySummary?.total_withdrawals || 0).toFixed(0)}
+              Withdraw: ₹ {(todaySummary?.total_withdrawals || 0).toFixed(0)}
             </div>
           </CardContent>
         </Card>
@@ -539,9 +539,9 @@ const FinancialSummaryWidget: React.FC<FinancialSummaryWidgetProps> = ({
 
       {/* Monthly Summary */}
       {monthSummary && (
-        <Card className="rounded-3xl border-none shadow-2xl bg-white overflow-hidden">
-          <CardHeader className="bg-slate-50/50 border-b border-slate-100 p-4">
-            <CardTitle className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500">
+        <Card className="rounded-3xl border-none shadow-2xl bg-card overflow-hidden">
+          <CardHeader className="bg-muted/50 border-b border-border p-4">
+            <CardTitle className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
               <Calendar className="h-3 w-3" />
               Monthly Overview
             </CardTitle>
@@ -549,33 +549,33 @@ const FinancialSummaryWidget: React.FC<FinancialSummaryWidgetProps> = ({
           <CardContent className="p-4">
             <div className="grid grid-cols-3 md:grid-cols-5 gap-4">
               <div>
-                <div className="text-[9px] font-bold text-slate-400 uppercase mb-1">Income</div>
-                <div className="text-sm font-black text-emerald-600 truncate">
-                  रु {monthSummary.total_income.toLocaleString()}
+                <div className="text-[9px] font-bold text-muted-foreground uppercase mb-1">Income</div>
+                <div className="text-sm font-black text-success truncate">
+                  ₹ {monthSummary.total_income.toLocaleString()}
                 </div>
               </div>
               <div>
-                <div className="text-[9px] font-bold text-slate-400 uppercase mb-1">Expense</div>
-                <div className="text-sm font-black text-rose-600 truncate">
-                  रु {monthSummary.total_expenses.toLocaleString()}
+                <div className="text-[9px] font-bold text-muted-foreground uppercase mb-1">Expense</div>
+                <div className="text-sm font-black text-destructive truncate">
+                  ₹ {monthSummary.total_expenses.toLocaleString()}
                 </div>
               </div>
               <div className="hidden md:block">
-                <div className="text-[9px] font-bold text-slate-400 uppercase mb-1">Deposit</div>
-                <div className="text-sm font-black text-blue-600 truncate">
-                  रु {monthSummary.total_deposits.toLocaleString()}
+                <div className="text-[9px] font-bold text-muted-foreground uppercase mb-1">Deposit</div>
+                <div className="text-sm font-black text-primary truncate">
+                  ₹ {monthSummary.total_deposits.toLocaleString()}
                 </div>
               </div>
               <div className="hidden md:block">
-                <div className="text-[9px] font-bold text-slate-400 uppercase mb-1">Withdraw</div>
-                <div className="text-sm font-black text-orange-600 truncate">
-                  रु {monthSummary.total_withdrawals.toLocaleString()}
+                <div className="text-[9px] font-bold text-muted-foreground uppercase mb-1">Withdraw</div>
+                <div className="text-sm font-black text-accent truncate">
+                  ₹ {monthSummary.total_withdrawals.toLocaleString()}
                 </div>
               </div>
               <div>
-                <div className="text-[9px] font-bold text-slate-400 uppercase mb-1">Net</div>
-                <div className={cn("text-sm font-black truncate", monthSummary.net_profit >= 0 ? "text-emerald-600" : "text-rose-600")}>
-                  रु {monthSummary.net_profit.toLocaleString()}
+                <div className="text-[9px] font-bold text-muted-foreground uppercase mb-1">Net</div>
+                <div className={cn("text-sm font-black truncate", monthSummary.net_profit >= 0 ? "text-success" : "text-destructive")}>
+                  ₹ {monthSummary.net_profit.toLocaleString()}
                 </div>
               </div>
             </div>
@@ -587,7 +587,7 @@ const FinancialSummaryWidget: React.FC<FinancialSummaryWidgetProps> = ({
       {todaySummary && (
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-gray-700">
+            <CardTitle className="flex items-center gap-2 text-foreground">
               <CreditCard className="h-5 w-5" />
               Today's Payment Breakdown
             </CardTitle>
@@ -596,35 +596,35 @@ const FinancialSummaryWidget: React.FC<FinancialSummaryWidgetProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <Banknote className="h-4 w-4 text-green-600" />
-                  <span className="text-sm font-medium text-gray-700">
+                  <Banknote className="h-4 w-4 text-success" />
+                  <span className="text-sm font-medium text-foreground">
                     Cash
                   </span>
                 </div>
-                <div className="text-lg font-semibold text-green-600">
-                  NRs. {todaySummary.total_income_cash.toFixed(2)}
+                <div className="text-lg font-semibold text-success">
+                  ₹ {todaySummary.total_income_cash.toFixed(2)}
                 </div>
               </div>
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <Wallet className="h-4 w-4 text-blue-600" />
-                  <span className="text-sm font-medium text-gray-700">
+                  <Wallet className="h-4 w-4 text-primary" />
+                  <span className="text-sm font-medium text-foreground">
                     eSewa
                   </span>
                 </div>
-                <div className="text-lg font-semibold text-blue-600">
-                  NRs. {todaySummary.total_income_esewa.toFixed(2)}
+                <div className="text-lg font-semibold text-primary">
+                  ₹ {todaySummary.total_income_esewa.toFixed(2)}
                 </div>
               </div>
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <CreditCard className="h-4 w-4 text-purple-600" />
-                  <span className="text-sm font-medium text-gray-700">
+                  <CreditCard className="h-4 w-4 text-primary" />
+                  <span className="text-sm font-medium text-foreground">
                     Fonepay
                   </span>
                 </div>
-                <div className="text-lg font-semibold text-purple-600">
-                  NRs. {(todaySummary.total_income_fonepay || 0).toFixed(2)}
+                <div className="text-lg font-semibold text-primary">
+                  ₹ {(todaySummary.total_income_fonepay || 0).toFixed(2)}
                 </div>
               </div>
             </div>
@@ -634,19 +634,20 @@ const FinancialSummaryWidget: React.FC<FinancialSummaryWidgetProps> = ({
 
       {/* No Data Warning */}
       {!todaySummary && !loading && (
-        <Card className="bg-yellow-50 border-yellow-200">
+        <Card className="bg-warning/5 border-warning/10">
           <CardContent className="flex items-center gap-3 p-6">
-            <AlertCircle className="h-6 w-6 text-yellow-600" />
+            <AlertCircle className="h-6 w-6 text-warning" />
             <div>
-              <p className="font-medium text-yellow-800">
+              <p className="font-medium text-foreground">
                 No daily summary data available
               </p>
-              <p className="text-sm text-yellow-600">
+              <p className="text-sm text-muted-foreground">
                 Please perform daily closing to generate summary data. All
                 analytics are based on daily_summary table for consistency.
               </p>
               <Button
                 size="sm"
+                variant="outline"
                 className="mt-2"
                 onClick={refreshSummary}
                 disabled={refreshing}
@@ -662,14 +663,14 @@ const FinancialSummaryWidget: React.FC<FinancialSummaryWidgetProps> = ({
       )}
 
       {/* Data Source Badge */}
-      <Card className="bg-blue-50 border-blue-200">
+      <Card className="bg-primary/5 border-primary/10">
         <CardContent className="p-4">
           <div className="flex items-center gap-2 text-sm">
-            <Database className="h-4 w-4 text-blue-600" />
-            <span className="text-blue-700 font-medium">
+            <Database className="h-4 w-4 text-primary" />
+            <span className="text-primary font-medium">
               Data Source: daily_summary table
             </span>
-            <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+            <Badge variant="secondary" className="bg-primary/10 text-primary">
               Consistent Reports
             </Badge>
           </div>

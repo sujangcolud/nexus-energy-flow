@@ -246,7 +246,7 @@ const VATEntryTab = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
           <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden">
-            <CardHeader className="bg-slate-50/50 border-b border-slate-100 px-4 md:px-6 py-4">
+            <CardHeader className="bg-muted/50/50 border-b border-border px-4 md:px-6 py-4">
               <CardTitle className="text-base md:text-lg font-bold">Income Entries</CardTitle>
             </CardHeader>
             <CardContent className="p-0">

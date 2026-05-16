@@ -10,20 +10,20 @@ const mobileButtonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-blue-500 text-white hover:bg-blue-600 shadow-lg hover:shadow-xl",
+          "bg-primary text-white hover:bg-primary shadow-lg hover:shadow-xl",
         destructive:
-          "bg-red-500 text-white hover:bg-red-600 shadow-lg hover:shadow-xl",
+          "bg-destructive text-white hover:bg-destructive shadow-lg hover:shadow-xl",
         outline:
-          "border-2 border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300",
-        secondary: "bg-gray-100 text-gray-900 hover:bg-gray-200",
-        ghost: "hover:bg-gray-100 hover:text-gray-900",
+          "border-2 border-border bg-white hover:bg-muted/50 hover:border-gray-300",
+        secondary: "bg-muted text-foreground hover:bg-muted",
+        ghost: "hover:bg-muted hover:text-foreground",
         link: "text-blue-500 underline-offset-4 hover:underline",
         gradient:
           "bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700 shadow-lg hover:shadow-xl",
         success:
-          "bg-green-500 text-white hover:bg-green-600 shadow-lg hover:shadow-xl",
+          "bg-success text-white hover:bg-success shadow-lg hover:shadow-xl",
         warning:
-          "bg-yellow-500 text-white hover:bg-yellow-600 shadow-lg hover:shadow-xl",
+          "bg-accent text-white hover:bg-accent shadow-lg hover:shadow-xl",
       },
       size: {
         default: "h-12 px-6 py-3",

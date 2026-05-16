@@ -179,8 +179,8 @@ const Settings = () => {
   if (loading) {
     return (
       <div className="space-y-6 animate-pulse">
-        <div className="h-8 bg-gray-200 rounded w-1/4"></div>
-        <div className="h-64 bg-gray-200 rounded"></div>
+        <div className="h-8 bg-muted rounded w-1/4"></div>
+        <div className="h-64 bg-muted rounded"></div>
       </div>
     );
   }
@@ -188,15 +188,15 @@ const Settings = () => {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2">
-        <SettingsIcon className="h-6 w-6 text-blue-600" />
-        <h2 className="text-2xl font-bold text-gray-800">Application Settings</h2>
+        <SettingsIcon className="h-6 w-6 text-primary" />
+        <h2 className="text-2xl font-bold text-foreground">Application Settings</h2>
       </div>
 
       {/* Tab Visibility Settings */}
       <Card>
         <CardHeader>
           <CardTitle>Tab Visibility Settings</CardTitle>
-          <p className="text-sm text-gray-600">Control which tabs are visible in the application</p>
+          <p className="text-sm text-muted-foreground">Control which tabs are visible in the application</p>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -222,7 +222,7 @@ const Settings = () => {
       <Card>
         <CardHeader>
           <CardTitle>Transaction Editing Settings</CardTitle>
-          <p className="text-sm text-gray-600">Configure transaction editing permissions and behavior</p>
+          <p className="text-sm text-muted-foreground">Configure transaction editing permissions and behavior</p>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -248,7 +248,7 @@ const Settings = () => {
       <Card>
         <CardHeader>
           <CardTitle>General Settings</CardTitle>
-          <p className="text-sm text-gray-600">Configure general application behavior</p>
+          <p className="text-sm text-muted-foreground">Configure general application behavior</p>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -313,7 +313,7 @@ const Settings = () => {
 
       {/* Save Settings Button */}
       <div className="flex justify-end">
-        <Button onClick={saveSettings} className="bg-blue-600 hover:bg-blue-700">
+        <Button onClick={saveSettings} className="bg-primary hover:bg-blue-700">
           <SettingsIcon className="h-4 w-4 mr-2" />
           Save All Settings
         </Button>
@@ -321,8 +321,8 @@ const Settings = () => {
 
       {/* User Management Section */}
       <div className="flex items-center gap-2 mt-8">
-        <Users className="h-6 w-6 text-blue-600" />
-        <h2 className="text-2xl font-bold text-gray-800">User Management</h2>
+        <Users className="h-6 w-6 text-primary" />
+        <h2 className="text-2xl font-bold text-foreground">User Management</h2>
       </div>
 
       <Card>

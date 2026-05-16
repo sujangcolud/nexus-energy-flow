@@ -576,7 +576,7 @@ const OrdersTab = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-orange-600 font-medium">
+                  <p className="text-sm text-accent font-medium">
                     Cart Items
                   </p>
                   <p className="text-2xl font-bold text-orange-800">
@@ -598,7 +598,7 @@ const OrdersTab = () => {
                     Cart Total
                   </p>
                   <p className="text-2xl font-bold text-pink-800">
-                    NRs. {getCartTotal().toFixed(2)}
+                    ₹ {getCartTotal().toFixed(2)}
                   </p>
                 </div>
                 <div className="p-3 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl text-white">
@@ -612,7 +612,7 @@ const OrdersTab = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-purple-600 font-medium">
+                  <p className="text-sm text-primary font-medium">
                     Total Orders
                   </p>
                   <p className="text-2xl font-bold text-purple-800">
@@ -626,18 +626,18 @@ const OrdersTab = () => {
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-indigo-50 to-blue-50 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
+          <Card className="bg-gradient-to-br from-indigo-50 to-primary/5 border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-indigo-600 font-medium">
+                  <p className="text-sm text-primary font-medium">
                     Total Spent
                   </p>
                   <p className="text-2xl font-bold text-indigo-800">
-                    NRs. {totalOrders.toFixed(2)}
+                    ₹ {totalOrders.toFixed(2)}
                   </p>
                 </div>
-                <div className="p-3 bg-gradient-to-r from-indigo-500 to-blue-500 rounded-xl text-white">
+                <div className="p-3 bg-gradient-to-r from-indigo-500 to-primary/50 rounded-xl text-white">
                   <TrendingUp className="h-6 w-6" />
                 </div>
               </div>
@@ -674,8 +674,8 @@ const OrdersTab = () => {
                 {/* Category Filters */}
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
-                    <Filter className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600" />
-                    <span className="text-sm font-medium text-gray-700">
+                    <Filter className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
+                    <span className="text-sm font-medium text-foreground">
                       Filter by Category
                     </span>
                   </div>
@@ -687,7 +687,7 @@ const OrdersTab = () => {
                         selectedCategory === null ? "default" : "outline"
                       }
                       size="sm"
-                      className={`transition-all duration-150 text-xs sm:text-sm px-2 sm:px-3 ${selectedCategory === null ? "bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-md" : "hover:bg-orange-50"}`}
+                      className={`transition-all duration-150 text-xs sm:text-sm px-2 sm:px-3 ${selectedCategory === null ? "bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-md" : "hover:bg-accent/5"}`}
                     >
                       All
                     </Button>
@@ -699,7 +699,7 @@ const OrdersTab = () => {
                           selectedCategory === category ? "default" : "outline"
                         }
                         size="sm"
-                        className={`transition-all duration-150 text-xs sm:text-sm px-2 sm:px-3 ${selectedCategory === category ? `bg-gradient-to-r ${categoryColors[category as keyof typeof categoryColors] || "from-gray-500 to-slate-500"} text-white shadow-md` : "hover:bg-orange-50"}`}
+                        className={`transition-all duration-150 text-xs sm:text-sm px-2 sm:px-3 ${selectedCategory === category ? `bg-gradient-to-r ${categoryColors[category as keyof typeof categoryColors] || "from-gray-500 to-slate-500"} text-white shadow-md` : "hover:bg-accent/5"}`}
                       >
                         {category}
                       </Button>
@@ -710,9 +710,9 @@ const OrdersTab = () => {
                 {/* Menu Items Display */}
                 {Object.keys(currentMenuItemsToDisplay).length === 0 &&
                   searchTerm && (
-                    <div className="text-center py-12 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200">
+                    <div className="text-center py-12 bg-muted/50 rounded-3xl border-2 border-dashed border-border">
                       <Package className="h-12 w-12 mx-auto text-slate-300 mb-4" />
-                      <p className="text-slate-500 font-medium">
+                      <p className="text-muted-foreground font-medium">
                         No matches for "{searchTerm}"
                       </p>
                     </div>
@@ -727,7 +727,7 @@ const OrdersTab = () => {
                           <div
                             className={`w-2 h-6 rounded-full bg-gradient-to-b ${categoryColors[category as keyof typeof categoryColors] || "from-slate-400 to-slate-500"}`}
                           ></div>
-                          <h3 className="text-base font-black uppercase tracking-tight text-slate-800">
+                          <h3 className="text-base font-black uppercase tracking-tight text-foreground">
                             {category}
                           </h3>
                         </div>
@@ -735,18 +735,18 @@ const OrdersTab = () => {
                           {items.map((item, index) => (
                             <Card
                               key={item.id}
-                              className="group bg-white hover:bg-primary/5 transition-all active:scale-95 cursor-pointer border-slate-100 hover:border-primary/30 rounded-xl overflow-hidden shadow-sm"
+                              className="group bg-white hover:bg-primary/5 transition-all active:scale-95 cursor-pointer border-border hover:border-primary/30 rounded-xl overflow-hidden shadow-sm"
                               onClick={() => addToCart(item)}
                             >
                               <CardContent className="p-2 flex flex-col h-full justify-between min-h-[100px]">
                                 <div className="space-y-1">
-                                  <h4 className="font-bold text-[10px] sm:text-xs leading-tight text-slate-800 group-hover:text-primary break-words whitespace-normal">
+                                  <h4 className="font-bold text-[10px] sm:text-xs leading-tight text-foreground group-hover:text-primary break-words whitespace-normal">
                                     {item.name}
                                   </h4>
                                 </div>
                                 <div className="mt-auto pt-2">
                                   <div className="bg-primary/10 text-primary rounded-lg py-1 px-1.5 text-center">
-                                    <span className="text-[10px] font-black">रु {item.price}</span>
+                                    <span className="text-[10px] font-black">₹ {item.price}</span>
                                   </div>
                                 </div>
                               </CardContent>
@@ -761,10 +761,10 @@ const OrdersTab = () => {
                 {menuItems.length === 0 && !searchTerm && (
                   <div className="text-center py-12">
                     <ChefHat className="h-16 w-16 mx-auto text-gray-300 mb-4" />
-                    <p className="text-xl font-semibold text-gray-700 mb-2">
+                    <p className="text-xl font-semibold text-foreground mb-2">
                       No menu items available
                     </p>
-                    <p className="text-gray-500">
+                    <p className="text-muted-foreground">
                       Check back later for delicious options!
                     </p>
                   </div>
@@ -796,7 +796,7 @@ const OrdersTab = () => {
                   </div>
                   <div className="text-right">
                     <p className="text-[10px] font-bold uppercase tracking-wider leading-none opacity-80">Total</p>
-                    <p className="text-base font-black">NRs. {getCartTotal().toFixed(0)}</p>
+                    <p className="text-base font-black">₹ {getCartTotal().toFixed(0)}</p>
                   </div>
                 </Button>
               )}
@@ -827,10 +827,10 @@ const OrdersTab = () => {
                 {cart.length === 0 ? (
                   <div className="text-center py-8">
                     <ShoppingCart className="h-16 w-16 mx-auto text-gray-300 mb-4" />
-                    <p className="font-semibold text-lg mb-1 text-gray-700">
+                    <p className="font-semibold text-lg mb-1 text-foreground">
                       Your cart is empty
                     </p>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-muted-foreground">
                       Add some delicious items!
                     </p>
                   </div>
@@ -850,8 +850,8 @@ const OrdersTab = () => {
                             >
                               {item.name}
                             </h4>
-                            <p className="text-xs text-gray-500">
-                              NRs. {item.price} each
+                            <p className="text-xs text-muted-foreground">
+                              ₹ {item.price} each
                             </p>
                           </div>
                           <div className="flex items-center gap-1">
@@ -861,7 +861,7 @@ const OrdersTab = () => {
                               onClick={() =>
                                 updateCartQuantity(item.id, item.quantity - 1)
                               }
-                              className="h-6 w-6 hover:bg-red-50 hover:border-red-300 flex-shrink-0"
+                              className="h-6 w-6 hover:bg-destructive/5 hover:border-red-300 flex-shrink-0"
                             >
                               <Minus className="h-3 w-3" />
                             </Button>
@@ -874,7 +874,7 @@ const OrdersTab = () => {
                               onClick={() =>
                                 updateCartQuantity(item.id, item.quantity + 1)
                               }
-                              className="h-6 w-6 hover:bg-green-50 hover:border-green-300 flex-shrink-0"
+                              className="h-6 w-6 hover:bg-success/5 hover:border-green-300 flex-shrink-0"
                             >
                               <Plus className="h-3 w-3" />
                             </Button>
@@ -882,7 +882,7 @@ const OrdersTab = () => {
                               variant="ghost"
                               size="icon"
                               onClick={() => removeFromCart(item.id)}
-                              className="h-6 w-6 text-red-500 hover:text-red-700 hover:bg-red-50 flex-shrink-0"
+                              className="h-6 w-6 text-destructive hover:text-red-700 hover:bg-destructive/5 flex-shrink-0"
                             >
                               <Trash2 className="h-3 w-3" />
                             </Button>
@@ -897,7 +897,7 @@ const OrdersTab = () => {
                       <div className="flex justify-between items-center font-bold text-lg">
                         <span>Total:</span>
                         <span className="bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
-                          NRs. {getCartTotal().toFixed(2)}
+                          ₹ {getCartTotal().toFixed(2)}
                         </span>
                       </div>
 
@@ -950,7 +950,7 @@ const OrdersTab = () => {
                         ) : (
                           <div className="flex items-center gap-2">
                             <CheckCircle className="h-5 w-5" />
-                            Place Order (NRs. {getCartTotal().toFixed(2)})
+                            Place Order (₹ {getCartTotal().toFixed(2)})
                           </div>
                         )}
                       </Button>
@@ -964,10 +964,10 @@ const OrdersTab = () => {
 
         {/* Order History */}
         <Card className="bg-gradient-to-br from-white/90 to-gray-50/90 backdrop-blur-sm border-0 shadow-2xl">
-          <CardHeader className="border-b border-gray-200/50 space-y-4">
+          <CardHeader className="border-b border-border/50 space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <CardTitle className="text-lg sm:text-2xl font-bold bg-gradient-to-r from-gray-700 to-gray-900 bg-clip-text text-transparent flex items-center gap-2">
-                <Clock className="h-5 w-5 sm:h-6 sm:w-6 text-gray-600" />
+                <Clock className="h-5 w-5 sm:h-6 sm:w-6 text-muted-foreground" />
                 Order History
               </CardTitle>
               <div className="flex items-center gap-2">
@@ -1019,15 +1019,15 @@ const OrdersTab = () => {
                 <div className="w-16 h-16 bg-gradient-to-r from-orange-500 to-red-500 rounded-full animate-spin mx-auto flex items-center justify-center mb-4">
                   <Package className="h-8 w-8 text-white" />
                 </div>
-                <p className="text-gray-600">Loading orders...</p>
+                <p className="text-muted-foreground">Loading orders...</p>
               </div>
             ) : orders.length === 0 ? (
               <div className="text-center py-12">
                 <Package className="h-16 w-16 mx-auto text-gray-300 mb-4" />
-                <p className="text-xl font-semibold text-gray-700 mb-2">
+                <p className="text-xl font-semibold text-foreground mb-2">
                   No orders found
                 </p>
-                <p className="text-gray-500">
+                <p className="text-muted-foreground">
                   Your order history will appear here.
                 </p>
               </div>
@@ -1036,25 +1036,25 @@ const OrdersTab = () => {
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-gradient-to-r from-gray-50 to-orange-50">
-                      <TableHead className="font-semibold text-gray-700 text-xs sm:text-sm px-2 sm:px-4">
+                      <TableHead className="font-semibold text-foreground text-xs sm:text-sm px-2 sm:px-4">
                         Date
                       </TableHead>
-                      <TableHead className="font-semibold text-gray-700 text-xs sm:text-sm px-2 sm:px-4">
+                      <TableHead className="font-semibold text-foreground text-xs sm:text-sm px-2 sm:px-4">
                         Item
                       </TableHead>
-                      <TableHead className="font-semibold text-gray-700 text-center text-xs sm:text-sm px-1 sm:px-4">
+                      <TableHead className="font-semibold text-foreground text-center text-xs sm:text-sm px-1 sm:px-4">
                         Qty
                       </TableHead>
-                      <TableHead className="font-semibold text-gray-700 text-right text-xs sm:text-sm px-1 sm:px-4">
+                      <TableHead className="font-semibold text-foreground text-right text-xs sm:text-sm px-1 sm:px-4">
                         Rate
                       </TableHead>
-                      <TableHead className="font-semibold text-gray-700 text-right text-xs sm:text-sm px-1 sm:px-4">
+                      <TableHead className="font-semibold text-foreground text-right text-xs sm:text-sm px-1 sm:px-4">
                         Total
                       </TableHead>
-                      <TableHead className="font-semibold text-gray-700 text-xs sm:text-sm px-1 sm:px-4 hidden sm:table-cell">
+                      <TableHead className="font-semibold text-foreground text-xs sm:text-sm px-1 sm:px-4 hidden sm:table-cell">
                         Payment
                       </TableHead>
-                      <TableHead className="font-semibold text-gray-700 text-xs sm:text-sm px-1 sm:px-4 hidden sm:table-cell">
+                      <TableHead className="font-semibold text-foreground text-xs sm:text-sm px-1 sm:px-4 hidden sm:table-cell">
                         Actions
                       </TableHead>
                     </TableRow>
@@ -1071,7 +1071,7 @@ const OrdersTab = () => {
                         colSpan={3}
                         className="font-bold text-right text-xs sm:text-sm px-1 sm:px-4"
                       >
-                        NRs. {totalOrders.toFixed(2)}
+                        ₹ {totalOrders.toFixed(2)}
                       </TableCell>
                     </TableRow>
                     {orders.map((order, index) => (
@@ -1099,33 +1099,33 @@ const OrdersTab = () => {
                         <TableCell className="text-center px-1 sm:px-4">
                           <Badge
                             variant="outline"
-                            className="bg-blue-50 border-blue-200 text-xs px-1 sm:px-2"
+                            className="bg-primary/5 border-primary/10 text-xs px-1 sm:px-2"
                           >
                             {order.quantity}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right text-xs sm:text-sm px-1 sm:px-4">
                           <div className="sm:hidden">
-                            रु {Number(order.rate).toFixed(0)}
+                            ₹ {Number(order.rate).toFixed(0)}
                           </div>
                           <div className="hidden sm:block">
-                            NRs. {Number(order.rate).toFixed(2)}
+                            ₹ {Number(order.rate).toFixed(2)}
                           </div>
                         </TableCell>
                         <TableCell className="text-right px-1 sm:px-4">
                           <span className="font-bold text-sm sm:text-lg bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
                             <div className="sm:hidden">
-                              रु {Number(order.total).toFixed(0)}
+                              ₹ {Number(order.total).toFixed(0)}
                             </div>
                             <div className="hidden sm:block">
-                              NRs. {Number(order.total).toFixed(2)}
+                              ₹ {Number(order.total).toFixed(2)}
                             </div>
                           </span>
                         </TableCell>
                         <TableCell className="hidden sm:table-cell px-1 sm:px-4">
                           <Badge
                             variant="outline"
-                            className="bg-green-50 border-green-200 text-xs"
+                            className="bg-success/5 border-green-200 text-xs"
                           >
                             {order.payment_mode}
                           </Badge>
@@ -1148,7 +1148,7 @@ const OrdersTab = () => {
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  className="text-red-500 hover:text-red-700 hover:bg-red-50 px-2"
+                                  className="text-destructive hover:text-red-700 hover:bg-destructive/5 px-2"
                                 >
                                   <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
                                 </Button>
@@ -1187,7 +1187,7 @@ const OrdersTab = () => {
                         Grand Total:
                       </TableCell>
                       <TableCell className="text-right font-bold text-xl bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
-                        NRs.{" "}
+                        ₹{" "}
                         {orders
                           .reduce((acc, order) => acc + Number(order.total), 0)
                           .toFixed(2)}
@@ -1200,7 +1200,7 @@ const OrdersTab = () => {
             )}
           </CardContent>
           {orders.length > 0 && (
-            <div className="flex justify-center p-4 border-t border-gray-200">
+            <div className="flex justify-center p-4 border-t border-border">
               <div className="flex items-center gap-4">
                 <Button
                   onClick={() => onPageChange(page - 1)}

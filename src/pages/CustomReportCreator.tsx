@@ -222,7 +222,7 @@ const CustomReportCreator = () => {
               <div className="mt-2 space-y-2">
                 {Object.entries(availableColumns).map(([table, columns]) => (
                   <div key={table}>
-                    <h4 className="font-medium text-sm text-gray-700">{table}</h4>
+                    <h4 className="font-medium text-sm text-foreground">{table}</h4>
                     <div className="flex flex-wrap gap-1">
                       {columns.map((column) => (
                         <Badge key={column} variant="secondary" className="text-xs">

@@ -328,7 +328,7 @@ const DataInputTab = () => {
       </div>
 
       <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden">
-        <CardHeader className="bg-slate-50/50 border-b border-slate-100 px-4 md:px-6 py-4">
+        <CardHeader className="bg-muted/50/50 border-b border-border px-4 md:px-6 py-4">
           <CardTitle className="flex items-center gap-2 text-base md:text-lg font-bold">
             <Upload className="h-5 w-5 text-primary" />
             Copy and Paste Data
@@ -370,11 +370,11 @@ const DataInputTab = () => {
                   onChange={(e) => setBulkData(e.target.value)}
                   rows={10}
                   disabled={!dataType}
-                  className="rounded-2xl border-slate-200 focus:border-primary resize-none p-4"
+                  className="rounded-2xl border-border focus:border-primary resize-none p-4"
                 />
                 {!dataType && (
-                  <div className="absolute inset-0 bg-slate-50/80 backdrop-blur-[1px] rounded-2xl flex items-center justify-center border-2 border-dashed border-slate-200">
-                    <p className="text-slate-400 font-bold uppercase tracking-wider text-xs">
+                  <div className="absolute inset-0 bg-muted/50/80 backdrop-blur-[1px] rounded-2xl flex items-center justify-center border-2 border-dashed border-border">
+                    <p className="text-muted-foreground font-bold uppercase tracking-wider text-xs">
                       Please select a data type first
                     </p>
                   </div>
@@ -407,8 +407,8 @@ const DataInputTab = () => {
 
       {dataType && (
         <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden">
-          <CardHeader className="bg-slate-50 border-b border-slate-100 px-4 md:px-6 py-3">
-            <CardTitle className="text-sm font-bold uppercase tracking-tight text-slate-600 flex items-center gap-2">
+          <CardHeader className="bg-muted/50 border-b border-border px-4 md:px-6 py-3">
+            <CardTitle className="text-sm font-bold uppercase tracking-tight text-muted-foreground flex items-center gap-2">
               <Database className="h-4 w-4" />
               Expected Format: {dataTypes.find((t) => t.value === dataType)?.label}
             </CardTitle>
@@ -417,7 +417,7 @@ const DataInputTab = () => {
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
                 <thead>
-                  <tr className="bg-slate-50/50">
+                  <tr className="bg-muted/50/50">
                     <th className="text-left py-3 px-4 font-black uppercase text-muted-foreground tracking-wider">Field</th>
                     <th className="text-left py-3 px-4 font-black uppercase text-muted-foreground tracking-wider">Type</th>
                     <th className="text-left py-3 px-4 font-black uppercase text-muted-foreground tracking-wider">Req?</th>
@@ -426,9 +426,9 @@ const DataInputTab = () => {
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {tableFields[dataType].map((field) => (
-                    <tr key={field.name} className="hover:bg-slate-50/30 transition-colors">
-                      <td className="py-3 px-4 font-bold text-slate-700">{field.name}</td>
-                      <td className="py-3 px-4 text-slate-500 font-medium">{field.type}</td>
+                    <tr key={field.name} className="hover:bg-muted/50/30 transition-colors">
+                      <td className="py-3 px-4 font-bold text-foreground">{field.name}</td>
+                      <td className="py-3 px-4 text-muted-foreground font-medium">{field.type}</td>
                       <td className="py-3 px-4">
                         {field.required ? (
                           <Badge variant="destructive" className="rounded-md h-5 px-1 text-[10px] uppercase">Yes</Badge>
@@ -436,7 +436,7 @@ const DataInputTab = () => {
                           <Badge variant="secondary" className="rounded-md h-5 px-1 text-[10px] uppercase font-normal">No</Badge>
                         )}
                       </td>
-                      <td className="py-3 px-4 text-slate-400 italic">
+                      <td className="py-3 px-4 text-muted-foreground italic">
                         {field.options?.join(", ") || "-"}
                       </td>
                     </tr>
