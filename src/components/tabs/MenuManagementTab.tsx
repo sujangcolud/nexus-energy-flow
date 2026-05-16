@@ -24,6 +24,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { Plus, Edit, Trash2, UtensilsCrossed } from "lucide-react";
+import MobileTable from "@/components/ui/mobile-table";
 
 interface MenuItem {
   id: string;
@@ -235,35 +236,46 @@ const MenuManagementTab = () => {
                 <CardTitle className="text-base md:text-lg font-bold">Menu Items</CardTitle>
               </CardHeader>
               <CardContent className="p-0">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Category</TableHead>
-                      <TableHead>Price</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {menuItems.map((item) => (
-                      <TableRow key={item.id}>
-                        <TableCell className="font-medium">{item.name}</TableCell>
-                        <TableCell>{item.category}</TableCell>
-                        <TableCell>Rs. {item.price}</TableCell>
-                        <TableCell>
-                          <Switch checked={item.is_available} onCheckedChange={() => toggleAvailability(item.id, item.is_available)} />
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex gap-2">
-                            <Button variant="outline" size="sm" onClick={() => handleEdit(item)}><Edit className="h-3 w-3" /></Button>
-                            <Button variant="outline" size="sm" onClick={() => handleDelete(item.id)}><Trash2 className="h-3 w-3" /></Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                <MobileTable
+                  columns={[
+                    {
+                      key: "name",
+                      label: "Item",
+                      render: (val, item) => (
+                        <div className="flex flex-col">
+                          <span className="font-bold">{val}</span>
+                          <span className="text-[10px] text-muted-foreground">{item.category}</span>
+                        </div>
+                      ),
+                    },
+                    {
+                      key: "price",
+                      label: "Price",
+                      className: "text-right font-bold",
+                      render: (val) => `रु ${val}`,
+                    },
+                    {
+                      key: "is_available",
+                      label: "Status",
+                      render: (val, item) => (
+                        <Switch checked={val} onCheckedChange={() => toggleAvailability(item.id, val)} />
+                      ),
+                    },
+                    {
+                      key: "actions",
+                      label: "Actions",
+                      className: "text-right",
+                      render: (_, item) => (
+                        <div className="flex justify-end gap-1">
+                          <Button variant="outline" size="sm" className="h-8 w-8 p-0" onClick={() => handleEdit(item)}><Edit className="h-4 w-4" /></Button>
+                          <Button variant="outline" size="sm" className="h-8 w-8 p-0 text-destructive" onClick={() => handleDelete(item.id)}><Trash2 className="h-4 w-4" /></Button>
+                        </div>
+                      ),
+                    },
+                  ]}
+                  data={menuItems}
+                  loading={loading}
+                />
               </CardContent>
             </Card>
           </div>

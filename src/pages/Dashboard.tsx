@@ -417,15 +417,15 @@ const Dashboard = () => {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center py-4">
               <div className="flex items-center gap-3">
-                <div className="p-3 rounded-lg shadow-sm bg-slate-600 text-white">
+                <div className="p-3 rounded-lg shadow-sm bg-primary text-white">
                   <BarChart3 className="h-6 w-6" />
                 </div>
                 <div>
-                  <h1 className="text-xl font-bold text-slate-800">
-                    EcoSoft Pro
+                  <h1 className="text-xl font-black text-slate-800 uppercase tracking-tighter">
+                    Energy Palace
                   </h1>
-                  <p className="text-sm text-slate-600">
-                    Business Management System
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                    Business Platform
                   </p>
                 </div>
               </div>
@@ -433,9 +433,9 @@ const Dashboard = () => {
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-2 text-sm text-slate-700">
                   <User className="h-4 w-4" />
-                  <span>{user?.email}</span>
+                  <span className="font-bold">{user?.email}</span>
                   {userRole && (
-                    <span className="bg-slate-100 text-slate-700 px-3 py-1 rounded-full text-xs font-medium">
+                    <span className="bg-primary/10 text-primary px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider">
                       {userRole.replace("_", " ")}
                     </span>
                   )}
@@ -445,7 +445,7 @@ const Dashboard = () => {
                   variant="outline"
                   size="sm"
                   onClick={handleSignOut}
-                  className="flex items-center gap-2 hover:bg-red-50 hover:border-red-300"
+                  className="flex items-center gap-2 hover:bg-destructive/5 hover:border-destructive/30"
                 >
                   <LogOut className="h-4 w-4" />
                   Sign Out
@@ -510,17 +510,17 @@ const Dashboard = () => {
               >
                 {({ isActive }) => (
                   <>
-                    <div className="p-2 rounded-md bg-primary text-primary-foreground">
+                    <div className="p-2 rounded-md bg-primary text-white">
                       <BarChart3 className="h-4 w-4" />
                     </div>
                     <div>
                       <h1
-                        className={`text-lg font-semibold transition-colors ${isActive ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"}`}
+                        className={`text-lg font-black transition-colors uppercase tracking-tight ${isActive ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"}`}
                       >
-                        EcoSoft Pro
+                        Energy Palace
                       </h1>
-                      <p className="text-xs text-muted-foreground">
-                        Business Management
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                        Business Platform
                       </p>
                     </div>
                   </>
@@ -587,7 +587,7 @@ const Dashboard = () => {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Mobile-only active page title */}
         {isSubPageActive && (
           <div className="sm:hidden mb-4 text-center">
@@ -660,54 +660,54 @@ const Dashboard = () => {
 
             {/* Quick Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
-              <Card className="bg-blue-50 border border-blue-200 shadow-sm hover:shadow-md transition-shadow">
+              <Card className="bg-white border-none shadow-xl hover:shadow-2xl transition-all duration-300 rounded-3xl overflow-hidden">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-blue-600 font-medium">
+                      <p className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-1">
                         Total Modules
                       </p>
-                      <p className="text-2xl font-bold text-blue-800">
+                      <p className="text-2xl font-black text-slate-800">
                         {navItems.length}
                       </p>
                     </div>
-                    <div className="p-3 bg-blue-600 rounded-lg text-white">
+                    <div className="p-3 bg-primary rounded-2xl text-white shadow-lg shadow-primary/20">
                       <LayoutDashboard className="h-6 w-6" />
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="bg-green-50 border border-green-200 shadow-sm hover:shadow-md transition-shadow">
+              <Card className="bg-white border-none shadow-xl hover:shadow-2xl transition-all duration-300 rounded-3xl overflow-hidden">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-green-600 font-medium">
+                      <p className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-1">
                         Your Role
                       </p>
-                      <p className="text-2xl font-bold text-green-800 capitalize">
+                      <p className="text-2xl font-black text-primary uppercase tracking-tight">
                         {userRole?.replace("_", " ")}
                       </p>
                     </div>
-                    <div className="p-3 bg-green-600 rounded-lg text-white">
+                    <div className="p-3 bg-secondary rounded-2xl text-white shadow-lg shadow-secondary/20">
                       <User className="h-6 w-6" />
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="bg-slate-50 border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+              <Card className="bg-white border-none shadow-xl hover:shadow-2xl transition-all duration-300 rounded-3xl overflow-hidden">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-slate-600 font-medium">
+                      <p className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-1">
                         System Status
                       </p>
-                      <p className="text-2xl font-bold text-slate-800">
+                      <p className="text-2xl font-black text-slate-800 uppercase tracking-tight">
                         Online
                       </p>
                     </div>
-                    <div className="p-3 bg-slate-600 rounded-lg text-white">
+                    <div className="p-3 bg-primary rounded-2xl text-white shadow-lg shadow-primary/20">
                       <BarChart3 className="h-6 w-6" />
                     </div>
                   </div>

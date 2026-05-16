@@ -74,6 +74,8 @@ import { cn } from "@/lib/utils";
 import useTableControls from "@/hooks/useTableControls";
 import MultiExpenseEntry from "@/components/MultiExpenseEntry";
 import { Switch } from "@/components/ui/switch";
+import MobileTable from "@/components/ui/mobile-table";
+import { Edit } from "lucide-react";
 
 interface Expense {
   id: string;
@@ -160,16 +162,16 @@ const ExpensesTab = () => {
   ];
 
   const categoryColors = {
-    "Food & Beverages": "from-orange-500 to-red-500",
-    Transportation: "from-blue-500 to-cyan-500",
-    Utilities: "from-yellow-500 to-orange-500",
-    "Office Supplies": "from-green-500 to-emerald-500",
-    Marketing: "from-purple-500 to-pink-500",
-    Equipment: "from-gray-500 to-slate-500",
-    Maintenance: "from-red-500 to-pink-500",
-    Insurance: "from-indigo-500 to-blue-500",
-    "Legal & Professional": "from-violet-500 to-purple-500",
-    Other: "from-teal-500 to-cyan-500",
+    "Food & Beverages": "from-primary to-primary/80",
+    Transportation: "from-primary to-primary/80",
+    Utilities: "from-primary to-primary/80",
+    "Office Supplies": "from-primary to-primary/80",
+    Marketing: "from-primary to-primary/80",
+    Equipment: "from-primary to-primary/80",
+    Maintenance: "from-primary to-primary/80",
+    Insurance: "from-primary to-primary/80",
+    "Legal & Professional": "from-primary to-primary/80",
+    Other: "from-primary to-primary/80",
   };
 
   useEffect(() => {
@@ -708,7 +710,7 @@ const ExpensesTab = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-8">
           {/* Add Expense Form */}
           <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden">
-            <CardHeader className="bg-rose-500 text-white p-4 md:p-6">
+            <CardHeader className="bg-primary text-white p-4 md:p-6">
               <CardTitle className="flex items-center gap-3 text-lg md:text-xl font-bold">
                 <div className="p-2 bg-white/20 rounded-xl">
                   <PlusCircle className="h-5 w-5 md:h-6 md:w-6" />
@@ -723,7 +725,7 @@ const ExpensesTab = () => {
                   <div className="flex items-center space-x-2">
                     <Switch
                       id="inventory-purchase"
-                      className="data-[state=checked]:bg-amber-500"
+                      className="data-[state=checked]:bg-secondary"
                       checked={formData.isInventoryPurchase}
                       onCheckedChange={(checked) =>
                         setFormData({ ...formData, isInventoryPurchase: checked })
@@ -737,7 +739,7 @@ const ExpensesTab = () => {
                   <div className="flex items-center space-x-2 border-l border-slate-200 pl-4">
                     <Switch
                       id="is-credit"
-                      className="data-[state=checked]:bg-blue-600"
+                      className="data-[state=checked]:bg-primary"
                       checked={formData.isCredit}
                       onCheckedChange={(checked) =>
                         setFormData({ ...formData, isCredit: checked })
@@ -985,8 +987,8 @@ const ExpensesTab = () => {
                     placeholder="0.00"
                     required
                     className={cn(
-                      "text-lg font-bold border-green-200 focus:border-green-500",
-                      formData.isInventoryPurchase && "bg-green-50/50"
+                      "text-lg font-bold border-primary/20 focus:border-primary",
+                      formData.isInventoryPurchase && "bg-primary/5"
                     )}
                   />
                 </div>
@@ -1087,7 +1089,7 @@ const ExpensesTab = () => {
                 <Button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full h-12 bg-gradient-to-r from-red-500 via-pink-500 to-purple-500 hover:from-red-600 hover:via-pink-600 hover:to-purple-600 text-white font-semibold shadow-lg transition-all duration-300 transform hover:scale-105"
+                  className="w-full h-14 bg-primary hover:bg-primary/90 text-white font-black text-lg shadow-xl shadow-primary/20 transition-all duration-300 transform rounded-2xl"
                 >
                   {isSubmitting ? (
                     <div className="flex items-center gap-2">
@@ -1106,10 +1108,10 @@ const ExpensesTab = () => {
           </Card>
 
           {/* Category Breakdown */}
-          <Card className="bg-gradient-to-br from-white/90 to-purple-50/90 backdrop-blur-sm border-0 shadow-2xl hover:shadow-3xl transition-all duration-300">
-            <CardHeader className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-t-lg">
-              <CardTitle className="flex items-center gap-3 text-xl">
-                <div className="p-2 bg-white/20 rounded-lg">
+          <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden transition-all duration-300">
+            <CardHeader className="bg-secondary text-white">
+              <CardTitle className="flex items-center gap-3 text-xl font-bold">
+                <div className="p-2 bg-white/20 rounded-xl">
                   <Tag className="h-6 w-6" />
                 </div>
                 Category Breakdown
@@ -1282,144 +1284,101 @@ const ExpensesTab = () => {
                 </p>
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-gradient-to-r from-gray-50 to-purple-50">
-                      <TableHead className="font-semibold text-gray-700">
-                        Date
-                      </TableHead>
-                      <TableHead className="font-semibold text-gray-700">
-                        Description
-                      </TableHead>
-                      <TableHead className="font-semibold text-gray-700">
-                        Category
-                      </TableHead>
-                      <TableHead className="font-semibold text-gray-700">
-                        Amount
-                      </TableHead>
-                      <TableHead className="font-semibold text-gray-700">
-                        Payment
-                      </TableHead>
-                      <TableHead className="font-semibold text-gray-700">
-                        Remarks
-                      </TableHead>
-                      <TableHead className="font-semibold text-gray-700">
-                        Actions
-                      </TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    <TableRow>
-                      <TableCell colSpan={3} className="font-bold">
-                        Total
-                      </TableCell>
-                      <TableCell colSpan={3} className="font-bold text-right">
-                        NRs. {totalExpenses.toFixed(2)}
-                      </TableCell>
-                    </TableRow>
-                    {expenses.map((expense, index) => (
-                      <TableRow
-                        key={expense.id}
-                        className="hover:bg-gradient-to-r hover:from-red-50 hover:to-pink-50 transition-all duration-200"
-                        style={{ animationDelay: `${index * 50}ms` }}
-                      >
-                        <TableCell className="font-medium">
-                          {format(
-                            new Date(expense.expense_date),
-                            "MMM dd, yyyy",
-                          )}
-                        </TableCell>
-                        <TableCell className="max-w-xs">
-                          <div
-                            className="font-medium text-gray-800 truncate flex items-center gap-2"
-                            title={expense.description}
-                          >
-                            {expense.is_inventory_purchase && (
-                              <Package className="h-3 w-3 text-amber-600 shrink-0" />
-                            )}
-                            {expense.description}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge
-                            className={`bg-gradient-to-r ${categoryColors[expense.category as keyof typeof categoryColors]} text-white border-0`}
-                          >
-                            {expense.category}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <span className="font-bold text-lg bg-gradient-to-r from-red-600 to-pink-600 bg-clip-text text-transparent">
-                            NRs. {expense.amount.toFixed(2)}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          <Badge
-                            variant="outline"
-                            className="bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200"
-                          >
-                            {expense.payment_mode}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="max-w-xs">
-                          <span
-                            className="text-sm text-gray-600 truncate"
-                            title={expense.remarks || ""}
-                          >
-                            {expense.remarks || "-"}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex gap-2">
+              <MobileTable
+                columns={[
+                  {
+                    key: "expense_date",
+                    label: "Date",
+                    render: (val) => format(new Date(val), "MMM dd, yyyy"),
+                    mobileLabel: "Date",
+                  },
+                  {
+                    key: "description",
+                    label: "Description",
+                    render: (val, expense) => (
+                      <div className="flex items-center gap-2">
+                        {expense.is_inventory_purchase && <Package className="h-3 w-3 text-amber-600" />}
+                        <span className="truncate">{val}</span>
+                      </div>
+                    ),
+                  },
+                  {
+                    key: "category",
+                    label: "Category",
+                    render: (val) => (
+                      <Badge className={cn("bg-gradient-to-r text-white border-0", categoryColors[val as keyof typeof categoryColors] || "from-gray-400 to-gray-500")}>
+                        {val}
+                      </Badge>
+                    ),
+                  },
+                  {
+                    key: "amount",
+                    label: "Amount",
+                    className: "text-right font-bold",
+                    render: (val) => <span className="text-destructive">रु {Number(val).toFixed(0)}</span>,
+                  },
+                  {
+                    key: "payment_mode",
+                    label: "Payment",
+                    hideOnMobile: true,
+                    render: (val) => <Badge variant="secondary">{val}</Badge>,
+                  },
+                  {
+                    key: "actions",
+                    label: "Actions",
+                    className: "text-right",
+                    render: (_, expense) => (
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedExpense(expense);
+                            setIsEditDialogOpen(true);
+                          }}
+                          className="h-8 w-8 p-0"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => {
-                                setSelectedExpense(expense);
-                                setIsEditDialogOpen(true);
-                              }}
+                              className="h-8 w-8 p-0 text-destructive"
                             >
-                              Edit
+                              <Trash2 className="h-4 w-4" />
                             </Button>
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>
-                                    Are you sure?
-                                  </AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    This action cannot be undone. This will
-                                    permanently delete the expense.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>
-                                    Cancel
-                                  </AlertDialogCancel>
-                                  <AlertDialogAction
-                                    onClick={() => handleDelete(expense.id)}
-                                  >
-                                    Continue
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This action cannot be undone.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDelete(expense.id)}>
+                                Continue
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                    ),
+                  },
+                ]}
+                data={expenses}
+                footer={
+                  <div className="flex justify-between items-center font-bold text-lg">
+                    <span>Page Total</span>
+                    <span className="text-destructive">
+                      रु {totalExpenses.toFixed(2)}
+                    </span>
+                  </div>
+                }
+              />
             )}
           </CardContent>
           {expenses.length > 0 && (

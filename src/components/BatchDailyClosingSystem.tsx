@@ -569,28 +569,28 @@ const BatchDailyClosingSystem: React.FC<BatchDailyClosingSystemProps> = ({
 
           {/* Summary Cards */}
           <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-            <Card className="rounded-2xl border-none shadow-sm bg-emerald-50/50">
+            <Card className="rounded-2xl border-none shadow-sm bg-primary/5">
               <CardContent className="p-3">
-                <p className="text-[9px] font-black text-emerald-600 uppercase mb-1">Total Income</p>
-                <p className="text-sm font-black text-emerald-800 truncate">
+                <p className="text-[9px] font-black text-primary uppercase mb-1">Total Income</p>
+                <p className="text-sm font-black text-primary truncate">
                   {formatCurrency(totalIncome)}
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="rounded-2xl border-none shadow-sm bg-rose-50/50">
+            <Card className="rounded-2xl border-none shadow-sm bg-destructive/5">
               <CardContent className="p-3">
-                <p className="text-[9px] font-black text-rose-600 uppercase mb-1">Total Expense</p>
-                <p className="text-sm font-black text-rose-800 truncate">
+                <p className="text-[9px] font-black text-destructive uppercase mb-1">Total Expense</p>
+                <p className="text-sm font-black text-destructive truncate">
                   {formatCurrency(totalExpenses)}
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="rounded-2xl border-none shadow-sm bg-blue-50/50">
+            <Card className="rounded-2xl border-none shadow-sm bg-primary/5">
               <CardContent className="p-3">
-                <p className="text-[9px] font-black text-blue-600 uppercase mb-1">Net Profit</p>
-                <p className={cn("text-sm font-black truncate", totalProfit >= 0 ? "text-emerald-700" : "text-rose-700")}>
+                <p className="text-[9px] font-black text-primary uppercase mb-1">Net Profit</p>
+                <p className={cn("text-sm font-black truncate", totalProfit >= 0 ? "text-primary" : "text-destructive")}>
                   {formatCurrency(totalProfit)}
                 </p>
               </CardContent>
@@ -605,10 +605,10 @@ const BatchDailyClosingSystem: React.FC<BatchDailyClosingSystemProps> = ({
               </CardContent>
             </Card>
 
-            <Card className="rounded-2xl border-none shadow-sm bg-amber-50/50">
+            <Card className="rounded-2xl border-none shadow-sm bg-secondary/5">
               <CardContent className="p-3 text-center">
-                <p className="text-[9px] font-black text-amber-600 uppercase mb-1">Errors</p>
-                <p className="text-sm font-black text-amber-700">
+                <p className="text-[9px] font-black text-secondary uppercase mb-1">Errors</p>
+                <p className="text-sm font-black text-secondary-foreground">
                   {errorDays}
                 </p>
               </CardContent>
@@ -790,7 +790,7 @@ const BatchDailyClosingSystem: React.FC<BatchDailyClosingSystemProps> = ({
             <Button
               onClick={processDateRange}
               disabled={processing || !user}
-              className="bg-blue-600 hover:bg-blue-700"
+              className="bg-primary hover:bg-primary/90"
             >
               {processing ? (
                 <>

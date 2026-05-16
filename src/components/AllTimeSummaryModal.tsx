@@ -260,7 +260,7 @@ export const AllTimeSummaryModal: React.FC<AllTimeSummaryModalProps> = ({
                 <div className="flex justify-between items-start mb-6">
                   <div>
                     <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Total Net Balance</p>
-                    <h3 className={cn("text-3xl font-black", allTimeData.totalBalance < 0 ? 'text-rose-400' : 'text-emerald-400')}>
+                    <h3 className={cn("text-3xl font-black", allTimeData.totalBalance < 0 ? 'text-destructive-foreground' : 'text-primary-foreground')}>
                       {formatCurrency(allTimeData.totalBalance)}
                     </h3>
                   </div>
@@ -291,12 +291,12 @@ export const AllTimeSummaryModal: React.FC<AllTimeSummaryModalProps> = ({
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {/* Income Summary */}
-              <Card className="rounded-3xl border-none shadow-sm bg-emerald-50/50">
+              <Card className="rounded-3xl border-none shadow-sm bg-primary/5">
                 <CardHeader className="p-4 pb-2">
-                  <CardTitle className="text-xs font-black uppercase tracking-widest text-emerald-700">Income Overview</CardTitle>
+                  <CardTitle className="text-xs font-black uppercase tracking-widest text-primary">Income Overview</CardTitle>
                 </CardHeader>
                 <CardContent className="p-4 pt-0 space-y-4">
-                  <div className="text-2xl font-black text-emerald-800">{formatCurrency(allTimeData.totalIncome)}</div>
+                  <div className="text-2xl font-black text-primary">{formatCurrency(allTimeData.totalIncome)}</div>
                   <div className="space-y-2">
                     <div className="flex justify-between text-xs font-medium">
                       <span className="text-slate-500">Orders</span>
@@ -317,37 +317,37 @@ export const AllTimeSummaryModal: React.FC<AllTimeSummaryModalProps> = ({
                 </CardHeader>
                 <CardContent className="p-4 pt-0 space-y-2">
                   <div className="flex justify-between text-xs py-1 border-b border-slate-50">
-                    <span className="font-bold text-orange-600">Cash</span>
+                    <span className="font-bold text-secondary">Cash</span>
                     <span className="font-black">{formatCurrency(allTimeData.cashIncome)}</span>
                   </div>
                   <div className="flex justify-between text-xs py-1 border-b border-slate-50">
-                    <span className="font-bold text-emerald-600">eSewa</span>
+                    <span className="font-bold text-primary">eSewa</span>
                     <span className="font-black">{formatCurrency(allTimeData.esewaIncome)}</span>
                   </div>
                   <div className="flex justify-between text-xs py-1">
-                    <span className="font-bold text-blue-600">Fonepay</span>
+                    <span className="font-bold text-primary/80">Fonepay</span>
                     <span className="font-black">{formatCurrency(allTimeData.fonepayIncome)}</span>
                   </div>
                 </CardContent>
               </Card>
 
               {/* Expenses Summary */}
-              <Card className="rounded-3xl border-none shadow-sm bg-rose-50/50">
+              <Card className="rounded-3xl border-none shadow-sm bg-destructive/5">
                 <CardHeader className="p-4 pb-2">
-                  <CardTitle className="text-xs font-black uppercase tracking-widest text-rose-700">Total Burn</CardTitle>
+                  <CardTitle className="text-xs font-black uppercase tracking-widest text-destructive">Total Burn</CardTitle>
                 </CardHeader>
                 <CardContent className="p-4 pt-0 space-y-4">
-                  <div className="text-2xl font-black text-rose-800">{formatCurrency(allTimeData.totalExpenses)}</div>
+                  <div className="text-2xl font-black text-destructive">{formatCurrency(allTimeData.totalExpenses)}</div>
                   <div className="grid grid-cols-3 gap-2">
-                    <div className="text-[9px] bg-white p-1 rounded-md border border-rose-100">
+                    <div className="text-[9px] bg-white p-1 rounded-md border border-destructive/10">
                       <span className="block text-slate-400 font-bold mb-1">CASH</span>
                       <span className="font-bold">{formatCurrency(allTimeData.cashExpenses)}</span>
                     </div>
-                    <div className="text-[9px] bg-white p-1 rounded-md border border-rose-100">
+                    <div className="text-[9px] bg-white p-1 rounded-md border border-destructive/10">
                       <span className="block text-slate-400 font-bold mb-1">ESEWA</span>
                       <span className="font-bold">{formatCurrency(allTimeData.esewaExpenses)}</span>
                     </div>
-                    <div className="text-[9px] bg-white p-1 rounded-md border border-rose-100">
+                    <div className="text-[9px] bg-white p-1 rounded-md border border-destructive/10">
                       <span className="block text-slate-400 font-bold mb-1">FONE</span>
                       <span className="font-bold">{formatCurrency(allTimeData.fonepayExpenses)}</span>
                     </div>
@@ -362,15 +362,15 @@ export const AllTimeSummaryModal: React.FC<AllTimeSummaryModalProps> = ({
                 </CardHeader>
                 <CardContent className="p-4 pt-0 space-y-2">
                   <div className="flex justify-between text-xs font-bold">
-                    <span className="text-blue-600">Deposits</span>
+                    <span className="text-primary">Deposits</span>
                     <span>{formatCurrency(allTimeData.totalDeposits)}</span>
                   </div>
                   <div className="flex justify-between text-xs font-bold">
-                    <span className="text-rose-600">Withdrawals</span>
+                    <span className="text-destructive">Withdrawals</span>
                     <span>{formatCurrency(allTimeData.totalWithdrawals)}</span>
                   </div>
                   <div className="flex justify-between text-xs font-bold">
-                    <span className="text-violet-600">Savings</span>
+                    <span className="text-secondary">Savings</span>
                     <span>{formatCurrency(allTimeData.totalSavings)}</span>
                   </div>
                 </CardContent>
@@ -379,7 +379,7 @@ export const AllTimeSummaryModal: React.FC<AllTimeSummaryModalProps> = ({
               {/* Net Summary */}
               <Card className={cn(
                 "rounded-3xl border-none shadow-md col-span-1 md:col-span-2",
-                allTimeData.netProfit >= 0 ? "bg-emerald-600 text-white" : "bg-rose-600 text-white"
+                allTimeData.netProfit >= 0 ? "bg-primary text-white" : "bg-destructive text-white"
               )}>
                 <CardHeader className="p-4 pb-2">
                   <CardTitle className="text-xs font-black uppercase tracking-widest opacity-70 text-white">Historical Net Profit</CardTitle>

@@ -386,7 +386,7 @@ const BusinessIntelligenceSuite = () => {
               label={`${cat} REAL Margin`}
               value={`${margin}%`}
               icon={Utensils}
-              color={margin > 35 ? "text-emerald-600" : margin > 20 ? "text-amber-600" : "text-destructive"}
+              color={margin > 35 ? "text-primary" : margin > 20 ? "text-secondary" : "text-destructive"}
             />
           );
         })}
@@ -418,10 +418,10 @@ const BusinessIntelligenceSuite = () => {
                     <td className="px-4 py-3 font-semibold text-foreground">{row.category}</td>
                     <td className="px-4 py-3 text-right text-muted-foreground">{fmt(row.income)}</td>
                     <td className="px-4 py-3 text-right text-muted-foreground">{fmt(row.expense)}</td>
-                    <td className={`px-4 py-3 text-right font-bold ${row.net < 0 ? "text-destructive" : "text-emerald-600"}`}>
+                    <td className={`px-4 py-3 text-right font-bold ${row.net < 0 ? "text-destructive" : "text-primary"}`}>
                       {fmt(row.net)}
                     </td>
-                    <td className={`px-4 py-3 text-right font-bold ${row.margin < 0 ? "text-destructive" : "text-emerald-600"}`}>
+                    <td className={`px-4 py-3 text-right font-bold ${row.margin < 0 ? "text-destructive" : "text-primary"}`}>
                       {row.margin.toFixed(1)}%
                     </td>
                   </tr>
@@ -458,7 +458,7 @@ const BusinessIntelligenceSuite = () => {
                     <td className="p-2 font-semibold">{row.category}</td>
                     <td className="p-2 text-right">{fmt(row.expense)}</td>
                     <td className="p-2 text-right">{fmt(row.sales)}</td>
-                    <td className={`p-2 text-right font-bold ${row.lastMargin < 20 ? "text-destructive" : "text-emerald-600"}`}>
+                    <td className={`p-2 text-right font-bold ${row.lastMargin < 20 ? "text-destructive" : "text-primary"}`}>
                       {row.lastMargin.toFixed(1)}%
                     </td>
                     <td className="p-2 text-right font-medium">{row.lastEfficiency}x</td>
@@ -511,13 +511,13 @@ const BusinessIntelligenceSuite = () => {
                       <td className="px-4 py-3 text-right text-muted-foreground font-semibold">
                         {row.charging_count}
                       </td>
-                      <td className="px-4 py-3 text-right text-blue-600 font-bold">
+                      <td className="px-4 py-3 text-right text-secondary font-bold">
                         {fmt(row.charging_revenue)}
                       </td>
                       <td className="px-4 py-3 text-right text-muted-foreground font-semibold">
                         {row.orders_count}
                       </td>
-                      <td className="px-4 py-3 text-right text-emerald-600 font-bold">
+                      <td className="px-4 py-3 text-right text-primary font-bold">
                         {fmt(row.orders_revenue)}
                       </td>
                     </tr>
@@ -591,8 +591,8 @@ const BusinessIntelligenceSuite = () => {
                 <Tooltip formatter={(v: any) => typeof v === 'number' ? v.toLocaleString() : v} />
                 <Legend />
                 <Bar yAxisId="left" dataKey="food_revenue" fill="hsl(var(--primary))" name="Food Revenue" stackId="a" />
-                <Bar yAxisId="left" dataKey="charging_revenue" fill="hsl(var(--chart-2))" name="Charging Revenue" stackId="a" />
-                <Line yAxisId="right" type="monotone" dataKey="conversion" stroke="#ff7300" name="Ratio" strokeWidth={2} dot={false} />
+                <Bar yAxisId="left" dataKey="charging_revenue" fill="hsl(var(--secondary))" name="Charging Revenue" stackId="a" />
+                <Line yAxisId="right" type="monotone" dataKey="conversion" stroke="hsl(var(--secondary))" name="Ratio" strokeWidth={2} dot={false} />
               </ComposedChart>
             </ResponsiveContainer>
           </CardContent>
@@ -769,7 +769,7 @@ const BusinessIntelligenceSuite = () => {
                 <Tooltip formatter={(v: number) => v.toLocaleString()} />
                 <Legend />
                 <Bar dataKey="withdrawals" fill="hsl(var(--destructive))" name="Rolling Withdrawals (7d)" />
-                <Bar dataKey="expenses" fill="hsl(var(--emerald-500))" name="Rolling Expenses (7d)" />
+                <Bar dataKey="expenses" fill="hsl(var(--primary))" name="Rolling Expenses (7d)" />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -787,7 +787,7 @@ const BusinessIntelligenceSuite = () => {
             {anomalies.length > 0 ? (
               <span className="ml-2 text-destructive font-medium">{anomalies.length} anomaly flagged</span>
             ) : (
-              <span className="ml-2 text-emerald-600 font-medium">All clean</span>
+              <span className="ml-2 text-primary font-medium">All clean</span>
             )}
           </CardDescription>
         </CardHeader>

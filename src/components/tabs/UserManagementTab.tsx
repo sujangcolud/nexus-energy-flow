@@ -25,6 +25,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Users, Shield, UserPlus } from "lucide-react";
 import { getUsersWithRolesFallback, type UserWithRole } from "@/utils/userRolesFallback";
+import MobileTable from "@/components/ui/mobile-table";
 
 const UserManagementTab = () => {
   const { user: currentUser } = useAuth();
@@ -143,38 +144,36 @@ const UserManagementTab = () => {
           <CardTitle className="text-base md:text-lg font-bold">System Users</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>User</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Created</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {users.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell>
-                    <div>
-                      <div className="font-medium">
-                        {user.first_name} {user.last_name}
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell>
-                    <Badge variant={getRoleBadgeVariant(user.role)}>
-                      {user.role.replace('_', ' ').toUpperCase()}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    {new Date(user.created_at).toLocaleDateString()}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <MobileTable
+            columns={[
+              {
+                key: "name",
+                label: "User",
+                render: (_, user) => <div className="font-bold">{user.first_name} {user.last_name}</div>,
+              },
+              {
+                key: "email",
+                label: "Email",
+              },
+              {
+                key: "role",
+                label: "Role",
+                render: (val) => (
+                  <Badge variant={getRoleBadgeVariant(val)}>
+                    {val.replace('_', ' ').toUpperCase()}
+                  </Badge>
+                ),
+              },
+              {
+                key: "created_at",
+                label: "Joined",
+                hideOnMobile: true,
+                render: (val) => new Date(val).toLocaleDateString(),
+              },
+            ]}
+            data={users}
+            loading={loading}
+          />
         </CardContent>
       </Card>
     </div>

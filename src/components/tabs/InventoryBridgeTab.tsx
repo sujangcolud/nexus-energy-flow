@@ -495,10 +495,10 @@ const InventoryBridgeTab = () => {
                       <td className="py-2 px-2 text-right tabular-nums">
                         {fmt(p.opening)}
                       </td>
-                      <td className="py-2 px-2 text-right tabular-nums text-emerald-600">
+                      <td className="py-2 px-2 text-right tabular-nums text-primary">
                         +{fmt(p.purchased)}
                       </td>
-                      <td className="py-2 px-2 text-right tabular-nums text-rose-600">
+                      <td className="py-2 px-2 text-right tabular-nums text-destructive">
                         −{fmt(p.consumed)}
                       </td>
                       <td className="py-2 px-2 text-right tabular-nums">
@@ -649,13 +649,13 @@ const InventoryBridgeTab = () => {
                         <Activity className="h-3.5 w-3.5 text-muted-foreground" />
                         {format(new Date(d.date), "MMM d, yyyy")}
                       </td>
-                      <td className="py-2 px-2 text-right tabular-nums text-emerald-600">
+                      <td className="py-2 px-2 text-right tabular-nums text-primary">
                         +{fmt(d.in)}
                       </td>
                       <td className="py-2 px-2 text-right tabular-nums">
                         {money(d.in_value)}
                       </td>
-                      <td className="py-2 px-2 text-right tabular-nums text-rose-600">
+                      <td className="py-2 px-2 text-right tabular-nums text-destructive">
                         −{fmt(d.out)}
                       </td>
                       <td className="py-2 px-2 text-right tabular-nums">

@@ -3,6 +3,7 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
@@ -26,6 +27,7 @@ interface MobileTableProps {
   emptyMessage?: string;
   className?: string;
   cardKey?: string; // Unique key for mobile cards
+  footer?: React.ReactNode;
 }
 
 const MobileTable: React.FC<MobileTableProps> = ({
@@ -35,6 +37,7 @@ const MobileTable: React.FC<MobileTableProps> = ({
   emptyMessage = "No data available",
   className,
   cardKey = "id",
+  footer,
 }) => {
   const isMobile = useIsMobile();
 
@@ -58,11 +61,11 @@ const MobileTable: React.FC<MobileTableProps> = ({
   // Mobile card layout
   if (isMobile) {
     return (
-      <div className={`space-y-3 ${className}`}>
+      <div className={`space-y-4 px-2 pb-6 ${className}`}>
         {data.map((row, index) => (
-          <Card key={row[cardKey] || index} className="bg-white shadow-sm">
-            <CardContent className="p-4">
-              <div className="space-y-2">
+          <Card key={row[cardKey] || index} className="bg-white shadow-md rounded-2xl border-none overflow-hidden">
+            <CardContent className="p-0">
+              <div className="divide-y divide-slate-50">
                 {columns
                   .filter((col) => !col.hideOnMobile)
                   .map((column) => {
@@ -74,12 +77,12 @@ const MobileTable: React.FC<MobileTableProps> = ({
                     return (
                       <div
                         key={column.key}
-                        className="flex justify-between items-start"
+                        className="flex justify-between items-center p-4"
                       >
-                        <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                        <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
                           {column.mobileLabel || column.label}
                         </span>
-                        <div className="text-sm text-gray-900 text-right max-w-[60%]">
+                        <div className="text-sm font-bold text-slate-800 text-right">
                           {displayValue}
                         </div>
                       </div>
@@ -89,6 +92,11 @@ const MobileTable: React.FC<MobileTableProps> = ({
             </CardContent>
           </Card>
         ))}
+        {footer && (
+          <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 shadow-sm mt-6">
+            {footer}
+          </div>
+        )}
       </div>
     );
   }
@@ -124,6 +132,15 @@ const MobileTable: React.FC<MobileTableProps> = ({
             </TableRow>
           ))}
         </TableBody>
+        {footer && (
+          <TableFooter>
+            <TableRow>
+              <TableCell colSpan={columns.length}>
+                {footer}
+              </TableCell>
+            </TableRow>
+          </TableFooter>
+        )}
       </Table>
     </div>
   );

@@ -39,22 +39,22 @@ export const BalanceDisplay: React.FC<BalanceDisplayProps> = ({
     size === "sm" ? "text-lg" : size === "lg" ? "text-2xl" : "text-xl";
 
   return (
-    <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200">
+    <Card className="bg-gradient-to-br from-primary/5 to-secondary/5 border-primary/20">
       <CardHeader className={cardClass}>
         <CardTitle className={`flex items-center gap-2 ${titleSize}`}>
-          <DollarSign className="h-5 w-5 text-blue-600" />
+          <DollarSign className="h-5 w-5 text-primary" />
           Current Balances
         </CardTitle>
       </CardHeader>
       <CardContent className={cardClass}>
         <div className="space-y-3">
           {/* Total Balance */}
-          <div className="bg-white rounded-lg p-3 border border-blue-100">
+          <div className="bg-white rounded-lg p-3 border border-primary/10">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium text-gray-600">
                 Total Balance
               </span>
-              <span className={`font-bold text-blue-600 ${valueSize}`}>
+              <span className={`font-bold text-primary ${valueSize}`}>
                 {formatCurrency(totalBalance)}
               </span>
             </div>
@@ -63,53 +63,53 @@ export const BalanceDisplay: React.FC<BalanceDisplayProps> = ({
           {showDetails && (
             <div className="grid grid-cols-2 gap-2">
               {/* Cash Balance */}
-              <div className="bg-orange-50 rounded-lg p-2 border border-orange-100">
+              <div className="bg-secondary/5 rounded-lg p-2 border border-secondary/20">
                 <div className="flex items-center gap-2 mb-1">
-                  <Wallet className="h-4 w-4 text-orange-600" />
-                  <span className="text-xs font-medium text-orange-700">
+                  <Wallet className="h-4 w-4 text-secondary" />
+                  <span className="text-xs font-medium text-secondary-foreground">
                     Cash
                   </span>
                 </div>
-                <div className="text-sm font-semibold text-orange-800">
+                <div className="text-sm font-semibold text-secondary-foreground">
                   {formatCurrency(cashBalance)}
                 </div>
               </div>
 
               {/* Bank/Fonepay Balance */}
-              <div className="bg-blue-50 rounded-lg p-2 border border-blue-100">
+              <div className="bg-primary/5 rounded-lg p-2 border border-primary/20">
                 <div className="flex items-center gap-2 mb-1">
-                  <CreditCard className="h-4 w-4 text-blue-600" />
-                  <span className="text-xs font-medium text-blue-700">
+                  <CreditCard className="h-4 w-4 text-primary" />
+                  <span className="text-xs font-medium text-primary">
                     Bank/Fonepay
                   </span>
                 </div>
-                <div className="text-sm font-semibold text-blue-800">
+                <div className="text-sm font-semibold text-primary">
                   {formatCurrency(bankBalance)}
                 </div>
               </div>
 
               {/* Cooperative Balance */}
-              <div className="bg-green-50 rounded-lg p-2 border border-green-100">
+              <div className="bg-primary/10 rounded-lg p-2 border border-primary/20">
                 <div className="flex items-center gap-2 mb-1">
-                  <PiggyBank className="h-4 w-4 text-green-600" />
-                  <span className="text-xs font-medium text-green-700">
+                  <PiggyBank className="h-4 w-4 text-primary" />
+                  <span className="text-xs font-medium text-primary">
                     Cooperative
                   </span>
                 </div>
-                <div className="text-sm font-semibold text-green-800">
+                <div className="text-sm font-semibold text-primary">
                   {formatCurrency(cooperativeBalance)}
                 </div>
               </div>
 
               {/* Esewa Balance */}
-              <div className="bg-purple-50 rounded-lg p-2 border border-purple-100">
+              <div className="bg-primary/5 rounded-lg p-2 border border-primary/10">
                 <div className="flex items-center gap-2 mb-1">
-                  <DollarSign className="h-4 w-4 text-purple-600" />
-                  <span className="text-xs font-medium text-purple-700">
+                  <DollarSign className="h-4 w-4 text-primary" />
+                  <span className="text-xs font-medium text-primary">
                     Esewa
                   </span>
                 </div>
-                <div className="text-sm font-semibold text-purple-800">
+                <div className="text-sm font-semibold text-primary">
                   {formatCurrency(esewaBalance)}
                 </div>
               </div>

@@ -133,7 +133,7 @@ const DepositsTab = () => {
       label: "Amount",
       className: "font-semibold text-gray-700",
       render: (value: number) => (
-        <span className="font-bold text-xl bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+        <span className="font-bold text-xl text-primary">
           NRs. {value.toFixed(2)}
         </span>
       ),
@@ -241,13 +241,13 @@ const DepositsTab = () => {
   const depositedByTypes = ["Customer", "Staff"];
 
   const modeColors = {
-    Cash: "from-green-500 to-emerald-500",
-    Esewa: "from-blue-500 to-cyan-500",
-    Fonepay: "from-purple-500 to-pink-500",
-    "Bank Transfer": "from-indigo-500 to-blue-500",
-    Cheque: "from-orange-500 to-red-500",
-    "Credit Card": "from-violet-500 to-purple-500",
-    "Mobile Banking": "from-teal-500 to-cyan-500",
+    Cash: "from-primary to-primary/80",
+    Esewa: "from-secondary to-secondary/80",
+    Fonepay: "from-primary to-primary/80",
+    "Bank Transfer": "from-secondary to-secondary/80",
+    Cheque: "from-primary to-primary/80",
+    "Credit Card": "from-secondary to-secondary/80",
+    "Mobile Banking": "from-primary to-primary/80",
     Other: "from-gray-500 to-slate-500",
   };
 
@@ -667,7 +667,7 @@ const DepositsTab = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-8">
           {/* Add Deposit Form */}
           <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden">
-            <CardHeader className="bg-emerald-500 text-white p-4 md:p-6">
+            <CardHeader className="bg-primary text-white p-4 md:p-6">
               <CardTitle className="flex items-center gap-3 text-lg md:text-xl font-bold">
                 <div className="p-2 bg-white/20 rounded-xl">
                   <ArrowUpCircle className="h-5 w-5 md:h-6 md:w-6" />
@@ -837,7 +837,7 @@ const DepositsTab = () => {
                 <Button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full h-12 md:h-14 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-black text-lg shadow-lg shadow-emerald-500/20 transition-all active:scale-[0.98]"
+                  className="w-full h-12 md:h-14 rounded-2xl bg-primary hover:bg-primary/90 text-white font-black text-lg shadow-lg shadow-primary/20 transition-all active:scale-[0.98]"
                 >
                   {isSubmitting ? (
                     <div className="flex items-center gap-2">
@@ -856,10 +856,10 @@ const DepositsTab = () => {
           </Card>
 
           {/* Deposit Mode Breakdown */}
-          <Card className="bg-gradient-to-br from-white/90 to-teal-50/90 backdrop-blur-sm border-0 shadow-2xl hover:shadow-3xl transition-all duration-300">
-            <CardHeader className="bg-gradient-to-r from-teal-500 to-cyan-600 text-white rounded-t-lg">
-              <CardTitle className="flex items-center gap-3 text-xl">
-                <div className="p-2 bg-white/20 rounded-lg">
+          <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden transition-all duration-300">
+            <CardHeader className="bg-secondary text-white">
+              <CardTitle className="flex items-center gap-3 text-xl font-bold">
+                <div className="p-2 bg-white/20 rounded-xl">
                   <Wallet className="h-6 w-6" />
                 </div>
                 Deposit Methods
@@ -924,10 +924,10 @@ const DepositsTab = () => {
         {canAddCategory && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Manage Categories */}
-            <Card className="bg-gradient-to-br from-white/90 to-red-50/90 backdrop-blur-sm border-0 shadow-2xl hover:shadow-3xl transition-all duration-300">
-              <CardHeader className="bg-gradient-to-r from-red-500 to-pink-600 text-white rounded-t-lg">
-                <CardTitle className="flex items-center gap-3 text-xl">
-                  <div className="p-2 bg-white/20 rounded-lg">
+            <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden transition-all duration-300">
+              <CardHeader className="bg-primary text-white">
+                <CardTitle className="flex items-center gap-3 text-xl font-bold">
+                  <div className="p-2 bg-white/20 rounded-xl">
                     <CreditCard className="h-6 w-6" />
                   </div>
                   Manage Categories
@@ -939,11 +939,11 @@ const DepositsTab = () => {
                     value={newCategory}
                     onChange={(e) => setNewCategory(e.target.value)}
                     placeholder="Enter new category"
-                    className="h-12"
+                    className="h-11 rounded-xl"
                   />
                   <Button
                     type="submit"
-                    className="w-full h-12 bg-gradient-to-r from-red-500 to-pink-500 text-white"
+                    className="w-full h-12 bg-primary text-white rounded-xl font-bold"
                   >
                     Add Category
                   </Button>
@@ -984,28 +984,93 @@ const DepositsTab = () => {
               />
             </div>
           </CardHeader>
-          <CardContent className={isMobile ? "p-2" : "p-0"}>
-            {/* Total row for mobile */}
-            {!loading && deposits.length > 0 && (
-              <div
-                className={`${isMobile ? "bg-gray-50 p-3 rounded-lg mb-3" : ""}`}
-              >
-                <div className="flex justify-between items-center">
-                  <span className="font-bold text-gray-700">Total:</span>
-                  <span className="font-bold text-green-600">
-                    NRs. {totalDeposits.toFixed(2)}
-                  </span>
-                </div>
-              </div>
-            )}
-
+          <CardContent className="p-0">
             <MobileTable
-              columns={tableColumns}
+              columns={[
+                {
+                  key: "deposit_date",
+                  label: "Date",
+                  render: (val) => format(new Date(val), "MMM dd, yyyy"),
+                  mobileLabel: "Date",
+                },
+                {
+                  key: "amount",
+                  label: "Amount",
+                  className: "text-right font-bold",
+                  render: (val) => <span className="text-primary">रु {Number(val).toFixed(0)}</span>,
+                },
+                {
+                  key: "mode",
+                  label: "Mode",
+                  render: (val) => (
+                    <Badge className={cn("bg-gradient-to-r text-white border-0", modeColors[val as keyof typeof modeColors] || "from-gray-400 to-gray-500")}>
+                      {val}
+                    </Badge>
+                  ),
+                },
+                {
+                  key: "deposited_by",
+                  label: "By",
+                  hideOnMobile: true,
+                  render: (val) => val,
+                },
+                {
+                  key: "actions",
+                  label: "Actions",
+                  className: "text-right",
+                  render: (_, deposit) => (
+                    <div className="flex justify-end gap-1">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedDeposit(deposit);
+                          setIsEditDialogOpen(true);
+                        }}
+                        className="h-8 w-8 p-0"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 w-8 p-0 text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This action cannot be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => handleDelete(deposit.id)}>
+                              Continue
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+                  ),
+                },
+              ]}
               data={deposits}
               loading={loading}
-              emptyMessage="No deposits found. Start recording your deposits to see them here."
-              className={isMobile ? "" : ""}
-              cardKey="id"
+              emptyMessage="No deposits found."
+              footer={
+                <div className="flex justify-between items-center font-bold text-lg">
+                  <span>Page Total</span>
+                  <span className="text-primary">
+                    रु {totalDeposits.toFixed(2)}
+                  </span>
+                </div>
+              }
             />
           </CardContent>
           {deposits.length > 0 && (
@@ -1015,18 +1080,18 @@ const DepositsTab = () => {
                   onClick={() => onPageChange(page - 1)}
                   disabled={page === 1}
                   variant="outline"
-                  className="hover:bg-gradient-to-r hover:from-green-50 hover:to-emerald-50"
+                  className="hover:bg-primary/5"
                 >
                   Previous
                 </Button>
-                <span className="px-4 py-2 bg-gradient-to-r from-teal-50 to-emerald-50 rounded-lg font-medium">
+                <span className="px-4 py-2 bg-primary/5 rounded-lg font-medium">
                   Page {page}
                 </span>
                 <Button
                   onClick={() => onPageChange(page + 1)}
                   disabled={deposits.length < itemsPerPage}
                   variant="outline"
-                  className="hover:bg-gradient-to-r hover:from-green-50 hover:to-emerald-50"
+                  className="hover:bg-primary/5"
                 >
                   Next
                 </Button>
