@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { format, startOfMonth, endOfMonth } from "date-fns";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 import { extractErrorMessage, logError } from "@/utils/errorHandling";
 
 interface DailySummary {

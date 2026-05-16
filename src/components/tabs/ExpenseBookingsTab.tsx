@@ -51,6 +51,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import TransactionDatePicker from "@/components/ui/transaction-date-picker";
 import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 interface ExpenseBooking {
   id: string;

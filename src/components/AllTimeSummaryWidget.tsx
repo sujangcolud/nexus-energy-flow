@@ -23,6 +23,7 @@ import { extractErrorMessage, logError } from "@/utils/errorHandling";
 import { AllTimeSummaryModal } from "./AllTimeSummaryModal";
 import { DateRange } from "react-day-picker";
 import { formatCurrency as formatCurrencyUtil } from "@/lib/calculations";
+import { cn } from "@/lib/utils";
 
 interface AllTimeSummaryData {
   totalIncome: number;

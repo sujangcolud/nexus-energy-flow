@@ -48,6 +48,7 @@ import {
 } from "lucide-react";
 import { format, addDays, differenceInDays, parseISO } from "date-fns";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 import { extractErrorMessage, logError } from "@/utils/errorHandling";
 
 interface DailySummaryData {
