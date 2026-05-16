@@ -4,8 +4,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  TrendingUp,
+import {TrendingUp,
   TrendingDown,
   DollarSign,
   PiggyBank,
@@ -17,8 +16,7 @@ import {
   BarChart3,
   Clock,
   Eye,
-  Loader2,
-} from "lucide-react";
+  Loader2,} from "lucide-react";
 import { toast } from "sonner";
 import { extractErrorMessage, logError } from "@/utils/errorHandling";
 import { AllTimeSummaryModal } from "./AllTimeSummaryModal";
