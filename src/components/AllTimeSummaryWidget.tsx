@@ -17,6 +17,7 @@ import {
   BarChart3,
   Clock,
   Eye,
+  Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { extractErrorMessage, logError } from "@/utils/errorHandling";
