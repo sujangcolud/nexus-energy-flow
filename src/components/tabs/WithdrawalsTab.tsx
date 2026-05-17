@@ -19,7 +19,6 @@ import { toast } from "sonner";
 import TransactionDatePicker from "@/components/ui/transaction-date-picker";
 import { format } from "date-fns";
 import { logError, extractErrorMessage } from "@/utils/errorHandling";
-import AllTimeTotalDisplay from "@/components/AllTimeTotalDisplay";
 import RecordAttachments from "@/components/RecordAttachments";
 import {
   Select,
@@ -423,38 +422,6 @@ const WithdrawalsTab = () => {
           </div>
         </div>
 
-        {/* All-Time Total Display */}
-        <AllTimeTotalDisplay type="withdrawals" className="mb-4 md:mb-6" />
-
-        {/* Quick Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-4 md:mb-6">
-          <Card className="rounded-3xl border-none bg-white shadow-sm overflow-hidden">
-            <CardContent className="p-4 md:p-6">
-              <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Total</p>
-              <p className="text-sm md:text-xl font-bold text-destructive">NRs. {totalWithdrawals.toFixed(2)}</p>
-            </CardContent>
-          </Card>
-          <Card className="rounded-3xl border-none bg-white shadow-sm overflow-hidden">
-            <CardContent className="p-4 md:p-6">
-              <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Entries</p>
-              <p className="text-sm md:text-xl font-bold text-foreground">{withdrawals.length}</p>
-            </CardContent>
-          </Card>
-          <Card className="rounded-3xl border-none bg-white shadow-sm overflow-hidden hidden md:block">
-            <CardContent className="p-4 md:p-6">
-              <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Avg Amount</p>
-              <p className="text-sm md:text-xl font-bold text-foreground">NRs. {averageWithdrawal.toFixed(2)}</p>
-            </CardContent>
-          </Card>
-          <Card className="rounded-3xl border-none bg-white shadow-sm overflow-hidden">
-            <CardContent className="p-4 md:p-6">
-              <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Top Purpose</p>
-              <p className="text-[10px] md:text-sm font-bold text-primary truncate">
-                {topPurpose ? topPurpose[0] : "None"}
-              </p>
-            </CardContent>
-          </Card>
-        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-8">
           {/* Add Withdrawal Form */}

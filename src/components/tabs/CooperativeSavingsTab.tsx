@@ -26,7 +26,6 @@ import { toast } from "sonner";
 import { extractErrorMessage, logError } from "@/utils/errorHandling";
 import TransactionDatePicker from "@/components/ui/transaction-date-picker";
 import { format } from "date-fns";
-import AllTimeTotalDisplay from "@/components/AllTimeTotalDisplay";
 import RecordAttachments from "@/components/RecordAttachments";
 import {
   PiggyBank,
@@ -433,38 +432,6 @@ const CooperativeSavingsTab = () => {
           </div>
         </div>
 
-        {/* All-Time Total Display */}
-        <AllTimeTotalDisplay type="savings" className="mb-4 md:mb-6" />
-
-        {/* Quick Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-4 md:mb-6">
-          <Card className="rounded-3xl border-none bg-white shadow-sm overflow-hidden">
-            <CardContent className="p-4 md:p-6">
-              <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Total</p>
-              <p className="text-sm md:text-xl font-bold text-primary">NRs. {totalSavings.toFixed(2)}</p>
-            </CardContent>
-          </Card>
-          <Card className="rounded-3xl border-none bg-white shadow-sm overflow-hidden">
-            <CardContent className="p-4 md:p-6">
-              <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Members</p>
-              <p className="text-sm md:text-xl font-bold text-foreground">{uniqueMembers}</p>
-            </CardContent>
-          </Card>
-          <Card className="rounded-3xl border-none bg-white shadow-sm overflow-hidden hidden md:block">
-            <CardContent className="p-4 md:p-6">
-              <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Avg Contribution</p>
-              <p className="text-sm md:text-xl font-bold text-foreground">NRs. {averageContribution.toFixed(0)}</p>
-            </CardContent>
-          </Card>
-          <Card className="rounded-3xl border-none bg-white shadow-sm overflow-hidden">
-            <CardContent className="p-4 md:p-6">
-              <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Cycle</p>
-              <p className="text-[10px] md:text-sm font-bold text-primary truncate">
-                {topPeriod ? topPeriod[0] : "None"}
-              </p>
-            </CardContent>
-          </Card>
-        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-8">
           {/* Add Saving Form */}

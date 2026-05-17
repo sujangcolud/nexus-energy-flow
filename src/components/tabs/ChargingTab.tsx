@@ -24,7 +24,6 @@ import { toast } from "sonner";
 import { extractErrorMessage, logError } from "@/utils/errorHandling";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Label } from "@/components/ui/label";
-import AllTimeTotalDisplay from "@/components/AllTimeTotalDisplay";
 import {
   Zap,
   Plus,
@@ -511,36 +510,6 @@ const ChargingTab = () => {
           <MultiChargingEntry categories={categories} onComplete={fetchSessions} />
         </div>
 
-        {/* All-Time Total Display */}
-        <AllTimeTotalDisplay type="charging" className="mb-4 md:mb-6" />
-
-        {/* Quick Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-4 md:mb-6">
-          <Card className="rounded-3xl border-none bg-white shadow-sm overflow-hidden">
-            <CardContent className="p-4 md:p-6">
-              <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Total Revenue</p>
-              <p className="text-sm md:text-xl font-bold text-primary">NRs. {totalSessionCost.toFixed(2)}</p>
-            </CardContent>
-          </Card>
-          <Card className="rounded-3xl border-none bg-white shadow-sm overflow-hidden">
-            <CardContent className="p-4 md:p-6">
-              <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Sessions</p>
-              <p className="text-sm md:text-xl font-bold text-foreground">{sessions.length}</p>
-            </CardContent>
-          </Card>
-          <Card className="rounded-3xl border-none bg-white shadow-sm overflow-hidden hidden md:block">
-            <CardContent className="p-4 md:p-6">
-              <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Avg. Cost</p>
-              <p className="text-sm md:text-xl font-bold text-foreground">NRs. {averageSessionCost.toFixed(2)}</p>
-            </CardContent>
-          </Card>
-          <Card className="rounded-3xl border-none bg-white shadow-sm overflow-hidden hidden md:block">
-            <CardContent className="p-4 md:p-6">
-              <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Total kCal</p>
-              <p className="text-sm md:text-xl font-bold text-foreground">{totalKcal.toFixed(2)}</p>
-            </CardContent>
-          </Card>
-        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-8">
           {/* Charging Session Form */}
