@@ -33,6 +33,7 @@ import {
   Trash2,
   ArrowUpCircle,
   ArrowDownCircle,
+  Edit,
 } from "lucide-react";
 import { DateRange } from "react-day-picker";
 import {
@@ -315,32 +316,6 @@ const SavingsWithdrawalsTab = () => {
           <h1 className="text-xl md:text-2xl font-bold text-foreground">Savings & Withdrawals</h1>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-          <Card className="rounded-3xl border-none bg-white shadow-sm overflow-hidden">
-            <CardContent className="p-4 md:p-6">
-              <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Total Savings</p>
-              <p className="text-sm md:text-xl font-bold text-primary">NRs. {totalSavings.toFixed(2)}</p>
-            </CardContent>
-          </Card>
-          <Card className="rounded-3xl border-none bg-white shadow-sm overflow-hidden">
-            <CardContent className="p-4 md:p-6">
-              <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Total Withdrawals</p>
-              <p className="text-sm md:text-xl font-bold text-destructive">NRs. {totalWithdrawals.toFixed(2)}</p>
-            </CardContent>
-          </Card>
-          <Card className="rounded-3xl border-none bg-white shadow-sm overflow-hidden hidden md:block">
-            <CardContent className="p-4 md:p-6">
-              <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Savings Count</p>
-              <p className="text-sm md:text-xl font-bold text-foreground">{savings.length}</p>
-            </CardContent>
-          </Card>
-          <Card className="rounded-3xl border-none bg-white shadow-sm overflow-hidden hidden md:block">
-            <CardContent className="p-4 md:p-6">
-              <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Withdrawals Count</p>
-              <p className="text-sm md:text-xl font-bold text-foreground">{withdrawals.length}</p>
-            </CardContent>
-          </Card>
-        </div>
 
         <Tabs defaultValue="savings" className="space-y-4">
           <TabsList className="grid w-full grid-cols-2 bg-slate-100 p-1 rounded-2xl h-12">

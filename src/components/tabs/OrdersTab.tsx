@@ -71,7 +71,6 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import useTableControls from "@/hooks/useTableControls";
 import BalanceDisplay from "@/components/ui/balance-display";
-import AllTimeTotalDisplay from "@/components/AllTimeTotalDisplay";
 import MultiOrderEntry from "@/components/MultiOrderEntry";
 import MobileTable from "@/components/ui/mobile-table";
 import { Edit } from "lucide-react";
@@ -106,7 +105,6 @@ interface CartItem {
 const OrdersTab = () => {
   const { user } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
-  const [totalOrdersCount, setTotalOrdersCount] = useState(0);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [paymentMode, setPaymentMode] = useState("");
@@ -150,22 +148,13 @@ const OrdersTab = () => {
         query = query.lte("order_date", format(range.to, "yyyy-MM-dd"));
       }
 
-      const { data, error, count } = await query
+      const { data, error } = await query
         .order("order_date", { ascending: false })
         .order("created_at", { ascending: false })
         .range((page - 1) * itemsPerPage, page * itemsPerPage - 1);
 
       if (error) throw error;
       setOrders(data || []);
-
-      // Get total count without pagination
-      const { count: totalCount, error: countError } = await supabase
-        .from("orders")
-        .select("*", { count: "exact", head: true });
-
-      if (!countError && totalCount !== null) {
-        setTotalOrdersCount(totalCount);
-      }
     } catch (error) {
       console.error("Error fetching orders:", error);
       toast.error("Failed to load orders");
@@ -539,15 +528,6 @@ const OrdersTab = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      {/* Animated Background Elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-20 left-20 w-64 h-64 bg-primary/5 rounded-full blur-3xl animate-pulse"></div>
-        <div
-            className="absolute top-1/3 right-20 w-80 h-80 bg-secondary/5 rounded-full blur-3xl animate-pulse"
-          style={{ animationDelay: "1s" }}
-        ></div>
-      </div>
-
       <div className="space-y-4 md:space-y-6">
         {/* Header */}
         <div className="bg-primary/5 p-4 rounded-3xl mb-4 md:mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -565,83 +545,6 @@ const OrdersTab = () => {
           <MultiOrderEntry onComplete={fetchOrders} />
         </div>
 
-        {/* All-Time Total Display */}
-        <AllTimeTotalDisplay type="orders" className="mb-8" />
-
-        {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card className="bg-white border-none shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 rounded-3xl overflow-hidden">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">
-                    Cart Items
-                  </p>
-                  <p className="text-2xl font-bold text-foreground">
-                    {cart.length}
-                  </p>
-                </div>
-                <div className="p-3 bg-primary rounded-2xl text-white shadow-lg shadow-primary/20">
-                  <ShoppingCart className="h-6 w-6" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white border-none shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 rounded-3xl overflow-hidden">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">
-                    Cart Total
-                  </p>
-                  <p className="text-2xl font-bold text-primary">
-                    NRs. {getCartTotal().toFixed(2)}
-                  </p>
-                </div>
-                <div className="p-3 bg-secondary rounded-2xl text-white shadow-lg shadow-secondary/20">
-                  <DollarSign className="h-6 w-6" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white border-none shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 rounded-3xl overflow-hidden">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">
-                    Total Orders
-                  </p>
-                  <p className="text-2xl font-bold text-foreground">
-                    {totalOrdersCount}
-                  </p>
-                </div>
-                <div className="p-3 bg-primary rounded-2xl text-white shadow-lg shadow-primary/20">
-                  <Package className="h-6 w-6" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white border-none shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 rounded-3xl overflow-hidden">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">
-                    Total Spent
-                  </p>
-                  <p className="text-2xl font-bold text-foreground">
-                    NRs. {totalOrders.toFixed(2)}
-                  </p>
-                </div>
-                <div className="p-3 bg-primary rounded-2xl text-white shadow-lg shadow-primary/20">
-                  <TrendingUp className="h-6 w-6" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Menu Items Section */}
