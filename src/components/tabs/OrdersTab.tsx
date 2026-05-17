@@ -357,11 +357,6 @@ const OrdersTab = () => {
 
   const productCategories = Object.keys(groupedMenuItems);
 
-  useEffect(() => {
-    if (productCategories.length > 0 && !selectedCategory) {
-      setSelectedCategory(productCategories[0]);
-    }
-  }, [productCategories, selectedCategory]);
 
   const filteredMenuItems = () => {
     let allItems = menuItems;
