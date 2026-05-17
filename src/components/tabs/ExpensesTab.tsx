@@ -760,7 +760,7 @@ const ExpensesTab = () => {
                                 {inventoryItems.map((item) => (
                                   <CommandItem
                                     key={item.id}
-                                    value={item.item_name}
+                                    value={`${item.item_name} ${item.id}`}
                                     onSelect={() => {
                                       const qty = parseFloat(formData.quantity || "0");
                                       const cpu = item.unit_cost || 0;

@@ -192,7 +192,7 @@ const ChargingTab = () => {
   const calculateTotalAmount = () => {
     const pctCost = calculatePercentageCost();
     const unitCost = calculateKcalCost();
-    return pctCost > 0 ? pctCost : unitCost;
+    return pctCost + unitCost;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
