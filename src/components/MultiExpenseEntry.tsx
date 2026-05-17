@@ -263,9 +263,9 @@ const MultiExpenseEntry = ({ categories, inventory, onComplete }: Props) => {
                                   {inventory.map((item) => (
                                     <CommandItem
                                       key={item.id}
-                                      value={`${item.item_name} ${item.id}`}
-                                      onSelect={(currentValue) => {
-                                        console.log("Selecting bulk item:", item.item_name);
+                                      value={item.item_name}
+                                      onMouseDown={(e) => e.preventDefault()}
+                                      onSelect={() => {
                                         const amount = (r.quantity * (item.unit_cost || 0)).toFixed(2);
                                         updateRow(i, {
                                           inventory_item_id: item.id,
