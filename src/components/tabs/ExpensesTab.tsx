@@ -79,6 +79,7 @@ import { Check, ChevronsUpDown } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import useTableControls from "@/hooks/useTableControls";
 import MultiExpenseEntry from "@/components/MultiExpenseEntry";
 import { Switch } from "@/components/ui/switch";
@@ -159,6 +160,23 @@ const ExpensesTab = () => {
     format(new Date(), "yyyy-MM-dd"),
   );
   const [inventorySearchOpen, setInventorySearchOpen] = useState(false);
+
+  const handleInventorySelect = (item: InventoryItem) => {
+    const qty = parseFloat(formData.quantity || "0");
+    const cpu = item.unit_cost || 0;
+    const calcAmount = (qty * cpu).toFixed(2);
+    setFormData((prev) => ({
+      ...prev,
+      inventoryItemId: item.id,
+      description: `Purchase: ${item.item_name}`,
+      category: item.category || prev.category,
+      unit: item.base_unit || "",
+      factor: 1,
+      costPerUnit: cpu.toString(),
+      amount: parseFloat(calcAmount) > 0 ? calcAmount : prev.amount,
+    }));
+    setInventorySearchOpen(false);
+  };
 
   const paymentModes = [
     "Cash",
@@ -737,23 +755,25 @@ const ExpensesTab = () => {
                         <ShoppingCart className="h-4 w-4 text-amber-600" />
                         Select Inventory Item *
                       </Label>
-                      <Popover open={inventorySearchOpen} onOpenChange={setInventorySearchOpen}>
+                      <Popover open={inventorySearchOpen} onOpenChange={setInventorySearchOpen} modal={true}>
                         <PopoverTrigger asChild>
                           <Button
                             variant="outline"
                             role="combobox"
-                            aria-expanded={inventorySearchOpen}
                             className="w-full justify-between border-amber-200 focus:ring-amber-500 h-11 rounded-xl"
                           >
-                            {formData.inventoryItemId
-                              ? inventoryItems.find((item) => item.id === formData.inventoryItemId)?.item_name
-                              : "Select inventory item..."}
+                            <span className="truncate">
+                              {formData.inventoryItemId
+                                ? inventoryItems.find((item) => item.id === formData.inventoryItemId)?.item_name
+                                : "Select inventory item..."}
+                            </span>
                             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                           </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
                           <Command filter={(value, search) => {
-                            if (value.toLowerCase().includes(search.toLowerCase())) return 1;
+                            const item = inventoryItems.find(i => i.id === value);
+                            if (item?.item_name.toLowerCase().includes(search.toLowerCase())) return 1;
                             return 0;
                           }}>
                             <CommandInput placeholder="Search inventory..." />
@@ -763,24 +783,8 @@ const ExpensesTab = () => {
                                 {inventoryItems.map((item) => (
                                   <CommandItem
                                     key={item.id}
-                                    value={item.item_name}
-                                    onMouseDown={(e) => e.preventDefault()}
-                                    onSelect={() => {
-                                      const qty = parseFloat(formData.quantity || "0");
-                                      const cpu = item.unit_cost || 0;
-                                      const calcAmount = (qty * cpu).toFixed(2);
-                                      setFormData({
-                                        ...formData,
-                                        inventoryItemId: item.id,
-                                        description: `Purchase: ${item.item_name}`,
-                                        category: item.category || formData.category,
-                                        unit: item.base_unit || "",
-                                        factor: 1,
-                                        costPerUnit: cpu.toString(),
-                                        amount: parseFloat(calcAmount) > 0 ? calcAmount : formData.amount
-                                      });
-                                      setInventorySearchOpen(false);
-                                    }}
+                                    value={item.id}
+                                    onSelect={() => handleInventorySelect(item)}
                                   >
                                     <Check
                                       className={cn(
@@ -1113,65 +1117,62 @@ const ExpensesTab = () => {
 
           {/* Category Breakdown */}
           <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden transition-all duration-300">
-            <CardHeader className="bg-secondary text-white">
-              <CardTitle className="flex items-center gap-3 text-xl font-bold">
-                <div className="p-2 bg-white/20 rounded-xl">
-                  <Tag className="h-6 w-6" />
+            <CardHeader className="bg-secondary text-white p-4">
+              <CardTitle className="flex items-center gap-2 text-lg font-bold">
+                <div className="p-1.5 bg-white/20 rounded-lg">
+                  <Tag className="h-5 w-5" />
                 </div>
                 Category Breakdown
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-6">
+            <CardContent className="p-4">
               {Object.keys(categoryBreakdown).length === 0 ? (
-                <div className="text-center py-8">
-                  <Tag className="h-16 w-16 mx-auto text-gray-300 mb-4" />
-                  <p className="text-gray-500 text-lg font-medium">
-                    No expenses yet
-                  </p>
-                  <p className="text-gray-400">
-                    Add your first expense to see category breakdown!
-                  </p>
+                <div className="text-center py-6">
+                  <Tag className="h-12 w-12 mx-auto text-gray-300 mb-2" />
+                  <p className="text-gray-500 font-medium">No expenses yet</p>
                 </div>
               ) : (
-                <div className="space-y-4">
-                  {Object.entries(categoryBreakdown)
-                    .sort(([, a], [, b]) => b - a)
-                    .map(([category, amount], index) => {
-                      const percentage = (amount / totalExpenses) * 100;
-                      return (
-                        <div
-                          key={category}
-                          className="p-4 bg-gradient-to-r from-white to-purple-50 rounded-lg border border-purple-100 hover:shadow-md transition-all duration-200"
-                          style={{ animationDelay: `${index * 100}ms` }}
-                        >
-                          <div className="flex items-center justify-between mb-2">
-                            <div className="flex items-center gap-3">
-                              <div
-                                className={`w-4 h-4 rounded-full bg-gradient-to-r ${categoryColors[category as keyof typeof categoryColors]}`}
-                              ></div>
-                              <span className="font-medium text-gray-800">
-                                {category}
-                              </span>
-                            </div>
-                            <div className="text-right">
-                              <span className="font-bold text-purple-600">
-                                NRs. {amount.toFixed(2)}
-                              </span>
-                              <div className="text-sm text-gray-500">
-                                {percentage.toFixed(1)}%
+                <ScrollArea className="h-[400px] pr-4">
+                  <div className="space-y-3">
+                    {Object.entries(categoryBreakdown)
+                      .sort(([, a], [, b]) => b - a)
+                      .map(([category, amount], index) => {
+                        const percentage = (amount / totalExpenses) * 100;
+                        return (
+                          <div
+                            key={category}
+                            className="p-3 bg-slate-50 rounded-xl border border-slate-100 hover:shadow-sm transition-all duration-200"
+                            style={{ animationDelay: `${index * 50}ms` }}
+                          >
+                            <div className="flex items-center justify-between mb-1.5">
+                              <div className="flex items-center gap-2">
+                                <div
+                                  className={`w-3 h-3 rounded-full bg-gradient-to-r ${categoryColors[category as keyof typeof categoryColors] || "from-gray-400 to-gray-500"}`}
+                                ></div>
+                                <span className="text-sm font-bold text-slate-700 truncate max-w-[120px]">
+                                  {category}
+                                </span>
+                              </div>
+                              <div className="text-right">
+                                <span className="text-sm font-black text-primary">
+                                  रु {amount.toLocaleString()}
+                                </span>
+                                <div className="text-[10px] font-bold text-muted-foreground uppercase">
+                                  {percentage.toFixed(1)}%
+                                </div>
                               </div>
                             </div>
+                            <div className="w-full bg-slate-200 rounded-full h-1.5">
+                              <div
+                                className={`bg-gradient-to-r ${categoryColors[category as keyof typeof categoryColors] || "from-gray-400 to-gray-500"} h-1.5 rounded-full transition-all duration-500`}
+                                style={{ width: `${percentage}%` }}
+                              ></div>
+                            </div>
                           </div>
-                          <div className="w-full bg-gray-200 rounded-full h-2">
-                            <div
-                              className={`bg-gradient-to-r ${categoryColors[category as keyof typeof categoryColors]} h-2 rounded-full transition-all duration-500`}
-                              style={{ width: `${percentage}%` }}
-                            ></div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                </div>
+                        );
+                      })}
+                  </div>
+                </ScrollArea>
               )}
             </CardContent>
           </Card>
@@ -1179,47 +1180,51 @@ const ExpensesTab = () => {
         {canAddCategory && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Manage Categories */}
-            <Card className="bg-gradient-to-br from-white/90 to-red-50/90 backdrop-blur-sm border-0 shadow-2xl hover:shadow-3xl transition-all duration-300">
-              <CardHeader className="bg-gradient-to-r from-red-500 to-pink-600 text-white rounded-t-lg">
-                <CardTitle className="flex items-center gap-3 text-xl">
-                  <div className="p-2 bg-white/20 rounded-lg">
-                    <Tag className="h-6 w-6" />
+            <Card className="bg-white border-0 shadow-sm rounded-3xl overflow-hidden">
+              <CardHeader className="bg-pink-600 text-white p-4">
+                <CardTitle className="flex items-center gap-2 text-lg font-bold">
+                  <div className="p-1.5 bg-white/20 rounded-lg">
+                    <Tag className="h-5 w-5" />
                   </div>
                   Manage Categories
                 </CardTitle>
               </CardHeader>
-              <CardContent className="p-6">
-                <form onSubmit={handleAddCategory} className="space-y-4">
+              <CardContent className="p-4 space-y-4">
+                <form onSubmit={handleAddCategory} className="flex gap-2">
                   <Input
                     value={newCategory}
                     onChange={(e) => setNewCategory(e.target.value)}
-                    placeholder="Enter new category"
-                    className="h-12"
+                    placeholder="New category..."
+                    className="h-10 rounded-xl"
                   />
                   <Button
                     type="submit"
-                    className="w-full h-12 bg-gradient-to-r from-red-500 to-pink-500 text-white"
+                    size="sm"
+                    className="bg-pink-600 hover:bg-pink-700 text-white rounded-xl font-bold px-4"
                   >
-                    Add Category
+                    Add
                   </Button>
                 </form>
-                <div className="mt-6 space-y-2">
-                  {categories.map((cat) => (
-                    <div
-                      key={cat.id}
-                      className="flex items-center justify-between bg-white p-3 rounded-lg shadow-sm"
-                    >
-                      <span className="font-medium">{cat.name}</span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDeleteCategory(cat.id)}
+                <ScrollArea className="h-[300px] pr-4">
+                  <div className="space-y-2">
+                    {categories.map((cat) => (
+                      <div
+                        key={cat.id}
+                        className="flex items-center justify-between bg-slate-50 p-2.5 rounded-xl border border-slate-100"
                       >
-                        <Trash2 className="h-4 w-4 text-red-500" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
+                        <span className="text-sm font-bold text-slate-700">{cat.name}</span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeleteCategory(cat.id)}
+                          className="h-8 w-8 p-0 text-rose-500 hover:text-rose-600 hover:bg-rose-50"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </ScrollArea>
               </CardContent>
             </Card>
           </div>

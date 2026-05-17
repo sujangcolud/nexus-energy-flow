@@ -111,6 +111,20 @@ const MultiExpenseEntry = ({ categories, inventory, onComplete }: Props) => {
   const [submitting, setSubmitting] = useState(false);
   const [popoverOpen, setPopoverOpen] = useState<Record<number, boolean>>({});
 
+  const handleInventorySelect = (i: number, item: InventoryItem, r: Row) => {
+    const amount = (r.quantity * (item.unit_cost || 0)).toFixed(2);
+    updateRow(i, {
+      inventory_item_id: item.id,
+      description: `Purchase: ${item.item_name}`,
+      category: item.category || r.category,
+      unit_cost: item.unit_cost || 0,
+      unit: item.base_unit,
+      factor: 1,
+      amount: parseFloat(amount) > 0 ? parseFloat(amount) : r.amount,
+    });
+    setPopoverOpen((prev) => ({ ...prev, [i]: false }));
+  };
+
   const updateRow = (i: number, patch: Partial<Row>) =>
     setRows((r) => r.map((row, idx) => (idx === i ? { ...row, ...patch } : row)));
 
@@ -235,12 +249,11 @@ const MultiExpenseEntry = ({ categories, inventory, onComplete }: Props) => {
                     <Label className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5 block">Description</Label>
                     {r.is_inventory_purchase ? (
                       <div className="space-y-2">
-                        <Popover open={popoverOpen[i]} onOpenChange={(val) => setPopoverOpen(prev => ({...prev, [i]: val}))}>
+                          <Popover open={popoverOpen[i]} onOpenChange={(val) => setPopoverOpen(prev => ({...prev, [i]: val}))} modal={true}>
                           <PopoverTrigger asChild>
                             <Button
                               variant="outline"
                               role="combobox"
-                              aria-expanded={popoverOpen[i]}
                               className="w-full justify-between h-11 rounded-xl font-bold border-slate-200 bg-white text-left overflow-hidden"
                             >
                               <span className="truncate">
@@ -252,10 +265,11 @@ const MultiExpenseEntry = ({ categories, inventory, onComplete }: Props) => {
                             </Button>
                           </PopoverTrigger>
                           <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
-                            <Command filter={(value, search) => {
-                              if (value.toLowerCase().includes(search.toLowerCase())) return 1;
-                              return 0;
-                            }}>
+                                <Command filter={(value, search) => {
+                                  const item = inventory.find(it => it.id === value);
+                                  if (item?.item_name.toLowerCase().includes(search.toLowerCase())) return 1;
+                                  return 0;
+                                }}>
                               <CommandInput placeholder="Search inventory..." />
                               <CommandList>
                                 <CommandEmpty>No item found.</CommandEmpty>
@@ -263,21 +277,8 @@ const MultiExpenseEntry = ({ categories, inventory, onComplete }: Props) => {
                                   {inventory.map((item) => (
                                     <CommandItem
                                       key={item.id}
-                                      value={item.item_name}
-                                      onMouseDown={(e) => e.preventDefault()}
-                                      onSelect={() => {
-                                        const amount = (r.quantity * (item.unit_cost || 0)).toFixed(2);
-                                        updateRow(i, {
-                                          inventory_item_id: item.id,
-                                          description: `Purchase: ${item.item_name}`,
-                                          category: item.category || r.category,
-                                          unit_cost: item.unit_cost || 0,
-                                          unit: item.base_unit,
-                                          factor: 1,
-                                          amount: parseFloat(amount) > 0 ? parseFloat(amount) : r.amount
-                                        });
-                                        setPopoverOpen(prev => ({...prev, [i]: false}));
-                                      }}
+                                        value={item.id}
+                                        onSelect={() => handleInventorySelect(i, item, r)}
                                     >
                                       <Check
                                         className={cn(
