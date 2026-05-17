@@ -177,7 +177,10 @@ const ExpensesTab = () => {
         amount: parseFloat(calcAmount) > 0 ? calcAmount : prev.amount,
       };
     });
-    setInventorySearchOpen(false);
+    // Use a timeout to ensure state update is processed before closing popover
+    setTimeout(() => {
+      setInventorySearchOpen(false);
+    }, 150);
   };
 
   const paymentModes = [
@@ -750,20 +753,19 @@ const ExpensesTab = () => {
                 </div>
 
                 {(formData.isInventoryPurchase || formData.isCredit) ? (
-                  <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
+                  <div className="space-y-4">
                     {formData.isInventoryPurchase && (
                     <div className="space-y-2">
-                      <Label htmlFor="inventoryItemId" className="text-sm font-medium flex items-center gap-2">
+                      <Label className="text-sm font-medium flex items-center gap-2">
                         <ShoppingCart className="h-4 w-4 text-amber-600" />
                         Select Inventory Item *
                       </Label>
                       <Popover open={inventorySearchOpen} onOpenChange={setInventorySearchOpen} modal={true}>
                         <PopoverTrigger asChild>
                           <Button
-                            type="button"
                             variant="outline"
                             role="combobox"
-                            className="w-full justify-between border-amber-200 focus:ring-amber-500 h-11 rounded-xl bg-white"
+                            className="w-full justify-between h-11 rounded-xl font-bold border-slate-200 bg-white text-left overflow-hidden"
                           >
                             <span className="truncate">
                               {formData.inventoryItemId
@@ -783,7 +785,15 @@ const ExpensesTab = () => {
                                   <CommandItem
                                     key={item.id}
                                     value={`${item.item_name.toLowerCase()}-${item.id}`}
-                                    onMouseDown={(e) => e.preventDefault()}
+                                    onMouseDown={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                    }}
+                                    onPointerDown={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      handleInventorySelect(item);
+                                    }}
                                     onSelect={() => handleInventorySelect(item)}
                                     className="cursor-pointer pointer-events-auto"
                                   >
@@ -956,7 +966,7 @@ const ExpensesTab = () => {
                     </div>
                   </div>
                 ) : (
-                  <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
+                  <div className="space-y-2">
                     <Label
                       htmlFor="description"
                       className="text-sm font-medium text-gray-700 flex items-center gap-2"
