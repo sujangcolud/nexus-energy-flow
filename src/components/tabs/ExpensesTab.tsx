@@ -770,7 +770,7 @@ const ExpensesTab = () => {
                             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                           </Button>
                         </PopoverTrigger>
-                        <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                        <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start" onOpenAutoFocus={(e) => e.preventDefault()}>
                           <Command shouldFilter={true}>
                             <CommandInput placeholder="Search inventory..." />
                             <CommandList>
@@ -779,9 +779,9 @@ const ExpensesTab = () => {
                                 {inventoryItems.map((item) => (
                                   <CommandItem
                                     key={item.id}
-                                    value={`${item.item_name} ${item.id}`}
-                                    onMouseDown={(e) => e.preventDefault()}
+                                    value={`${item.item_name}-${item.id}`}
                                     onSelect={() => handleInventorySelect(item)}
+                                    className="cursor-pointer pointer-events-auto"
                                   >
                                     <Check
                                       className={cn(

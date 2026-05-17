@@ -448,24 +448,6 @@ const MobileDashboard = () => {
                     <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground px-4 mb-2">Actions</p>
                     <Button
                       variant="ghost"
-                      onClick={handleDailyClosing}
-                      className="w-full justify-start gap-4 h-14 rounded-2xl px-4 hover:bg-primary/5 active:scale-[0.98] transition-all"
-                    >
-                      <div className="p-2 bg-primary/10 rounded-xl text-primary"><Database className="h-5 w-5" /></div>
-                      <span className="font-bold">Daily Closing</span>
-                    </Button>
-                    {showBatchClosing && (
-                      <Button
-                        variant="ghost"
-                        onClick={() => setIsBatchClosingOpen(true)}
-                        className="w-full justify-start gap-4 h-14 rounded-2xl px-4 hover:bg-primary/5 active:scale-[0.98] transition-all"
-                      >
-                        <div className="p-2 bg-primary/10 rounded-xl text-primary"><Calendar className="h-5 w-5" /></div>
-                        <span className="font-bold">Batch Closing</span>
-                      </Button>
-                    )}
-                    <Button
-                      variant="ghost"
                       onClick={() => {
                         navigate("/dashboard/settings");
                         setIsMenuOpen(false);

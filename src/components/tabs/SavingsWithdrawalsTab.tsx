@@ -109,6 +109,7 @@ const SavingsWithdrawalsTab = () => {
     referenceNumber: "",
     paymentMode: "",
     withdrawalFrom: "",
+    sourceCooperative: "",
     remarks: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -224,12 +225,13 @@ const SavingsWithdrawalsTab = () => {
         reference_number: withdrawalsFormData.referenceNumber || null,
         payment_mode: withdrawalsFormData.paymentMode,
         withdrawal_from: withdrawalsFormData.withdrawalFrom,
+        source_cooperative: withdrawalsFormData.sourceCooperative || null,
         remarks: withdrawalsFormData.remarks || null,
         withdrawal_date: transactionDate,
       }]);
       if (error) throw error;
       toast.success("Withdrawal recorded successfully!");
-      setWithdrawalsFormData({ amount: "", purpose: "", recipient: "", referenceNumber: "", paymentMode: "", withdrawalFrom: "", remarks: "" });
+      setWithdrawalsFormData({ amount: "", purpose: "", recipient: "", referenceNumber: "", paymentMode: "", withdrawalFrom: "", sourceCooperative: "", remarks: "" });
       fetchWithdrawals();
     } catch (error) {
       logError("recording withdrawal", error);
@@ -299,6 +301,10 @@ const SavingsWithdrawalsTab = () => {
                   <div className="space-y-1.5">
                     <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Purpose</Label>
                     <Input value={(selectedItem as Withdrawal).purpose} onChange={(e) => setSelectedItem({ ...selectedItem, purpose: e.target.value } as Withdrawal)} className="h-11 rounded-xl" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Bank/Cooperative</Label>
+                    <Input value={(selectedItem as Withdrawal).source_cooperative || ""} onChange={(e) => setSelectedItem({ ...selectedItem, source_cooperative: e.target.value } as Withdrawal)} className="h-11 rounded-xl" />
                   </div>
                 </>
               )}
@@ -420,6 +426,7 @@ const SavingsWithdrawalsTab = () => {
                   <div className="space-y-1.5"><Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">From *</Label><Select value={withdrawalsFormData.withdrawalFrom} onValueChange={(v) => setWithdrawalsFormData({ ...withdrawalsFormData, withdrawalFrom: v })}><SelectTrigger className="h-11 rounded-xl"><SelectValue placeholder="Select" /></SelectTrigger><SelectContent>{withdrawalSources.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent></Select></div>
                   <div className="space-y-1.5"><Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Payment Mode *</Label><Select value={withdrawalsFormData.paymentMode} onValueChange={(v) => setWithdrawalsFormData({ ...withdrawalsFormData, paymentMode: v })}><SelectTrigger className="h-11 rounded-xl"><SelectValue placeholder="Select" /></SelectTrigger><SelectContent>{paymentModes.map((m) => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent></Select></div>
                   <div className="space-y-1.5"><Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Recipient</Label><Input value={withdrawalsFormData.recipient} onChange={(e) => setWithdrawalsFormData({ ...withdrawalsFormData, recipient: e.target.value })} className="h-11 rounded-xl" /></div>
+                  <div className="space-y-1.5"><Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Bank/Cooperative</Label><Input value={withdrawalsFormData.sourceCooperative} onChange={(e) => setWithdrawalsFormData({ ...withdrawalsFormData, sourceCooperative: e.target.value })} className="h-11 rounded-xl" placeholder="e.g. Nabil Bank" /></div>
                   <div className="space-y-1.5"><Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Date</Label><Input type="date" value={transactionDate} onChange={(e) => setTransactionDate(e.target.value)} className="h-11 rounded-xl" /></div>
                   <div className="md:col-span-3 pt-2"><Button type="submit" disabled={isSubmitting} className="w-full h-12 rounded-xl text-lg font-bold shadow-lg shadow-destructive/20" variant="destructive">{isSubmitting ? "Saving..." : "Add Withdrawal"}</Button></div>
                 </form>
