@@ -161,6 +161,23 @@ const ExpensesTab = () => {
   );
   const [inventorySearchOpen, setInventorySearchOpen] = useState(false);
 
+  const handleInventorySelect = (item: InventoryItem) => {
+    const qty = parseFloat(formData.quantity || "0");
+    const cpu = item.unit_cost || 0;
+    const calcAmount = (qty * cpu).toFixed(2);
+    setFormData((prev) => ({
+      ...prev,
+      inventoryItemId: item.id,
+      description: `Purchase: ${item.item_name}`,
+      category: item.category || prev.category,
+      unit: item.base_unit || "",
+      factor: 1,
+      costPerUnit: cpu.toString(),
+      amount: parseFloat(calcAmount) > 0 ? calcAmount : prev.amount,
+    }));
+    setInventorySearchOpen(false);
+  };
+
   const paymentModes = [
     "Cash",
     "Esewa",
@@ -738,23 +755,25 @@ const ExpensesTab = () => {
                         <ShoppingCart className="h-4 w-4 text-amber-600" />
                         Select Inventory Item *
                       </Label>
-                      <Popover open={inventorySearchOpen} onOpenChange={setInventorySearchOpen}>
+                      <Popover open={inventorySearchOpen} onOpenChange={setInventorySearchOpen} modal={true}>
                         <PopoverTrigger asChild>
                           <Button
                             variant="outline"
                             role="combobox"
-                            aria-expanded={inventorySearchOpen}
                             className="w-full justify-between border-amber-200 focus:ring-amber-500 h-11 rounded-xl"
                           >
-                            {formData.inventoryItemId
-                              ? inventoryItems.find((item) => item.id === formData.inventoryItemId)?.item_name
-                              : "Select inventory item..."}
+                            <span className="truncate">
+                              {formData.inventoryItemId
+                                ? inventoryItems.find((item) => item.id === formData.inventoryItemId)?.item_name
+                                : "Select inventory item..."}
+                            </span>
                             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                           </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
                           <Command filter={(value, search) => {
-                            if (value.toLowerCase().includes(search.toLowerCase())) return 1;
+                            const item = inventoryItems.find(i => i.id === value);
+                            if (item?.item_name.toLowerCase().includes(search.toLowerCase())) return 1;
                             return 0;
                           }}>
                             <CommandInput placeholder="Search inventory..." />
@@ -764,23 +783,8 @@ const ExpensesTab = () => {
                                 {inventoryItems.map((item) => (
                                   <CommandItem
                                     key={item.id}
-                                    value={item.item_name}
-                                    onSelect={() => {
-                                      const qty = parseFloat(formData.quantity || "0");
-                                      const cpu = item.unit_cost || 0;
-                                      const calcAmount = (qty * cpu).toFixed(2);
-                                      setFormData({
-                                        ...formData,
-                                        inventoryItemId: item.id,
-                                        description: `Purchase: ${item.item_name}`,
-                                        category: item.category || formData.category,
-                                        unit: item.base_unit || "",
-                                        factor: 1,
-                                        costPerUnit: cpu.toString(),
-                                        amount: parseFloat(calcAmount) > 0 ? calcAmount : formData.amount
-                                      });
-                                      setInventorySearchOpen(false);
-                                    }}
+                                    value={item.id}
+                                    onSelect={() => handleInventorySelect(item)}
                                   >
                                     <Check
                                       className={cn(
