@@ -252,7 +252,10 @@ const MultiExpenseEntry = ({ categories, inventory, onComplete }: Props) => {
                             </Button>
                           </PopoverTrigger>
                           <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
-                            <Command>
+                            <Command filter={(value, search) => {
+                              if (value.toLowerCase().includes(search.toLowerCase())) return 1;
+                              return 0;
+                            }}>
                               <CommandInput placeholder="Search inventory..." />
                               <CommandList>
                                 <CommandEmpty>No item found.</CommandEmpty>
@@ -261,7 +264,8 @@ const MultiExpenseEntry = ({ categories, inventory, onComplete }: Props) => {
                                     <CommandItem
                                       key={item.id}
                                       value={`${item.item_name} ${item.id}`}
-                                      onSelect={() => {
+                                      onSelect={(currentValue) => {
+                                        console.log("Selecting bulk item:", item.item_name);
                                         const amount = (r.quantity * (item.unit_cost || 0)).toFixed(2);
                                         updateRow(i, {
                                           inventory_item_id: item.id,
