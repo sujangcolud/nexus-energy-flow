@@ -583,45 +583,41 @@ const MobileDashboard = () => {
       <main className="pb-safe">
         {!isSubPageActive ? (
           <div className="space-y-6">
-            {/* Welcome Section */}
-            <div className="px-4 pt-6">
-              <div className="bg-slate-900 rounded-[2.5rem] p-8 shadow-2xl relative overflow-hidden group border border-white/5">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-primary/30 transition-all"></div>
-                <div className="absolute bottom-0 left-0 w-24 h-24 bg-secondary/10 rounded-full blur-2xl -ml-12 -mb-12"></div>
+            {/* Welcome Section - Compact Row */}
+            <div className="px-4 pt-4">
+              <div className="bg-slate-900 rounded-2xl p-3 shadow-lg flex items-center justify-between border border-white/10 overflow-hidden relative group">
+                <div className="absolute top-0 right-0 w-24 h-24 bg-primary/20 rounded-full blur-2xl -mr-12 -mt-12"></div>
 
-                <div className="relative z-10 flex items-center justify-between">
-                  <div className="space-y-1">
-                    <h2 className="text-2xl font-black text-white tracking-tight">
+                <div className="flex items-center gap-3 relative z-10">
+                  <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-secondary p-[1.5px] shadow-md">
+                    <div className="w-full h-full bg-slate-900 rounded-[10px] flex items-center justify-center">
+                      <User className="h-5 w-5 text-primary" />
+                    </div>
+                  </div>
+                  <div>
+                    <h2 className="text-sm font-black text-white leading-none">
                       Hello, {user?.name || user?.email?.split('@')[0]}!
                     </h2>
-                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-                      {new Date().toLocaleDateString("en-US", {
-                        weekday: "short",
-                        month: "short",
-                        day: "numeric",
-                      })}
-                    </p>
-                  </div>
-                  <div className="h-16 w-16 rounded-[1.25rem] bg-gradient-to-br from-primary to-secondary p-[2px] shadow-xl transform rotate-3 hover:rotate-0 transition-transform">
-                    <div className="w-full h-full bg-slate-900 rounded-[1.15rem] flex items-center justify-center">
-                      <User className="h-8 w-8 text-primary" />
+                    <div className="flex items-center gap-2 mt-1.5">
+                      <div className="flex items-center gap-1 bg-white/5 px-2 py-0.5 rounded-full border border-white/10">
+                        <span className="h-1.5 w-1.5 bg-primary rounded-full animate-pulse"></span>
+                        <span className="text-[9px] font-black text-primary uppercase tracking-tighter">Online</span>
+                      </div>
+                      <div className="bg-white/5 px-2 py-0.5 rounded-full border border-white/10">
+                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-tighter">
+                          {userRole?.replace('_', ' ')}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                <div className="mt-8 grid grid-cols-2 gap-4 relative z-10">
-                  <div className="bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/10">
-                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Status</p>
-                    <p className="text-sm font-bold text-primary mt-1 flex items-center gap-1.5">
-                      <span className="h-1.5 w-1.5 bg-primary rounded-full animate-pulse"></span>
-                      Online
-                    </p>
-                  </div>
-                  <div className="bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/10">
-                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Role</p>
-                    <p className="text-sm font-bold text-primary mt-1 truncate">
-                      {userRole?.replace('_', ' ')}
-                    </p>
+                <div className="relative z-10 text-right">
+                   <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest bg-white/5 px-2 py-1 rounded-lg border border-white/5">
+                    {new Date().toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                    })}
                   </div>
                 </div>
               </div>
