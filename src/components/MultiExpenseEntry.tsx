@@ -265,11 +265,7 @@ const MultiExpenseEntry = ({ categories, inventory, onComplete }: Props) => {
                             </Button>
                           </PopoverTrigger>
                           <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
-                                <Command filter={(value, search) => {
-                                  const item = inventory.find(it => it.id === value);
-                                  if (item?.item_name.toLowerCase().includes(search.toLowerCase())) return 1;
-                                  return 0;
-                                }}>
+                                <Command shouldFilter={true}>
                               <CommandInput placeholder="Search inventory..." />
                               <CommandList>
                                 <CommandEmpty>No item found.</CommandEmpty>
@@ -277,7 +273,8 @@ const MultiExpenseEntry = ({ categories, inventory, onComplete }: Props) => {
                                   {inventory.map((item) => (
                                     <CommandItem
                                       key={item.id}
-                                        value={item.id}
+                                        value={`${item.item_name} ${item.id}`}
+                                        onMouseDown={(e) => e.preventDefault()}
                                         onSelect={() => handleInventorySelect(i, item, r)}
                                     >
                                       <Check

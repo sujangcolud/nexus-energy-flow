@@ -771,11 +771,7 @@ const ExpensesTab = () => {
                           </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
-                          <Command filter={(value, search) => {
-                            const item = inventoryItems.find(i => i.id === value);
-                            if (item?.item_name.toLowerCase().includes(search.toLowerCase())) return 1;
-                            return 0;
-                          }}>
+                          <Command shouldFilter={true}>
                             <CommandInput placeholder="Search inventory..." />
                             <CommandList>
                               <CommandEmpty>No item found.</CommandEmpty>
@@ -783,7 +779,8 @@ const ExpensesTab = () => {
                                 {inventoryItems.map((item) => (
                                   <CommandItem
                                     key={item.id}
-                                    value={item.id}
+                                    value={`${item.item_name} ${item.id}`}
+                                    onMouseDown={(e) => e.preventDefault()}
                                     onSelect={() => handleInventorySelect(item)}
                                   >
                                     <Check
