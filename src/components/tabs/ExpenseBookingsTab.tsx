@@ -93,7 +93,7 @@ const ExpenseBookingsTab = () => {
   const [canAddCategory, setCanAddCategory] = useState(true); // Default to true as per request
   const [isPaidDialogOpen, setIsPaidDialogOpen] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<ExpenseBooking | null>(null);
-  const [expenseFormData, setExpenseFormData] = useState({ paymentMode: "", remarks: "", paymentDate: "" });
+  const [expenseFormData, setExpenseFormData] = useState({ paymentMode: "Cash", remarks: "", paymentDate: "", paymentAmount: "" });
   const [expandedParties, setExpandedParties] = useState<Record<string, boolean>>({});
 
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -204,7 +204,8 @@ const ExpenseBookingsTab = () => {
     setExpenseFormData({
       paymentMode: "Cash",
       remarks: booking.remarks || "",
-      paymentDate: booking.payment_date || format(new Date(), "yyyy-MM-dd")
+      paymentDate: format(new Date(), "yyyy-MM-dd"),
+      paymentAmount: booking.amount.toString()
     });
     setIsPaidDialogOpen(true);
   };
@@ -286,29 +287,70 @@ const ExpenseBookingsTab = () => {
   const handleExpenseSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user || !selectedBooking) return;
+
+    const paidAmount = parseFloat(expenseFormData.paymentAmount);
+    if (isNaN(paidAmount) || paidAmount <= 0) {
+      toast.error("Please enter a valid amount");
+      return;
+    }
+
     try {
-      const { data, error } = await supabase.rpc("process_inventory_expense", {
-        p_user_id: user.id,
-        p_description: selectedBooking.description,
-        p_amount: selectedBooking.amount,
-        p_category: selectedBooking.category,
-        p_payment_mode: expenseFormData.paymentMode,
-        p_remarks: expenseFormData.remarks || null,
-        p_expense_date: expenseFormData.paymentDate,
-        p_is_inventory_purchase: selectedBooking.is_inventory_purchase || false,
-        p_inventory_item_id: selectedBooking.inventory_item_id || null,
-        p_quantity: selectedBooking.quantity || null,
-        p_unit: selectedBooking.unit || null,
-        p_cost_per_unit: selectedBooking.cost_per_unit || null,
-        p_supplier: selectedBooking.supplier || null,
-        p_invoice_number: selectedBooking.invoice_number || null,
-        p_is_credit: false, // Now it's being paid
-        p_id: selectedBooking.id // Pass the ID to make it atomic
-      });
+      const isPartial = paidAmount < selectedBooking.amount;
 
-      if (error) throw error;
+      if (isPartial) {
+        // 1. Record the actual payment as a NEW plain expense
+        const { error: rpcError } = await supabase.rpc("process_inventory_expense", {
+          p_user_id: user.id,
+          p_description: selectedBooking.description + " (Partial Payment)",
+          p_amount: paidAmount,
+          p_category: selectedBooking.category,
+          p_payment_mode: expenseFormData.paymentMode,
+          p_remarks: expenseFormData.remarks || null,
+          p_expense_date: expenseFormData.paymentDate,
+          p_is_inventory_purchase: false, // Stock stays with the booking until full payment
+          p_supplier: selectedBooking.supplier || null,
+          p_invoice_number: selectedBooking.invoice_number || null,
+          p_is_credit: false
+        });
 
-      toast.success("Expense recorded and balance updated!");
+        if (rpcError) throw rpcError;
+
+        // 2. Update the existing booking with reduced amount
+        const { error: updateError } = await supabase
+          .from("expense_bookings")
+          .update({
+            amount: selectedBooking.amount - paidAmount,
+            remarks: (selectedBooking.remarks || "") + `\n[Paid रु ${paidAmount} on ${expenseFormData.paymentDate}]`
+          })
+          .eq("id", selectedBooking.id);
+
+        if (updateError) throw updateError;
+        toast.success(`Partial payment of रु ${paidAmount} recorded!`);
+      } else {
+        // FULL PAYMENT - use atomic RPC with p_id to transition everything
+        const { error: rpcError } = await supabase.rpc("process_inventory_expense", {
+          p_user_id: user.id,
+          p_description: selectedBooking.description,
+          p_amount: paidAmount,
+          p_category: selectedBooking.category,
+          p_payment_mode: expenseFormData.paymentMode,
+          p_remarks: expenseFormData.remarks || null,
+          p_expense_date: expenseFormData.paymentDate,
+          p_is_inventory_purchase: selectedBooking.is_inventory_purchase || false,
+          p_inventory_item_id: selectedBooking.inventory_item_id || null,
+          p_quantity: selectedBooking.quantity || null,
+          p_unit: selectedBooking.unit || null,
+          p_cost_per_unit: selectedBooking.cost_per_unit || null,
+          p_supplier: selectedBooking.supplier || null,
+          p_invoice_number: selectedBooking.invoice_number || null,
+          p_is_credit: false,
+          p_id: selectedBooking.id
+        });
+
+        if (rpcError) throw rpcError;
+        toast.success("Full payment recorded and booking cleared!");
+      }
+
       setTimeout(() => {
         setIsPaidDialogOpen(false);
         fetchBookings();
@@ -352,6 +394,18 @@ const ExpenseBookingsTab = () => {
                   <span className="text-muted-foreground">Details:</span>
                   <span className="font-medium">{selectedBooking.description}</span>
                 </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Amount to Pay *</Label>
+                <Input
+                  type="number"
+                  value={expenseFormData.paymentAmount}
+                  onChange={(e) => setExpenseFormData({...expenseFormData, paymentAmount: e.target.value})}
+                  className="h-11 rounded-xl font-bold text-lg"
+                />
+                {parseFloat(expenseFormData.paymentAmount) < selectedBooking.amount && (
+                  <p className="text-[10px] text-amber-600 font-bold uppercase">Partial Payment: रु {(selectedBooking.amount - parseFloat(expenseFormData.paymentAmount || "0")).toFixed(2)} will remain</p>
+                )}
               </div>
               <div className="space-y-1.5">
                 <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Payment Date *</Label>

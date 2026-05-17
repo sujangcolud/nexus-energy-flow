@@ -31,6 +31,7 @@ interface Row {
   recipient: string;
   payment_mode: string;
   withdrawal_from: string;
+  source_cooperative: string;
   reference_number: string;
   remarks: string;
 }
@@ -49,6 +50,7 @@ const blankRow = (): Row => ({
   recipient: "",
   payment_mode: "Cash",
   withdrawal_from: "Cooperative",
+  source_cooperative: "",
   reference_number: "",
   remarks: "",
 });
@@ -87,6 +89,7 @@ const MultiWithdrawalEntry = ({ onComplete }: Props) => {
         recipient: r.recipient || null,
         payment_mode: r.payment_mode,
         withdrawal_from: r.withdrawal_from,
+        source_cooperative: r.source_cooperative || null,
         reference_number: r.reference_number || null,
         remarks: r.remarks || null,
       }));
@@ -202,6 +205,15 @@ const MultiWithdrawalEntry = ({ onComplete }: Props) => {
                       ))}
                     </SelectContent>
                   </Select>
+                </div>
+                <div className="md:col-span-2">
+                  <Label className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5 block">Bank/Coop</Label>
+                  <Input
+                    value={r.source_cooperative}
+                    className="h-11 rounded-xl font-bold border-slate-200"
+                    onChange={(e) => updateRow(i, { source_cooperative: e.target.value })}
+                    placeholder="Source..."
+                  />
                 </div>
                 <div className="flex items-center justify-between md:col-span-1">
                   <Button

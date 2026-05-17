@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -20,16 +20,41 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {Plus, Trash2, Layers,
-  ShoppingCart,} from "lucide-react";
+  ShoppingCart,
+  Check,
+  ChevronsUpDown,} from "lucide-react";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 interface Row {
   order_date: string;
   item_name: string;
+  menu_item_id: string;
+  category: string;
   quantity: number;
   rate: number;
   payment_mode: string;
+}
+
+interface MenuItem {
+  id: string;
+  name: string;
+  price: number;
+  category: string;
 }
 
 interface Props {
@@ -41,6 +66,8 @@ const paymentModes = ["Cash", "Esewa", "Fonepay", "Bank", "Cheque", "Credit"];
 const blankRow = (): Row => ({
   order_date: format(new Date(), "yyyy-MM-dd"),
   item_name: "",
+  menu_item_id: "",
+  category: "",
   quantity: 1,
   rate: 0,
   payment_mode: "Cash",
@@ -51,6 +78,38 @@ const MultiOrderEntry = ({ onComplete }: Props) => {
   const [open, setOpen] = useState(false);
   const [rows, setRows] = useState<Row[]>([blankRow()]);
   const [submitting, setSubmitting] = useState(false);
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [popoverOpen, setPopoverOpen] = useState<Record<number, boolean>>({});
+
+  useEffect(() => {
+    if (open) {
+      fetchMenuItems();
+    }
+  }, [open]);
+
+  const fetchMenuItems = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("menu_items")
+        .select("id, name, price, category")
+        .eq("is_available", true)
+        .order("name");
+      if (error) throw error;
+      setMenuItems(data || []);
+    } catch (error) {
+      console.error("Error fetching menu items:", error);
+    }
+  };
+
+  const handleMenuSelect = (i: number, item: MenuItem) => {
+    updateRow(i, {
+      menu_item_id: item.id,
+      item_name: item.name,
+      rate: item.price,
+      category: item.category
+    });
+    setPopoverOpen(prev => ({ ...prev, [i]: false }));
+  };
 
   const updateRow = (i: number, patch: Partial<Row>) =>
     setRows((r) => r.map((row, idx) => (idx === i ? { ...row, ...patch } : row)));
@@ -77,6 +136,7 @@ const MultiOrderEntry = ({ onComplete }: Props) => {
         order_date: r.order_date,
         date: r.order_date,
         item_name: r.item_name,
+        menu_item_id: r.menu_item_id || null,
         quantity: Number(r.quantity),
         rate: Number(r.rate),
         total: total(r),
@@ -133,13 +193,68 @@ const MultiOrderEntry = ({ onComplete }: Props) => {
                   />
                 </div>
                 <div className="md:col-span-3">
-                  <Label className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5 block">Item Name</Label>
-                  <Input
-                    value={r.item_name}
-                    className="h-11 rounded-xl font-bold border-slate-200"
-                    onChange={(e) => updateRow(i, { item_name: e.target.value })}
-                    placeholder="Enter item name..."
-                  />
+                  <Label className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5 block">Menu Item</Label>
+                  <div className="space-y-2">
+                    <Popover
+                      open={popoverOpen[i]}
+                      onOpenChange={(val) => setPopoverOpen(prev => ({...prev, [i]: val}))}
+                      modal={true}
+                    >
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          className="w-full justify-between h-11 rounded-xl font-bold border-slate-200 bg-white text-left overflow-hidden"
+                        >
+                          <span className="truncate">
+                            {r.item_name || "Select item..."}
+                          </span>
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start" onOpenAutoFocus={(e) => e.preventDefault()}>
+                        <Command shouldFilter={true}>
+                          <CommandInput placeholder="Search menu..." />
+                          <CommandList>
+                            <CommandEmpty>No item found.</CommandEmpty>
+                            <CommandGroup>
+                              {menuItems.map((item) => (
+                                <CommandItem
+                                  key={item.id}
+                                  value={`${item.name.toLowerCase()}-${item.id}`}
+                                  onMouseDown={(e) => e.preventDefault()}
+                                  onSelect={() => {
+                                    console.log("MultiOrder: Item selected:", item.name);
+                                    handleMenuSelect(i, item);
+                                  }}
+                                  className="cursor-pointer pointer-events-auto"
+                                >
+                                  <Check
+                                    className={cn(
+                                      "mr-2 h-4 w-4",
+                                      r.menu_item_id === item.id ? "opacity-100" : "opacity-0"
+                                    )}
+                                  />
+                                  <div className="flex flex-col">
+                                    <span className="font-bold">{item.name}</span>
+                                    <span className="text-[10px] text-muted-foreground uppercase">{item.category} - रु {item.price}</span>
+                                  </div>
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                    {(!r.menu_item_id) && (
+                      <Input
+                        value={r.item_name}
+                        className="h-9 rounded-lg font-medium border-slate-200"
+                        onChange={(e) => updateRow(i, { item_name: e.target.value })}
+                        placeholder="Manual item name..."
+                      />
+                    )}
+                  </div>
                 </div>
                 <div className="grid grid-cols-2 md:col-span-3 gap-3">
                   <div>

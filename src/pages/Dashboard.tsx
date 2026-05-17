@@ -548,27 +548,6 @@ const Dashboard = () => {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={handleDailyClosing}
-                className="h-8 text-xs"
-              >
-                <Database className="h-3 w-3 mr-1" />
-                <span className="hidden sm:inline">Daily Closing</span>
-                <span className="sm:hidden">Daily</span>
-              </Button>
-              {showBatchClosing && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsBatchClosingOpen(true)}
-                  className="h-8 text-xs"
-                >
-                  <Calendar className="h-3 w-3 mr-1" />
-                  <span className="hidden sm:inline">Batch</span>
-                </Button>
-              )}
-              <Button
-                variant="outline"
-                size="sm"
                 onClick={handleSignOut}
                 className="h-8 text-xs"
               >
@@ -655,8 +634,6 @@ const Dashboard = () => {
               })}
             </div>
 
-            {/* Financial Summary Widget */}
-            <FinancialSummaryWidget className="mb-8" />
 
             {/* Quick Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
