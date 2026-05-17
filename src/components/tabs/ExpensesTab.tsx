@@ -752,7 +752,10 @@ const ExpensesTab = () => {
                           </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
-                          <Command>
+                          <Command filter={(value, search) => {
+                            if (value.toLowerCase().includes(search.toLowerCase())) return 1;
+                            return 0;
+                          }}>
                             <CommandInput placeholder="Search inventory..." />
                             <CommandList>
                               <CommandEmpty>No item found.</CommandEmpty>
@@ -761,7 +764,8 @@ const ExpensesTab = () => {
                                   <CommandItem
                                     key={item.id}
                                     value={`${item.item_name} ${item.id}`}
-                                    onSelect={() => {
+                                    onSelect={(currentValue) => {
+                                      console.log("Selecting item:", item.item_name);
                                       const qty = parseFloat(formData.quantity || "0");
                                       const cpu = item.unit_cost || 0;
                                       const calcAmount = (qty * cpu).toFixed(2);

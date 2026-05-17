@@ -156,7 +156,7 @@ const MultiChargingEntry = ({ categories, onComplete }: Props) => {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 md:col-span-3 gap-3">
+                <div className="grid grid-cols-2 md:col-span-2 gap-3">
                   <div>
                     <Label className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5 block">Start %</Label>
                     <Input
@@ -179,6 +179,18 @@ const MultiChargingEntry = ({ categories, onComplete }: Props) => {
                       }
                     />
                   </div>
+                </div>
+
+                <div className="md:col-span-1">
+                  <Label className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5 block">Rate/%</Label>
+                  <Input
+                    type="number"
+                    value={r.per_percent_rate}
+                    className="h-11 rounded-xl font-bold border-slate-200"
+                    onChange={(e) =>
+                      updateRow(i, { per_percent_rate: parseFloat(e.target.value) || 0 })
+                    }
+                  />
                 </div>
 
                 <div className="grid grid-cols-2 md:col-span-3 gap-3">
