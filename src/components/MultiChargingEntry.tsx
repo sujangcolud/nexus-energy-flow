@@ -70,8 +70,8 @@ const MultiChargingEntry = ({ categories, onComplete }: Props) => {
   const computeTotal = (r: Row) => {
     const pctCost = Math.max(0, r.end_percentage - r.start_percentage) * r.per_percent_rate;
     const unitCost = r.kcal * r.per_unit_rate;
-    // Calculation is either percentage based or consumed unit based
-    return pctCost > 0 ? pctCost : unitCost;
+    // Calculation is the sum, which handles either/or cases if one is zero
+    return pctCost + unitCost;
   };
 
   const grandTotal = rows.reduce((s, r) => s + computeTotal(r), 0);
