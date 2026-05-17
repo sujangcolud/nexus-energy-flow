@@ -126,7 +126,7 @@ const MultiChargingEntry = ({ categories, onComplete }: Props) => {
           Bulk Sessions
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-5xl w-[95vw] max-h-[95vh] overflow-y-auto p-4 md:p-6 rounded-3xl" aria-describedby={undefined}>
+      <DialogContent className="max-w-7xl w-[95vw] max-h-[95vh] overflow-y-auto p-4 md:p-6 rounded-3xl" aria-describedby={undefined}>
         <DialogHeader className="mb-4">
           <DialogTitle className="text-xl md:text-2xl font-black text-primary flex items-center gap-2">
             <Zap className="h-6 w-6" />
@@ -237,7 +237,26 @@ const MultiChargingEntry = ({ categories, onComplete }: Props) => {
                   </Select>
                 </div>
 
-                <div className="flex items-center justify-between md:col-span-2">
+                <div className="md:col-span-2">
+                  <Label className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5 block">Category</Label>
+                  <Select
+                    value={r.category}
+                    onValueChange={(v) => updateRow(i, { category: v })}
+                  >
+                    <SelectTrigger className="h-11 rounded-xl font-bold border-slate-200 bg-white">
+                      <SelectValue placeholder="Select" />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-xl shadow-2xl">
+                      {categories.map((c) => (
+                        <SelectItem key={c.id} value={c.name} className="font-bold">
+                          {c.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="flex items-center justify-between md:col-span-1">
                   <div className="flex flex-col items-start md:items-end w-full">
                     <Label className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5 block md:hidden">Subtotal</Label>
                     <div className="text-lg font-black text-primary">
