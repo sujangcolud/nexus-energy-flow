@@ -264,7 +264,6 @@ const MultiExpenseEntry = ({ categories, inventory, onComplete }: Props) => {
                                     <CommandItem
                                       key={item.id}
                                       value={item.item_name}
-                                      onMouseDown={(e) => e.preventDefault()}
                                       onSelect={() => {
                                         const amount = (r.quantity * (item.unit_cost || 0)).toFixed(2);
                                         updateRow(i, {
