@@ -779,8 +779,12 @@ const ExpensesTab = () => {
                                 {inventoryItems.map((item) => (
                                   <CommandItem
                                     key={item.id}
-                                    value={`${item.item_name}-${item.id}`}
-                                    onSelect={() => handleInventorySelect(item)}
+                                    value={`${item.item_name.toLowerCase()}-${item.id}`}
+                                    onMouseDown={(e) => e.preventDefault()}
+                                    onSelect={() => {
+                                      console.log("Item selected via onSelect:", item.item_name);
+                                      handleInventorySelect(item);
+                                    }}
                                     className="cursor-pointer pointer-events-auto"
                                   >
                                     <Check
