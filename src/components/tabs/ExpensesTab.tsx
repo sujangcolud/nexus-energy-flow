@@ -763,6 +763,7 @@ const ExpensesTab = () => {
                       <Popover open={inventorySearchOpen} onOpenChange={setInventorySearchOpen} modal={true}>
                         <PopoverTrigger asChild>
                           <Button
+                            type="button"
                             variant="outline"
                             role="combobox"
                             className="w-full justify-between h-11 rounded-xl font-bold border-slate-200 bg-white text-left overflow-hidden"
@@ -785,10 +786,7 @@ const ExpensesTab = () => {
                                   <CommandItem
                                     key={item.id}
                                     value={`${item.item_name.toLowerCase()}-${item.id}`}
-                                    onMouseDown={(e) => {
-                                      e.preventDefault();
-                                      e.stopPropagation();
-                                    }}
+                                    onMouseDown={(e) => e.preventDefault()}
                                     onPointerDown={(e) => {
                                       e.preventDefault();
                                       e.stopPropagation();

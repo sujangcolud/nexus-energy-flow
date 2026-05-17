@@ -108,7 +108,9 @@ const MultiOrderEntry = ({ onComplete }: Props) => {
       rate: item.price,
       category: item.category
     });
-    setPopoverOpen(prev => ({ ...prev, [i]: false }));
+    setTimeout(() => {
+      setPopoverOpen(prev => ({ ...prev, [i]: false }));
+    }, 150);
   };
 
   const updateRow = (i: number, patch: Partial<Row>) =>
@@ -202,6 +204,7 @@ const MultiOrderEntry = ({ onComplete }: Props) => {
                     >
                       <PopoverTrigger asChild>
                         <Button
+                          type="button"
                           variant="outline"
                           role="combobox"
                           className="w-full justify-between h-11 rounded-xl font-bold border-slate-200 bg-white text-left overflow-hidden"
@@ -223,6 +226,11 @@ const MultiOrderEntry = ({ onComplete }: Props) => {
                                   key={item.id}
                                   value={`${item.name.toLowerCase()}-${item.id}`}
                                   onMouseDown={(e) => e.preventDefault()}
+                                  onPointerDown={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    handleMenuSelect(i, item);
+                                  }}
                                   onSelect={() => handleMenuSelect(i, item)}
                                   className="cursor-pointer pointer-events-auto"
                                 >

@@ -122,7 +122,9 @@ const MultiExpenseEntry = ({ categories, inventory, onComplete }: Props) => {
       factor: 1,
       amount: parseFloat(amount) > 0 ? parseFloat(amount) : r.amount,
     });
-    setPopoverOpen((prev) => ({ ...prev, [i]: false }));
+    setTimeout(() => {
+      setPopoverOpen((prev) => ({ ...prev, [i]: false }));
+    }, 150);
   };
 
   const updateRow = (i: number, patch: Partial<Row>) =>
@@ -252,6 +254,7 @@ const MultiExpenseEntry = ({ categories, inventory, onComplete }: Props) => {
                           <Popover open={popoverOpen[i]} onOpenChange={(val) => setPopoverOpen(prev => ({...prev, [i]: val}))} modal={true}>
                           <PopoverTrigger asChild>
                             <Button
+                              type="button"
                               variant="outline"
                               role="combobox"
                               className="w-full justify-between h-11 rounded-xl font-bold border-slate-200 bg-white text-left overflow-hidden"
@@ -273,10 +276,15 @@ const MultiExpenseEntry = ({ categories, inventory, onComplete }: Props) => {
                                   {inventory.map((item) => (
                                     <CommandItem
                                       key={item.id}
-                                        value={`${item.item_name.toLowerCase()}-${item.id}`}
-                                        onMouseDown={(e) => e.preventDefault()}
-                                        onSelect={() => handleInventorySelect(i, item, r)}
-                                        className="cursor-pointer pointer-events-auto"
+                                      value={`${item.item_name.toLowerCase()}-${item.id}`}
+                                      onMouseDown={(e) => e.preventDefault()}
+                                      onPointerDown={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        handleInventorySelect(i, item, r);
+                                      }}
+                                      onSelect={() => handleInventorySelect(i, item, r)}
+                                      className="cursor-pointer pointer-events-auto"
                                     >
                                       <Check
                                         className={cn(
