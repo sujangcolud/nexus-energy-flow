@@ -19,8 +19,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {Plus, Trash2, Layers,
-  Receipt,} from "lucide-react";
+  Receipt, Check, ChevronsUpDown} from "lucide-react";
+import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
@@ -95,6 +109,7 @@ const MultiExpenseEntry = ({ categories, inventory, onComplete }: Props) => {
   const [open, setOpen] = useState(false);
   const [rows, setRows] = useState<Row[]>([blankRow()]);
   const [submitting, setSubmitting] = useState(false);
+  const [popoverOpen, setPopoverOpen] = useState<Record<number, boolean>>({});
 
   const updateRow = (i: number, patch: Partial<Row>) =>
     setRows((r) => r.map((row, idx) => (idx === i ? { ...row, ...patch } : row)));
@@ -220,35 +235,60 @@ const MultiExpenseEntry = ({ categories, inventory, onComplete }: Props) => {
                     <Label className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5 block">Description</Label>
                     {r.is_inventory_purchase ? (
                       <div className="space-y-2">
-                        <Select
-                          value={r.inventory_item_id}
-                          onValueChange={(v) => {
-                            const item = inventory.find(it => it.id === v);
-                            if (item) {
-                              const amount = (r.quantity * (item.unit_cost || 0)).toFixed(2);
-                              updateRow(i, {
-                                inventory_item_id: v,
-                                description: `Purchase: ${item.item_name}`,
-                                category: item.category || r.category,
-                                unit_cost: item.unit_cost || 0,
-                                unit: item.base_unit,
-                                factor: 1,
-                                amount: parseFloat(amount) > 0 ? parseFloat(amount) : r.amount
-                              });
-                            }
-                          }}
-                        >
-                          <SelectTrigger className="h-11 rounded-xl font-bold border-slate-200 bg-white">
-                            <SelectValue placeholder="Select inventory item" />
-                          </SelectTrigger>
-                          <SelectContent className="rounded-xl shadow-2xl">
-                            {inventory.map((item) => (
-                              <SelectItem key={item.id} value={item.id} className="font-bold">
-                                  {item.item_name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <Popover open={popoverOpen[i]} onOpenChange={(val) => setPopoverOpen(prev => ({...prev, [i]: val}))}>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              aria-expanded={popoverOpen[i]}
+                              className="w-full justify-between h-11 rounded-xl font-bold border-slate-200 bg-white text-left overflow-hidden"
+                            >
+                              <span className="truncate">
+                                {r.inventory_item_id
+                                  ? inventory.find((item) => item.id === r.inventory_item_id)?.item_name
+                                  : "Select inventory item..."}
+                              </span>
+                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                            <Command>
+                              <CommandInput placeholder="Search inventory..." />
+                              <CommandList>
+                                <CommandEmpty>No item found.</CommandEmpty>
+                                <CommandGroup>
+                                  {inventory.map((item) => (
+                                    <CommandItem
+                                      key={item.id}
+                                      value={item.item_name}
+                                      onSelect={() => {
+                                        const amount = (r.quantity * (item.unit_cost || 0)).toFixed(2);
+                                        updateRow(i, {
+                                          inventory_item_id: item.id,
+                                          description: `Purchase: ${item.item_name}`,
+                                          category: item.category || r.category,
+                                          unit_cost: item.unit_cost || 0,
+                                          unit: item.base_unit,
+                                          factor: 1,
+                                          amount: parseFloat(amount) > 0 ? parseFloat(amount) : r.amount
+                                        });
+                                        setPopoverOpen(prev => ({...prev, [i]: false}));
+                                      }}
+                                    >
+                                      <Check
+                                        className={cn(
+                                          "mr-2 h-4 w-4",
+                                          r.inventory_item_id === item.id ? "opacity-100" : "opacity-0"
+                                        )}
+                                      />
+                                      {item.item_name}
+                                    </CommandItem>
+                                  ))}
+                                </CommandGroup>
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
                         <Input
                           value={r.description}
                           className="h-9 rounded-lg font-medium border-slate-200"
