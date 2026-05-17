@@ -223,10 +223,7 @@ const MultiOrderEntry = ({ onComplete }: Props) => {
                                   key={item.id}
                                   value={`${item.name.toLowerCase()}-${item.id}`}
                                   onMouseDown={(e) => e.preventDefault()}
-                                  onSelect={() => {
-                                    console.log("MultiOrder: Item selected:", item.name);
-                                    handleMenuSelect(i, item);
-                                  }}
+                                  onSelect={() => handleMenuSelect(i, item)}
                                   className="cursor-pointer pointer-events-auto"
                                 >
                                   <Check

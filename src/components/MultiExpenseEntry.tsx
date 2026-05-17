@@ -275,10 +275,7 @@ const MultiExpenseEntry = ({ categories, inventory, onComplete }: Props) => {
                                       key={item.id}
                                         value={`${item.item_name.toLowerCase()}-${item.id}`}
                                         onMouseDown={(e) => e.preventDefault()}
-                                        onSelect={() => {
-                                          console.log("MultiExpense: Item selected:", item.item_name);
-                                          handleInventorySelect(i, item, r);
-                                        }}
+                                        onSelect={() => handleInventorySelect(i, item, r)}
                                         className="cursor-pointer pointer-events-auto"
                                     >
                                       <Check

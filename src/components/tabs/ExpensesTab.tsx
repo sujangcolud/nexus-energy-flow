@@ -162,19 +162,21 @@ const ExpensesTab = () => {
   const [inventorySearchOpen, setInventorySearchOpen] = useState(false);
 
   const handleInventorySelect = (item: InventoryItem) => {
-    const qty = parseFloat(formData.quantity || "0");
-    const cpu = item.unit_cost || 0;
-    const calcAmount = (qty * cpu).toFixed(2);
-    setFormData((prev) => ({
-      ...prev,
-      inventoryItemId: item.id,
-      description: `Purchase: ${item.item_name}`,
-      category: item.category || prev.category,
-      unit: item.base_unit || "",
-      factor: 1,
-      costPerUnit: cpu.toString(),
-      amount: parseFloat(calcAmount) > 0 ? calcAmount : prev.amount,
-    }));
+    setFormData((prev) => {
+      const qty = parseFloat(prev.quantity || "0");
+      const cpu = item.unit_cost || 0;
+      const calcAmount = (qty * cpu).toFixed(2);
+      return {
+        ...prev,
+        inventoryItemId: item.id,
+        description: `Purchase: ${item.item_name}`,
+        category: item.category || prev.category,
+        unit: item.base_unit || "",
+        factor: 1,
+        costPerUnit: cpu.toString(),
+        amount: parseFloat(calcAmount) > 0 ? calcAmount : prev.amount,
+      };
+    });
     setInventorySearchOpen(false);
   };
 
@@ -758,9 +760,10 @@ const ExpensesTab = () => {
                       <Popover open={inventorySearchOpen} onOpenChange={setInventorySearchOpen} modal={true}>
                         <PopoverTrigger asChild>
                           <Button
+                            type="button"
                             variant="outline"
                             role="combobox"
-                            className="w-full justify-between border-amber-200 focus:ring-amber-500 h-11 rounded-xl"
+                            className="w-full justify-between border-amber-200 focus:ring-amber-500 h-11 rounded-xl bg-white"
                           >
                             <span className="truncate">
                               {formData.inventoryItemId
@@ -781,10 +784,7 @@ const ExpensesTab = () => {
                                     key={item.id}
                                     value={`${item.item_name.toLowerCase()}-${item.id}`}
                                     onMouseDown={(e) => e.preventDefault()}
-                                    onSelect={() => {
-                                      console.log("Item selected via onSelect:", item.item_name);
-                                      handleInventorySelect(item);
-                                    }}
+                                    onSelect={() => handleInventorySelect(item)}
                                     className="cursor-pointer pointer-events-auto"
                                   >
                                     <Check
@@ -793,7 +793,7 @@ const ExpensesTab = () => {
                                         formData.inventoryItemId === item.id ? "opacity-100" : "opacity-0"
                                       )}
                                     />
-                                    {item.item_name} ({item.quantity} {item.base_unit} in stock)
+                                    {item.item_name}
                                   </CommandItem>
                                 ))}
                               </CommandGroup>
