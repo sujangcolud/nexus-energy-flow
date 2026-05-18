@@ -658,18 +658,67 @@ const ExpensesTab = () => {
                           />
                         </div>
                         <div className="col-span-2 space-y-1.5">
-                          <Label className="text-[10px] font-bold uppercase text-muted-foreground">Item ID (UUID)</Label>
-                          <Input
-                            value={selectedExpense.inventory_item_id || ""}
-                            onChange={(e) =>
-                              setSelectedExpense({
-                                ...selectedExpense,
-                                inventory_item_id: e.target.value,
-                              })
-                            }
-                            placeholder="Required"
-                            className="h-10 rounded-lg"
-                          />
+                          <Label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Select Inventory Item</Label>
+                          <Popover modal={false}>
+                            <PopoverTrigger asChild>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                role="combobox"
+                                className="w-full justify-between h-10 rounded-lg font-bold border-slate-200 bg-white text-left overflow-hidden px-3"
+                              >
+                                <span className="truncate">
+                                  {selectedExpense.inventory_item_id
+                                    ? inventoryItems.find((item) => item.id === selectedExpense.inventory_item_id)?.item_name
+                                    : "Select inventory item..."}
+                                </span>
+                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start" onOpenAutoFocus={(e) => e.preventDefault()}>
+                              <Command shouldFilter={true}>
+                                <CommandInput placeholder="Search inventory..." />
+                                <CommandList>
+                                  <CommandEmpty>No item found.</CommandEmpty>
+                                  <CommandGroup>
+                                    {inventoryItems.map((item) => (
+                                      <CommandItem
+                                        key={item.id}
+                                        value={`${item.item_name.toLowerCase()}-${item.id}`}
+                                        onMouseDown={(e) => e.preventDefault()}
+                                        onPointerDown={(e) => {
+                                          e.stopPropagation();
+                                          setSelectedExpense({
+                                            ...selectedExpense,
+                                            inventory_item_id: item.id,
+                                            category: item.category || selectedExpense.category,
+                                            unit: item.base_unit || selectedExpense.unit
+                                          });
+                                        }}
+                                        onSelect={() => {
+                                          setSelectedExpense({
+                                            ...selectedExpense,
+                                            inventory_item_id: item.id,
+                                            category: item.category || selectedExpense.category,
+                                            unit: item.base_unit || selectedExpense.unit
+                                          });
+                                        }}
+                                        className="cursor-pointer pointer-events-auto"
+                                      >
+                                        <Check
+                                          className={cn(
+                                            "mr-2 h-4 w-4",
+                                            selectedExpense.inventory_item_id === item.id ? "opacity-100" : "opacity-0"
+                                          )}
+                                        />
+                                        {item.item_name}
+                                      </CommandItem>
+                                    ))}
+                                  </CommandGroup>
+                                </CommandList>
+                              </Command>
+                            </PopoverContent>
+                          </Popover>
                         </div>
                       </>
                     )}
@@ -762,7 +811,7 @@ const ExpensesTab = () => {
                         <ShoppingCart className="h-4 w-4 text-amber-600" />
                         Select Inventory Item *
                       </Label>
-                      <Popover open={inventorySearchOpen} onOpenChange={setInventorySearchOpen}>
+                      <Popover open={inventorySearchOpen} onOpenChange={setInventorySearchOpen} modal={false}>
                         <PopoverTrigger asChild>
                           <Button
                             type="button"
