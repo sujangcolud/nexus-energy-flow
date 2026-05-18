@@ -74,6 +74,35 @@ const MobileDashboard = () => {
   const [isDailyClosingOpen, setIsDailyClosingOpen] = useState(false);
   const [isBatchClosingOpen, setIsBatchClosingOpen] = useState(false);
   const [showBatchClosing, setShowBatchClosing] = useState(true);
+  const [scrollTilt, setScrollTilt] = useState(0);
+
+  // Scroll velocity tracking for 3D tilt
+  useEffect(() => {
+    let lastScrollY = window.scrollY;
+    let timeoutId: NodeJS.Timeout;
+
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      const velocity = currentScrollY - lastScrollY;
+      lastScrollY = currentScrollY;
+
+      // Calculate tilt based on velocity, capped at 12deg
+      const tilt = Math.max(-12, Math.min(12, velocity * 0.5));
+      setScrollTilt(tilt);
+
+      // Snap back to flat after scroll stops
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        setScrollTilt(0);
+      }, 150);
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      clearTimeout(timeoutId);
+    };
+  }, []);
 
   // Update time every minute
   useEffect(() => {
@@ -507,11 +536,11 @@ const MobileDashboard = () => {
 
   // Mobile app grid
   const MobileAppGrid = () => (
-    <div className="p-4 space-y-8">
+    <div className="p-4 space-y-8 dashboard-perspective">
       {Object.entries(groupedItems).map(([category, items]) => {
         const CategoryIcon = getCategoryIcon(category);
         return (
-          <div key={category} className="space-y-4">
+          <div key={category} className="space-y-4" style={{ transformStyle: 'preserve-3d' }}>
             <div className="flex items-center justify-between px-2">
               <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-muted-foreground">
                 <CategoryIcon className="h-3.5 w-3.5" />
@@ -519,7 +548,7 @@ const MobileDashboard = () => {
               </div>
               <div className="h-[1px] flex-grow ml-4 bg-slate-100"></div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-4" style={{ transformStyle: 'preserve-3d' }}>
               {items.map((item) => {
                 const Icon = item.icon;
                 return (
@@ -529,15 +558,16 @@ const MobileDashboard = () => {
                       navigate(item.path);
                       setIsMenuOpen(false);
                     }}
-                    className="group cursor-pointer transition-all duration-300 hover:shadow-xl active:scale-[0.96] border-none shadow-sm bg-white rounded-3xl overflow-hidden"
+                    style={{ transform: `rotateX(${scrollTilt}deg)` }}
+                    className="group cursor-pointer scroll-responsive-card press-3d border-none shadow-sm bg-white rounded-3xl overflow-hidden"
                   >
-                    <CardContent className="p-5 flex flex-col items-center text-center space-y-4">
+                    <CardContent className="p-5 flex flex-col items-center text-center space-y-4" style={{ transformStyle: 'preserve-3d' }}>
                       <div
-                        className={`h-14 w-14 rounded-2xl bg-gradient-to-br ${item.color} flex items-center justify-center shadow-lg transform group-hover:rotate-6 transition-transform`}
+                        className={`h-14 w-14 rounded-2xl bg-gradient-to-br ${item.color} flex items-center justify-center shadow-lg transform group-hover:rotate-6 transition-transform z-float-icon`}
                       >
                         <Icon className="h-7 w-7 text-white" />
                       </div>
-                      <div className="space-y-1">
+                      <div className="space-y-1 z-float-text" style={{ transformStyle: 'preserve-3d' }}>
                         <p className="font-black text-xs uppercase tracking-tight text-slate-800">
                           {item.label}
                         </p>
