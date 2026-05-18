@@ -817,17 +817,18 @@ const ExpensesTab = () => {
                             type="button"
                             variant="outline"
                             role="combobox"
+                            aria-expanded={inventorySearchOpen}
                             className="w-full justify-between h-11 rounded-xl font-bold border-slate-200 bg-white text-left overflow-hidden"
                           >
                             <span className="truncate">
                               {formData.inventoryItemId
-                                ? inventoryItems.find((item) => item.id === formData.inventoryItemId)?.item_name
+                                ? inventoryItems.find((item) => item.id === formData.inventoryItemId)?.item_name || "Select inventory item..."
                                 : "Select inventory item..."}
                             </span>
-                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            <ChevronsUpDown className={cn("ml-2 h-4 w-4 shrink-0 opacity-50 transition-transform", inventorySearchOpen && "rotate-180")} />
                           </Button>
                         </PopoverTrigger>
-                        <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start" onOpenAutoFocus={(e) => e.preventDefault()}>
+                        <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
                           <Command shouldFilter={true}>
                             <CommandInput placeholder="Search inventory..." />
                             <CommandList>
@@ -836,14 +837,12 @@ const ExpensesTab = () => {
                                 {inventoryItems.map((item) => (
                                   <CommandItem
                                     key={item.id}
-                                    value={`${item.item_name.toLowerCase()}-${item.id}`}
-                                    onMouseDown={(e) => e.preventDefault()}
-                                    onPointerDown={(e) => {
-                                      e.stopPropagation();
+                                    value={item.item_name}
+                                    onSelect={() => {
                                       handleInventorySelect(item);
+                                      setInventorySearchOpen(false);
                                     }}
-                                    onSelect={() => handleInventorySelect(item)}
-                                    className="cursor-pointer pointer-events-auto"
+                                    className="cursor-pointer"
                                   >
                                     <Check
                                       className={cn(
