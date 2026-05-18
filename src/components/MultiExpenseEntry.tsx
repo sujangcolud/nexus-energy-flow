@@ -114,12 +114,14 @@ const MultiExpenseEntry = ({ categories, inventory, onComplete }: Props) => {
   const [popoverOpen, setPopoverOpen] = useState<Record<number, boolean>>({});
 
   const handleInventorySelect = (i: number, item: InventoryItem, r: Row) => {
-    const amount = (r.quantity * (item.unit_cost || 0)).toFixed(2);
+    const qty = r.quantity || 0;
+    const cpu = item.unit_cost || 0;
+    const amount = (qty * cpu).toFixed(2);
     updateRow(i, {
       inventory_item_id: item.id,
       description: `Purchase: ${item.item_name}`,
       category: item.category || r.category,
-      unit_cost: item.unit_cost || 0,
+      unit_cost: cpu,
       unit: item.base_unit,
       factor: 1,
       amount: parseFloat(amount) > 0 ? parseFloat(amount) : r.amount,
@@ -157,7 +159,7 @@ const MultiExpenseEntry = ({ categories, inventory, onComplete }: Props) => {
       // Use RPC for each row to handle potential inventory updates
       for (let i = rows.length - 1; i >= 0; i--) {
         const r = rows[i];
-        const { error } = await supabase.rpc("process_inventory_expense", {
+        const { error, data } = await supabase.rpc("process_inventory_expense", {
           p_user_id: user.id,
           p_description: r.description,
           p_amount: Number(r.amount),
@@ -166,7 +168,7 @@ const MultiExpenseEntry = ({ categories, inventory, onComplete }: Props) => {
           p_remarks: r.remarks || null,
           p_expense_date: r.expense_date,
           p_is_inventory_purchase: r.is_inventory_purchase,
-          p_inventory_item_id: r.inventory_item_id || null,
+          p_inventory_item_id: (r.is_inventory_purchase && r.inventory_item_id) ? r.inventory_item_id : null,
           p_quantity: r.is_inventory_purchase ? Number(r.quantity) : null,
           p_unit: r.is_inventory_purchase ? r.unit : null,
           p_cost_per_unit: r.is_inventory_purchase ? Number(r.unit_cost) : null,
