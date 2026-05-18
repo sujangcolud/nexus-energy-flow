@@ -257,53 +257,52 @@ const MultiExpenseEntry = ({ categories, inventory, onComplete }: Props) => {
                     {r.is_inventory_purchase ? (
                       <div className="space-y-2">
                           <Popover open={popoverOpen[i]} onOpenChange={(val) => setPopoverOpen(prev => ({...prev, [i]: val}))} modal={false}>
-                          <PopoverTrigger asChild>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              role="combobox"
-                              className="w-full justify-between h-11 rounded-xl font-bold border-slate-200 bg-white text-left overflow-hidden"
-                            >
-                              <span className="truncate">
-                                {r.inventory_item_id
-                                  ? inventory.find((item) => item.id === r.inventory_item_id)?.item_name
-                                  : "Select inventory item..."}
-                              </span>
-                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start" onOpenAutoFocus={(e) => e.preventDefault()}>
-                                <Command shouldFilter={true}>
-                              <CommandInput placeholder="Search inventory..." />
-                              <CommandList>
-                                <CommandEmpty>No item found.</CommandEmpty>
-                                <CommandGroup>
-                                  {inventory.map((item) => (
-                                    <CommandItem
-                                      key={item.id}
-                                      value={`${item.item_name.toLowerCase()}-${item.id}`}
-                                      onMouseDown={(e) => e.preventDefault()}
-                                      onPointerDown={(e) => {
-                                        e.stopPropagation();
-                                        handleInventorySelect(i, item, r);
-                                      }}
-                                      onSelect={() => handleInventorySelect(i, item, r)}
-                                      className="cursor-pointer pointer-events-auto"
-                                    >
-                                      <Check
-                                        className={cn(
-                                          "mr-2 h-4 w-4",
-                                          r.inventory_item_id === item.id ? "opacity-100" : "opacity-0"
-                                        )}
-                                      />
-                                      {item.item_name}
-                                    </CommandItem>
-                                  ))}
-                                </CommandGroup>
-                              </CommandList>
-                            </Command>
-                          </PopoverContent>
-                        </Popover>
+                            <PopoverTrigger asChild>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                role="combobox"
+                                aria-expanded={popoverOpen[i]}
+                                className="w-full justify-between h-11 rounded-xl font-bold border-slate-200 bg-white text-left overflow-hidden"
+                              >
+                                <span className="truncate">
+                                  {r.inventory_item_id
+                                    ? inventory.find((item) => item.id === r.inventory_item_id)?.item_name || "Select inventory item..."
+                                    : "Select inventory item..."}
+                                </span>
+                                <ChevronsUpDown className={cn("ml-2 h-4 w-4 shrink-0 opacity-50 transition-transform", popoverOpen[i] && "rotate-180")} />
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                              <Command shouldFilter={true}>
+                                <CommandInput placeholder="Search inventory..." />
+                                <CommandList>
+                                  <CommandEmpty>No item found.</CommandEmpty>
+                                  <CommandGroup>
+                                    {inventory.map((item) => (
+                                      <CommandItem
+                                        key={item.id}
+                                        value={item.item_name}
+                                        onSelect={() => {
+                                          handleInventorySelect(i, item, r);
+                                          setPopoverOpen(prev => ({...prev, [i]: false}));
+                                        }}
+                                        className="cursor-pointer"
+                                      >
+                                        <Check
+                                          className={cn(
+                                            "mr-2 h-4 w-4",
+                                            r.inventory_item_id === item.id ? "opacity-100" : "opacity-0"
+                                          )}
+                                        />
+                                        {item.item_name}
+                                      </CommandItem>
+                                    ))}
+                                  </CommandGroup>
+                                </CommandList>
+                              </Command>
+                            </PopoverContent>
+                          </Popover>
                         <Input
                           value={r.description}
                           className="h-9 rounded-lg font-medium border-slate-200"
