@@ -2158,14 +2158,17 @@ export type Database = {
           p_cost_per_unit?: number
           p_description: string
           p_expense_date: string
-          p_inventory_item_id?: string
-          p_invoice_number?: string
+          p_id?: string | null
+          p_inventory_item_id?: string | null
+          p_invoice_number?: string | null
+          p_is_credit?: boolean
           p_is_inventory_purchase?: boolean
+          p_manual_conversion_factor?: number | null
           p_payment_mode: string
-          p_quantity?: number
-          p_remarks: string
-          p_supplier?: string
-          p_unit?: string
+          p_quantity?: number | null
+          p_remarks: string | null
+          p_supplier?: string | null
+          p_unit?: string | null
           p_user_id: string
         }
         Returns: string

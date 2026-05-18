@@ -175,7 +175,8 @@ const MultiExpenseEntry = ({ categories, inventory, onComplete }: Props) => {
           p_supplier: r.supplier || null,
           p_invoice_number: null,
           p_manual_conversion_factor: r.is_inventory_purchase ? r.factor : null,
-          p_is_credit: r.is_credit
+          p_is_credit: r.is_credit,
+          p_id: null
         });
 
         if (error) {
