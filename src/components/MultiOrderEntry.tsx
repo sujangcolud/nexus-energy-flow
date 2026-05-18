@@ -227,7 +227,6 @@ const MultiOrderEntry = ({ onComplete }: Props) => {
                                   value={`${item.name.toLowerCase()}-${item.id}`}
                                   onMouseDown={(e) => e.preventDefault()}
                                   onPointerDown={(e) => {
-                                    e.preventDefault();
                                     e.stopPropagation();
                                     handleMenuSelect(i, item);
                                   }}

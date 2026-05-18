@@ -47,6 +47,7 @@ interface Row {
   payment_mode: string;
   remarks: string;
   is_inventory_purchase: boolean;
+  is_credit: boolean;
   inventory_item_id: string;
   quantity: number;
   unit: string;
@@ -97,6 +98,7 @@ const blankRow = (): Row => ({
   payment_mode: "Cash",
   remarks: "",
   is_inventory_purchase: false,
+  is_credit: false,
   inventory_item_id: "",
   quantity: 0,
   unit: "",
@@ -171,7 +173,7 @@ const MultiExpenseEntry = ({ categories, inventory, onComplete }: Props) => {
           p_supplier: r.supplier || null,
           p_invoice_number: null,
           p_manual_conversion_factor: r.is_inventory_purchase ? r.factor : null,
-          p_is_credit: r.payment_mode === "Credit" || r.payment_mode === "On Credit"
+          p_is_credit: r.is_credit
         });
 
         if (error) {
@@ -279,7 +281,6 @@ const MultiExpenseEntry = ({ categories, inventory, onComplete }: Props) => {
                                       value={`${item.item_name.toLowerCase()}-${item.id}`}
                                       onMouseDown={(e) => e.preventDefault()}
                                       onPointerDown={(e) => {
-                                        e.preventDefault();
                                         e.stopPropagation();
                                         handleInventorySelect(i, item, r);
                                       }}
@@ -365,13 +366,22 @@ const MultiExpenseEntry = ({ categories, inventory, onComplete }: Props) => {
                     </Select>
                   </div>
 
-                  <div className="md:col-span-1 flex items-center justify-center h-11">
+                  <div className="md:col-span-1 flex items-center justify-center h-11 gap-4">
                     <div className="flex flex-col items-center">
                       <Label className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1 block">Stock?</Label>
                       <input
                         type="checkbox"
                         checked={r.is_inventory_purchase}
                         onChange={(e) => updateRow(i, { is_inventory_purchase: e.target.checked })}
+                        className="h-5 w-5 rounded-md border-slate-300 text-primary focus:ring-primary"
+                      />
+                    </div>
+                    <div className="flex flex-col items-center">
+                      <Label className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1 block">Credit?</Label>
+                      <input
+                        type="checkbox"
+                        checked={r.is_credit}
+                        onChange={(e) => updateRow(i, { is_credit: e.target.checked })}
                         className="h-5 w-5 rounded-md border-slate-300 text-primary focus:ring-primary"
                       />
                     </div>
