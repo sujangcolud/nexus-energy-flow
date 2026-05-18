@@ -323,7 +323,8 @@ const ExpensesTab = () => {
         p_supplier: formData.supplier || null,
         p_invoice_number: formData.invoiceNumber || null,
         p_manual_conversion_factor: formData.isInventoryPurchase ? formData.factor : null,
-        p_is_credit: formData.isCredit
+        p_is_credit: formData.isCredit,
+        p_id: null
       });
 
       if (error) {
@@ -428,6 +429,7 @@ const ExpensesTab = () => {
         p_cost_per_unit: selectedExpense.cost_per_unit || null,
         p_supplier: selectedExpense.supplier || null,
         p_invoice_number: selectedExpense.invoice_number || null,
+        p_manual_conversion_factor: null,
         p_is_credit: selectedExpense.is_credit || false,
         p_id: selectedExpense.id
       });

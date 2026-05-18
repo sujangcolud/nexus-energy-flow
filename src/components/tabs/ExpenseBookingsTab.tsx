@@ -310,7 +310,9 @@ const ExpenseBookingsTab = () => {
           p_is_inventory_purchase: false, // Stock stays with the booking until full payment
           p_supplier: selectedBooking.supplier || null,
           p_invoice_number: selectedBooking.invoice_number || null,
-          p_is_credit: false
+          p_manual_conversion_factor: null,
+          p_is_credit: false,
+          p_id: null
         });
 
         if (rpcError) throw rpcError;
@@ -343,6 +345,7 @@ const ExpenseBookingsTab = () => {
           p_cost_per_unit: selectedBooking.cost_per_unit || null,
           p_supplier: selectedBooking.supplier || null,
           p_invoice_number: selectedBooking.invoice_number || null,
+          p_manual_conversion_factor: null,
           p_is_credit: false,
           p_id: selectedBooking.id
         });

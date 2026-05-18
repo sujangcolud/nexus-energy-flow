@@ -249,6 +249,7 @@ const ModuleSection = ({ config, fromDate, toDate, editable }: ModuleSectionProp
           p_cost_per_unit: patch.cost_per_unit ? Number(patch.cost_per_unit) : null,
           p_supplier: patch.supplier || null,
           p_invoice_number: patch.invoice_number || null,
+          p_manual_conversion_factor: null,
           p_is_credit: patch.is_credit === "true" || patch.is_credit === true,
           p_id: id
         });
@@ -306,7 +307,9 @@ const ModuleSection = ({ config, fromDate, toDate, editable }: ModuleSectionProp
           p_cost_per_unit: patch.cost_per_unit ? Number(patch.cost_per_unit) : null,
           p_supplier: patch.supplier || null,
           p_invoice_number: patch.invoice_number || null,
-          p_is_credit: patch.is_credit === "true" || patch.is_credit === true
+          p_manual_conversion_factor: null,
+          p_is_credit: patch.is_credit === "true" || patch.is_credit === true,
+          p_id: null
         });
         if (error) throw error;
       } else {

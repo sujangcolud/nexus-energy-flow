@@ -169,7 +169,9 @@ const MultiInventoryEntry = ({ inventory, categories, onComplete }: Props) => {
           p_cost_per_unit: row.unit_cost,
           p_supplier: row.supplier || null,
           p_invoice_number: null,
-          p_manual_conversion_factor: row.factor
+          p_manual_conversion_factor: row.factor,
+          p_is_credit: false,
+          p_id: null
         });
 
         if (error) {
