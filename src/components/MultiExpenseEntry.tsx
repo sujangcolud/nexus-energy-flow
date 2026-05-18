@@ -256,7 +256,7 @@ const MultiExpenseEntry = ({ categories, inventory, onComplete }: Props) => {
                     <Label className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5 block">Description</Label>
                     {r.is_inventory_purchase ? (
                       <div className="space-y-2">
-                          <Popover open={popoverOpen[i]} onOpenChange={(val) => setPopoverOpen(prev => ({...prev, [i]: val}))} modal={true}>
+                          <Popover open={popoverOpen[i]} onOpenChange={(val) => setPopoverOpen(prev => ({...prev, [i]: val}))} modal={false}>
                           <PopoverTrigger asChild>
                             <Button
                               type="button"
