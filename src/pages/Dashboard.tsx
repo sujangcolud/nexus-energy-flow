@@ -97,6 +97,33 @@ const Dashboard = () => {
   const [isDailyClosingOpen, setIsDailyClosingOpen] = useState(false);
   const [isBatchClosingOpen, setIsBatchClosingOpen] = useState(false);
   const [showBatchClosing, setShowBatchClosing] = useState(true);
+  const [scrollTilt, setScrollTilt] = useState(0);
+
+  // Scroll velocity tracking for 3D tilt
+  useEffect(() => {
+    let lastScrollY = window.scrollY;
+    let timeoutId: NodeJS.Timeout;
+
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      const velocity = currentScrollY - lastScrollY;
+      lastScrollY = currentScrollY;
+
+      const tilt = Math.max(-12, Math.min(12, velocity * 0.5));
+      setScrollTilt(tilt);
+
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        setScrollTilt(0);
+      }, 150);
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      clearTimeout(timeoutId);
+    };
+  }, []);
 
   useEffect(() => {
     const storedSettings = localStorage.getItem("tabSettings");
@@ -590,14 +617,15 @@ const Dashboard = () => {
             </div>
 
             {/* Navigation Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-6 dashboard-perspective">
               {navItems.map((item, index) => {
                 const Icon = item.icon;
                 return (
                   <Card
                     key={item.id}
                     onClick={() => navigate(item.path)}
-                    className="relative cursor-pointer transition-all duration-200 hover:shadow-md bg-card border border-border h-full group"
+                    style={{ transform: `rotateX(${scrollTilt}deg)` }}
+                    className="relative cursor-pointer scroll-responsive-card press-3d bg-card border border-border h-full group"
                   >
                     {canDeleteTabs && (
                       <Button
@@ -614,13 +642,13 @@ const Dashboard = () => {
                         <Trash className="h-4 w-4" />
                       </Button>
                     )}
-                    <CardContent className="flex flex-col items-center justify-center p-6 space-y-4 h-full">
+                    <CardContent className="flex flex-col items-center justify-center p-6 space-y-4 h-full" style={{ transformStyle: 'preserve-3d' }}>
                       <div
-                        className={`p-4 rounded-lg transition-all duration-300 ${item.color} text-white shadow-sm group-hover:shadow-md`}
+                        className={`p-4 rounded-lg transition-all duration-300 ${item.color} text-white shadow-sm group-hover:shadow-md z-float-icon`}
                       >
                         <Icon className="h-8 w-8" />
                       </div>
-                      <div className="text-center space-y-2">
+                      <div className="text-center space-y-2 z-float-text" style={{ transformStyle: 'preserve-3d' }}>
                         <p className="font-semibold text-lg text-slate-800">
                           {item.label}
                         </p>

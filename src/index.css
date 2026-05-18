@@ -231,6 +231,34 @@ All colors MUST be HSL.
     perspective: 1000px;
     will-change: transform, opacity;
   }
+
+  .dashboard-perspective {
+    perspective: 1200px;
+    perspective-origin: 50% 50%;
+    transform-style: preserve-3d;
+  }
+
+  .scroll-responsive-card {
+    transform-style: preserve-3d;
+    will-change: transform, opacity;
+    transition: transform 0.2s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.2s ease;
+  }
+
+  .press-3d {
+    transition: transform 0.1s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+
+  .press-3d:active {
+    transform: scale(0.95) rotateX(4deg) translateZ(-10px) !important;
+  }
+
+  .z-float-icon {
+    transform: translateZ(15px);
+  }
+
+  .z-float-text {
+    transform: translateZ(10px);
+  }
 }
 
 /* Scrollable content on mobile */
