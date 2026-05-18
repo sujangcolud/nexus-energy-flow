@@ -760,7 +760,7 @@ const ExpensesTab = () => {
                         <ShoppingCart className="h-4 w-4 text-amber-600" />
                         Select Inventory Item *
                       </Label>
-                      <Popover open={inventorySearchOpen} onOpenChange={setInventorySearchOpen} modal={true}>
+                      <Popover open={inventorySearchOpen} onOpenChange={setInventorySearchOpen}>
                         <PopoverTrigger asChild>
                           <Button
                             type="button"
@@ -788,7 +788,6 @@ const ExpensesTab = () => {
                                     value={`${item.item_name.toLowerCase()}-${item.id}`}
                                     onMouseDown={(e) => e.preventDefault()}
                                     onPointerDown={(e) => {
-                                      e.preventDefault();
                                       e.stopPropagation();
                                       handleInventorySelect(item);
                                     }}
