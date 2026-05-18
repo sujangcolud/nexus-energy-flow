@@ -216,6 +216,21 @@ All colors MUST be HSL.
   .mobile-form-spacing {
     @apply space-y-4 sm:space-y-6;
   }
+
+  .transition-premium {
+    @apply transition-all duration-150 ease-snappy;
+  }
+
+  .active-press {
+    @apply active:scale-95 transition-transform duration-100 ease-snappy;
+  }
+
+  .gpu {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    perspective: 1000px;
+    will-change: transform, opacity;
+  }
 }
 
 /* Scrollable content on mobile */

@@ -583,7 +583,7 @@ const OrdersTab = () => {
                         selectedCategory === null ? "default" : "outline"
                       }
                       size="sm"
-                      className={`transition-all duration-150 text-xs sm:text-sm px-3 sm:px-4 h-10 rounded-xl ${selectedCategory === null ? "bg-primary text-white shadow-md shadow-primary/20" : "hover:bg-primary/5"}`}
+                      className={`transition-all duration-150 ease-snappy text-xs sm:text-sm px-3 sm:px-4 h-10 rounded-xl gpu active:scale-95 ${selectedCategory === null ? "bg-primary text-white shadow-md shadow-primary/20" : "hover:bg-primary/5"}`}
                     >
                       All
                     </Button>
@@ -595,7 +595,7 @@ const OrdersTab = () => {
                           selectedCategory === category ? "default" : "outline"
                         }
                         size="sm"
-                        className={`transition-all duration-150 text-xs sm:text-sm px-3 sm:px-4 h-10 rounded-xl ${selectedCategory === category ? `bg-secondary text-white shadow-md shadow-secondary/20` : "hover:bg-secondary/5"}`}
+                        className={`transition-all duration-150 ease-snappy text-xs sm:text-sm px-3 sm:px-4 h-10 rounded-xl gpu active:scale-95 ${selectedCategory === category ? `bg-secondary text-white shadow-md shadow-secondary/20` : "hover:bg-secondary/5"}`}
                       >
                         {category}
                       </Button>
@@ -631,7 +631,7 @@ const OrdersTab = () => {
                           {items.map((item, index) => (
                             <Card
                               key={item.id}
-                              className="group bg-white hover:bg-primary/5 transition-all active:scale-95 cursor-pointer border-slate-100 hover:border-primary/30 rounded-xl overflow-hidden shadow-sm"
+                              className="group bg-white hover:bg-primary/5 transition-all active:scale-95 cursor-pointer border-slate-100 hover:border-primary/30 rounded-xl overflow-hidden shadow-sm gpu"
                               onClick={() => addToCart(item)}
                             >
                               <CardContent className="p-2 flex flex-col h-full justify-between min-h-[100px]">
@@ -736,8 +736,8 @@ const OrdersTab = () => {
                       {cart.map((item, index) => (
                         <div
                           key={item.id}
-                          className="flex items-center justify-between p-2 sm:p-3 bg-gradient-to-r from-white to-pink-50 rounded-lg border border-pink-100"
-                          style={{ animationDelay: `${index * 100}ms` }}
+                          className="flex items-center justify-between p-2 sm:p-3 bg-gradient-to-r from-white to-pink-50 rounded-lg border border-pink-100 animate-in fade-in slide-in-from-right-4 duration-200 ease-snappy gpu"
+                          style={{ animationDelay: `${index * 50}ms` }}
                         >
                           <div className="flex-1 min-w-0 mr-2">
                             <h4
@@ -836,7 +836,7 @@ const OrdersTab = () => {
                         disabled={
                           submitting || !paymentMode || cart.length === 0
                         }
-                        className="w-full h-14 bg-primary hover:bg-primary/90 text-white font-black text-lg shadow-xl shadow-primary/20 transition-all duration-300 transform rounded-2xl"
+                        className="w-full h-14 bg-primary hover:bg-primary/90 text-white font-black text-lg shadow-xl shadow-primary/20 transition-all duration-150 ease-snappy rounded-2xl active:scale-95 gpu"
                       >
                         {submitting ? (
                           <div className="flex items-center gap-2">

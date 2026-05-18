@@ -78,6 +78,12 @@ export default {
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
+      transitionTimingFunction: {
+        "premium-in-out": "cubic-bezier(0.4, 0, 0.2, 1)",
+        "premium-out": "cubic-bezier(0, 0, 0.2, 1)",
+        "premium-in": "cubic-bezier(0.4, 0, 1, 1)",
+        "snappy": "cubic-bezier(0.2, 0.8, 0.2, 1)",
+      },
       keyframes: {
         "accordion-down": {
           from: {
@@ -95,10 +101,25 @@ export default {
             height: "0",
           },
         },
+        "scale-in": {
+          "0%": { opacity: "0", transform: "scale(0.96)" },
+          "100%": { opacity: "1", transform: "scale(1)" },
+        },
+        "scale-out": {
+          "0%": { opacity: "1", transform: "scale(1)" },
+          "100%": { opacity: "0", transform: "scale(0.96)" },
+        },
+        "slide-in-from-bottom": {
+          "0%": { opacity: "0", transform: "translateY(10px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "scale-in": "scale-in 0.15s cubic-bezier(0.2, 0.8, 0.2, 1)",
+        "scale-out": "scale-out 0.1s cubic-bezier(0.4, 0, 1, 1)",
+        "slide-in-from-bottom": "slide-in-from-bottom 0.2s cubic-bezier(0.2, 0.8, 0.2, 1)",
       },
     },
   },
