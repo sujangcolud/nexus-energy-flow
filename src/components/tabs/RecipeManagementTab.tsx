@@ -167,8 +167,9 @@ const RecipeManagementTab = () => {
   const profit = selectedMenu ? selectedMenu.price - unitCostVal : 0;
 
   const handleCopyRecipe = async () => {
-    if (!copySourceId) return;
+    if (!copySourceId || !selectedMenuId) return;
     try {
+      const sourceMenu = menu.find(m => m.id === copySourceId);
       const { data, error } = await supabase
         .from("recipe_items" as any)
         .select("inventory_item_id,quantity_used,unit_type,waste_percentage")
@@ -187,8 +188,13 @@ const RecipeManagementTab = () => {
         return;
       }
 
+      // Copy the yield as well if available
+      if (sourceMenu?.recipe_yield) {
+        await handleYieldChange(sourceMenu.recipe_yield.toString());
+      }
+
       setRows(newRows);
-      toast.success("Recipe copied! Don't forget to save.");
+      toast.success("Recipe and yield copied! Don't forget to save.");
       setCopySourceId("");
     } catch (e) {
       logError("recipe copy", e);
@@ -320,10 +326,10 @@ const RecipeManagementTab = () => {
             <Card className="rounded-3xl border-none shadow-sm bg-white overflow-hidden">
               <CardHeader className="bg-slate-50/50 border-b border-slate-100 px-4 md:px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <CardTitle className="text-base md:text-lg font-bold">Ingredients Breakdown</CardTitle>
-                <div className="flex flex-wrap items-center gap-2">
-                  <div className="hidden md:flex items-center gap-2 mr-2">
+                <div className="flex flex-wrap items-center gap-3">
+                  <div className="flex items-center gap-2 bg-slate-100/50 p-1 rounded-xl border border-slate-200/50">
                     <Select value={copySourceId} onValueChange={setCopySourceId}>
-                      <SelectTrigger className="w-[180px] h-9 rounded-lg text-xs">
+                      <SelectTrigger className="w-[130px] md:w-[180px] h-8 rounded-lg text-[10px] md:text-xs bg-transparent border-none shadow-none focus:ring-0">
                         <SelectValue placeholder="Copy from..." />
                       </SelectTrigger>
                       <SelectContent>
@@ -334,16 +340,25 @@ const RecipeManagementTab = () => {
                     </Select>
                     <Button
                       size="sm"
-                      variant="secondary"
-                      className="h-9 rounded-lg px-4"
+                      variant="ghost"
+                      className="h-7 rounded-lg px-2 text-[10px] md:text-xs font-bold hover:bg-primary hover:text-white transition-colors"
                       onClick={handleCopyRecipe}
                       disabled={!copySourceId}
                     >
-                      <Copy className="h-3.5 w-3.5 mr-2" /> Copy
+                      <Copy className="h-3 w-3 mr-1" /> Copy
                     </Button>
                   </div>
-                  <Button size="sm" variant="outline" onClick={addRow} className="h-9 rounded-lg px-4 font-bold border-primary/20 text-primary hover:bg-primary/5"><Plus className="h-4 w-4 mr-2" />Add</Button>
-                  <Button size="sm" onClick={save} disabled={saving} className="h-9 rounded-lg px-6 font-bold shadow-sm shadow-primary/20"><Save className="h-4 w-4 mr-2" />{saving ? "Saving…" : "Save Recipe"}</Button>
+                  <div className="flex items-center gap-2 ml-auto">
+                    <Button size="sm" variant="outline" onClick={addRow} className="h-9 rounded-lg px-3 font-bold border-primary/20 text-primary hover:bg-primary/5">
+                      <Plus className="h-4 w-4 md:mr-2" />
+                      <span className="hidden md:inline">Add</span>
+                    </Button>
+                    <Button size="sm" onClick={save} disabled={saving} className="h-9 rounded-lg px-4 font-bold shadow-sm shadow-primary/20">
+                      <Save className="h-4 w-4 md:mr-2" />
+                      {saving ? "..." : <span className="hidden md:inline">Save Recipe</span>}
+                      {!saving && <span className="md:hidden">Save</span>}
+                    </Button>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent className="p-0">
