@@ -147,9 +147,10 @@ const MultiDepositEntry = ({ onComplete }: Props) => {
                   <Label className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5 block">Amount (रु)</Label>
                   <Input
                     type="number"
-                    value={r.amount}
+                    value={r.amount === 0 ? "" : r.amount}
                     className="h-11 rounded-xl font-bold border-slate-200"
-                    onChange={(e) => updateRow(i, { amount: parseFloat(e.target.value) || 0 })}
+                    onChange={(e) => updateRow(i, { amount: e.target.value === "" ? 0 : parseFloat(e.target.value) })}
+                    placeholder="0.00"
                   />
                 </div>
                 <div className="md:col-span-2">
