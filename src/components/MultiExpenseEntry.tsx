@@ -77,6 +77,7 @@ interface Props {
   categories: { id: string; name: string }[];
   inventory: InventoryItem[];
   onComplete: () => void;
+  onOpen?: () => void;
 }
 
 const paymentModes = [
@@ -106,9 +107,16 @@ const blankRow = (): Row => ({
   unit_cost: 0,
 });
 
-const MultiExpenseEntry = ({ categories, inventory, onComplete }: Props) => {
+const MultiExpenseEntry = ({ categories, inventory, onComplete, onOpen }: Props) => {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
+
+  const handleOpenChange = (newOpen: boolean) => {
+    setOpen(newOpen);
+    if (newOpen && onOpen) {
+      onOpen();
+    }
+  };
   const [rows, setRows] = useState<Row[]>([blankRow()]);
   const [submitting, setSubmitting] = useState(false);
   const [popoverOpen, setPopoverOpen] = useState<Record<number, boolean>>({});
@@ -209,7 +217,7 @@ const MultiExpenseEntry = ({ categories, inventory, onComplete }: Props) => {
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button variant="outline" size="sm" className="gap-2 rounded-xl font-bold h-10 border-primary/20 text-primary hover:bg-primary/5">
           <Layers className="h-4 w-4" />

@@ -60,6 +60,7 @@ interface Props {
   inventory: InventoryItem[];
   categories: Category[];
   onComplete: () => void;
+  onOpen?: () => void;
 }
 
 const paymentModes = [
@@ -85,9 +86,16 @@ const blankRow = (): Row => ({
   remarks: "",
 });
 
-const MultiInventoryEntry = ({ inventory, categories, onComplete }: Props) => {
+const MultiInventoryEntry = ({ inventory, categories, onComplete, onOpen }: Props) => {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
+
+  const handleOpenChange = (newOpen: boolean) => {
+    setOpen(newOpen);
+    if (newOpen && onOpen) {
+      onOpen();
+    }
+  };
   const [rows, setRows] = useState<Row[]>([blankRow()]);
   const [submitting, setSubmitting] = useState(false);
 
@@ -204,7 +212,7 @@ const MultiInventoryEntry = ({ inventory, categories, onComplete }: Props) => {
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button variant="outline" size="sm" className="gap-2 rounded-xl font-bold h-10 border-primary/20 text-primary hover:bg-primary/5">
           <Layers className="h-4 w-4" />
