@@ -37,6 +37,7 @@ import {
   ArrowUpCircle,
   Wallet,
   Trash2,
+  Edit,
 } from "lucide-react";
 import { DateRange } from "react-day-picker";
 import {
@@ -316,7 +317,8 @@ const DepositsTab = () => {
       !formData.amount ||
       !formData.mode ||
       !formData.depositedBy ||
-      !formData.depositedByType
+      !formData.depositedByType ||
+      !formData.deposited_to
     ) {
       toast.error("Please fill in all required fields");
       return;
@@ -348,7 +350,7 @@ const DepositsTab = () => {
       const newBalance = { ...balanceData };
       const amount = parseFloat(formData.amount);
 
-      switch (formData.mode) {
+      switch (formData.deposited_to) {
         case "Cash":
           newBalance.cash_in_hand += amount;
           break;
@@ -381,7 +383,7 @@ const DepositsTab = () => {
           deposited_by_type: formData.depositedByType,
           remarks: formData.remarks || "",
           deposit_date: transactionDate,
-          // Removed non-existent columns: sender_name, receiver_name, payment_mode, deposited_to, category
+          deposited_to: formData.deposited_to,
         },
       ]);
 
