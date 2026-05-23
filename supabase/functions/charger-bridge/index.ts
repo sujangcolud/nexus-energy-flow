@@ -93,13 +93,23 @@ serve((req) => {
               transactionId: parseInt(txId)
             };
 
+            // Fetch current SoC if available from charger_status or connectors
+            const { data: connector } = await supabase
+              .from('charger_connectors')
+              .select('soc')
+              .eq('charger_id', chargerId)
+              .eq('connector_id', payload.connectorId)
+              .single();
+
             // PERSIST transaction to database
             await supabase.from('charger_transactions').insert({
                 transaction_id: txId,
                 charger_id: chargerId,
+                connector_id: payload.connectorId,
                 id_tag: payload.idTag,
                 start_meter: payload.meterStart,
                 start_time: timestamp,
+                initial_soc: connector?.soc || 0,
                 is_active: true
             });
 
@@ -118,11 +128,19 @@ serve((req) => {
                 .single();
 
             if (tx) {
-              await recordCompletedSession(chargerId, tx, payload, timestamp);
-              // Deactivate transaction
+              const result = await recordCompletedSession(chargerId, tx, payload, timestamp);
+
+              // Update transaction record with final details
               await supabase
                 .from('charger_transactions')
-                .update({ is_active: false, end_time: timestamp, end_meter: payload.meterStop })
+                .update({
+                  is_active: false,
+                  end_time: timestamp,
+                  end_meter: payload.meterStop,
+                  final_soc: result.finalSoc,
+                  total_energy_kwh: result.consumedUnits,
+                  total_cost: result.totalCost
+                })
                 .eq('transaction_id', tx.transaction_id);
             }
 
@@ -230,8 +248,15 @@ async function recordCompletedSession(chargerId: string, tx: any, payload: any, 
 
   const rate = charger?.price_per_kwh || 15;
 
+  // Fetch final SoC
+  const { data: connector } = await supabase
+    .from('charger_connectors')
+    .select('soc')
+    .eq('charger_id', chargerId)
+    .eq('connector_id', tx.connector_id)
+    .single();
+
   // Fetch a default user_id or handle it as a system entry
-  // In a real multi-user system, we'd map id_tag to a profile_id
   const { data: profile } = await supabase
     .from('profiles')
     .select('id')
@@ -240,18 +265,26 @@ async function recordCompletedSession(chargerId: string, tx: any, payload: any, 
 
   const userId = profile?.id || '00000000-0000-0000-0000-000000000000';
 
+  const totalCost = consumedUnits * rate;
+
   // Record in charging_sessions table
   const { error } = await supabase.from('charging_sessions').insert({
     charger_id: chargerId,
-    connector_id: payload.connectorId,
+    connector_id: tx.connector_id,
     kcal: consumedUnits,
-    total_amount: consumedUnits * rate,
+    total_amount: totalCost,
     payment_mode: 'Auto-Bill',
     session_date: new Date().toISOString().split('T')[0],
     user_id: userId
   });
 
   if (error) console.error("[Database] Session Recording Error:", error.message);
+
+  return {
+    consumedUnits,
+    totalCost,
+    finalSoc: connector?.soc || 0
+  };
 }
 
 /**
