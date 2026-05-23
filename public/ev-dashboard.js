@@ -19,53 +19,107 @@
     let chart = null;
     let powerHistory = [];
 
-    // Views
-    const viewDashboard = document.getElementById('view-dashboard');
-    const viewStations = document.getElementById('view-stations');
-    const viewDetail = document.getElementById('view-charger-detail');
-    const viewTransactions = document.getElementById('view-transactions');
-    const viewReports = document.getElementById('view-reports');
-    const navItems = [
-        document.getElementById('nav-dashboard'),
-        document.getElementById('nav-stations'),
-        document.getElementById('nav-transactions'),
-        document.getElementById('nav-reports')
-    ];
+    // Views and Elements
+    let viewDashboard, viewStations, viewDetail, viewTransactions, viewReports;
+    let navItems = [];
 
     async function init() {
-        setupChart();
-        await fetchData();
-        subscribeToRealtime();
-        renderStationsTable();
-        renderTransactionsTable();
-        updateOverviewStats();
+        console.log("[CSMS] Initializing Dashboard...");
 
-        // Navigation listeners
-        document.getElementById('nav-stations').addEventListener('click', (e) => {
-            e.preventDefault();
-            setActiveNav('nav-stations');
-            showView(viewStations);
+        // Initialize DOM references
+        viewDashboard = document.getElementById('view-dashboard');
+        viewStations = document.getElementById('view-stations');
+        viewDetail = document.getElementById('view-charger-detail');
+        viewTransactions = document.getElementById('view-transactions');
+        viewReports = document.getElementById('view-reports');
+
+        navItems = [
+            document.getElementById('nav-dashboard'),
+            document.getElementById('nav-stations'),
+            document.getElementById('nav-transactions'),
+            document.getElementById('nav-reports')
+        ].filter(el => el !== null);
+
+        // ATTACH LISTENERS FIRST (so they work even if data fetch is slow/fails)
+        const navStations = document.getElementById('nav-stations');
+        if (navStations) {
+            navStations.addEventListener('click', (e) => {
+                e.preventDefault();
+                setActiveNav('nav-stations');
+                showView(viewStations);
+            });
+        }
+
+        const navTransactions = document.getElementById('nav-transactions');
+        if (navTransactions) {
+            navTransactions.addEventListener('click', (e) => {
+                e.preventDefault();
+                setActiveNav('nav-transactions');
+                showView(viewTransactions);
+                renderTransactionsTable();
+            });
+        }
+
+        // Transaction filters
+        const txStatusFilters = document.querySelectorAll('#transaction-status-filters button');
+        txStatusFilters.forEach(btn => {
+            btn.addEventListener('click', () => {
+                txStatusFilters.forEach(b => {
+                    b.classList.remove('bg-white', 'shadow-sm', 'text-slate-800');
+                    b.classList.add('text-slate-500');
+                });
+                btn.classList.add('bg-white', 'shadow-sm', 'text-slate-800');
+                btn.classList.remove('text-slate-500');
+
+                renderTransactionsTable({ status: btn.dataset.filter });
+            });
         });
 
-        document.getElementById('nav-transactions').addEventListener('click', (e) => {
-            e.preventDefault();
-            setActiveNav('nav-transactions');
-            showView(viewTransactions);
-        });
+        const txChargerFilter = document.getElementById('filter-transaction-charger');
+        if (txChargerFilter) {
+            txChargerFilter.addEventListener('input', (e) => {
+                renderTransactionsTable({ chargerId: e.target.value });
+            });
+        }
 
-        document.getElementById('nav-dashboard').addEventListener('click', (e) => {
-            e.preventDefault();
-            setActiveNav('nav-dashboard');
-            showView(viewDashboard);
+        const txIdFilter = document.getElementById('filter-transaction-id');
+        if (txIdFilter) {
+            txIdFilter.addEventListener('input', (e) => {
+                renderTransactionsTable({ transactionId: e.target.value });
+            });
+        }
+
+        const navDashboard = document.getElementById('nav-dashboard');
+        if (navDashboard) {
+            navDashboard.addEventListener('click', (e) => {
+                e.preventDefault();
+                setActiveNav('nav-dashboard');
+                showView(viewDashboard);
+                updateOverviewStats();
+            });
+        }
+
+        const navReports = document.getElementById('nav-reports');
+        if (navReports) {
+            navReports.addEventListener('click', (e) => {
+                e.preventDefault();
+                setActiveNav('nav-reports');
+                showView(viewReports);
+                updateOverviewCharts();
+            });
+        }
+
+        // Initialize UI State
+        try {
+            setupChart();
+            await fetchData();
+            subscribeToRealtime();
+            renderStationsTable();
+            renderTransactionsTable();
             updateOverviewStats();
-        });
-
-        document.getElementById('nav-reports').addEventListener('click', (e) => {
-            e.preventDefault();
-            setActiveNav('nav-reports');
-            showView(viewReports);
-            updateOverviewCharts();
-        });
+        } catch (err) {
+            console.error("[CSMS] Initialization Error:", err);
+        }
 
         // Search and Filter listeners
         const searchInput = document.querySelector('input[placeholder="Filter by Charger..."]');
@@ -129,8 +183,44 @@
     }
 
     async function updateOverviewCharts() {
-        // Placeholder implementation for charts
-        console.log("Updating overview charts...");
+        const { data: sessions } = await sb
+            .from('charger_transactions')
+            .select('start_time, total_energy_kwh, total_cost')
+            .eq('is_active', false)
+            .order('start_time', { ascending: true });
+
+        if (!sessions || sessions.length === 0) return;
+
+        // Group by day for simple overview
+        const grouped = sessions.reduce((acc, curr) => {
+            const date = new Date(curr.start_time).toLocaleDateString();
+            if (!acc[date]) acc[date] = { energy: 0, revenue: 0 };
+            acc[date].energy += (curr.total_energy_kwh || 0);
+            acc[date].revenue += (curr.total_cost || 0);
+            return acc;
+        }, {});
+
+        const categories = Object.keys(grouped);
+        const energyData = categories.map(c => grouped[c].energy.toFixed(1));
+        const revenueData = categories.map(c => grouped[c].revenue.toFixed(0));
+
+        const energyChart = new ApexCharts(document.querySelector("#overview-energy-chart"), {
+            series: [{ name: 'Energy (kWh)', data: energyData }],
+            chart: { type: 'bar', height: 250, toolbar: { show: false } },
+            colors: ['#8b5cf6'],
+            xaxis: { categories },
+            plotOptions: { bar: { borderRadius: 4 } }
+        });
+        energyChart.render();
+
+        const revenueChart = new ApexCharts(document.querySelector("#overview-revenue-chart"), {
+            series: [{ name: 'Revenue (Rs)', data: revenueData }],
+            chart: { type: 'area', height: 250, toolbar: { show: false } },
+            colors: ['#10b981'],
+            stroke: { curve: 'smooth' },
+            xaxis: { categories }
+        });
+        revenueChart.render();
     }
 
     async function fetchData() {
@@ -278,42 +368,56 @@
         showView(viewStations);
     };
 
-    async function renderTransactionsTable() {
+    async function renderTransactionsTable(filters = {}) {
         const tbody = document.getElementById('transactions-table-body');
         if (!tbody) return;
 
-        const { data, error } = await sb
-            .from('charging_sessions')
-            .select('*, profiles(email)')
-            .order('created_at', { ascending: false })
+        let query = sb.from('charger_transactions').select('*');
+
+        if (filters.status && filters.status !== 'all') {
+            if (filters.status === 'active') query = query.eq('is_active', true);
+            else if (filters.status === 'completed') query = query.eq('is_active', false);
+        }
+
+        if (filters.chargerId) query = query.ilike('charger_id', `%${filters.chargerId}%`);
+        if (filters.transactionId) query = query.ilike('transaction_id', `%${filters.transactionId}%`);
+
+        const { data, error } = await query
+            .order('start_time', { ascending: false })
             .limit(20);
 
         if (error || !data || data.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-12 text-center text-slate-400">No transactions found.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="10" class="px-6 py-12 text-center text-slate-400">No transactions found.</td></tr>`;
             return;
         }
 
         tbody.innerHTML = '';
         data.forEach(tx => {
             const tr = document.createElement('tr');
+            tr.className = "hover:bg-slate-50 transition-colors";
+
+            const startStr = tx.start_time ? new Date(tx.start_time).toLocaleString() : 'N/A';
+            const endStr = tx.end_time ? new Date(tx.end_time).toLocaleString() : '-';
+            const socStr = tx.initial_soc !== null ? `${tx.initial_soc}% - ${tx.final_soc || '...'}%` : 'N/A';
+
             tr.innerHTML = `
-                <td class="px-6 py-4 font-mono text-xs text-slate-500">${tx.id.split('-')[0]}...</td>
+                <td class="px-6 py-4 font-mono text-xs text-slate-500">${tx.transaction_id}</td>
                 <td class="px-6 py-4">
                     <div class="flex flex-col">
-                        <span class="font-bold text-slate-700">${tx.charger_id || 'System'}</span>
-                        <span class="text-[10px] text-slate-400 uppercase">Connector ${tx.connector_id || 'N/A'}</span>
+                        <span class="font-bold text-blue-600 cursor-pointer hover:underline">${tx.charger_id}</span>
                     </div>
                 </td>
+                <td class="px-6 py-4 text-slate-600 font-medium">0${tx.connector_id || 1}</td>
+                <td class="px-6 py-4 text-slate-600 text-xs">${socStr}</td>
+                <td class="px-6 py-4 text-slate-400">-</td>
+                <td class="px-6 py-4 text-slate-600 font-bold">${(tx.total_energy_kwh || 0).toFixed(2)} kWh</td>
+                <td class="px-6 py-4 font-bold text-slate-700">Rs. ${(tx.total_cost || 0).toFixed(2)}</td>
+                <td class="px-6 py-4 text-xs text-slate-500">${startStr}</td>
+                <td class="px-6 py-4 text-xs text-slate-500">${endStr}</td>
                 <td class="px-6 py-4">
-                    <div class="flex flex-col">
-                        <span class="text-slate-600 font-medium">${new Date(tx.created_at).toLocaleDateString()}</span>
-                        <span class="text-[10px] text-slate-400">${new Date(tx.created_at).toLocaleTimeString()}</span>
-                    </div>
-                </td>
-                <td class="px-6 py-4 text-slate-600 font-bold">${(tx.kcal || 0).toFixed(2)} kWh</td>
-                <td class="px-6 py-4 font-black text-slate-900">रु ${tx.total_amount || 0}</td>
-                <td class="px-6 py-4">
-                    <span class="px-2 py-1 rounded-full bg-green-50 text-green-600 text-[10px] font-black uppercase tracking-wider border border-green-100">Completed</span>
+                    <span class="status-badge ${tx.is_active ? 'status-charging' : 'status-online'}">
+                        ${tx.is_active ? 'Active' : 'Completed'}
+                    </span>
                 </td>
             `;
             tbody.appendChild(tr);

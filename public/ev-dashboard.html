@@ -262,21 +262,39 @@
                 </div>
 
                 <div class="glass-card">
+                    <div class="p-4 border-b border-slate-100 flex items-center justify-between flex-wrap gap-4">
+                        <div class="flex bg-slate-100 p-1 rounded-lg" id="transaction-status-filters">
+                            <button class="px-4 py-1.5 rounded-md text-xs font-bold bg-white shadow-sm text-slate-800" data-filter="all">All</button>
+                            <button class="px-4 py-1.5 rounded-md text-xs font-bold text-slate-500 hover:text-slate-700" data-filter="active">Active</button>
+                            <button class="px-4 py-1.5 rounded-md text-xs font-bold text-slate-500 hover:text-slate-700" data-filter="completed">Completed</button>
+                            <button class="px-4 py-1.5 rounded-md text-xs font-bold text-slate-500 hover:text-slate-700" data-filter="failed">Failed</button>
+                        </div>
+
+                        <div class="flex gap-4">
+                            <input type="text" id="filter-transaction-charger" placeholder="Filter by Charger..." class="pl-4 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none w-48">
+                            <input type="text" id="filter-transaction-id" placeholder="Filter by Transaction ID" class="pl-4 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none w-48">
+                        </div>
+                    </div>
+
                     <div class="overflow-x-auto">
                         <table class="w-full text-left border-collapse">
                             <thead>
                                 <tr class="bg-slate-50 text-[10px] font-black uppercase tracking-widest text-slate-500 border-b border-slate-100">
-                                    <th class="px-6 py-4">Transaction ID</th>
-                                    <th class="px-6 py-4">Charger ID</th>
+                                    <th class="px-6 py-4">Session ID</th>
+                                    <th class="px-6 py-4">Charger</th>
+                                    <th class="px-6 py-4">Connector</th>
+                                    <th class="px-6 py-4">Initial/Final SoC</th>
+                                    <th class="px-6 py-4">User</th>
+                                    <th class="px-6 py-4">Energy Used</th>
+                                    <th class="px-6 py-4">Price</th>
                                     <th class="px-6 py-4">Start Time</th>
-                                    <th class="px-6 py-4">Energy (kWh)</th>
-                                    <th class="px-6 py-4">Amount</th>
+                                    <th class="px-6 py-4">End Time</th>
                                     <th class="px-6 py-4">Status</th>
                                 </tr>
                             </thead>
                             <tbody id="transactions-table-body" class="text-sm divide-y divide-slate-100">
                                 <tr>
-                                    <td colspan="6" class="px-6 py-12 text-center text-slate-400">
+                                    <td colspan="10" class="px-6 py-12 text-center text-slate-400">
                                         No recent transactions found.
                                     </td>
                                 </tr>
