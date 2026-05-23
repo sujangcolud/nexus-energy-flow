@@ -20,13 +20,16 @@
     let powerHistory = [];
 
     // Views
+    const viewDashboard = document.getElementById('view-dashboard');
     const viewStations = document.getElementById('view-stations');
     const viewDetail = document.getElementById('view-charger-detail');
     const viewTransactions = document.getElementById('view-transactions');
+    const viewReports = document.getElementById('view-reports');
     const navItems = [
         document.getElementById('nav-dashboard'),
         document.getElementById('nav-stations'),
-        document.getElementById('nav-transactions')
+        document.getElementById('nav-transactions'),
+        document.getElementById('nav-reports')
     ];
 
     async function init() {
@@ -35,6 +38,7 @@
         subscribeToRealtime();
         renderStationsTable();
         renderTransactionsTable();
+        updateOverviewStats();
 
         // Navigation listeners
         document.getElementById('nav-stations').addEventListener('click', (e) => {
@@ -52,7 +56,15 @@
         document.getElementById('nav-dashboard').addEventListener('click', (e) => {
             e.preventDefault();
             setActiveNav('nav-dashboard');
-            showView(viewStations); // For now dashboard points to stations
+            showView(viewDashboard);
+            updateOverviewStats();
+        });
+
+        document.getElementById('nav-reports').addEventListener('click', (e) => {
+            e.preventDefault();
+            setActiveNav('nav-reports');
+            showView(viewReports);
+            updateOverviewCharts();
         });
 
         // Search and Filter listeners
@@ -88,10 +100,37 @@
     }
 
     function showView(view) {
-        [viewStations, viewDetail, viewTransactions].forEach(v => {
+        [viewDashboard, viewStations, viewDetail, viewTransactions, viewReports].forEach(v => {
             if (v === view) v.classList.remove('hidden');
             else v.classList.add('hidden');
         });
+    }
+
+    async function updateOverviewStats() {
+        const total = chargers.size;
+        const online = Array.from(chargers.values()).filter(c => c.status.toLowerCase() !== 'offline').length;
+        const active = Array.from(chargers.values()).filter(c => c.status.toLowerCase() === 'charging').length;
+
+        const totalEl = document.getElementById('stat-total-chargers');
+        const onlineEl = document.getElementById('stat-online-chargers');
+        const activeEl = document.getElementById('stat-active-sessions');
+        const energyEl = document.getElementById('stat-total-energy');
+
+        if (totalEl) totalEl.innerText = total;
+        if (onlineEl) onlineEl.innerText = online;
+        if (activeEl) activeEl.innerText = active;
+
+        // Energy summary from charging_sessions
+        const { data } = await sb.from('charging_sessions').select('kcal, total_amount');
+        if (data && energyEl) {
+            const totalEnergy = data.reduce((acc, curr) => acc + (curr.kcal || 0), 0);
+            energyEl.innerHTML = `${totalEnergy.toFixed(1)} <span class="text-xs">kWh</span>`;
+        }
+    }
+
+    async function updateOverviewCharts() {
+        // Placeholder implementation for charts
+        console.log("Updating overview charts...");
     }
 
     async function fetchData() {
@@ -203,7 +242,7 @@
         return 'bg-slate-100 text-slate-500';
     }
 
-    window.showChargerDetail = (id) => {
+    window.showChargerDetail = async (id) => {
         currentChargerId = id;
 
         // Reset chart state before showing new data
@@ -215,6 +254,22 @@
 
         const data = chargers.get(id);
         if (data) updateDetailUI(data);
+
+        // Fetch historical data for chart
+        const { data: history } = await sb
+            .from('charger_meter_values')
+            .select('timestamp, power_kw')
+            .eq('charger_id', id)
+            .order('timestamp', { ascending: false })
+            .limit(50);
+
+        if (history && history.length > 0) {
+            powerHistory = history.map(h => ({
+                x: new Date(h.timestamp).getTime(),
+                y: h.power_kw
+            })).reverse();
+            if (chart) chart.updateSeries([{ data: powerHistory }]);
+        }
     };
 
     window.showStationsList = () => {
@@ -229,7 +284,7 @@
 
         const { data, error } = await sb
             .from('charging_sessions')
-            .select('*')
+            .select('*, profiles(email)')
             .order('created_at', { ascending: false })
             .limit(20);
 
@@ -243,12 +298,22 @@
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td class="px-6 py-4 font-mono text-xs text-slate-500">${tx.id.split('-')[0]}...</td>
-                <td class="px-6 py-4 font-bold text-slate-700">System</td>
-                <td class="px-6 py-4 text-slate-600">${new Date(tx.created_at).toLocaleString()}</td>
-                <td class="px-6 py-4 text-slate-600">${tx.kcal || 0} kWh</td>
-                <td class="px-6 py-4 font-bold text-slate-900">Rs. ${tx.total_amount || 0}</td>
                 <td class="px-6 py-4">
-                    <span class="px-2 py-1 rounded-full bg-green-100 text-green-700 text-[10px] font-bold uppercase">Success</span>
+                    <div class="flex flex-col">
+                        <span class="font-bold text-slate-700">${tx.charger_id || 'System'}</span>
+                        <span class="text-[10px] text-slate-400 uppercase">Connector ${tx.connector_id || 'N/A'}</span>
+                    </div>
+                </td>
+                <td class="px-6 py-4">
+                    <div class="flex flex-col">
+                        <span class="text-slate-600 font-medium">${new Date(tx.created_at).toLocaleDateString()}</span>
+                        <span class="text-[10px] text-slate-400">${new Date(tx.created_at).toLocaleTimeString()}</span>
+                    </div>
+                </td>
+                <td class="px-6 py-4 text-slate-600 font-bold">${(tx.kcal || 0).toFixed(2)} kWh</td>
+                <td class="px-6 py-4 font-black text-slate-900">रु ${tx.total_amount || 0}</td>
+                <td class="px-6 py-4">
+                    <span class="px-2 py-1 rounded-full bg-green-50 text-green-600 text-[10px] font-black uppercase tracking-wider border border-green-100">Completed</span>
                 </td>
             `;
             tbody.appendChild(tr);

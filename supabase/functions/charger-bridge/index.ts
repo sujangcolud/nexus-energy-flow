@@ -59,11 +59,30 @@ serve((req) => {
 
           case 'MeterValues': {
             const metrics = extractMetrics(payload);
-            if (payload.connectorId === 0) {
-              await updateChargerStatus(chargerId, metrics);
-            } else {
+
+            // Update Connector Status
+            if (payload.connectorId !== 0) {
               await updateConnectorStatus(chargerId, payload.connectorId, metrics);
             }
+
+            // AGGREGATE for Charger Status (Sum power across connectors for main dashboard)
+            const { data: connectors } = await supabase
+              .from('charger_connectors')
+              .select('power_kw, current, voltage, soc')
+              .eq('charger_id', chargerId);
+
+            const totalPower = connectors?.reduce((sum, c) => sum + (c.power_kw || 0), 0) || 0;
+            const avgSoc = connectors?.length ? (connectors.reduce((sum, c) => sum + (c.soc || 0), 0) / connectors.length) : 0;
+
+            await updateChargerStatus(chargerId, {
+              power_kw: totalPower,
+              soc: payload.connectorId === 0 ? metrics.soc : avgSoc,
+              voltage: metrics.voltage || undefined,
+              current: metrics.current || undefined
+            });
+
+            // RECORD granular historical data
+            await recordMeterValues(chargerId, payload.connectorId, payload.transactionId, metrics);
             break;
           }
 
@@ -91,12 +110,11 @@ serve((req) => {
           case 'StopTransaction': {
             responsePayload = { idTagInfo: { status: 'Accepted' } };
 
-            // FETCH persisted transaction
+            // FETCH persisted transaction using transactionId from payload
             const { data: tx } = await supabase
                 .from('charger_transactions')
                 .select('*')
-                .eq('charger_id', chargerId)
-                .eq('is_active', true)
+                .eq('transaction_id', payload.transactionId.toString())
                 .single();
 
             if (tx) {
@@ -104,10 +122,20 @@ serve((req) => {
               // Deactivate transaction
               await supabase
                 .from('charger_transactions')
-                .update({ is_active: false })
+                .update({ is_active: false, end_time: timestamp, end_meter: payload.meterStop })
                 .eq('transaction_id', tx.transaction_id);
             }
-            await updateChargerStatus(chargerId, { status: 'Available' });
+
+            // Set status to Available if all transactions are closed
+            const { count } = await supabase
+                .from('charger_transactions')
+                .select('*', { count: 'exact', head: true })
+                .eq('charger_id', chargerId)
+                .eq('is_active', true);
+
+            if (count === 0) {
+              await updateChargerStatus(chargerId, { status: 'Available', power_kw: 0, current: 0 });
+            }
             break;
           }
 
@@ -168,6 +196,23 @@ async function updateConnectorStatus(charger_id: string, connector_id: number, u
 }
 
 /**
+ * Records granular meter values for historical charting
+ */
+async function recordMeterValues(charger_id: string, connector_id: number, transaction_id: any, metrics: any) {
+  const { error } = await supabase
+    .from('charger_meter_values')
+    .insert({
+      charger_id,
+      connector_id,
+      transaction_id: transaction_id?.toString(),
+      ...metrics,
+      timestamp: new Date().toISOString()
+    });
+
+  if (error) console.error("[Database] Meter Recording Error:", error.message);
+}
+
+/**
  * Records the completed session into the business management system
  */
 async function recordCompletedSession(chargerId: string, tx: any, payload: any, endTime: string) {
@@ -175,6 +220,15 @@ async function recordCompletedSession(chargerId: string, tx: any, payload: any, 
 
   // Calculate consumed energy (Wh to kWh/Units)
   const consumedUnits = Math.max(0, (payload.meterStop - tx.start_meter) / 1000);
+
+  // Fetch charger specific rate
+  const { data: charger } = await supabase
+    .from('charger_status')
+    .select('price_per_kwh')
+    .eq('charger_id', chargerId)
+    .single();
+
+  const rate = charger?.price_per_kwh || 15;
 
   // Fetch a default user_id or handle it as a system entry
   // In a real multi-user system, we'd map id_tag to a profile_id
@@ -188,8 +242,10 @@ async function recordCompletedSession(chargerId: string, tx: any, payload: any, 
 
   // Record in charging_sessions table
   const { error } = await supabase.from('charging_sessions').insert({
+    charger_id: chargerId,
+    connector_id: payload.connectorId,
     kcal: consumedUnits,
-    total_amount: consumedUnits * 15, // Standard rate per unit
+    total_amount: consumedUnits * rate,
     payment_mode: 'Auto-Bill',
     session_date: new Date().toISOString().split('T')[0],
     user_id: userId

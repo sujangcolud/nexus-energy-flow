@@ -74,7 +74,7 @@
             </div>
 
             <nav class="space-y-1">
-                <a href="#" class="sidebar-item flex items-center gap-3 px-4 py-2 rounded-lg transition-colors" id="nav-dashboard">
+                <a href="#" class="sidebar-item active flex items-center gap-3 px-4 py-2 rounded-lg transition-colors" id="nav-dashboard">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
                     <span class="text-sm font-medium">Dashboard</span>
                 </a>
@@ -82,7 +82,7 @@
                 <div class="pt-4 pb-2 px-4">
                     <span class="text-[10px] font-bold uppercase tracking-widest text-slate-500">Chargers</span>
                 </div>
-                <a href="#" class="sidebar-item active flex items-center gap-3 px-4 py-2 rounded-lg transition-colors" id="nav-stations">
+                <a href="#" class="sidebar-item flex items-center gap-3 px-4 py-2 rounded-lg transition-colors" id="nav-stations">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
                     <span class="text-sm font-medium">Chargers</span>
                 </a>
@@ -127,8 +127,70 @@
 
         <!-- Dynamic Content -->
         <main class="flex-grow overflow-y-auto p-8" id="content-area">
-            <!-- Stations View (Default) -->
-            <div id="view-stations">
+            <!-- Dashboard Overview View -->
+            <div id="view-dashboard">
+                <div class="flex justify-between items-center mb-8">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-800">Overview</h2>
+                    </div>
+                    <div class="text-sm text-slate-500">
+                        Dashboard / <span class="text-blue-600 font-medium">Overview</span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                    <div class="glass-card p-6 flex items-center gap-4">
+                        <div class="p-3 bg-blue-50 text-blue-600 rounded-xl">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Total Chargers</p>
+                            <p id="stat-total-chargers" class="text-2xl font-black text-slate-800">0</p>
+                        </div>
+                    </div>
+                    <div class="glass-card p-6 flex items-center gap-4">
+                        <div class="p-3 bg-green-50 text-green-600 rounded-xl">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Online Now</p>
+                            <p id="stat-online-chargers" class="text-2xl font-black text-green-600">0</p>
+                        </div>
+                    </div>
+                    <div class="glass-card p-6 flex items-center gap-4">
+                        <div class="p-3 bg-amber-50 text-amber-600 rounded-xl">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"/><path d="m17 5-5-3-5 3"/><path d="m17 19-5 3-5-3"/><path d="M2 12h20"/><path d="m5 7-3 5 3 5"/><path d="m19 7 3 5-3 5"/></svg>
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Active Sessions</p>
+                            <p id="stat-active-sessions" class="text-2xl font-black text-amber-600">0</p>
+                        </div>
+                    </div>
+                    <div class="glass-card p-6 flex items-center gap-4">
+                        <div class="p-3 bg-purple-50 text-purple-600 rounded-xl">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1v22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Total Consumption</p>
+                            <p id="stat-total-energy" class="text-2xl font-black text-purple-600">0.0 <span class="text-xs">kWh</span></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="glass-card p-8">
+                        <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-6">Energy Consumption Trends</p>
+                        <div id="overview-energy-chart" class="h-64"></div>
+                    </div>
+                    <div class="glass-card p-8">
+                        <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-6">Revenue Summary</p>
+                        <div id="overview-revenue-chart" class="h-64"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stations View -->
+            <div id="view-stations" class="hidden">
                 <div class="flex justify-between items-center mb-8">
                     <div>
                         <h2 class="text-2xl font-bold text-slate-800">Stations</h2>
@@ -220,6 +282,29 @@
                                 </tr>
                             </tbody>
                         </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reports View (Hidden by default) -->
+            <div id="view-reports" class="hidden">
+                <div class="flex justify-between items-center mb-8">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-800">Reports</h2>
+                    </div>
+                    <div class="text-sm text-slate-500">
+                        Dashboard / <span class="text-blue-600 font-medium">Reports</span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div class="glass-card p-8">
+                        <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-6">Historical Consumption (kWh)</p>
+                        <div id="historical-energy-chart" class="h-80"></div>
+                    </div>
+                    <div class="glass-card p-8">
+                        <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-6">Monthly Revenue</p>
+                        <div id="historical-revenue-chart" class="h-80"></div>
                     </div>
                 </div>
             </div>
