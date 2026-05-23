@@ -1,10 +1,15 @@
 const WebSocket = require('ws');
 
-const chargerId = 'TEST-CHARGER-001';
+/**
+ * PRODUCTION-READY CHARGER SIMULATOR
+ * Connects as 'theego084' and simulates an active charging session.
+ */
+
+const chargerId = 'theego084';
 const ws = new WebSocket(`ws://localhost:3000/ocpp/ws/${chargerId}`);
 
 ws.on('open', () => {
-  console.log('Mock Charger: Connected to server');
+  console.log(`[Simulator] Connected to bridge as ${chargerId}`);
 
   // 1. Send BootNotification
   sendCall('BootNotification', {
@@ -12,60 +17,50 @@ ws.on('open', () => {
     chargePointModel: 'EP-Fast-01'
   });
 
-  // 2. Start periodic Heartbeats
-  setInterval(() => {
-    sendCall('Heartbeat', {});
-  }, 10000);
-
-  // 3. Simulate a Charging Session
-  console.log('Mock Charger: Starting simulated session...');
+  // 2. Start Charging Session
   setTimeout(() => {
-    sendCall('StatusNotification', {
-      connectorId: 1,
-      errorCode: 'NoError',
-      status: 'Charging'
-    });
+    console.log('[Simulator] Simulating status: Preparing...');
+    sendCall('StatusNotification', { connectorId: 1, errorCode: 'NoError', status: 'Preparing' });
 
-    startSimulatingMeterValues();
+    setTimeout(() => {
+      console.log('[Simulator] Simulating status: Charging...');
+      sendCall('StatusNotification', { connectorId: 1, errorCode: 'NoError', status: 'Charging' });
+      startSimulatingMeterValues();
+    }, 2000);
   }, 2000);
 });
 
 function sendCall(action, payload) {
   const messageId = Math.random().toString(36).substring(7);
-  const message = JSON.stringify([2, messageId, action, payload]);
-  ws.send(message);
-  console.log(`Mock Charger: Sent ${action}`);
+  ws.send(JSON.stringify([2, messageId, action, payload]));
 }
 
 function startSimulatingMeterValues() {
-  let power = 7.2;
-  let soc = 20;
+  let soc = 40.0;
 
   setInterval(() => {
-    // fluctuate power slightly
-    power = 7.0 + Math.random() * 0.5;
-    soc += 0.1;
-    if (soc > 100) soc = 100;
+    // Simulated values as requested
+    const voltage = 398 + Math.random() * 4; // Around 400V
+    const power = 14.8 + Math.random() * 0.4;  // Around 15kW
+    const current = (power * 1000) / voltage;
+
+    soc += 0.05; // Increment SoC
+    if (soc > 80) soc = 40; // Reset for loop testing
 
     sendCall('MeterValues', {
       connectorId: 1,
       meterValue: [{
         timestamp: new Date().toISOString(),
         sampledValue: [
-          { value: power.toString(), unit: 'kW', measurand: 'Power.Active.Import' },
-          { value: '230', unit: 'V', measurand: 'Voltage' },
-          { value: (power * 1000 / 230).toFixed(1), unit: 'A', measurand: 'Current.Import' },
-          { value: soc.toFixed(1), unit: 'Percent', measurand: 'SoC' }
+          { value: power.toFixed(2), unit: 'kW', measurand: 'Power.Active.Import' },
+          { value: voltage.toFixed(1), unit: 'V', measurand: 'Voltage' },
+          { value: current.toFixed(1), unit: 'A', measurand: 'Current.Import' },
+          { value: soc.toFixed(2), unit: 'Percent', measurand: 'SoC' }
         ]
       }]
     });
-  }, 3000);
+  }, 3000); // Send every 3 seconds
 }
 
-ws.on('message', (data) => {
-  console.log('Mock Charger: Received from server:', data.toString());
-});
-
-ws.on('error', (err) => {
-  console.error('Mock Charger: WebSocket error:', err);
-});
+ws.on('message', (data) => console.log('[Simulator] Response:', data.toString()));
+ws.on('error', (err) => console.error('[Simulator] Error:', err));

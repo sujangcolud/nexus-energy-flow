@@ -1,116 +1,130 @@
-// Replace with your server URL
+/**
+ * EV CHARGING DASHBOARD - CLIENT SCRIPT
+ * Connects to the Bridge Server and updates the UI in real-time.
+ */
+
 const SERVER_URL = 'http://localhost:3000';
 const socket = io(SERVER_URL);
 
-// Chart Initialization
-const chartOptions = {
-    series: [{
-        name: 'Power',
-        data: []
-    }],
+// Chart Configuration
+const options = {
+    series: [{ name: 'Power', data: [] }],
     chart: {
         type: 'area',
-        height: 160,
+        height: 250,
+        foreColor: '#94a3b8',
+        toolbar: { show: false },
         animations: {
             enabled: true,
             easing: 'linear',
-            dynamicAnimation: {
-                speed: 1000
-            }
+            dynamicAnimation: { speed: 1000 }
         },
-        toolbar: {
-            show: false
-        },
-        zoom: {
-            enabled: false
-        }
+        zoom: { enabled: false }
     },
-    dataLabels: {
-        enabled: false
-    },
-    stroke: {
-        curve: 'smooth',
-        width: 3,
-        colors: ['#2563eb']
-    },
+    colors: ['#3b82f6'],
+    dataLabels: { enabled: false },
+    stroke: { curve: 'smooth', width: 4 },
     fill: {
         type: 'gradient',
         gradient: {
             shadeIntensity: 1,
-            opacityFrom: 0.45,
+            opacityFrom: 0.4,
             opacityTo: 0.05,
-            stops: [20, 100, 100, 100]
+            stops: [0, 90, 100]
         }
+    },
+    grid: {
+        borderColor: '#1e293b',
+        strokeDashArray: 4,
+        xaxis: { lines: { show: true } },
+        yaxis: { lines: { show: false } }
     },
     xaxis: {
         type: 'datetime',
-        range: 60000, // 60 seconds view
+        range: 60000, // Show 60 seconds of data
         labels: { show: false },
         axisBorder: { show: false },
         axisTicks: { show: false }
     },
     yaxis: {
-        labels: { show: false }
+        min: 0,
+        max: 25, // Based on 15kW simulation
+        tickAmount: 5,
+        labels: {
+            formatter: (val) => val.toFixed(1) + ' kW'
+        }
     },
-    grid: {
-        show: false
-    },
-    colors: ['#2563eb']
+    tooltip: { theme: 'dark' }
 };
 
-const chart = new ApexCharts(document.querySelector("#power-chart"), chartOptions);
+const chart = new ApexCharts(document.querySelector("#power-chart"), options);
 chart.render();
 
-const powerData = [];
+const powerSeries = [];
 
-// Socket Listeners
+// Socket.IO Listeners
 socket.on('connect', () => {
-    console.log('Connected to backend');
-});
-
-socket.on('chargerStatus', (data) => {
-    document.getElementById('charger-id-label').innerText = `ID: ${data.chargerId}`;
-    updateBadge(data.status);
-});
-
-socket.on('chargerUpdate', (data) => {
-    updateBadge(data.status);
+    console.log('Connected to CSMS Bridge');
+    updateStatusUI('Connected', 'Online');
 });
 
 socket.on('transactionUpdate', (data) => {
-    // Update Text Fields
-    document.getElementById('power-val').innerText = data.power.toFixed(1);
+    // 1. Update Core Metrics
+    document.getElementById('charger-id-display').innerText = `Station: ${data.chargerId}`;
+    document.getElementById('power-val').innerText = data.powerKw.toFixed(2);
     document.getElementById('voltage-val').innerText = Math.round(data.voltage);
     document.getElementById('current-val').innerText = data.current.toFixed(1);
-    document.getElementById('soc-val').innerText = data.soc > 0 ? data.soc : '--';
-    document.getElementById('last-update').innerText = `Last updated: ${new Date().toLocaleTimeString()}`;
 
-    // Update Chart
-    const timestamp = new Date().getTime();
-    powerData.push({ x: timestamp, y: data.power });
+    const soc = data.soc || 0;
+    document.getElementById('soc-val').innerText = soc > 0 ? soc.toFixed(1) : '--';
+    document.getElementById('soc-bar').style.width = `${soc}%`;
 
-    // Keep last 100 points
-    if (powerData.length > 100) {
-        powerData.shift();
-    }
+    // 2. Update Status UI
+    updateStatusUI('Connected', data.status);
 
-    chart.updateSeries([{ data: powerData }]);
+    // 3. Update Last Seen
+    document.getElementById('last-seen').innerText = `LAST SYNC: ${new Date(data.timestamp).toLocaleTimeString()}`;
 
-    // Auto-update badge to 'Charging' if power is being consumed
-    if (data.power > 0) {
-        updateBadge('Charging');
-    }
+    // 4. Update Chart
+    const ts = new Date(data.timestamp).getTime();
+    powerSeries.push({ x: ts, y: data.powerKw });
+
+    // Limit data points to keep chart smooth
+    if (powerSeries.length > 100) powerSeries.shift();
+    chart.updateSeries([{ data: powerSeries }]);
 });
 
-function updateBadge(status) {
-    const badge = document.getElementById('status-badge');
-    badge.innerText = status;
+socket.on('disconnect', () => {
+    updateStatusUI('Disconnected', 'Offline');
+});
 
-    if (status === 'Charging') {
-        badge.className = 'px-3 py-1 bg-green-500 rounded-full text-[10px] font-black uppercase tracking-widest border border-white/30';
-    } else if (status === 'Available' || status === 'Online') {
-        badge.className = 'px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-[10px] font-black uppercase tracking-widest border border-white/30';
-    } else {
-        badge.className = 'px-3 py-1 bg-red-500 rounded-full text-[10px] font-black uppercase tracking-widest border border-white/30';
+/**
+ * Updates the visual status badge and pulse
+ */
+function updateStatusUI(connection, chargerStatus) {
+    const pulse = document.getElementById('status-pulse');
+    const text = document.getElementById('status-text');
+
+    text.innerText = chargerStatus;
+
+    if (connection === 'Disconnected') {
+        pulse.className = 'w-3 h-3 rounded-full bg-red-500';
+        text.className = 'text-xs font-black uppercase tracking-widest text-red-500';
+        return;
+    }
+
+    switch (chargerStatus.toLowerCase()) {
+        case 'charging':
+            pulse.className = 'w-3 h-3 rounded-full bg-green-500 animate-pulse';
+            text.className = 'text-xs font-black uppercase tracking-widest text-green-400';
+            break;
+        case 'available':
+        case 'online':
+            pulse.className = 'w-3 h-3 rounded-full bg-blue-500';
+            text.className = 'text-xs font-black uppercase tracking-widest text-blue-400';
+            break;
+        default:
+            pulse.className = 'w-3 h-3 rounded-full bg-gray-500';
+            text.className = 'text-xs font-black uppercase tracking-widest text-gray-400';
     }
 }
