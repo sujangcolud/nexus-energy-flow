@@ -161,6 +161,18 @@ const MobileDashboard = () => {
         category: "transactions",
       },
       {
+        id: "ev_live",
+        path: "/ev-dashboard.html",
+        label: "EV Live",
+        icon: Activity,
+        roles: ["user", "data_entry", "reports_viewer", "super_admin"],
+        color: "from-blue-600 to-blue-400",
+        bgColor: "bg-blue-50/5",
+        description: "Live charging status",
+        category: "transactions",
+        isExternal: true,
+      },
+      {
         id: "expenses",
         path: "expenses",
         label: "Expenses",
@@ -555,8 +567,12 @@ const MobileDashboard = () => {
                   <Card
                     key={item.id}
                     onClick={() => {
-                      navigate(item.path);
-                      setIsMenuOpen(false);
+                      if ('isExternal' in item && item.isExternal) {
+                        window.location.href = item.path;
+                      } else {
+                        navigate(item.path);
+                        setIsMenuOpen(false);
+                      }
                     }}
                     style={{ transform: `rotateX(${scrollTilt}deg)` }}
                     className="group cursor-pointer scroll-responsive-card press-3d border-none shadow-sm bg-white rounded-3xl overflow-hidden"
