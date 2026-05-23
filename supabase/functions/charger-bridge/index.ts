@@ -50,12 +50,20 @@ serve((req) => {
             break;
 
           case 'StatusNotification':
-            await updateChargerStatus(chargerId, { status: payload.status });
+            if (payload.connectorId === 0) {
+              await updateChargerStatus(chargerId, { status: payload.status });
+            } else {
+              await updateConnectorStatus(chargerId, payload.connectorId, { status: payload.status });
+            }
             break;
 
           case 'MeterValues': {
             const metrics = extractMetrics(payload);
-            await updateChargerStatus(chargerId, metrics);
+            if (payload.connectorId === 0) {
+              await updateChargerStatus(chargerId, metrics);
+            } else {
+              await updateConnectorStatus(chargerId, payload.connectorId, metrics);
+            }
             break;
           }
 
@@ -140,7 +148,23 @@ async function updateChargerStatus(charger_id: string, updates: any) {
       updated_at: new Date().toISOString()
     }, { onConflict: 'charger_id' });
 
-  if (error) console.error("[Database] Status Update Error:", error.message);
+  if (error) console.error("[Database] Status Update (Charger) Error:", error.message);
+}
+
+/**
+ * Persists connector metrics directly into Supabase 'charger_connectors' table
+ */
+async function updateConnectorStatus(charger_id: string, connector_id: number, updates: any) {
+  const { error } = await supabase
+    .from('charger_connectors')
+    .upsert({
+      charger_id,
+      connector_id,
+      ...updates,
+      updated_at: new Date().toISOString()
+    }, { onConflict: 'charger_id, connector_id' });
+
+  if (error) console.error("[Database] Status Update (Connector) Error:", error.message);
 }
 
 /**
@@ -164,13 +188,11 @@ async function recordCompletedSession(chargerId: string, tx: any, payload: any, 
 
   // Record in charging_sessions table
   const { error } = await supabase.from('charging_sessions').insert({
-    category: 'OCPP Session',
     kcal: consumedUnits,
     total_amount: consumedUnits * 15, // Standard rate per unit
     payment_mode: 'Auto-Bill',
     session_date: new Date().toISOString().split('T')[0],
-    user_id: userId,
-    amount: consumedUnits * 15 // Ensure both amount and total_amount are set if needed
+    user_id: userId
   });
 
   if (error) console.error("[Database] Session Recording Error:", error.message);
