@@ -19,40 +19,46 @@
     let chart = null;
     let powerHistory = [];
 
-    // Views
-    const viewDashboard = document.getElementById('view-dashboard');
-    const viewStations = document.getElementById('view-stations');
-    const viewDetail = document.getElementById('view-charger-detail');
-    const viewTransactions = document.getElementById('view-transactions');
-    const viewReports = document.getElementById('view-reports');
-    const navItems = [
-        document.getElementById('nav-dashboard'),
-        document.getElementById('nav-stations'),
-        document.getElementById('nav-transactions'),
-        document.getElementById('nav-reports')
-    ];
+    // Views and Elements
+    let viewDashboard, viewStations, viewDetail, viewTransactions, viewReports;
+    let navItems = [];
 
     async function init() {
-        setupChart();
-        await fetchData();
-        subscribeToRealtime();
-        renderStationsTable();
-        renderTransactionsTable();
-        updateOverviewStats();
+        console.log("[CSMS] Initializing Dashboard...");
 
-        // Navigation listeners
-        document.getElementById('nav-stations').addEventListener('click', (e) => {
-            e.preventDefault();
-            setActiveNav('nav-stations');
-            showView(viewStations);
-        });
+        // Initialize DOM references
+        viewDashboard = document.getElementById('view-dashboard');
+        viewStations = document.getElementById('view-stations');
+        viewDetail = document.getElementById('view-charger-detail');
+        viewTransactions = document.getElementById('view-transactions');
+        viewReports = document.getElementById('view-reports');
 
-        document.getElementById('nav-transactions').addEventListener('click', (e) => {
-            e.preventDefault();
-            setActiveNav('nav-transactions');
-            showView(viewTransactions);
-            renderTransactionsTable();
-        });
+        navItems = [
+            document.getElementById('nav-dashboard'),
+            document.getElementById('nav-stations'),
+            document.getElementById('nav-transactions'),
+            document.getElementById('nav-reports')
+        ].filter(el => el !== null);
+
+        // ATTACH LISTENERS FIRST (so they work even if data fetch is slow/fails)
+        const navStations = document.getElementById('nav-stations');
+        if (navStations) {
+            navStations.addEventListener('click', (e) => {
+                e.preventDefault();
+                setActiveNav('nav-stations');
+                showView(viewStations);
+            });
+        }
+
+        const navTransactions = document.getElementById('nav-transactions');
+        if (navTransactions) {
+            navTransactions.addEventListener('click', (e) => {
+                e.preventDefault();
+                setActiveNav('nav-transactions');
+                showView(viewTransactions);
+                renderTransactionsTable();
+            });
+        }
 
         // Transaction filters
         const txStatusFilters = document.querySelectorAll('#transaction-status-filters button');
@@ -83,19 +89,37 @@
             });
         }
 
-        document.getElementById('nav-dashboard').addEventListener('click', (e) => {
-            e.preventDefault();
-            setActiveNav('nav-dashboard');
-            showView(viewDashboard);
-            updateOverviewStats();
-        });
+        const navDashboard = document.getElementById('nav-dashboard');
+        if (navDashboard) {
+            navDashboard.addEventListener('click', (e) => {
+                e.preventDefault();
+                setActiveNav('nav-dashboard');
+                showView(viewDashboard);
+                updateOverviewStats();
+            });
+        }
 
-        document.getElementById('nav-reports').addEventListener('click', (e) => {
-            e.preventDefault();
-            setActiveNav('nav-reports');
-            showView(viewReports);
-            updateOverviewCharts();
-        });
+        const navReports = document.getElementById('nav-reports');
+        if (navReports) {
+            navReports.addEventListener('click', (e) => {
+                e.preventDefault();
+                setActiveNav('nav-reports');
+                showView(viewReports);
+                updateOverviewCharts();
+            });
+        }
+
+        // Initialize UI State
+        try {
+            setupChart();
+            await fetchData();
+            subscribeToRealtime();
+            renderStationsTable();
+            renderTransactionsTable();
+            updateOverviewStats();
+        } catch (err) {
+            console.error("[CSMS] Initialization Error:", err);
+        }
 
         // Search and Filter listeners
         const searchInput = document.querySelector('input[placeholder="Filter by Charger..."]');
