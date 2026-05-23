@@ -181,6 +181,17 @@ const Dashboard = () => {
         description: "Track energy consumption",
       },
       {
+        id: "ev_live",
+        path: "/ev-dashboard.html",
+        label: "EV Live",
+        icon: Activity,
+        roles: ["user", "data_entry", "reports_viewer", "super_admin"],
+        color: "bg-blue-600",
+        bgColor: "bg-blue-50",
+        description: "Live charging status",
+        isExternal: true,
+      },
+      {
         id: "expenses",
         path: "expenses",
         label: "Expenses",
@@ -623,7 +634,13 @@ const Dashboard = () => {
                 return (
                   <Card
                     key={item.id}
-                    onClick={() => navigate(item.path)}
+                    onClick={() => {
+                      if ('isExternal' in item && item.isExternal) {
+                        window.location.href = item.path;
+                      } else {
+                        navigate(item.path);
+                      }
+                    }}
                     style={{ transform: `rotateX(${scrollTilt}deg)` }}
                     className="relative cursor-pointer scroll-responsive-card press-3d bg-card border border-border h-full group"
                   >
