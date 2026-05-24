@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {CalendarIcon, Loader2, Download, RefreshCw,
-  Wallet,} from "lucide-react";
+  Wallet, Banknote, Save, Database} from "lucide-react";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { formatCurrency } from "@/utils/unifiedCalculations";
@@ -52,6 +52,10 @@ interface DailyClosingData {
   netProfit: number;
   cooperativeWithdrawals: number;
   bankWithdrawals: number;
+
+  // Actual entries
+  actualCashInHand?: number;
+  actualFonepayTotal?: number;
 }
 
 export const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
@@ -62,6 +66,9 @@ export const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
   const [closingData, setClosingData] = useState<DailyClosingData | null>(null);
   const [loading, setLoading] = useState(false);
   const [processing, setProcessing] = useState(false);
+  const [actualCash, setActualCash] = useState<string>("");
+  const [actualFonepay, setActualFonepay] = useState<string>("");
+  const [isSaving, setIsSaving] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
@@ -176,7 +183,7 @@ export const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
       const cooperativeBalance = safeGet(latestSummary, 'cooperative_balance');
       const totalBalance = cashBalance + esewaBalance + fonepayBalance + cooperativeBalance;
 
-      const calculatedData = {
+      const calculatedData: DailyClosingData = {
         selectedDate: targetDate || startFilter,
         totalIncome,
         totalIncomeFromOrders: aggregatedData.totalIncomeFromOrders,
@@ -198,11 +205,15 @@ export const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
         totalBalance,
         netProfit,
         cooperativeWithdrawals: aggregatedData.cooperativeWithdrawals,
-        bankWithdrawals: aggregatedData.bankWithdrawals
+        bankWithdrawals: aggregatedData.bankWithdrawals,
+        actualCashInHand: safeGet(latestSummary, 'actual_cash_in_hand'),
+        actualFonepayTotal: safeGet(latestSummary, 'actual_fonepay_total')
       };
 
       console.log('Final calculated data from daily_summary:', calculatedData);
       setClosingData(calculatedData);
+      setActualCash(calculatedData.actualCashInHand?.toString() || "");
+      setActualFonepay(calculatedData.actualFonepayTotal?.toString() || "");
     } catch (error) {
       console.error('Error fetching daily closing data:', error);
     } finally {
@@ -347,7 +358,9 @@ export const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
         totalBalance,
         netProfit,
         cooperativeWithdrawals: cooperativeWithdrawalsTotal,
-        bankWithdrawals: bankWithdrawalsTotal
+        bankWithdrawals: bankWithdrawalsTotal,
+        actualCashInHand: 0,
+        actualFonepayTotal: 0
       };
 
       console.log('💰 Calculated data from transactions:', calculatedData);
@@ -427,6 +440,33 @@ export const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
 
   const handlePopoverClick = (e: React.MouseEvent) => {
     e.stopPropagation();
+  };
+
+  const saveActualEntries = async () => {
+    if (!closingData || isSaving) return;
+
+    setIsSaving(true);
+    try {
+      const targetDateStr = toDateStr(closingData.selectedDate);
+      const { error } = await supabase
+        .from('daily_summary')
+        .update({
+          actual_cash_in_hand: Number(actualCash) || 0,
+          actual_fonepay_total: Number(actualFonepay) || 0,
+          updated_at: new Date().toISOString()
+        })
+        .eq('summary_date', targetDateStr);
+
+      if (error) throw error;
+
+      toast.success("Actual entries saved successfully");
+      await fetchDailyClosingData(selectedDate, startDate, endDate);
+    } catch (error: any) {
+      console.error('Error saving actual entries:', error);
+      toast.error(error.message || "Failed to save actual entries");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -597,6 +637,96 @@ export const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Analytics & Physical Verification Section */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Card className="rounded-3xl border-none shadow-md bg-white overflow-hidden">
+                  <CardHeader className="bg-slate-50 p-4">
+                    <CardTitle className="text-xs font-black uppercase tracking-widest text-slate-500 flex items-center gap-2">
+                      <Banknote className="h-4 w-4" /> Physical Cash Verification
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-4 space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase mb-1">System Cash</p>
+                        <p className="text-lg font-black text-slate-700">{formatCurrency(closingData.cashBalance)}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase mb-1">Actual Entry</p>
+                        <input
+                          type="number"
+                          value={actualCash}
+                          onChange={(e) => setActualCash(e.target.value)}
+                          placeholder="0.00"
+                          className="w-full h-10 px-3 font-black text-lg border-2 border-slate-100 rounded-xl focus:border-primary focus:ring-0 outline-none transition-all"
+                        />
+                      </div>
+                    </div>
+
+                    {actualCash !== "" && (
+                      <div className={cn(
+                        "p-3 rounded-2xl flex justify-between items-center",
+                        (Number(actualCash) - closingData.cashBalance) === 0 ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"
+                      )}>
+                        <span className="text-xs font-bold uppercase tracking-wider">Difference</span>
+                        <span className="text-lg font-black">
+                          {formatCurrency(Number(actualCash) - closingData.cashBalance)}
+                        </span>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                <Card className="rounded-3xl border-none shadow-md bg-white overflow-hidden">
+                  <CardHeader className="bg-slate-50 p-4">
+                    <CardTitle className="text-xs font-black uppercase tracking-widest text-slate-500 flex items-center gap-2">
+                      <RefreshCw className="h-4 w-4" /> Fonepay Verification
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-4 space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase mb-1">System Fonepay</p>
+                        <p className="text-lg font-black text-slate-700">{formatCurrency(closingData.fonepayIncome)}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase mb-1">Actual Entry</p>
+                        <input
+                          type="number"
+                          value={actualFonepay}
+                          onChange={(e) => setActualFonepay(e.target.value)}
+                          placeholder="0.00"
+                          className="w-full h-10 px-3 font-black text-lg border-2 border-slate-100 rounded-xl focus:border-primary focus:ring-0 outline-none transition-all"
+                        />
+                      </div>
+                    </div>
+
+                    {actualFonepay !== "" && (
+                      <div className={cn(
+                        "p-3 rounded-2xl flex justify-between items-center",
+                        (Number(actualFonepay) - closingData.fonepayIncome) === 0 ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"
+                      )}>
+                        <span className="text-xs font-bold uppercase tracking-wider">Difference</span>
+                        <span className="text-lg font-black">
+                          {formatCurrency(Number(actualFonepay) - closingData.fonepayIncome)}
+                        </span>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div className="flex justify-center">
+                <Button
+                  onClick={saveActualEntries}
+                  disabled={isSaving}
+                  className="rounded-full px-8 h-12 font-black uppercase tracking-widest shadow-lg active:scale-95 transition-all"
+                >
+                  {isSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+                  Save Verification Data
+                </Button>
+              </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {/* Income Summary */}

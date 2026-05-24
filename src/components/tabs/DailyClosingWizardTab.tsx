@@ -33,18 +33,24 @@ const STEPS = [
 type Totals = {
   income: number;
   ordersIncome: number;
+  ordersIncomeCash: number;
   chargingIncome: number;
+  chargingIncomeCash: number;
   expenses: number;
+  expensesCash: number;
   deposits: number;
   withdrawals: number;
   savings: number;
   cashBalance: number;
   esewaBalance: number;
   fonepayBalance: number;
+  fonepayIncome: number;
   cooperativeBalance: number;
   totalBalance: number;
   netProfit: number;
   source: "daily_summary" | "transactions";
+  actualCashInHand?: number;
+  actualFonepayTotal?: number;
 };
 
 async function computeTotalsFromTransactions(dateStr: string): Promise<Totals> {
@@ -58,16 +64,29 @@ async function computeTotalsFromTransactions(dateStr: string): Promise<Totals> {
   ]);
   const sum = (rows: any[] | null, k: string) =>
     (rows || []).reduce((acc, r) => acc + (Number(r[k]) || 0), 0);
+
+  const sumByMode = (rows: any[] | null, k: string, mode: string) =>
+    (rows || []).filter(r => r.payment_mode?.toLowerCase() === mode).reduce((acc, r) => acc + (Number(r[k]) || 0), 0);
+
   const ordersIncome = sum(o.data, "total");
+  const ordersIncomeCash = sumByMode(o.data, "total", "cash");
+  const ordersIncomeFonepay = sumByMode(o.data, "total", "fonepay");
   const chargingIncome = sum(c.data, "total_amount");
+  const chargingIncomeCash = sumByMode(c.data, "total_amount", "cash");
+  const chargingIncomeFonepay = sumByMode(c.data, "total_amount", "fonepay");
   const expenses = sum(e.data, "amount");
+  const expensesCash = sumByMode(e.data, "amount", "cash");
+
   const deposits = sum(d.data, "amount");
   const withdrawals = sum(w.data, "amount");
   const savings = sum(s.data, "contribution_amount");
   const income = ordersIncome + chargingIncome;
+
   return {
-    income, ordersIncome, chargingIncome, expenses, deposits, withdrawals, savings,
-    cashBalance: 0, esewaBalance: 0, fonepayBalance: 0, cooperativeBalance: 0, totalBalance: 0,
+    income, ordersIncome, ordersIncomeCash, chargingIncome, chargingIncomeCash,
+    expenses, expensesCash, deposits, withdrawals, savings,
+    cashBalance: 0, esewaBalance: 0, fonepayBalance: 0, fonepayIncome: ordersIncomeFonepay + chargingIncomeFonepay,
+    cooperativeBalance: 0, totalBalance: 0,
     netProfit: income - expenses,
     source: "transactions",
   };
@@ -78,6 +97,9 @@ const DailyClosingWizardTab = () => {
   const qc = useQueryClient();
   const [step, setStep] = useState(1);
   const [closingDate, setClosingDate] = useState<Date>(new Date());
+  const [actualCash, setActualCash] = useState<string>("");
+  const [actualFonepay, setActualFonepay] = useState<string>("");
+  const [isSavingActuals, setIsSavingActuals] = useState(false);
   const dateStr = useMemo(() => toDateStr(closingDate), [closingDate]);
 
   // ---------- totals ----------
@@ -101,21 +123,38 @@ const DailyClosingWizardTab = () => {
       return {
         income,
         ordersIncome: Number(data.total_income_from_orders || 0),
+        ordersIncomeCash: Number(data.total_income_from_orders_cash || 0),
         chargingIncome: Number(data.total_income_from_charging || 0),
+        chargingIncomeCash: Number(data.total_income_from_charging_cash || 0),
         expenses,
+        expensesCash: Number(data.total_expenses_cash || 0),
         deposits: Number(data.total_deposits || 0),
         withdrawals: Number(data.total_withdrawals || 0),
         savings: Number(data.total_savings || 0),
         cashBalance: Number(data.cash_balance || 0),
         esewaBalance: Number(data.esewa_balance || 0),
         fonepayBalance: Number(data.fonepay_balance || 0),
+        fonepayIncome: Number(data.total_income_fonepay || 0),
         cooperativeBalance: Number(data.cooperative_balance || 0),
         totalBalance: Number(data.total_balance || 0),
         netProfit: income - expenses,
         source: "daily_summary",
+        actualCashInHand: Number(data.actual_cash_in_hand || 0),
+        actualFonepayTotal: Number(data.actual_fonepay_total || 0),
       };
     },
   });
+
+  // Automatically sync local actual entry state with fetched data
+  useMemo(() => {
+    if (totalsQ.data?.source === "daily_summary") {
+      setActualCash(totalsQ.data.actualCashInHand?.toString() || "");
+      setActualFonepay(totalsQ.data.actualFonepayTotal?.toString() || "");
+    } else {
+      setActualCash("");
+      setActualFonepay("");
+    }
+  }, [totalsQ.data]);
 
   // ---------- reconcile ----------
   const reconcileQ = useQuery<any>({
@@ -148,6 +187,31 @@ const DailyClosingWizardTab = () => {
       await reconcileQ.refetch();
     },
     onError: (e: any) => toast.error(e.message || "Refresh failed"),
+  });
+
+  // ---------- save actuals ----------
+  const saveActualsMutation = useMutation({
+    mutationFn: async () => {
+      setIsSavingActuals(true);
+      try {
+        const { error } = await supabase
+          .from("daily_summary")
+          .update({
+            actual_cash_in_hand: Number(actualCash) || 0,
+            actual_fonepay_total: Number(actualFonepay) || 0,
+            updated_at: new Date().toISOString()
+          })
+          .eq("summary_date", dateStr);
+        if (error) throw error;
+      } finally {
+        setIsSavingActuals(false);
+      }
+    },
+    onSuccess: () => {
+      toast.success("Verification data saved");
+      totalsQ.refetch();
+    },
+    onError: (e: any) => toast.error(e.message || "Save failed"),
   });
 
   // ---------- lock ----------
@@ -276,14 +340,25 @@ const DailyClosingWizardTab = () => {
                     <Stat label="Income" value={fmt(summary.income)} />
                     <Stat label="Expenses" value={fmt(summary.expenses)} />
                     <Stat label="Net Profit" value={fmt(summary.netProfit)} />
+                    <Stat label="Total Balance" value={fmt(summary.totalBalance)} />
+
+                    <div className="md:col-span-4 h-px bg-border my-2" />
+
+                    <Stat label="Cash Orders" value={fmt(summary.ordersIncomeCash)} />
+                    <Stat label="Cash Charging" value={fmt(summary.chargingIncomeCash)} />
+                    <Stat label="Cash Expenses" value={fmt(summary.expensesCash)} />
+                    <Stat label="Cash In Hand" value={fmt(summary.cashBalance)} className="bg-primary/5 border-primary/20" />
+
+                    <div className="md:col-span-4 h-px bg-border my-2" />
+
+                    <Stat label="Orders (Total)" value={fmt(summary.ordersIncome)} />
+                    <Stat label="Charging (Total)" value={fmt(summary.chargingIncome)} />
+                    <Stat label="eSewa" value={fmt(summary.esewaBalance)} />
+                    <Stat label="Fonepay" value={fmt(summary.fonepayBalance)} />
+
                     <Stat label="Deposits" value={fmt(summary.deposits)} />
                     <Stat label="Withdrawals" value={fmt(summary.withdrawals)} />
                     <Stat label="Savings" value={fmt(summary.savings)} />
-                    <Stat label="Orders" value={fmt(summary.ordersIncome)} />
-                    <Stat label="Charging" value={fmt(summary.chargingIncome)} />
-                    <Stat label="Cash" value={fmt(summary.cashBalance)} />
-                    <Stat label="eSewa" value={fmt(summary.esewaBalance)} />
-                    <Stat label="Fonepay" value={fmt(summary.fonepayBalance)} />
                     <Stat label="Cooperative" value={fmt(summary.cooperativeBalance)} />
                   </div>
                 </>
@@ -356,31 +431,118 @@ const DailyClosingWizardTab = () => {
                   </AlertDescription>
                 </Alert>
               ) : (
-                <table className="w-full text-sm">
-                  <thead className="text-xs text-muted-foreground">
-                    <tr className="border-b border-border">
-                      <th className="text-left py-2">Account</th>
-                      <th className="text-right py-2">Recorded</th>
-                      <th className="text-right py-2">Computed</th>
-                      <th className="text-right py-2">Variance</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {["cash", "esewa", "fonepay", "cooperative"].map((k) => {
-                      const v = Number(reconcileQ.data.variance?.[k] || 0);
-                      return (
-                        <tr key={k} className="border-b border-border last:border-0">
-                          <td className="py-2 capitalize">{k}</td>
-                          <td className="py-2 text-right tabular-nums">{fmt(reconcileQ.data.recorded?.[k] || 0)}</td>
-                          <td className="py-2 text-right tabular-nums">{fmt(reconcileQ.data.computed?.[k] || 0)}</td>
-                          <td className={cn("py-2 text-right tabular-nums font-medium", Math.abs(v) > 0.01 ? "text-foreground" : "text-muted-foreground")}>
-                            {v >= 0 ? "+" : ""}{v.toFixed(2)}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+                <div className="space-y-6">
+                  <table className="w-full text-sm">
+                    <thead className="text-xs text-muted-foreground">
+                      <tr className="border-b border-border">
+                        <th className="text-left py-2">Account</th>
+                        <th className="text-right py-2">Recorded</th>
+                        <th className="text-right py-2">Computed</th>
+                        <th className="text-right py-2">Variance</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {["cash", "esewa", "fonepay", "cooperative"].map((k) => {
+                        const v = Number(reconcileQ.data.variance?.[k] || 0);
+                        return (
+                          <tr key={k} className="border-b border-border last:border-0">
+                            <td className="py-2 capitalize">{k}</td>
+                            <td className="py-2 text-right tabular-nums">{fmt(reconcileQ.data.recorded?.[k] || 0)}</td>
+                            <td className="py-2 text-right tabular-nums">{fmt(reconcileQ.data.computed?.[k] || 0)}</td>
+                            <td className={cn("py-2 text-right tabular-nums font-medium", Math.abs(v) > 0.01 ? "text-foreground" : "text-muted-foreground")}>
+                              {v >= 0 ? "+" : ""}{v.toFixed(2)}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+
+                  {/* Physical Verification Inputs */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-muted/20 rounded-xl border border-border">
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="bg-background">Cash</Badge>
+                        <h4 className="text-xs font-bold uppercase text-muted-foreground">Physical Verification</h4>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-[10px] font-bold uppercase text-muted-foreground">
+                          <span>System Balance</span>
+                          <span>Actual Entry</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <div className="flex-1 p-2 bg-background border rounded-lg text-sm font-black text-slate-600">
+                            {fmt(summary?.cashBalance || 0)}
+                          </div>
+                          <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                          <input
+                            type="number"
+                            value={actualCash}
+                            onChange={(e) => setActualCash(e.target.value)}
+                            placeholder="0.00"
+                            className="flex-1 h-10 px-3 font-black text-sm border border-input rounded-lg focus:ring-1 focus:ring-primary outline-none"
+                          />
+                        </div>
+                        {actualCash !== "" && (
+                          <div className={cn(
+                            "flex justify-between items-center p-2 rounded-lg text-[10px] font-bold",
+                            (Number(actualCash) - (summary?.cashBalance || 0)) === 0 ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"
+                          )}>
+                            <span>DISCREPANCY</span>
+                            <span>{fmt(Number(actualCash) - (summary?.cashBalance || 0))}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="bg-background">Fonepay</Badge>
+                        <h4 className="text-xs font-bold uppercase text-muted-foreground">Actual Sales</h4>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-[10px] font-bold uppercase text-muted-foreground">
+                          <span>System Total</span>
+                          <span>Actual Entry</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <div className="flex-1 p-2 bg-background border rounded-lg text-sm font-black text-slate-600">
+                            {fmt(summary?.fonepayIncome || 0)}
+                          </div>
+                          <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                          <input
+                            type="number"
+                            value={actualFonepay}
+                            onChange={(e) => setActualFonepay(e.target.value)}
+                            placeholder="0.00"
+                            className="flex-1 h-10 px-3 font-black text-sm border border-input rounded-lg focus:ring-1 focus:ring-primary outline-none"
+                          />
+                        </div>
+                        {actualFonepay !== "" && (
+                          <div className={cn(
+                            "flex justify-between items-center p-2 rounded-lg text-[10px] font-bold",
+                            (Number(actualFonepay) - (summary?.fonepayIncome || 0)) === 0 ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"
+                          )}>
+                            <span>DISCREPANCY</span>
+                            <span>{fmt(Number(actualFonepay) - (summary?.fonepayIncome || 0))}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="md:col-span-2 flex justify-end pt-2">
+                      <Button
+                        size="sm"
+                        onClick={() => saveActualsMutation.mutate()}
+                        disabled={isSavingActuals || !totalsQ.data || totalsQ.data.source !== "daily_summary"}
+                        className="font-bold text-[10px] uppercase tracking-wider h-8"
+                      >
+                        {isSavingActuals ? <Loader2 className="h-3 w-3 animate-spin mr-2" /> : <ShieldCheck className="h-3 w-3 mr-2" />}
+                        Save Verification
+                      </Button>
+                    </div>
+                  </div>
+                </div>
               )}
 
               <div className="pt-4 border-t border-border">
@@ -454,8 +616,8 @@ const DailyClosingWizardTab = () => {
   );
 };
 
-const Stat = ({ label, value }: { label: string; value: string }) => (
-  <div className="border border-border rounded p-3">
+const Stat = ({ label, value, className }: { label: string; value: string; className?: string }) => (
+  <div className={cn("border border-border rounded p-3", className)}>
     <p className="text-xs text-muted-foreground">{label}</p>
     <p className="text-base font-semibold tabular-nums">{value}</p>
   </div>
