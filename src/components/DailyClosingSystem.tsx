@@ -31,6 +31,8 @@ interface DailyClosingData {
   totalDeposits: number;
   totalWithdrawals: number;
   totalSavings: number;
+  totalSavingsCash: number;
+  systemCashCalculation: number;
   
   // Payment mode breakdowns
   cashIncome: number;
@@ -151,6 +153,7 @@ export const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
           totalDeposits: acc.totalDeposits + safeGet(daily, 'total_deposits'),
           totalWithdrawals: acc.totalWithdrawals + safeGet(daily, 'total_withdrawals'),
           totalSavings: acc.totalSavings + safeGet(daily, 'total_savings'),
+        totalSavingsCash: acc.totalSavingsCash + safeGet(daily, 'total_savings_cash'),
           cooperativeWithdrawals: acc.cooperativeWithdrawals + safeGet(daily, 'total_withdrawals_cooperative'),
           bankWithdrawals: acc.bankWithdrawals + safeGet(daily, 'total_withdrawals_bank'),
         };
@@ -192,6 +195,7 @@ export const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
         totalDeposits: aggregatedData.totalDeposits,
         totalWithdrawals: aggregatedData.totalWithdrawals,
         totalSavings: aggregatedData.totalSavings,
+        totalSavingsCash: aggregatedData.totalSavingsCash,
         cashIncome: aggregatedData.totalIncomeCash,
         esewaIncome: aggregatedData.totalIncomeEsewa,
         fonepayIncome: aggregatedData.totalIncomeFonepay,
@@ -206,6 +210,7 @@ export const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
         netProfit,
         cooperativeWithdrawals: aggregatedData.cooperativeWithdrawals,
         bankWithdrawals: aggregatedData.bankWithdrawals,
+        systemCashCalculation: safeGet(latestSummary, 'system_cash_calculation'),
         actualCashInHand: safeGet(latestSummary, 'actual_cash_in_hand'),
         actualFonepayTotal: safeGet(latestSummary, 'actual_fonepay_total')
       };
@@ -647,10 +652,30 @@ export const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="p-4 space-y-4">
+                    {/* Breakdown */}
+                    <div className="p-3 bg-slate-50 rounded-2xl space-y-1.5 border border-slate-100">
+                      <div className="flex justify-between text-[10px] font-bold">
+                        <span className="text-slate-400">CASH ORDERS:</span>
+                        <span className="text-emerald-600">+{formatCurrency(closingData.cashIncome)}</span>
+                      </div>
+                      <div className="flex justify-between text-[10px] font-bold">
+                        <span className="text-slate-400">CASH EXPENSES:</span>
+                        <span className="text-rose-600">-{formatCurrency(closingData.cashExpenses)}</span>
+                      </div>
+                      <div className="flex justify-between text-[10px] font-bold">
+                        <span className="text-slate-400">CASH SAVINGS:</span>
+                        <span className="text-rose-600">-{formatCurrency(closingData.totalSavingsCash || 0)}</span>
+                      </div>
+                      <div className="pt-1.5 border-t border-slate-200 flex justify-between text-[11px] font-black">
+                        <span className="text-slate-600 uppercase">System Calc:</span>
+                        <span className="text-primary">{formatCurrency(closingData.systemCashCalculation)}</span>
+                      </div>
+                    </div>
+
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <p className="text-[10px] font-bold text-muted-foreground uppercase mb-1">System Cash</p>
-                        <p className="text-lg font-black text-slate-700">{formatCurrency(closingData.cashBalance)}</p>
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase mb-1">Calc Balance</p>
+                        <p className="text-lg font-black text-slate-700">{formatCurrency(closingData.systemCashCalculation)}</p>
                       </div>
                       <div>
                         <p className="text-[10px] font-bold text-muted-foreground uppercase mb-1">Actual Entry</p>
@@ -667,11 +692,11 @@ export const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
                     {actualCash !== "" && (
                       <div className={cn(
                         "p-3 rounded-2xl flex justify-between items-center",
-                        (Number(actualCash) - closingData.cashBalance) === 0 ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"
+                        (Number(actualCash) - closingData.systemCashCalculation) === 0 ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"
                       )}>
                         <span className="text-xs font-bold uppercase tracking-wider">Difference</span>
                         <span className="text-lg font-black">
-                          {formatCurrency(Number(actualCash) - closingData.cashBalance)}
+                          {formatCurrency(Number(actualCash) - closingData.systemCashCalculation)}
                         </span>
                       </div>
                     )}

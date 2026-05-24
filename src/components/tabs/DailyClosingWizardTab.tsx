@@ -41,12 +41,14 @@ type Totals = {
   deposits: number;
   withdrawals: number;
   savings: number;
+  savingsCash: number;
   cashBalance: number;
   esewaBalance: number;
   fonepayBalance: number;
   fonepayIncome: number;
   cooperativeBalance: number;
   totalBalance: number;
+  systemCashCalculation: number;
   netProfit: number;
   source: "daily_summary" | "transactions";
   actualCashInHand?: number;
@@ -80,13 +82,15 @@ async function computeTotalsFromTransactions(dateStr: string): Promise<Totals> {
   const deposits = sum(d.data, "amount");
   const withdrawals = sum(w.data, "amount");
   const savings = sum(s.data, "contribution_amount");
+  const savingsCash = sumByMode(s.data, "contribution_amount", "cash");
   const income = ordersIncome + chargingIncome;
 
   return {
     income, ordersIncome, ordersIncomeCash, chargingIncome, chargingIncomeCash,
-    expenses, expensesCash, deposits, withdrawals, savings,
+    expenses, expensesCash, deposits, withdrawals, savings, savingsCash,
     cashBalance: 0, esewaBalance: 0, fonepayBalance: 0, fonepayIncome: ordersIncomeFonepay + chargingIncomeFonepay,
     cooperativeBalance: 0, totalBalance: 0,
+    systemCashCalculation: (ordersIncomeCash + chargingIncomeCash) - (expensesCash + savingsCash),
     netProfit: income - expenses,
     source: "transactions",
   };
@@ -131,12 +135,14 @@ const DailyClosingWizardTab = () => {
         deposits: Number(data.total_deposits || 0),
         withdrawals: Number(data.total_withdrawals || 0),
         savings: Number(data.total_savings || 0),
+        savingsCash: Number(data.total_savings_cash || 0),
         cashBalance: Number(data.cash_balance || 0),
         esewaBalance: Number(data.esewa_balance || 0),
         fonepayBalance: Number(data.fonepay_balance || 0),
         fonepayIncome: Number(data.total_income_fonepay || 0),
         cooperativeBalance: Number(data.cooperative_balance || 0),
         totalBalance: Number(data.total_balance || 0),
+        systemCashCalculation: Number(data.system_cash_calculation || 0),
         netProfit: income - expenses,
         source: "daily_summary",
         actualCashInHand: Number(data.actual_cash_in_hand || 0),
@@ -146,7 +152,7 @@ const DailyClosingWizardTab = () => {
   });
 
   // Automatically sync local actual entry state with fetched data
-  useMemo(() => {
+  useEffect(() => {
     if (totalsQ.data?.source === "daily_summary") {
       setActualCash(totalsQ.data.actualCashInHand?.toString() || "");
       setActualFonepay(totalsQ.data.actualFonepayTotal?.toString() || "");
@@ -465,14 +471,39 @@ const DailyClosingWizardTab = () => {
                         <Badge variant="outline" className="bg-background">Cash</Badge>
                         <h4 className="text-xs font-bold uppercase text-muted-foreground">Physical Verification</h4>
                       </div>
+
+                      {/* Cash Breakdown for Clarity */}
+                      <div className="p-2 bg-background/50 rounded-lg border border-border/50 space-y-1 text-[10px]">
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Cash Orders:</span>
+                          <span className="font-medium text-emerald-600">+{fmt(summary?.ordersIncomeCash || 0)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Cash Charging:</span>
+                          <span className="font-medium text-emerald-600">+{fmt(summary?.chargingIncomeCash || 0)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Cash Expenses:</span>
+                          <span className="font-medium text-rose-600">-{fmt(summary?.expensesCash || 0)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Cash Savings:</span>
+                          <span className="font-medium text-rose-600">-{fmt(summary?.savingsCash || 0)}</span>
+                        </div>
+                        <div className="border-t pt-1 flex justify-between font-bold">
+                          <span>SYSTEM CALCULATION:</span>
+                          <span>{fmt(summary?.systemCashCalculation || 0)}</span>
+                        </div>
+                      </div>
+
                       <div className="space-y-2">
                         <div className="flex justify-between text-[10px] font-bold uppercase text-muted-foreground">
-                          <span>System Balance</span>
+                          <span>System Calc</span>
                           <span>Actual Entry</span>
                         </div>
                         <div className="flex items-center gap-3">
                           <div className="flex-1 p-2 bg-background border rounded-lg text-sm font-black text-slate-600">
-                            {fmt(summary?.cashBalance || 0)}
+                            {fmt(summary?.systemCashCalculation || 0)}
                           </div>
                           <ChevronRight className="h-4 w-4 text-muted-foreground" />
                           <input
@@ -486,10 +517,10 @@ const DailyClosingWizardTab = () => {
                         {actualCash !== "" && (
                           <div className={cn(
                             "flex justify-between items-center p-2 rounded-lg text-[10px] font-bold",
-                            (Number(actualCash) - (summary?.cashBalance || 0)) === 0 ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"
+                            (Number(actualCash) - (summary?.systemCashCalculation || 0)) === 0 ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"
                           )}>
                             <span>DISCREPANCY</span>
-                            <span>{fmt(Number(actualCash) - (summary?.cashBalance || 0))}</span>
+                            <span>{fmt(Number(actualCash) - (summary?.systemCashCalculation || 0))}</span>
                           </div>
                         )}
                       </div>
