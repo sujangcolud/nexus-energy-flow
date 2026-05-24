@@ -256,6 +256,49 @@ const BusinessIntelligenceSuite = () => {
   const flags = useMemo(() => balanceIntegrity(rows), [rows]);
   const anomalies = flags.filter((f) => f.status === "anomaly");
 
+  // Fetch daily summary data for integrity audit (including manual entries)
+  const { data: dailySummaries = [] } = useQuery({
+    queryKey: ["daily-summaries-audit", range.from, range.to],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('daily_summary')
+        .select(`
+          summary_date,
+          actual_cash_in_hand,
+          actual_fonepay_total,
+          cash_balance,
+          total_income_fonepay,
+          cash_diff,
+          fonepay_diff,
+          total_income_from_orders_cash,
+          total_income_from_charging_cash,
+          total_expenses_cash,
+          total_savings_cash,
+          system_cash_calculation
+        `)
+        .gte('summary_date', range.from)
+        .lte('summary_date', range.to)
+        .order('summary_date', { ascending: true });
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const integrityData = useMemo(() => dailySummaries.map(s => ({
+    date: format(parseISO(s.summary_date), 'MMM dd'),
+    "Cash Diff": s.cash_diff || 0,
+    "Fonepay Diff": s.fonepay_diff || 0,
+    "Actual Cash": s.actual_cash_in_hand || 0,
+    "System Cash": s.cash_balance || 0,
+    "Actual Fonepay": s.actual_fonepay_total || 0,
+    "System Fonepay": s.total_income_fonepay || 0,
+    "Cash Orders": s.total_income_from_orders_cash || 0,
+    "Cash Charging": s.total_income_from_charging_cash || 0,
+    "Cash Expenses": s.total_expenses_cash || 0,
+    "Cash Savings": s.total_savings_cash || 0,
+    "System Calc": s.system_cash_calculation || 0,
+  })), [dailySummaries]);
+
   // ---------- Sahuji Intelligence (Insights & Recommendations) ----------
   const sahujiIntel = useMemo(() => {
     const insights: string[] = [];
@@ -339,55 +382,12 @@ const BusinessIntelligenceSuite = () => {
     }
 
     return { insights, recommendations };
-  }, [advBi, kitchenMetrics, hookDays, rows, burdenByDow]);
+  }, [advBi, kitchenMetrics, hookDays, rows, burdenByDow, integrityData]);
 
   const mixData = rows.map((r) => ({
     date: format(new Date(r.business_date), "MMM d"),
     "Energy %": r.energy_revenue_share_pct,
     "Commission %": r.commission_burden_pct,
-  }));
-
-  // Fetch daily summary data for integrity audit (including manual entries)
-  const { data: dailySummaries = [] } = useQuery({
-    queryKey: ["daily-summaries-audit", range.from, range.to],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('daily_summary')
-        .select(`
-          summary_date,
-          actual_cash_in_hand,
-          actual_fonepay_total,
-          cash_balance,
-          total_income_fonepay,
-          cash_diff,
-          fonepay_diff,
-          total_income_from_orders_cash,
-          total_income_from_charging_cash,
-          total_expenses_cash,
-          total_savings_cash,
-          system_cash_calculation
-        `)
-        .gte('summary_date', range.from)
-        .lte('summary_date', range.to)
-        .order('summary_date', { ascending: true });
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  const integrityData = dailySummaries.map(s => ({
-    date: format(parseISO(s.summary_date), 'MMM dd'),
-    "Cash Diff": s.cash_diff || 0,
-    "Fonepay Diff": s.fonepay_diff || 0,
-    "Actual Cash": s.actual_cash_in_hand || 0,
-    "System Cash": s.cash_balance || 0,
-    "Actual Fonepay": s.actual_fonepay_total || 0,
-    "System Fonepay": s.total_income_fonepay || 0,
-    "Cash Orders": s.total_income_from_orders_cash || 0,
-    "Cash Charging": s.total_income_from_charging_cash || 0,
-    "Cash Expenses": s.total_expenses_cash || 0,
-    "Cash Savings": s.total_savings_cash || 0,
-    "System Calc": s.system_cash_calculation || 0,
   }));
 
   const compareData = rows.map((r) => ({
