@@ -363,7 +363,9 @@ const BusinessIntelligenceSuite = () => {
           fonepay_diff,
           total_income_from_orders_cash,
           total_income_from_charging_cash,
-          total_expenses_cash
+          total_expenses_cash,
+          total_savings_cash,
+          system_cash_calculation
         `)
         .gte('summary_date', range.from)
         .lte('summary_date', range.to)
@@ -384,6 +386,8 @@ const BusinessIntelligenceSuite = () => {
     "Cash Orders": s.total_income_from_orders_cash || 0,
     "Cash Charging": s.total_income_from_charging_cash || 0,
     "Cash Expenses": s.total_expenses_cash || 0,
+    "Cash Savings": s.total_savings_cash || 0,
+    "System Calc": s.system_cash_calculation || 0,
   }));
 
   const compareData = rows.map((r) => ({
@@ -810,7 +814,8 @@ const BusinessIntelligenceSuite = () => {
                     <th className="p-2 border text-right">Cash Orders</th>
                     <th className="p-2 border text-right">Cash Charging</th>
                     <th className="p-2 border text-right">Cash Expenses</th>
-                    <th className="p-2 border bg-blue-50/50 text-right">System Balance</th>
+                    <th className="p-2 border text-right">Cash Savings</th>
+                    <th className="p-2 border bg-blue-50/50 text-right">System Calc</th>
                     <th className="p-2 border bg-blue-50 text-right font-bold">Actual In Hand</th>
                     <th className="p-2 border text-right">Cash Diff</th>
                     <th className="p-2 border text-right">Sys Fonepay</th>
@@ -825,7 +830,8 @@ const BusinessIntelligenceSuite = () => {
                       <td className="p-2 border text-right text-muted-foreground">{fmt(d["Cash Orders"])}</td>
                       <td className="p-2 border text-right text-muted-foreground">{fmt(d["Cash Charging"])}</td>
                       <td className="p-2 border text-right text-muted-foreground">{fmt(d["Cash Expenses"])}</td>
-                      <td className="p-2 border text-right bg-blue-50/20">{fmt(d["System Cash"])}</td>
+                      <td className="p-2 border text-right text-muted-foreground">{fmt(d["Cash Savings"])}</td>
+                      <td className="p-2 border text-right bg-blue-50/20">{fmt(d["System Calc"])}</td>
                       <td className="p-2 border text-right bg-blue-50/50 font-bold">{fmt(d["Actual Cash"])}</td>
                       <td className={cn("p-2 border text-right font-black", d["Cash Diff"] !== 0 ? "text-rose-600" : "text-emerald-600")}>
                         {fmt(d["Cash Diff"])}

@@ -7,10 +7,10 @@ ADD COLUMN IF NOT EXISTS total_income_from_orders_esewa NUMERIC DEFAULT 0,
 ADD COLUMN IF NOT EXISTS total_income_from_orders_fonepay NUMERIC DEFAULT 0,
 ADD COLUMN IF NOT EXISTS total_income_from_charging_cash NUMERIC DEFAULT 0,
 ADD COLUMN IF NOT EXISTS total_income_from_charging_esewa NUMERIC DEFAULT 0,
-ADD COLUMN IF NOT EXISTS total_income_from_charging_fonepay NUMERIC DEFAULT 0;
+ADD COLUMN IF NOT EXISTS total_income_from_charging_fonepay NUMERIC DEFAULT 0,
+ADD COLUMN IF NOT EXISTS system_cash_calculation NUMERIC DEFAULT 0;
 
 -- Add generated columns for differences to simplify BI queries
--- Note: Dropping existing generated columns first to allow recreation if they already existed as non-generated or with different definitions
 DO $$
 BEGIN
     ALTER TABLE public.daily_summary DROP COLUMN IF EXISTS cash_diff;
@@ -21,10 +21,10 @@ EXCEPTION
 END $$;
 
 ALTER TABLE public.daily_summary
-ADD COLUMN cash_diff NUMERIC GENERATED ALWAYS AS (actual_cash_in_hand - COALESCE(cash_balance, 0)) STORED,
+ADD COLUMN cash_diff NUMERIC GENERATED ALWAYS AS (actual_cash_in_hand - COALESCE(system_cash_calculation, 0)) STORED,
 ADD COLUMN fonepay_diff NUMERIC GENERATED ALWAYS AS (actual_fonepay_total - COALESCE(total_income_fonepay, 0)) STORED;
 
--- Update update_daily_summary to populate these new columns
+-- Update update_daily_summary to populate these new columns and follow the specific Cash in Hand logic
 CREATE OR REPLACE FUNCTION public.update_daily_summary(p_summary_date DATE)
 RETURNS VOID AS $$
 DECLARE
@@ -73,6 +73,7 @@ DECLARE
     v_fonepay_balance NUMERIC;
     v_cooperative_balance NUMERIC;
     v_total_balance NUMERIC;
+    v_system_cash_calc NUMERIC;
 BEGIN
     -- Calculate income from orders
     SELECT
@@ -162,12 +163,16 @@ BEGIN
     v_total_fonepay_income := v_total_income_fonepay_orders + v_total_income_fonepay_charging;
     v_total_esewa_income := v_total_income_esewa_orders + v_total_income_esewa_charging;
 
-    -- Calculate balances
+    -- Calculate balances (Standard Ledger)
     v_cash_balance := v_total_cash_income - v_total_expenses_cash - v_total_savings_cash + v_total_withdrawals_cash - v_total_deposits_esewa;
     v_esewa_balance := v_total_esewa_income - v_total_expenses_esewa - v_total_savings_esewa + v_total_deposits_esewa;
     v_fonepay_balance := v_total_fonepay_income - v_total_expenses_fonepay - v_total_savings_fonepay;
     v_cooperative_balance := v_total_savings - v_total_withdrawals_cooperative;
     v_total_balance := v_cash_balance + v_fonepay_balance + v_cooperative_balance + v_esewa_balance;
+
+    -- SPECIFIC REQUIREMENT: Cash in hand calculation for audit
+    -- Requirement: (Cash Orders + Cash Charging) - (Cash Expenses + Cash Savings)
+    v_system_cash_calc := (v_total_income_cash_orders + v_total_income_cash_charging) - (v_total_expenses_cash + v_total_savings_cash);
 
     -- Insert or update the summary table
     INSERT INTO public.daily_summary (
@@ -205,7 +210,8 @@ BEGIN
         esewa_balance,
         fonepay_balance,
         cooperative_balance,
-        total_balance
+        total_balance,
+        system_cash_calculation
     ) VALUES (
         p_summary_date,
         v_total_income_from_orders,
@@ -241,7 +247,8 @@ BEGIN
         v_esewa_balance,
         v_fonepay_balance,
         v_cooperative_balance,
-        v_total_balance
+        v_total_balance,
+        v_system_cash_calc
     )
     ON CONFLICT (summary_date) DO UPDATE SET
         total_income_from_orders = EXCLUDED.total_income_from_orders,
@@ -278,6 +285,7 @@ BEGIN
         fonepay_balance = EXCLUDED.fonepay_balance,
         cooperative_balance = EXCLUDED.cooperative_balance,
         total_balance = EXCLUDED.total_balance,
+        system_cash_calculation = EXCLUDED.system_cash_calculation,
         updated_at = NOW();
 END;
 $$ LANGUAGE plpgsql;
