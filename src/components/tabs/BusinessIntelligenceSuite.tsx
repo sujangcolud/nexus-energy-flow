@@ -26,6 +26,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { format, parseISO, subDays, isWithinInterval } from "date-fns";
+import { cn } from "@/lib/utils";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -334,6 +335,31 @@ const BusinessIntelligenceSuite = () => {
     "Commission %": r.commission_burden_pct,
   }));
 
+  // Fetch daily summary data for integrity audit (including manual entries)
+  const { data: dailySummaries = [] } = useQuery({
+    queryKey: ["daily-summaries-audit", range.from, range.to],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('daily_summary')
+        .select('summary_date, actual_cash_in_hand, actual_fonepay_total, cash_balance, total_income_fonepay, cash_diff, fonepay_diff')
+        .gte('summary_date', range.from)
+        .lte('summary_date', range.to)
+        .order('summary_date', { ascending: true });
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const integrityData = dailySummaries.map(s => ({
+    date: format(parseISO(s.summary_date), 'MMM dd'),
+    "Cash Diff": s.cash_diff || 0,
+    "Fonepay Diff": s.fonepay_diff || 0,
+    "Actual Cash": s.actual_cash_in_hand || 0,
+    "System Cash": s.cash_balance || 0,
+    "Actual Fonepay": s.actual_fonepay_total || 0,
+    "System Fonepay": s.total_income_fonepay || 0,
+  }));
+
   const compareData = rows.map((r) => ({
     date: format(new Date(r.business_date), "MMM d"),
     Restaurant: r.orders_revenue,
@@ -552,6 +578,8 @@ const BusinessIntelligenceSuite = () => {
       </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+
         <Card className="border border-border">
           <CardHeader className="pb-2">
             <CardTitle className="text-base flex items-center gap-2">
@@ -709,6 +737,80 @@ const BusinessIntelligenceSuite = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="border border-border lg:col-span-2">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base flex items-center gap-2 text-rose-600">
+              <AlertTriangle className="w-4 h-4" /> Cash & Fonepay Integrity Audit (System vs. Actual)
+            </CardTitle>
+            <CardDescription>Visualizing the drift between database records and physical verification counts.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <p className="text-xs font-bold uppercase text-muted-foreground text-center">Cash Variance</p>
+                <ResponsiveContainer width="100%" height={200}>
+                  <ComposedChart data={integrityData}>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                    <XAxis dataKey="date" tick={{ fontSize: 9 }} />
+                    <YAxis tick={{ fontSize: 9 }} />
+                    <Tooltip />
+                    <Legend iconSize={10} wrapperStyle={{ fontSize: 10 }} />
+                    <Bar dataKey="Cash Diff" fill="#e11d48" name="Variance" />
+                    <Line type="monotone" dataKey="System Cash" stroke="#94a3b8" dot={false} name="System" strokeWidth={1} />
+                  </ComposedChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="space-y-2">
+                <p className="text-xs font-bold uppercase text-muted-foreground text-center">Fonepay Variance</p>
+                <ResponsiveContainer width="100%" height={200}>
+                  <ComposedChart data={integrityData}>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                    <XAxis dataKey="date" tick={{ fontSize: 9 }} />
+                    <YAxis tick={{ fontSize: 9 }} />
+                    <Tooltip />
+                    <Legend iconSize={10} wrapperStyle={{ fontSize: 10 }} />
+                    <Bar dataKey="Fonepay Diff" fill="#f59e0b" name="Variance" />
+                    <Line type="monotone" dataKey="System Fonepay" stroke="#94a3b8" dot={false} name="System" strokeWidth={1} />
+                  </ComposedChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            <div className="mt-6 overflow-x-auto">
+              <table className="w-full text-[10px] text-left border-collapse">
+                <thead>
+                  <tr className="bg-muted/50">
+                    <th className="p-2 border">Date</th>
+                    <th className="p-2 border text-right">System Cash</th>
+                    <th className="p-2 border text-right">Actual Cash</th>
+                    <th className="p-2 border text-right">Cash Diff</th>
+                    <th className="p-2 border text-right">System Fone</th>
+                    <th className="p-2 border text-right">Actual Fone</th>
+                    <th className="p-2 border text-right">Fone Diff</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {integrityData.slice(-7).reverse().map((d, i) => (
+                    <tr key={i} className="hover:bg-muted/20">
+                      <td className="p-2 border font-medium">{d.date}</td>
+                      <td className="p-2 border text-right">{fmt(d["System Cash"])}</td>
+                      <td className="p-2 border text-right font-bold">{fmt(d["Actual Cash"])}</td>
+                      <td className={cn("p-2 border text-right font-black", d["Cash Diff"] !== 0 ? "text-rose-600" : "text-emerald-600")}>
+                        {fmt(d["Cash Diff"])}
+                      </td>
+                      <td className="p-2 border text-right">{fmt(d["System Fonepay"])}</td>
+                      <td className="p-2 border text-right font-bold">{fmt(d["Actual Fonepay"])}</td>
+                      <td className={cn("p-2 border text-right font-black", d["Fonepay Diff"] !== 0 ? "text-amber-600" : "text-emerald-600")}>
+                        {fmt(d["Fonepay Diff"])}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+
         <Card className="border border-border">
           <CardHeader className="pb-2">
             <CardTitle className="text-base flex items-center gap-2 text-blue-600">
