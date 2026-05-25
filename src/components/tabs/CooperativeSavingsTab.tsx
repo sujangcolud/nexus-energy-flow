@@ -96,6 +96,7 @@ const CooperativeSavingsTab = () => {
     memberId: "",
     cyclePeriod: "",
     remarks: "",
+    paymentMode: "Cash",
   });
   const [newCategory, setNewCategory] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -217,6 +218,8 @@ const CooperativeSavingsTab = () => {
           member_id: formData.memberId,
           cycle_period: formData.cyclePeriod,
           contribution_date: transactionDate,
+          payment_mode: formData.paymentMode,
+          description: formData.remarks || null,
         },
       ]);
 
@@ -228,6 +231,7 @@ const CooperativeSavingsTab = () => {
         memberId: "",
         cyclePeriod: "",
         remarks: "",
+        paymentMode: "Cash",
       });
       fetchSavings();
     } catch (error) {
@@ -372,6 +376,22 @@ const CooperativeSavingsTab = () => {
                   }
                   className="h-11 rounded-xl"
                 />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="editPaymentMode" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Payment Mode</Label>
+                <Select
+                  value={(selectedSaving as any).payment_mode || "Cash"}
+                  onValueChange={(val) => setSelectedSaving({...selectedSaving, payment_mode: val} as any)}
+                >
+                  <SelectTrigger className="h-11 rounded-xl">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {["Cash", "Esewa", "Fonepay", "Bank"].map(mode => (
+                      <SelectItem key={mode} value={mode}>{mode}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="editMemberId" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Member ID</Label>
@@ -524,6 +544,34 @@ const CooperativeSavingsTab = () => {
                       </SelectContent>
                     </Select>
                   </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label
+                    htmlFor="paymentMode"
+                    className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2"
+                  >
+                    <CreditCard className="h-3.5 w-3.5 text-indigo-600" />
+                    Payment Mode *
+                  </Label>
+                  <Select
+                    value={formData.paymentMode}
+                    onValueChange={(value) =>
+                      setFormData({ ...formData, paymentMode: value })
+                    }
+                    required
+                  >
+                    <SelectTrigger className="h-11 rounded-xl">
+                      <SelectValue placeholder="Select mode" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {["Cash", "Esewa", "Fonepay", "Bank"].map((mode) => (
+                        <SelectItem key={mode} value={mode}>
+                          {mode}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 {/* Transaction Date */}

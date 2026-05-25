@@ -172,13 +172,11 @@ const VerificationSystemTab = () => {
   const dailyMetrics = useMemo(() => {
     if (!summaryQ.data) return null;
     const s = summaryQ.data;
-    const cashSales = (Number(s.total_income_from_orders_cash) || 0) + (Number(s.total_income_from_charging_cash) || 0);
-    const cashOut = (Number(s.total_expenses_cash) || 0) + (Number(s.total_withdrawals_cash) || 0) + (Number(s.total_savings_cash) || 0);
-    // User formula: Total sales in cash (order + charging) + Opening cash in hand balance - cash expenses - cash withdrawal from counter - cash savings
-    // We'll use the accumulated opening balance for the day.
+    const cashIn = (Number(s.total_income_from_orders_cash) || 0) + (Number(s.total_income_from_charging_cash) || 0) + (Number(s.total_savings_cash) || 0) + (Number(s.total_deposits_cash) || 0);
+    const cashOut = (Number(s.total_expenses_cash) || 0) + (Number(s.total_withdrawals_cash) || 0) + (Number(s.total_deposits_from_cash) || 0);
 
     return {
-      cashSales,
+      cashIn,
       cashOut,
       fonepaySystem: Number(s.total_income_fonepay) || 0,
     };
@@ -189,8 +187,8 @@ const VerificationSystemTab = () => {
     let accumulatedCash = Number(settingsQ.data.opening_cash_balance) || 0;
 
     return historyQ.data.map((s: any) => {
-      const cashIn = (Number(s.total_income_from_orders_cash) || 0) + (Number(s.total_income_from_charging_cash) || 0);
-      const cashOut = (Number(s.total_expenses_cash) || 0) + (Number(s.total_withdrawals_cash) || 0) + (Number(s.total_savings_cash) || 0) + (Number(s.total_deposits_from_cash) || 0);
+      const cashIn = (Number(s.total_income_from_orders_cash) || 0) + (Number(s.total_income_from_charging_cash) || 0) + (Number(s.total_savings_cash) || 0) + (Number(s.total_deposits_cash) || 0);
+      const cashOut = (Number(s.total_expenses_cash) || 0) + (Number(s.total_withdrawals_cash) || 0) + (Number(s.total_deposits_from_cash) || 0);
 
       const expectedClosing = accumulatedCash + cashIn - cashOut;
       const actualClosing = Number(s.actual_cash_in_hand) || 0;
@@ -376,12 +374,12 @@ const VerificationSystemTab = () => {
                         <span className="font-bold">{fmt(currentDayRow?.opening || 0)}</span>
                       </div>
                       <div className="flex justify-between text-[11px]">
-                        <span className="text-muted-foreground font-medium">Cash Sales (Orders + Charging)</span>
-                        <span className="font-bold text-emerald-600">+{fmt(dailyMetrics?.cashSales || 0)}</span>
+                        <span className="text-muted-foreground font-medium">Cash In (Sales + Sav + DepTo)</span>
+                        <span className="font-bold text-emerald-600">+{fmt(dailyMetrics?.cashIn || 0)}</span>
                       </div>
                       <div className="flex justify-between text-[11px]">
-                        <span className="text-muted-foreground font-medium">Cash Out (Exp + With + Sav + Dep)</span>
-                        <span className="font-bold text-rose-600">-{fmt(currentDayRow?.cashOut || 0)}</span>
+                        <span className="text-muted-foreground font-medium">Cash Out (Exp + With + DepFrom)</span>
+                        <span className="font-bold text-rose-600">-{fmt(dailyMetrics?.cashOut || 0)}</span>
                       </div>
                       <div className="flex justify-between text-sm pt-2 border-t font-black">
                         <span>Expected Cash</span>
@@ -436,7 +434,7 @@ const VerificationSystemTab = () => {
                       {actualFonepay !== "" && (
                         <div className={cn(
                           "flex justify-between items-center p-3 rounded-xl text-xs font-black uppercase tracking-widest mt-2",
-                          (Number(actualFonepay) - (dailyMetrics?.fonepaySystem || 0)) >= 0 ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"
+                          Math.abs(Number(actualFonepay) - (dailyMetrics?.fonepaySystem || 0)) <= 10 ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"
                         )}>
                           <span>Fonepay Variance</span>
                           <span>{fmt(Number(actualFonepay) - (dailyMetrics?.fonepaySystem || 0))}</span>
@@ -557,7 +555,7 @@ const VerificationSystemTab = () => {
                     </td>
                     <td className={cn("px-4 py-3 text-right font-black", row.fonepayVariance < -10 ? "text-rose-600" : row.fonepayVariance > 10 ? "text-emerald-600" : "text-slate-400")}>
                       {row.fonepayVariance !== 0 ? (row.fonepayVariance > 0 ? "+" : "") + row.fonepayVariance.toFixed(0) : "0"}
-                      </td>
+                    </td>
                     </tr>
                   );
                 })}

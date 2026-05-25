@@ -80,7 +80,13 @@ async function computeTotalsFromTransactions(dateStr: string): Promise<Totals> {
   const expensesCash = sumByMode(e.data, "amount", "cash");
 
   const deposits = sum(d.data, "amount");
+  const depositsFromCash = (d.data || [])
+    .filter(r => (r.mode || "cash").toLowerCase() === "cash")
+    .reduce((acc, r) => acc + (Number(r.amount) || 0), 0);
+
   const withdrawals = sum(w.data, "amount");
+  const withdrawalsCash = sumByMode(w.data, "amount", "cash");
+
   const savings = sum(s.data, "contribution_amount");
   const savingsCash = sumByMode(s.data, "contribution_amount", "cash");
   const income = ordersIncome + chargingIncome;
@@ -90,7 +96,7 @@ async function computeTotalsFromTransactions(dateStr: string): Promise<Totals> {
     expenses, expensesCash, deposits, withdrawals, savings, savingsCash,
     cashBalance: 0, esewaBalance: 0, fonepayBalance: 0, fonepayIncome: ordersIncomeFonepay + chargingIncomeFonepay,
     cooperativeBalance: 0, totalBalance: 0,
-    systemCashCalculation: (ordersIncomeCash + chargingIncomeCash) - (expensesCash + savingsCash),
+    systemCashCalculation: (ordersIncomeCash + chargingIncomeCash + savingsCash) - (expensesCash + depositsFromCash + withdrawalsCash),
     netProfit: income - expenses,
     source: "transactions",
   };

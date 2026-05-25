@@ -95,6 +95,7 @@ const WithdrawalsTab = () => {
     referenceNumber: "",
     remarks: "",
     sourceCooperative: "",
+    paymentMode: "Cash",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [transactionDate, setTransactionDate] = useState(
@@ -195,8 +196,10 @@ const WithdrawalsTab = () => {
         recipient: formData.recipient || null,
         reference_number: formData.referenceNumber || null,
         remarks: formData.remarks || null,
+        description: formData.remarks || null,
         withdrawal_date: transactionDate,
         source_cooperative: formData.sourceCooperative || null,
+        payment_mode: formData.paymentMode,
       };
 
       console.log("Attempting to insert withdrawal data:", withdrawalData);
@@ -217,6 +220,7 @@ const WithdrawalsTab = () => {
         referenceNumber: "",
         remarks: "",
         sourceCooperative: "",
+        paymentMode: "Cash",
       });
       fetchWithdrawals();
     } catch (error) {
@@ -378,6 +382,22 @@ const WithdrawalsTab = () => {
                 />
               </div>
               <div className="space-y-1.5">
+                <Label htmlFor="editPaymentMode" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Payment Mode</Label>
+                <Select
+                  value={selectedWithdrawal.payment_mode || "Cash"}
+                  onValueChange={(val) => setSelectedWithdrawal({...selectedWithdrawal, payment_mode: val})}
+                >
+                  <SelectTrigger className="h-11 rounded-xl">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {["Cash", "Esewa", "Fonepay", "Bank", "Cheque"].map(mode => (
+                      <SelectItem key={mode} value={mode}>{mode}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
                 <Label htmlFor="editRemarks" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Remarks</Label>
                 <Textarea
                   id="editRemarks"
@@ -521,26 +541,51 @@ const WithdrawalsTab = () => {
                   </div>
                 </div>
 
-                <div className="space-y-1.5">
-                  <Label
-                    htmlFor="sourceCooperative"
-                    className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2"
-                  >
-                    <Landmark className="h-3.5 w-3.5 text-indigo-600" />
-                    Source/Cooperative
-                  </Label>
-                  <Input
-                    id="sourceCooperative"
-                    value={formData.sourceCooperative}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        sourceCooperative: e.target.value,
-                      })
-                    }
-                    placeholder="e.g. Bank Account, Cooperative Name"
-                    className="h-11 rounded-xl"
-                  />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label
+                      htmlFor="sourceCooperative"
+                      className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2"
+                    >
+                      <Landmark className="h-3.5 w-3.5 text-indigo-600" />
+                      Source/Cooperative
+                    </Label>
+                    <Input
+                      id="sourceCooperative"
+                      value={formData.sourceCooperative}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          sourceCooperative: e.target.value,
+                        })
+                      }
+                      placeholder="e.g. Bank Account, Cooperative Name"
+                      className="h-11 rounded-xl"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label
+                      htmlFor="paymentMode"
+                      className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2"
+                    >
+                      <CreditCard className="h-3.5 w-3.5 text-indigo-600" />
+                      Mode
+                    </Label>
+                    <Select
+                      value={formData.paymentMode}
+                      onValueChange={(val) => setFormData({...formData, paymentMode: val})}
+                    >
+                      <SelectTrigger className="h-11 rounded-xl">
+                        <SelectValue placeholder="Select mode" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {["Cash", "Esewa", "Fonepay", "Bank", "Cheque"].map(mode => (
+                          <SelectItem key={mode} value={mode}>{mode}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
 
                 <div className="space-y-1.5">
