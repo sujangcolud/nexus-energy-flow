@@ -17,7 +17,6 @@ import {
   Calculator,
   Pencil,
   X,
-  AlertTriangle
 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -492,6 +491,7 @@ const VerificationSystemTab = () => {
                   <th className="px-4 py-3 text-right">Expected</th>
                   <th className="px-4 py-3 text-right">Actual</th>
                   <th className="px-4 py-3 text-right">Variance</th>
+                  <th className="px-4 py-3 text-right">Fonepay Act.</th>
                   <th className="px-4 py-3 text-right">Fonepay Var.</th>
                 </tr>
               </thead>
@@ -512,9 +512,17 @@ const VerificationSystemTab = () => {
                             value={rowDraft.actual_cash}
                             onChange={(e) => setRowDraft({ ...rowDraft, actual_cash: e.target.value })}
                             className="h-7 text-xs w-20 ml-auto"
+                            autoFocus
                           />
                         ) : (
-                        (row.actualClosing !== null && row.actualClosing !== undefined) ? fmt(row.actualClosing) : "-"
+                          <div className="flex items-center gap-2 justify-end group">
+                            <span>
+                              {(row.actualClosing !== null && row.actualClosing !== undefined) ? fmt(row.actualClosing) : "-"}
+                            </span>
+                            <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => startEditRow(row)}>
+                              <Pencil className="h-3 w-3" />
+                            </Button>
+                          </div>
                         )}
                       </td>
                     <td className={cn("px-4 py-3 text-right font-black", row.variance < -50 ? "text-rose-600" : row.variance > 50 ? "text-emerald-600" : "text-slate-400")}>
