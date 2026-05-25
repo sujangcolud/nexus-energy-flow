@@ -51,6 +51,7 @@ import {
   Activity,
   Lock,
   FileSpreadsheet,
+  ShieldCheck,
   Boxes,
   ChefHat,
 } from "lucide-react";
@@ -82,6 +83,7 @@ import InventoryTab from "@/components/tabs/InventoryTab";
 import RecipeManagementTab from "@/components/tabs/RecipeManagementTab";
 import FileUploadTab from "@/components/tabs/FileUploadTab";
 import LoansTab from "@/components/tabs/LoansTab";
+import VerificationSystemTab from "@/components/tabs/VerificationSystemTab";
 
 const Dashboard = () => {
   const { user, signOut, userRole } = useAuth();
@@ -364,6 +366,17 @@ const Dashboard = () => {
         color: "bg-foreground",
         bgColor: "bg-muted",
         description: "Reconcile and lock the day",
+      },
+      {
+        id: "verification_system",
+        path: "verification-system",
+        label: "Verification System",
+        icon: ShieldCheck,
+        component: VerificationSystemTab,
+        roles: ["super_admin"],
+        color: "bg-primary",
+        bgColor: "bg-primary/5",
+        description: "Financial reconciliation & audit",
       },
       {
         id: "report_builder",

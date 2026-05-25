@@ -43,6 +43,7 @@ import DashboardStudioPage from "./pages/DashboardStudio";
 import DailySummaryReport from "./pages/DailySummaryReport";
 import CommandCenterTab from "./components/tabs/CommandCenterTab";
 import DailyClosingWizardTab from "./components/tabs/DailyClosingWizardTab";
+import VerificationSystemTab from "./components/tabs/VerificationSystemTab";
 import CustomReportBuilderTab from "./components/tabs/CustomReportBuilderTab";
 import InventoryBridgeTab from "./components/tabs/InventoryBridgeTab";
 import BusinessIntelligenceSuite from "./components/tabs/BusinessIntelligenceSuite";
@@ -166,6 +167,7 @@ const App = () => {
                 />
                 <Route path="command-center" element={<CommandCenterTab />} />
                 <Route path="closing-wizard" element={<DailyClosingWizardTab />} />
+                <Route path="verification-system" element={<VerificationSystemTab />} />
                 <Route path="report-builder" element={<CustomReportBuilderTab />} />
                 <Route path="inventory-bridge" element={<InventoryBridgeTab />} />
                 <Route path="bi-suite" element={<BusinessIntelligenceSuite />} />
