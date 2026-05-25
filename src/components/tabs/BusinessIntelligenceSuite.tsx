@@ -774,40 +774,44 @@ const BusinessIntelligenceSuite = () => {
             </CardTitle>
             <CardDescription>Visualizing the drift between database records and physical verification counts.</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-3 sm:p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <p className="text-xs font-bold uppercase text-muted-foreground text-center">Cash Variance</p>
-                <ResponsiveContainer width="100%" height={200}>
-                  <ComposedChart data={integrityData}>
-                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                    <XAxis dataKey="date" tick={{ fontSize: 9 }} />
-                    <YAxis tick={{ fontSize: 9 }} />
-                    <Tooltip />
-                    <Legend iconSize={10} wrapperStyle={{ fontSize: 10 }} />
-                    <Bar dataKey="Cash Diff" fill="#e11d48" name="Variance" />
-                    <Line type="monotone" dataKey="System Cash" stroke="#94a3b8" dot={false} name="System" strokeWidth={1} />
-                  </ComposedChart>
-                </ResponsiveContainer>
+                <div className="h-[200px] w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <ComposedChart data={integrityData}>
+                      <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                      <XAxis dataKey="date" tick={{ fontSize: 9 }} />
+                      <YAxis tick={{ fontSize: 9 }} />
+                      <Tooltip />
+                      <Legend iconSize={10} wrapperStyle={{ fontSize: 10 }} />
+                      <Bar dataKey="Cash Diff" fill="#e11d48" name="Variance" />
+                      <Line type="monotone" dataKey="System Cash" stroke="#94a3b8" dot={false} name="System" strokeWidth={1} />
+                    </ComposedChart>
+                  </ResponsiveContainer>
+                </div>
               </div>
               <div className="space-y-2">
                 <p className="text-xs font-bold uppercase text-muted-foreground text-center">Fonepay Variance</p>
-                <ResponsiveContainer width="100%" height={200}>
-                  <ComposedChart data={integrityData}>
-                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                    <XAxis dataKey="date" tick={{ fontSize: 9 }} />
-                    <YAxis tick={{ fontSize: 9 }} />
-                    <Tooltip />
-                    <Legend iconSize={10} wrapperStyle={{ fontSize: 10 }} />
-                    <Bar dataKey="Fonepay Diff" fill="#f59e0b" name="Variance" />
-                    <Line type="monotone" dataKey="System Fonepay" stroke="#94a3b8" dot={false} name="System" strokeWidth={1} />
-                  </ComposedChart>
-                </ResponsiveContainer>
+                <div className="h-[200px] w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <ComposedChart data={integrityData}>
+                      <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                      <XAxis dataKey="date" tick={{ fontSize: 9 }} />
+                      <YAxis tick={{ fontSize: 9 }} />
+                      <Tooltip />
+                      <Legend iconSize={10} wrapperStyle={{ fontSize: 10 }} />
+                      <Bar dataKey="Fonepay Diff" fill="#f59e0b" name="Variance" />
+                      <Line type="monotone" dataKey="System Fonepay" stroke="#94a3b8" dot={false} name="System" strokeWidth={1} />
+                    </ComposedChart>
+                  </ResponsiveContainer>
+                </div>
               </div>
             </div>
 
-            <div className="mt-6 overflow-x-auto">
-              <table className="w-full text-[10px] text-left border-collapse">
+            <div className="mt-6 overflow-x-auto -mx-3 sm:mx-0">
+              <table className="w-full text-[10px] text-left border-collapse min-w-[600px]">
                 <thead>
                   <tr className="bg-muted/50">
                     <th className="p-2 border">Date</th>

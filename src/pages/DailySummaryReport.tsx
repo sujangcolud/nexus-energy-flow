@@ -63,10 +63,21 @@ interface DailySummaryRow {
   total_income_fonepay: number | null;
   total_income_esewa: number | null;
   total_income_cash: number | null;
+  system_cash_calculation: number | null;
+  actual_cash_in_hand: number | null;
+  actual_fonepay_total: number | null;
+  cash_diff: number | null;
+  fonepay_diff: number | null;
 }
 
 const COLUMNS: { key: keyof DailySummaryRow; label: string }[] = [
   { key: "summary_date", label: "summary_date" },
+  { key: "system_cash_calculation", label: "system_cash_calc" },
+  { key: "actual_cash_in_hand", label: "actual_cash" },
+  { key: "cash_diff", label: "cash_variance" },
+  { key: "total_income_fonepay", label: "fonepay_income" },
+  { key: "actual_fonepay_total", label: "actual_fonepay" },
+  { key: "fonepay_diff", label: "fonepay_variance" },
   { key: "total_income_from_orders", label: "total_income_from_orders" },
   { key: "total_income_from_orders_cash", label: "total_income_from_orders_cash" },
   { key: "total_income_from_orders_fonepay", label: "total_income_from_orders_fonepay" },
@@ -105,7 +116,6 @@ const COLUMNS: { key: keyof DailySummaryRow; label: string }[] = [
   { key: "total_balance", label: "total_balance" },
   { key: "created_at", label: "created_at" },
   { key: "updated_at", label: "updated_at" },
-  { key: "total_income_fonepay", label: "total_income_fonepay" },
   { key: "total_income_esewa", label: "total_income_esewa" },
   { key: "total_income_cash", label: "total_income_cash" },
 ];
@@ -410,11 +420,19 @@ const DailySummaryReport = () => {
               key: col.key,
               label: col.label,
               mobileLabel: col.label,
-              hideOnMobile: !["summary_date", "total_income", "total_expenses", "total_balance"].includes(col.key),
+              hideOnMobile: !["summary_date", "total_income", "cash_diff", "fonepay_diff"].includes(col.key),
               render: (val, r) => {
                 if (col.key === "summary_date") return String(val ?? "");
                 if (col.key === "created_at" || col.key === "updated_at") {
                   return val ? format(new Date(val as string), "yyyy-MM-dd HH:mm") : "";
+                }
+                const num = Number(val) || 0;
+                if (col.key === "cash_diff" || col.key === "fonepay_diff") {
+                  return (
+                    <span className={cn("font-bold", num !== 0 ? "text-rose-600" : "text-emerald-600")}>
+                      {fmtNum(num)}
+                    </span>
+                  );
                 }
                 return fmtNum(val as number | null);
               }
