@@ -28,9 +28,24 @@ type ModuleConfig = {
   extraEditFields?: FieldDef[];
   attachmentType?: AttachmentRecordType;
   updateRpc?: string;
+  hideAdd?: boolean;
 };
 
 const MODULES: ModuleConfig[] = [
+  {
+    key: "verification",
+    title: "Daily Verification",
+    table: "daily_summary",
+    dateColumn: "summary_date",
+    amountColumn: "actual_cash_in_hand",
+    hideAdd: true,
+    columns: [
+      { key: "system_cash_calculation", label: "System Cash", type: "number", editable: false },
+      { key: "actual_cash_in_hand", label: "Actual Cash", type: "number", editable: true },
+      { key: "total_income_fonepay", label: "System Fonepay", type: "number", editable: false },
+      { key: "actual_fonepay_total", label: "Actual Fonepay", type: "number", editable: true },
+    ],
+  },
   {
     key: "orders",
     title: "Orders",
@@ -490,7 +505,7 @@ const ModuleSection = ({ config, fromDate, toDate, editable }: ModuleSectionProp
                   Cancel
                 </Button>
               )}
-              {!bulkEdit && (
+              {!bulkEdit && !config.hideAdd && (
                 <Button
                   variant="outline"
                   size="sm"
