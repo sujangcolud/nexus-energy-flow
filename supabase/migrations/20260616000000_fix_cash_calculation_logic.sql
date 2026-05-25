@@ -2,7 +2,7 @@
 -- Savings and Deposits from hand reduce Cash in Hand.
 
 CREATE OR REPLACE FUNCTION public.update_daily_summary(p_summary_date DATE)
-RETURNS VOID AS 2346
+RETURNS VOID AS $$
 DECLARE
     -- Income from orders
     v_total_income_from_orders NUMERIC;
@@ -287,7 +287,7 @@ BEGIN
         system_cash_calculation = EXCLUDED.system_cash_calculation,
         updated_at = NOW();
 END;
-2346 LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 -- Trigger a re-sync for all dates
 DO $$

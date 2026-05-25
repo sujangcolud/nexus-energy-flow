@@ -267,8 +267,9 @@ const BusinessIntelligenceSuite = () => {
   });
 
   const { data: dailySummaries = [] } = useQuery({
-    queryKey: ["daily-summaries-audit", range.from, range.to],
+    queryKey: ["daily-summaries-audit", vSettings?.cutoff_date, range.to],
     queryFn: async () => {
+      if (!vSettings?.cutoff_date) return [];
       const { data, error } = await supabase
         .from('daily_summary')
         .select(`
@@ -288,23 +289,21 @@ const BusinessIntelligenceSuite = () => {
           total_deposits_from_cash,
           system_cash_calculation
         `)
-        .gte('summary_date', range.from)
+        .gte('summary_date', vSettings.cutoff_date)
         .lte('summary_date', range.to)
         .order('summary_date', { ascending: true });
       if (error) throw error;
       return data;
     },
+    enabled: !!vSettings?.cutoff_date
   });
 
   const integrityData = useMemo(() => {
     if (!vSettings) return [];
 
     let accumulatedCash = Number(vSettings.opening_cash_balance) || 0;
-    // We need to fetch data from cutoff_date to range.from to get the baseline?
-    // For simplicity in BI, we'll start accumulation from the first visible row using opening balance
-    // But ideally it should be consistent with the Verification Tab which fetches from cutoff.
 
-    return dailySummaries.map(s => {
+    const fullHistory = dailySummaries.map(s => {
       const cashOrders = Number(s.total_income_from_orders_cash) || 0;
       const cashCharging = Number(s.total_income_from_charging_cash) || 0;
       const cashDepositsTo = Number(s.total_deposits_cash) || 0;
@@ -323,6 +322,7 @@ const BusinessIntelligenceSuite = () => {
       const fonepayDiff = fonepayActual ? fonepayActual - fonepaySystem : 0;
 
       const row = {
+        summary_date: s.summary_date,
         date: format(parseISO(s.summary_date), 'MMM dd'),
         "Cash Diff": cashDiff,
         "Fonepay Diff": fonepayDiff,
@@ -342,7 +342,10 @@ const BusinessIntelligenceSuite = () => {
 
       return row;
     });
-  }, [dailySummaries, vSettings]);
+
+    // Filter to requested range for display
+    return fullHistory.filter(r => r.summary_date >= range.from && r.summary_date <= range.to);
+  }, [dailySummaries, vSettings, range.from, range.to]);
 
   // ---------- Sahuji Intelligence (Insights & Recommendations) ----------
   const sahujiIntel = useMemo(() => {

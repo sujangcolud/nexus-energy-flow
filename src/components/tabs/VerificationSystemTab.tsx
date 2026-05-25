@@ -172,8 +172,8 @@ const VerificationSystemTab = () => {
   const dailyMetrics = useMemo(() => {
     if (!summaryQ.data) return null;
     const s = summaryQ.data;
-    const cashIn = (Number(s.total_income_from_orders_cash) || 0) + (Number(s.total_income_from_charging_cash) || 0) + (Number(s.total_savings_cash) || 0) + (Number(s.total_deposits_cash) || 0);
-    const cashOut = (Number(s.total_expenses_cash) || 0) + (Number(s.total_withdrawals_cash) || 0) + (Number(s.total_deposits_from_cash) || 0);
+    const cashIn = (Number(s.total_income_from_orders_cash) || 0) + (Number(s.total_income_from_charging_cash) || 0) + (Number(s.total_deposits_cash) || 0);
+    const cashOut = (Number(s.total_expenses_cash) || 0) + (Number(s.total_withdrawals_cash) || 0) + (Number(s.total_savings_cash) || 0) + (Number(s.total_deposits_from_cash) || 0);
 
     return {
       cashIn,
@@ -184,9 +184,13 @@ const VerificationSystemTab = () => {
 
   const historyReport = useMemo(() => {
     if (!historyQ.data || !settingsQ.data) return [];
+
+    // Reverse data to process from oldest to newest for cumulative calculation
+    const sortedHistory = [...historyQ.data].sort((a, b) => a.summary_date.localeCompare(b.summary_date));
+
     let accumulatedCash = Number(settingsQ.data.opening_cash_balance) || 0;
 
-    return historyQ.data.map((s: any) => {
+    const report = sortedHistory.map((s: any) => {
       const cashOrders = Number(s.total_income_from_orders_cash) || 0;
       const cashCharging = Number(s.total_income_from_charging_cash) || 0;
       const cashDepositsTo = Number(s.total_deposits_cash) || 0;
@@ -226,6 +230,8 @@ const VerificationSystemTab = () => {
 
       return row;
     });
+
+    return report;
   }, [historyQ.data, settingsQ.data]);
 
   const currentDayRow = historyReport.find(r => r.date === dateStr);
