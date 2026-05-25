@@ -468,7 +468,7 @@ const DailySummaryReport = () => {
         <DayEntriesEditor
           fromDate={format(range.from, "yyyy-MM-dd")}
           toDate={format(range.to, "yyyy-MM-dd")}
-          editable={false}
+          editable={true}
           title="Module Entries"
         />
       )}

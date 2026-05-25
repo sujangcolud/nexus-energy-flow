@@ -14,7 +14,10 @@ import {
   History,
   Settings2,
   Save,
-  Calculator
+  Calculator,
+  Pencil,
+  X,
+  AlertTriangle
 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -217,6 +220,39 @@ const VerificationSystemTab = () => {
 
   const currentDayRow = historyReport.find(r => r.date === dateStr);
   const totalAccumulatedCash = historyReport.length > 0 ? historyReport[historyReport.length - 1].actualClosing || historyReport[historyReport.length - 1].expectedClosing : (Number(settingsQ.data?.opening_cash_balance) || 0);
+
+  const [editingRowDate, setEditingRowDate] = useState<string | null>(null);
+  const [rowDraft, setRowDraft] = useState({ actual_cash: "", actual_fonepay: "" });
+
+  const startEditRow = (row: any) => {
+    setEditingRowDate(row.date);
+    setRowDraft({
+      actual_cash: (row.actualClosing ?? 0).toString(),
+      actual_fonepay: (row.fonepayActual ?? 0).toString()
+    });
+  };
+
+  const saveRowMutation = useMutation({
+    mutationFn: async () => {
+      if (!editingRowDate) return;
+      const { error } = await supabase
+        .from("daily_summary")
+        .update({
+          actual_cash_in_hand: Number(rowDraft.actual_cash) || 0,
+          actual_fonepay_total: Number(rowDraft.actual_fonepay) || 0,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("summary_date", editingRowDate);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Verification updated");
+      setEditingRowDate(null);
+      summaryQ.refetch();
+      historyQ.refetch();
+    },
+    onError: (e: any) => toast.error(e.message || "Save failed"),
+  });
 
   return (
     <div className="space-y-6 pb-20">
@@ -460,22 +496,63 @@ const VerificationSystemTab = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {[...historyReport].reverse().map((row, i) => (
-                  <tr key={row.date} className={cn("hover:bg-slate-50/50 transition-colors", i === 0 && "bg-primary/5")}>
-                    <td className="px-4 py-3 font-bold">{format(parseISO(row.date), "MMM dd, EEE")}</td>
-                    <td className="px-4 py-3 text-right text-muted-foreground">{fmt(row.opening)}</td>
-                    <td className="px-4 py-3 text-right text-emerald-600 font-medium">+{fmt(row.cashIn)}</td>
-                    <td className="px-4 py-3 text-right text-rose-600 font-medium">-{fmt(row.cashOut)}</td>
-                    <td className="px-4 py-3 text-right font-medium">{fmt(row.expectedClosing)}</td>
-                    <td className="px-4 py-3 text-right font-black">{row.actualClosing ? fmt(row.actualClosing) : "-"}</td>
-                    <td className={cn("px-4 py-3 text-right font-black", row.variance < 0 ? "text-rose-600" : row.variance > 0 ? "text-emerald-600" : "text-slate-400")}>
-                      {row.variance !== 0 ? (row.variance > 0 ? "+" : "") + row.variance.toFixed(0) : "0"}
+                {[...historyReport].reverse().map((row, i) => {
+                  const isEditing = editingRowDate === row.date;
+                  return (
+                    <tr key={row.date} className={cn("hover:bg-slate-50/50 transition-colors", i === 0 && "bg-primary/5")}>
+                      <td className="px-4 py-3 font-bold">{format(parseISO(row.date), "MMM dd, EEE")}</td>
+                      <td className="px-4 py-3 text-right text-muted-foreground">{fmt(row.opening)}</td>
+                      <td className="px-4 py-3 text-right text-emerald-600 font-medium">+{fmt(row.cashIn)}</td>
+                      <td className="px-4 py-3 text-right text-rose-600 font-medium">-{fmt(row.cashOut)}</td>
+                      <td className="px-4 py-3 text-right font-medium">{fmt(row.expectedClosing)}</td>
+                      <td className="px-4 py-3 text-right font-black">
+                        {isEditing ? (
+                          <Input
+                            type="number"
+                            value={rowDraft.actual_cash}
+                            onChange={(e) => setRowDraft({ ...rowDraft, actual_cash: e.target.value })}
+                            className="h-7 text-xs w-20 ml-auto"
+                          />
+                        ) : (
+                        (row.actualClosing !== null && row.actualClosing !== undefined) ? fmt(row.actualClosing) : "-"
+                        )}
+                      </td>
+                    <td className={cn("px-4 py-3 text-right font-black", row.variance < -50 ? "text-rose-600" : row.variance > 50 ? "text-emerald-600" : "text-slate-400")}>
+                        {row.variance !== 0 ? (row.variance > 0 ? "+" : "") + row.variance.toFixed(0) : "0"}
+                      </td>
+                      <td className="px-4 py-3 text-right font-black">
+                        {isEditing ? (
+                          <div className="flex items-center gap-2 justify-end">
+                            <Input
+                              type="number"
+                              value={rowDraft.actual_fonepay}
+                              onChange={(e) => setRowDraft({ ...rowDraft, actual_fonepay: e.target.value })}
+                              className="h-7 text-xs w-20"
+                            />
+                            <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => saveRowMutation.mutate()}>
+                              <Save className="h-3 w-3" />
+                            </Button>
+                            <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => setEditingRowDate(null)}>
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2 justify-end group">
+                          <span>
+                            {(row.fonepayActual !== null && row.fonepayActual !== undefined) ? fmt(row.fonepayActual) : "-"}
+                            </span>
+                            <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => startEditRow(row)}>
+                              <Pencil className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        )}
                     </td>
-                    <td className={cn("px-4 py-3 text-right font-black", row.fonepayVariance < 0 ? "text-rose-600" : row.fonepayVariance > 0 ? "text-emerald-600" : "text-slate-400")}>
+                    <td className={cn("px-4 py-3 text-right font-black", row.fonepayVariance < -10 ? "text-rose-600" : row.fonepayVariance > 10 ? "text-emerald-600" : "text-slate-400")}>
                       {row.fonepayVariance !== 0 ? (row.fonepayVariance > 0 ? "+" : "") + row.fonepayVariance.toFixed(0) : "0"}
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
