@@ -307,11 +307,14 @@ const BusinessIntelligenceSuite = () => {
     return dailySummaries.map(s => {
       const cashOrders = Number(s.total_income_from_orders_cash) || 0;
       const cashCharging = Number(s.total_income_from_charging_cash) || 0;
-      const cashSavings = (Number(s.total_savings_cash) || 0) + (Number(s.total_deposits_cash) || 0);
-      const cashExpenses = Number(s.total_expenses_cash) || 0;
-      const cashOutOther = (Number(s.total_withdrawals_cash) || 0) + (Number(s.total_deposits_from_cash) || 0);
+      const cashDepositsTo = Number(s.total_deposits_cash) || 0;
 
-      const expectedCash = accumulatedCash + cashOrders + cashCharging + cashSavings - cashExpenses - cashOutOther;
+      const cashExpenses = Number(s.total_expenses_cash) || 0;
+      const cashSavings = Number(s.total_savings_cash) || 0;
+      const cashWithdrawals = Number(s.total_withdrawals_cash) || 0;
+      const cashDepositsFrom = Number(s.total_deposits_from_cash) || 0;
+
+      const expectedCash = accumulatedCash + cashOrders + cashCharging + cashDepositsTo - (cashExpenses + cashSavings + cashWithdrawals + cashDepositsFrom);
       const actualCash = Number(s.actual_cash_in_hand) || 0;
       const cashDiff = actualCash ? actualCash - expectedCash : 0;
 

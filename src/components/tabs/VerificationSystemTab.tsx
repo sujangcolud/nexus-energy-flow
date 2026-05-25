@@ -189,15 +189,15 @@ const VerificationSystemTab = () => {
     return historyQ.data.map((s: any) => {
       const cashOrders = Number(s.total_income_from_orders_cash) || 0;
       const cashCharging = Number(s.total_income_from_charging_cash) || 0;
-      const cashSavings = Number(s.total_savings_cash) || 0;
       const cashDepositsTo = Number(s.total_deposits_cash) || 0;
 
       const cashExpenses = Number(s.total_expenses_cash) || 0;
+      const cashSavings = Number(s.total_savings_cash) || 0; // User: Reduces cash in hand
       const cashWithdrawals = Number(s.total_withdrawals_cash) || 0;
-      const cashDepositsFrom = Number(s.total_deposits_from_cash) || 0;
+      const cashDepositsFrom = Number(s.total_deposits_from_cash) || 0; // User: Reduces cash in hand
 
-      const cashIn = cashOrders + cashCharging + cashSavings + cashDepositsTo;
-      const cashOut = cashExpenses + cashWithdrawals + cashDepositsFrom;
+      const cashIn = cashOrders + cashCharging + cashDepositsTo;
+      const cashOut = cashExpenses + cashWithdrawals + cashSavings + cashDepositsFrom;
 
       const expectedClosing = accumulatedCash + cashIn - cashOut;
       const actualClosing = Number(s.actual_cash_in_hand) || 0;
@@ -209,7 +209,7 @@ const VerificationSystemTab = () => {
         cashOrders,
         cashCharging,
         cashExpenses,
-        cashSavings: cashSavings + cashDepositsTo, // Combined inflows from savings/deposits
+        cashSavings: cashSavings + cashDepositsFrom, // Total reductions from hand for savings/deposits
         cashIn,
         cashOut,
         expectedClosing,
