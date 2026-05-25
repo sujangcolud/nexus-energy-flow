@@ -187,8 +187,17 @@ const VerificationSystemTab = () => {
     let accumulatedCash = Number(settingsQ.data.opening_cash_balance) || 0;
 
     return historyQ.data.map((s: any) => {
-      const cashIn = (Number(s.total_income_from_orders_cash) || 0) + (Number(s.total_income_from_charging_cash) || 0) + (Number(s.total_savings_cash) || 0) + (Number(s.total_deposits_cash) || 0);
-      const cashOut = (Number(s.total_expenses_cash) || 0) + (Number(s.total_withdrawals_cash) || 0) + (Number(s.total_deposits_from_cash) || 0);
+      const cashOrders = Number(s.total_income_from_orders_cash) || 0;
+      const cashCharging = Number(s.total_income_from_charging_cash) || 0;
+      const cashSavings = Number(s.total_savings_cash) || 0;
+      const cashDepositsTo = Number(s.total_deposits_cash) || 0;
+
+      const cashExpenses = Number(s.total_expenses_cash) || 0;
+      const cashWithdrawals = Number(s.total_withdrawals_cash) || 0;
+      const cashDepositsFrom = Number(s.total_deposits_from_cash) || 0;
+
+      const cashIn = cashOrders + cashCharging + cashSavings + cashDepositsTo;
+      const cashOut = cashExpenses + cashWithdrawals + cashDepositsFrom;
 
       const expectedClosing = accumulatedCash + cashIn - cashOut;
       const actualClosing = Number(s.actual_cash_in_hand) || 0;
@@ -197,6 +206,10 @@ const VerificationSystemTab = () => {
       const row = {
         date: s.summary_date,
         opening: accumulatedCash,
+        cashOrders,
+        cashCharging,
+        cashExpenses,
+        cashSavings: cashSavings + cashDepositsTo, // Combined inflows from savings/deposits
         cashIn,
         cashOut,
         expectedClosing,
@@ -483,14 +496,16 @@ const VerificationSystemTab = () => {
               <thead className="bg-slate-100 text-slate-500 font-black uppercase tracking-wider border-b">
                 <tr>
                   <th className="px-4 py-3">Date</th>
-                  <th className="px-4 py-3 text-right">Opening</th>
-                  <th className="px-4 py-3 text-right">Cash In</th>
-                  <th className="px-4 py-3 text-right">Cash Out</th>
-                  <th className="px-4 py-3 text-right">Expected</th>
-                  <th className="px-4 py-3 text-right">Actual</th>
-                  <th className="px-4 py-3 text-right">Variance</th>
-                  <th className="px-4 py-3 text-right">Fonepay Act.</th>
-                  <th className="px-4 py-3 text-right">Fonepay Var.</th>
+                  <th className="px-4 py-3 text-right">Cash Orders</th>
+                  <th className="px-4 py-3 text-right">Cash Charging</th>
+                  <th className="px-4 py-3 text-right">Cash Expenses</th>
+                  <th className="px-4 py-3 text-right">Cash Savings</th>
+                  <th className="px-4 py-3 text-right">System Calc</th>
+                  <th className="px-4 py-3 text-right">Actual In Hand</th>
+                  <th className="px-4 py-3 text-right">Cash Diff</th>
+                  <th className="px-4 py-3 text-right">Sys Fonepay</th>
+                  <th className="px-4 py-3 text-right">Act Fonepay</th>
+                  <th className="px-4 py-3 text-right">Fone Diff</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -498,12 +513,13 @@ const VerificationSystemTab = () => {
                   const isEditing = editingRowDate === row.date;
                   return (
                     <tr key={row.date} className={cn("hover:bg-slate-50/50 transition-colors", i === 0 && "bg-primary/5")}>
-                      <td className="px-4 py-3 font-bold">{format(parseISO(row.date), "MMM dd, EEE")}</td>
-                      <td className="px-4 py-3 text-right text-muted-foreground">{fmt(row.opening)}</td>
-                      <td className="px-4 py-3 text-right text-emerald-600 font-medium">+{fmt(row.cashIn)}</td>
-                      <td className="px-4 py-3 text-right text-rose-600 font-medium">-{fmt(row.cashOut)}</td>
+                      <td className="px-4 py-3 font-bold">{format(parseISO(row.date), "MMM dd")}</td>
+                      <td className="px-4 py-3 text-right text-muted-foreground">{fmt(row.cashOrders)}</td>
+                      <td className="px-4 py-3 text-right text-muted-foreground">{fmt(row.cashCharging)}</td>
+                      <td className="px-4 py-3 text-right text-muted-foreground">{fmt(row.cashExpenses)}</td>
+                      <td className="px-4 py-3 text-right text-muted-foreground">{fmt(row.cashSavings)}</td>
                       <td className="px-4 py-3 text-right font-medium">{fmt(row.expectedClosing)}</td>
-                      <td className="px-4 py-3 text-right font-black">
+                      <td className="px-4 py-3 text-right font-black bg-slate-50/50">
                         {isEditing ? (
                           <Input
                             type="number"
@@ -523,9 +539,10 @@ const VerificationSystemTab = () => {
                           </div>
                         )}
                       </td>
-                    <td className={cn("px-4 py-3 text-right font-black", row.variance < -50 ? "text-rose-600" : row.variance > 50 ? "text-emerald-600" : "text-slate-400")}>
+                      <td className={cn("px-4 py-3 text-right font-black", Math.abs(row.variance) > 50 ? "text-rose-600" : "text-emerald-600")}>
                         {row.variance !== 0 ? (row.variance > 0 ? "+" : "") + row.variance.toFixed(0) : "0"}
                       </td>
+                      <td className="px-4 py-3 text-right text-muted-foreground">{fmt(row.fonepaySystem)}</td>
                       <td className="px-4 py-3 text-right font-black">
                         {isEditing ? (
                           <div className="flex items-center gap-2 justify-end">
@@ -552,10 +569,10 @@ const VerificationSystemTab = () => {
                             </Button>
                           </div>
                         )}
-                    </td>
-                    <td className={cn("px-4 py-3 text-right font-black", row.fonepayVariance < -10 ? "text-rose-600" : row.fonepayVariance > 10 ? "text-emerald-600" : "text-slate-400")}>
-                      {row.fonepayVariance !== 0 ? (row.fonepayVariance > 0 ? "+" : "") + row.fonepayVariance.toFixed(0) : "0"}
-                    </td>
+                      </td>
+                      <td className={cn("px-4 py-3 text-right font-black", Math.abs(row.fonepayVariance) > 10 ? "text-amber-600" : "text-emerald-600")}>
+                        {row.fonepayVariance !== 0 ? (row.fonepayVariance > 0 ? "+" : "") + row.fonepayVariance.toFixed(0) : "0"}
+                      </td>
                     </tr>
                   );
                 })}

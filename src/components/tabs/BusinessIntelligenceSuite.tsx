@@ -257,6 +257,15 @@ const BusinessIntelligenceSuite = () => {
   const anomalies = flags.filter((f) => f.status === "anomaly");
 
   // Fetch daily summary data for integrity audit (including manual entries)
+  const { data: vSettings } = useQuery({
+    queryKey: ["verification-settings-bi"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("verification_settings").select("*").eq("id", 1).single();
+      if (error) throw error;
+      return data;
+    }
+  });
+
   const { data: dailySummaries = [] } = useQuery({
     queryKey: ["daily-summaries-audit", range.from, range.to],
     queryFn: async () => {
@@ -274,6 +283,9 @@ const BusinessIntelligenceSuite = () => {
           total_income_from_charging_cash,
           total_expenses_cash,
           total_savings_cash,
+          total_deposits_cash,
+          total_withdrawals_cash,
+          total_deposits_from_cash,
           system_cash_calculation
         `)
         .gte('summary_date', range.from)
@@ -284,20 +296,50 @@ const BusinessIntelligenceSuite = () => {
     },
   });
 
-  const integrityData = useMemo(() => dailySummaries.map(s => ({
-    date: format(parseISO(s.summary_date), 'MMM dd'),
-    "Cash Diff": s.cash_diff || 0,
-    "Fonepay Diff": s.fonepay_diff || 0,
-    "Actual Cash": s.actual_cash_in_hand || 0,
-    "System Cash": s.cash_balance || 0,
-    "Actual Fonepay": s.actual_fonepay_total || 0,
-    "System Fonepay": s.total_income_fonepay || 0,
-    "Cash Orders": s.total_income_from_orders_cash || 0,
-    "Cash Charging": s.total_income_from_charging_cash || 0,
-    "Cash Expenses": s.total_expenses_cash || 0,
-    "Cash Savings": s.total_savings_cash || 0,
-    "System Calc": s.system_cash_calculation || 0,
-  })), [dailySummaries]);
+  const integrityData = useMemo(() => {
+    if (!vSettings) return [];
+
+    let accumulatedCash = Number(vSettings.opening_cash_balance) || 0;
+    // We need to fetch data from cutoff_date to range.from to get the baseline?
+    // For simplicity in BI, we'll start accumulation from the first visible row using opening balance
+    // But ideally it should be consistent with the Verification Tab which fetches from cutoff.
+
+    return dailySummaries.map(s => {
+      const cashOrders = Number(s.total_income_from_orders_cash) || 0;
+      const cashCharging = Number(s.total_income_from_charging_cash) || 0;
+      const cashSavings = (Number(s.total_savings_cash) || 0) + (Number(s.total_deposits_cash) || 0);
+      const cashExpenses = Number(s.total_expenses_cash) || 0;
+      const cashOutOther = (Number(s.total_withdrawals_cash) || 0) + (Number(s.total_deposits_from_cash) || 0);
+
+      const expectedCash = accumulatedCash + cashOrders + cashCharging + cashSavings - cashExpenses - cashOutOther;
+      const actualCash = Number(s.actual_cash_in_hand) || 0;
+      const cashDiff = actualCash ? actualCash - expectedCash : 0;
+
+      const fonepaySystem = Number(s.total_income_fonepay) || 0;
+      const fonepayActual = Number(s.actual_fonepay_total) || 0;
+      const fonepayDiff = fonepayActual ? fonepayActual - fonepaySystem : 0;
+
+      const row = {
+        date: format(parseISO(s.summary_date), 'MMM dd'),
+        "Cash Diff": cashDiff,
+        "Fonepay Diff": fonepayDiff,
+        "Actual Cash": actualCash,
+        "System Cash": expectedCash,
+        "Actual Fonepay": fonepayActual,
+        "System Fonepay": fonepaySystem,
+        "Cash Orders": cashOrders,
+        "Cash Charging": cashCharging,
+        "Cash Expenses": cashExpenses,
+        "Cash Savings": cashSavings,
+        "System Calc": expectedCash,
+      };
+
+      // Reset baseline for next day if actual is provided
+      accumulatedCash = actualCash || expectedCash;
+
+      return row;
+    });
+  }, [dailySummaries, vSettings]);
 
   // ---------- Sahuji Intelligence (Insights & Recommendations) ----------
   const sahujiIntel = useMemo(() => {
