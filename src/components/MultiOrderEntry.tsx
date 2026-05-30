@@ -132,25 +132,51 @@ const MultiOrderEntry = ({ onComplete }: Props) => {
       return;
     }
     setSubmitting(true);
+
+    let successCount = 0;
+    let errorCount = 0;
+    const remainingRows = [...rows];
+
     try {
-      const payload = rows.map((r) => ({
-        user_id: user.id,
-        order_date: r.order_date,
-        date: r.order_date,
-        item_name: r.item_name,
-        menu_item_id: r.menu_item_id || null,
-        quantity: Number(r.quantity),
-        rate: Number(r.rate),
-        total: total(r),
-        payment_mode: r.payment_mode,
-      }));
-      const { error } = await supabase.from("orders").insert(payload);
-      if (error) throw error;
-      toast.success(`${payload.length} orders added`);
-      setRows([blankRow()]);
-      setOpen(false);
-      onComplete();
+      // Process rows one by one to ensure accurate state management on failure
+      for (let i = rows.length - 1; i >= 0; i--) {
+        const r = rows[i];
+
+        const { error } = await supabase.rpc("process_pos_order", {
+          p_items: [{
+            menu_item_id: r.menu_item_id || null,
+            item_name: r.item_name,
+            quantity: Number(r.quantity),
+            rate: Number(r.rate)
+          }],
+          p_payment_mode: r.payment_mode,
+          p_order_date: r.order_date
+        });
+
+        if (error) {
+          console.error("Error processing row:", error);
+          errorCount++;
+        } else {
+          successCount++;
+          remainingRows.splice(i, 1);
+        }
+      }
+
+      if (successCount > 0) {
+        toast.success(`${successCount} orders added successfully`);
+        setRows(remainingRows.length > 0 ? remainingRows : [blankRow()]);
+      }
+
+      if (errorCount > 0) {
+        toast.error(`Failed to process ${errorCount} orders.`);
+      }
+
+      if (remainingRows.length === 0) {
+        setOpen(false);
+        onComplete();
+      }
     } catch (e: any) {
+      console.error("Submission error:", e);
       toast.error(`Failed: ${e?.message || "Unknown error"}`);
     } finally {
       setSubmitting(false);
@@ -225,13 +251,8 @@ const MultiOrderEntry = ({ onComplete }: Props) => {
                                 <CommandItem
                                   key={item.id}
                                   value={`${item.name.toLowerCase()}-${item.id}`}
-                                  onMouseDown={(e) => e.preventDefault()}
-                                  onPointerDown={(e) => {
-                                    e.stopPropagation();
-                                    handleMenuSelect(i, item);
-                                  }}
                                   onSelect={() => handleMenuSelect(i, item)}
-                                  className="cursor-pointer pointer-events-auto"
+                                  className="cursor-pointer"
                                 >
                                   <Check
                                     className={cn(

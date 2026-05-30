@@ -273,7 +273,7 @@ const MultiExpenseEntry = ({ categories, inventory, onComplete }: Props) => {
                                 <ChevronsUpDown className={cn("ml-2 h-4 w-4 shrink-0 opacity-50 transition-transform", popoverOpen[i] && "rotate-180")} />
                               </Button>
                             </PopoverTrigger>
-                            <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                            <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start" onOpenAutoFocus={(e) => e.preventDefault()}>
                               <Command shouldFilter={true}>
                                 <CommandInput placeholder="Search inventory..." />
                                 <CommandList>
@@ -285,7 +285,6 @@ const MultiExpenseEntry = ({ categories, inventory, onComplete }: Props) => {
                                         value={item.item_name}
                                         onSelect={() => {
                                           handleInventorySelect(i, item, r);
-                                          setPopoverOpen(prev => ({...prev, [i]: false}));
                                         }}
                                         className="cursor-pointer"
                                       >
