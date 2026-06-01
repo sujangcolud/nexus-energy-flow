@@ -30,6 +30,7 @@ import {
   Receipt,
   CreditCard,
   Banknote,
+  Wallet,
   Users,
   BarChart3,
   FileText,
