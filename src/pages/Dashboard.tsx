@@ -62,6 +62,7 @@ import EnhancedChatBot from "@/components/AIAnalystChat";
 import MobileDashboard from "./MobileDashboard";
 import FinancialSummaryWidget from "@/components/FinancialSummaryWidget";
 import AllTimeSummaryWidget from "@/components/AllTimeSummaryWidget";
+import StaffPayrollSummaryWidget from "@/components/StaffPayrollSummaryWidget";
 import { DailyClosingSystem } from "@/components/DailyClosingSystem";
 import BatchDailyClosingSystem from "@/components/BatchDailyClosingSystem";
 
@@ -236,6 +237,36 @@ const Dashboard = () => {
         color: "bg-foreground",
         bgColor: "bg-muted",
         description: "Manage loans and repayments",
+      },
+      {
+        id: "staff_advance",
+        path: "staff-advance",
+        label: "Staff Advance",
+        icon: Wallet,
+        roles: ["user", "data_entry", "reports_viewer", "super_admin"],
+        color: "bg-foreground",
+        bgColor: "bg-muted",
+        description: "Staff advance requests",
+      },
+      {
+        id: "payroll",
+        path: "payroll",
+        label: "Payroll",
+        icon: Banknote,
+        roles: ["super_admin"],
+        color: "bg-foreground",
+        bgColor: "bg-muted",
+        description: "Monthly salary processing",
+      },
+      {
+        id: "advance_settlement",
+        path: "advance-settlement",
+        label: "Advance Settlement",
+        icon: Receipt,
+        roles: ["user", "data_entry", "reports_viewer", "super_admin"],
+        color: "bg-foreground",
+        bgColor: "bg-muted",
+        description: "Settle advances with bills",
       },
       {
         id: "share_investments",
@@ -749,6 +780,9 @@ const Dashboard = () => {
                 </CardContent>
               </Card>
             </div>
+
+            {/* Staff & Payroll Summary */}
+            <StaffPayrollSummaryWidget />
 
             {/* All-Time Summary Widget */}
             <AllTimeSummaryWidget className="my-8" />

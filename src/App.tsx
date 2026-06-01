@@ -48,6 +48,9 @@ import CustomReportBuilderTab from "./components/tabs/CustomReportBuilderTab";
 import InventoryBridgeTab from "./components/tabs/InventoryBridgeTab";
 import BusinessIntelligenceSuite from "./components/tabs/BusinessIntelligenceSuite";
 import LoansTab from "./components/tabs/LoansTab";
+import StaffAdvanceTab from "./components/tabs/StaffAdvanceTab";
+import PayrollManagementTab from "./components/tabs/PayrollManagementTab";
+import AdvanceSettlementTab from "./components/tabs/AdvanceSettlementTab";
 import { Outlet } from "react-router-dom"; // Needed for nested routes
 
 const queryClient = new QueryClient();
@@ -135,6 +138,16 @@ const App = () => {
                   element={<ShareInvestmentsTab />}
                 />
                 <Route path="loans" element={<LoansTab />} />
+                <Route path="staff-advance" element={<StaffAdvanceTab />} />
+                <Route
+                  path="payroll"
+                  element={
+                    <ProtectedRoute allowedRoles={["super_admin"]}>
+                      <PayrollManagementTab />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route path="advance-settlement" element={<AdvanceSettlementTab />} />
                 <Route
                   path="expense-bookings"
                   element={<ExpenseBookingsTab />}

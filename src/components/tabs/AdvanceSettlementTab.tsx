@@ -1,0 +1,316 @@
+import { useState, useEffect } from "react";
+import { useAuth } from "@/context/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
+import { logError } from "@/utils/errorHandling";
+import {
+  Receipt,
+  CheckCircle2,
+  XCircle,
+  Clock,
+  ArrowRightLeft,
+  FileText,
+  Upload,
+} from "lucide-react";
+import { format } from "date-fns";
+
+interface Employee {
+  id: string;
+  name: string;
+}
+
+interface StaffAdvance {
+  id: string;
+  amount: number;
+  employees: Employee;
+  status: string;
+}
+
+interface Settlement {
+  id: string;
+  advance_id: string;
+  amount: number;
+  settlement_type: string;
+  settlement_date: string;
+  status: string;
+  description: string;
+  staff_advances: StaffAdvance;
+}
+
+const AdvanceSettlementTab = () => {
+  const { user } = useAuth();
+  const [activeAdvances, setActiveAdvances] = useState<StaffAdvance[]>([]);
+  const [settlements, setSettlements] = useState<Settlement[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const [formData, setFormData] = useState({
+    advanceId: "",
+    amount: "",
+    settlementType: "Expense Bill",
+    expenseType: "",
+    description: "",
+    date: format(new Date(), "yyyy-MM-dd"),
+  });
+
+  useEffect(() => {
+    fetchActiveAdvances();
+    fetchSettlements();
+  }, []);
+
+  const fetchActiveAdvances = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("staff_advances")
+        .select("*, employees(id, name)")
+        .in("status", ["Disbursed", "Partially Settled"]);
+      if (error) throw error;
+      setActiveAdvances(data || []);
+    } catch (error) {
+      logError("fetching active advances", error);
+    }
+  };
+
+  const fetchSettlements = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("advance_settlements")
+        .select("*, staff_advances(amount, employees(name))")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      setSettlements(data || []);
+    } catch (error) {
+      logError("fetching settlements", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.advanceId || !formData.amount) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const { error } = await supabase.from("advance_settlements").insert({
+        advance_id: formData.advanceId,
+        amount: parseFloat(formData.amount),
+        settlement_type: formData.settlementType,
+        expense_type: formData.expenseType,
+        description: formData.description,
+        settlement_date: formData.date,
+        status: "Pending Verification",
+      });
+
+      if (error) throw error;
+
+      toast.success("Settlement submitted for verification");
+      setFormData({
+        advanceId: "",
+        amount: "",
+        settlementType: "Expense Bill",
+        expenseType: "",
+        description: "",
+        date: format(new Date(), "yyyy-MM-dd"),
+      });
+      fetchSettlements();
+    } catch (error) {
+      logError("submitting settlement", error);
+      toast.error("Submission failed");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleVerify = async (id: string, advanceId: string, amount: number, status: string) => {
+    try {
+      const { error } = await supabase.rpc("process_advance_settlement", {
+        p_settlement_id: id,
+        p_verifier_remarks: "Approved via dashboard",
+        p_status: status
+      });
+
+      if (error) throw error;
+
+      toast.success(`Settlement ${status.toLowerCase()} and balances updated`);
+      fetchSettlements();
+      fetchActiveAdvances();
+    } catch (error) {
+      logError("verifying settlement", error);
+      toast.error(`Verification failed: ${error.message}`);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-background p-2 md:p-6 pb-24 md:pb-6">
+      <div className="space-y-6">
+        <div className="bg-primary/5 p-4 rounded-3xl mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-emerald-600 rounded-xl text-white">
+              <Receipt className="h-6 w-6" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-foreground">Advance Settlement</h1>
+              <p className="text-xs text-muted-foreground">Settle outstanding staff advances with expense bills</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+           <Card className="lg:col-span-1 rounded-3xl border-none shadow-sm overflow-hidden">
+             <CardHeader className="bg-emerald-600 text-white p-4">
+                <CardTitle className="text-lg font-bold flex items-center gap-2">
+                  <ArrowRightLeft className="h-5 w-5" /> Submit Settlement
+                </CardTitle>
+             </CardHeader>
+             <CardContent className="p-4 space-y-4">
+                <form onSubmit={handleSubmit} className="space-y-4">
+                   <div className="space-y-2">
+                     <Label>Active Advance *</Label>
+                     <Select value={formData.advanceId} onValueChange={(v) => setFormData({...formData, advanceId: v})}>
+                       <SelectTrigger className="rounded-xl h-11">
+                         <SelectValue placeholder="Select Advance" />
+                       </SelectTrigger>
+                       <SelectContent>
+                         {activeAdvances.map((adv) => (
+                           <SelectItem key={adv.id} value={adv.id}>
+                             {adv.employees?.name} (रु {adv.amount.toLocaleString()})
+                           </SelectItem>
+                         ))}
+                       </SelectContent>
+                     </Select>
+                   </div>
+
+                   <div className="space-y-2">
+                     <Label>Settlement Amount *</Label>
+                     <Input
+                        type="number"
+                        value={formData.amount}
+                        onChange={(e) => setFormData({...formData, amount: e.target.value})}
+                        placeholder="0.00"
+                        className="rounded-xl h-11 font-bold text-lg"
+                      />
+                   </div>
+
+                   <div className="space-y-2">
+                     <Label>Expense Category</Label>
+                     <Input
+                        value={formData.expenseType}
+                        onChange={(e) => setFormData({...formData, expenseType: e.target.value})}
+                        placeholder="e.g. Travel, Food"
+                        className="rounded-xl"
+                      />
+                   </div>
+
+                   <div className="space-y-2">
+                     <Label>Description</Label>
+                     <Textarea
+                        value={formData.description}
+                        onChange={(e) => setFormData({...formData, description: e.target.value})}
+                        placeholder="Bill details..."
+                        className="rounded-xl"
+                      />
+                   </div>
+
+                   <div className="space-y-2">
+                      <Label>Bill/Receipt Attachment</Label>
+                      <div className="border-2 border-dashed border-muted rounded-xl p-6 text-center cursor-pointer hover:bg-muted/50 transition-colors">
+                        <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                        <p className="text-xs text-muted-foreground">Click or drag bill images here</p>
+                      </div>
+                   </div>
+
+                   <Button type="submit" disabled={isSubmitting} className="w-full h-12 rounded-xl text-lg font-bold mt-4 bg-emerald-600 shadow-lg">
+                      {isSubmitting ? "Submitting..." : "Submit for Verification"}
+                   </Button>
+                </form>
+             </CardContent>
+           </Card>
+
+           <Card className="lg:col-span-2 rounded-3xl border-none shadow-sm overflow-hidden">
+             <CardHeader className="p-4 bg-muted/50 border-b">
+                <CardTitle className="text-lg font-bold flex items-center gap-2">
+                  <Clock className="h-5 w-5 text-emerald-600" /> Recent Settlements
+                </CardTitle>
+             </CardHeader>
+             <CardContent className="p-0">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Employee</TableHead>
+                      <TableHead>Amount</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {settlements.map((s) => (
+                      <TableRow key={s.id}>
+                        <TableCell>{format(new Date(s.settlement_date), "MMM dd, yyyy")}</TableCell>
+                        <TableCell className="font-medium">{s.staff_advances?.employees?.name}</TableCell>
+                        <TableCell className="font-bold">रु {s.amount.toLocaleString()}</TableCell>
+                        <TableCell>
+                          <Badge variant={s.status === "Approved" ? "default" : "outline"}>
+                            {s.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                           {s.status === "Pending Verification" && (
+                             <div className="flex justify-end gap-2">
+                               <Button
+                                  size="sm"
+                                  className="bg-emerald-600 h-8"
+                                  onClick={() => handleVerify(s.id, s.advance_id, s.amount, "Approved")}
+                                >
+                                 Approve
+                               </Button>
+                               <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  className="h-8"
+                                  onClick={() => handleVerify(s.id, s.advance_id, s.amount, "Rejected")}
+                                >
+                                 Reject
+                               </Button>
+                             </div>
+                           )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+             </CardContent>
+           </Card>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default AdvanceSettlementTab;
