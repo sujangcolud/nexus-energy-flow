@@ -22,6 +22,25 @@ CREATE TABLE IF NOT EXISTS public.employees (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+ALTER TABLE public.staff_advances ADD COLUMN IF NOT EXISTS outstanding_amount NUMERIC DEFAULT 0;
+ALTER TABLE public.staff_advances ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;
+
+-- Ensure columns exist if table was already created without them
+ALTER TABLE public.employees ADD COLUMN IF NOT EXISTS employee_id TEXT;
+ALTER TABLE public.employees ADD COLUMN IF NOT EXISTS name TEXT;
+ALTER TABLE public.employees ADD COLUMN IF NOT EXISTS department TEXT;
+ALTER TABLE public.employees ADD COLUMN IF NOT EXISTS designation TEXT;
+ALTER TABLE public.employees ADD COLUMN IF NOT EXISTS joining_date DATE;
+ALTER TABLE public.employees ADD COLUMN IF NOT EXISTS pan_number TEXT;
+ALTER TABLE public.employees ADD COLUMN IF NOT EXISTS ssf_number TEXT;
+ALTER TABLE public.employees ADD COLUMN IF NOT EXISTS bank_account TEXT;
+ALTER TABLE public.employees ADD COLUMN IF NOT EXISTS basic_salary NUMERIC DEFAULT 0;
+ALTER TABLE public.employees ADD COLUMN IF NOT EXISTS allowance NUMERIC DEFAULT 0;
+ALTER TABLE public.employees ADD COLUMN IF NOT EXISTS other_benefits NUMERIC DEFAULT 0;
+ALTER TABLE public.employees ADD COLUMN IF NOT EXISTS marital_status TEXT DEFAULT 'single';
+ALTER TABLE public.employees ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true;
+ALTER TABLE public.employees ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;
+
 CREATE TABLE IF NOT EXISTS public.staff_advances (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     employee_id UUID REFERENCES public.employees(id) ON DELETE CASCADE,
@@ -71,6 +90,8 @@ CREATE TABLE IF NOT EXISTS public.advance_settlements (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+ALTER TABLE public.advance_settlements ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;
+
 CREATE TABLE IF NOT EXISTS public.advance_settlement_attachments (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     settlement_id UUID REFERENCES public.advance_settlements(id) ON DELETE CASCADE,
@@ -103,6 +124,8 @@ CREATE TABLE IF NOT EXISTS public.payroll_records (
     updated_at TIMESTAMPTZ DEFAULT NOW(),
     UNIQUE(employee_id, month_year)
 );
+
+ALTER TABLE public.payroll_records ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;
 
 CREATE TABLE IF NOT EXISTS public.payroll_settings (
     id SERIAL PRIMARY KEY,
@@ -556,3 +579,6 @@ CREATE TRIGGER staff_advances_summary_trigger AFTER INSERT OR UPDATE OR DELETE O
 
 DROP TRIGGER IF EXISTS payroll_summary_trigger ON public.payroll_records;
 CREATE TRIGGER payroll_summary_trigger AFTER INSERT OR UPDATE OR DELETE ON public.payroll_records FOR EACH ROW EXECUTE FUNCTION public.trigger_staff_summary_sync();
+
+-- 7. Force Schema Cache Refresh
+NOTIFY pgrst, 'reload schema';
