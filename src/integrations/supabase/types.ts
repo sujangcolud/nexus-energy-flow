@@ -14,6 +14,172 @@ export type Database = {
   }
   public: {
     Tables: {
+      advance_approvals: {
+        Row: {
+          acted_at: string
+          acted_by: string
+          action: string
+          advance_id: string
+          id: string
+          remarks: string | null
+        }
+        Insert: {
+          acted_at?: string
+          acted_by: string
+          action: string
+          advance_id: string
+          id?: string
+          remarks?: string | null
+        }
+        Update: {
+          acted_at?: string
+          acted_by?: string
+          action?: string
+          advance_id?: string
+          id?: string
+          remarks?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "advance_approvals_advance_id_fkey"
+            columns: ["advance_id"]
+            isOneToOne: false
+            referencedRelation: "staff_advances"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      advance_disbursements: {
+        Row: {
+          advance_id: string
+          amount: number
+          bank_account: string | null
+          bank_name: string | null
+          cashier: string | null
+          created_at: string
+          disbursed_by: string
+          disbursement_date: string
+          id: string
+          journal_entry_id: string | null
+          method: string
+          payment_mode: string
+          remarks: string | null
+          transaction_id: string | null
+        }
+        Insert: {
+          advance_id: string
+          amount: number
+          bank_account?: string | null
+          bank_name?: string | null
+          cashier?: string | null
+          created_at?: string
+          disbursed_by: string
+          disbursement_date?: string
+          id?: string
+          journal_entry_id?: string | null
+          method: string
+          payment_mode: string
+          remarks?: string | null
+          transaction_id?: string | null
+        }
+        Update: {
+          advance_id?: string
+          amount?: number
+          bank_account?: string | null
+          bank_name?: string | null
+          cashier?: string | null
+          created_at?: string
+          disbursed_by?: string
+          disbursement_date?: string
+          id?: string
+          journal_entry_id?: string | null
+          method?: string
+          payment_mode?: string
+          remarks?: string | null
+          transaction_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "advance_disbursements_advance_id_fkey"
+            columns: ["advance_id"]
+            isOneToOne: false
+            referencedRelation: "staff_advances"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      advance_settlements: {
+        Row: {
+          advance_id: string
+          amount: number
+          created_at: string
+          description: string | null
+          employee_id: string
+          expense_date: string | null
+          expense_type: string | null
+          id: string
+          journal_entry_id: string | null
+          settlement_type: string
+          submitted_by: string
+          updated_at: string
+          verification_status: string
+          verified_at: string | null
+          verified_by: string | null
+          verifier_remarks: string | null
+        }
+        Insert: {
+          advance_id: string
+          amount: number
+          created_at?: string
+          description?: string | null
+          employee_id: string
+          expense_date?: string | null
+          expense_type?: string | null
+          id?: string
+          journal_entry_id?: string | null
+          settlement_type?: string
+          submitted_by: string
+          updated_at?: string
+          verification_status?: string
+          verified_at?: string | null
+          verified_by?: string | null
+          verifier_remarks?: string | null
+        }
+        Update: {
+          advance_id?: string
+          amount?: number
+          created_at?: string
+          description?: string | null
+          employee_id?: string
+          expense_date?: string | null
+          expense_type?: string | null
+          id?: string
+          journal_entry_id?: string | null
+          settlement_type?: string
+          submitted_by?: string
+          updated_at?: string
+          verification_status?: string
+          verified_at?: string | null
+          verified_by?: string | null
+          verifier_remarks?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "advance_settlements_advance_id_fkey"
+            columns: ["advance_id"]
+            isOneToOne: false
+            referencedRelation: "staff_advances"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "advance_settlements_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_audit_log: {
         Row: {
           created_at: string
@@ -772,6 +938,66 @@ export type Database = {
         }
         Relationships: []
       }
+      employees: {
+        Row: {
+          bank_account: string | null
+          bank_name: string | null
+          contact_email: string | null
+          contact_phone: string | null
+          created_at: string
+          department: string | null
+          designation: string | null
+          employee_code: string
+          full_name: string
+          id: string
+          is_active: boolean
+          joining_date: string | null
+          marital_status: string
+          pan_number: string | null
+          ssf_number: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          bank_account?: string | null
+          bank_name?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          department?: string | null
+          designation?: string | null
+          employee_code: string
+          full_name: string
+          id?: string
+          is_active?: boolean
+          joining_date?: string | null
+          marital_status?: string
+          pan_number?: string | null
+          ssf_number?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          bank_account?: string | null
+          bank_name?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          department?: string | null
+          designation?: string | null
+          employee_code?: string
+          full_name?: string
+          id?: string
+          is_active?: boolean
+          joining_date?: string | null
+          marital_status?: string
+          pan_number?: string | null
+          ssf_number?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       expense_booking_categories: {
         Row: {
           created_at: string | null
@@ -1255,6 +1481,80 @@ export type Database = {
           },
         ]
       }
+      journal_entries: {
+        Row: {
+          created_at: string
+          entry_date: string
+          id: string
+          is_reversed: boolean
+          narration: string | null
+          posted_by: string
+          reference_id: string | null
+          reference_type: string
+          reversed_by_entry_id: string | null
+          total_amount: number
+        }
+        Insert: {
+          created_at?: string
+          entry_date?: string
+          id?: string
+          is_reversed?: boolean
+          narration?: string | null
+          posted_by: string
+          reference_id?: string | null
+          reference_type: string
+          reversed_by_entry_id?: string | null
+          total_amount?: number
+        }
+        Update: {
+          created_at?: string
+          entry_date?: string
+          id?: string
+          is_reversed?: boolean
+          narration?: string | null
+          posted_by?: string
+          reference_id?: string | null
+          reference_type?: string
+          reversed_by_entry_id?: string | null
+          total_amount?: number
+        }
+        Relationships: []
+      }
+      journal_lines: {
+        Row: {
+          account: string
+          credit: number
+          debit: number
+          entry_id: string
+          id: string
+          memo: string | null
+        }
+        Insert: {
+          account: string
+          credit?: number
+          debit?: number
+          entry_id: string
+          id?: string
+          memo?: string | null
+        }
+        Update: {
+          account?: string
+          credit?: number
+          debit?: number
+          entry_id?: string
+          id?: string
+          memo?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "journal_lines_entry_id_fkey"
+            columns: ["entry_id"]
+            isOneToOne: false
+            referencedRelation: "journal_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       loan_repayments: {
         Row: {
           amount_paid: number
@@ -1533,6 +1833,174 @@ export type Database = {
         }
         Relationships: []
       }
+      payroll_config: {
+        Row: {
+          created_at: string
+          default_currency: string
+          employee_ssf_pct: number
+          employer_ssf_pct: number
+          fiscal_year: string
+          id: string
+          is_active: boolean
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          default_currency?: string
+          employee_ssf_pct?: number
+          employer_ssf_pct?: number
+          fiscal_year: string
+          id?: string
+          is_active?: boolean
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          default_currency?: string
+          employee_ssf_pct?: number
+          employer_ssf_pct?: number
+          fiscal_year?: string
+          id?: string
+          is_active?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      payroll_periods: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string
+          fiscal_year: string
+          id: string
+          notes: string | null
+          paid_at: string | null
+          period_end: string
+          period_label: string
+          period_start: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          fiscal_year: string
+          id?: string
+          notes?: string | null
+          paid_at?: string | null
+          period_end: string
+          period_label: string
+          period_start: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          fiscal_year?: string
+          id?: string
+          notes?: string | null
+          paid_at?: string | null
+          period_end?: string
+          period_label?: string
+          period_start?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      payslips: {
+        Row: {
+          advance_recovery: number
+          allowance: number
+          basic_salary: number
+          created_at: string
+          ctc: number
+          employee_id: string
+          employee_ssf: number
+          employer_ssf: number
+          filing_status: string
+          gross_salary: number
+          id: string
+          journal_entry_id: string | null
+          net_pay: number
+          notes: string | null
+          other_benefits: number
+          other_deductions: number
+          paid_at: string | null
+          payment_mode: string | null
+          period_id: string
+          status: string
+          tax_deduction: number
+          updated_at: string
+        }
+        Insert: {
+          advance_recovery?: number
+          allowance?: number
+          basic_salary?: number
+          created_at?: string
+          ctc?: number
+          employee_id: string
+          employee_ssf?: number
+          employer_ssf?: number
+          filing_status?: string
+          gross_salary?: number
+          id?: string
+          journal_entry_id?: string | null
+          net_pay?: number
+          notes?: string | null
+          other_benefits?: number
+          other_deductions?: number
+          paid_at?: string | null
+          payment_mode?: string | null
+          period_id: string
+          status?: string
+          tax_deduction?: number
+          updated_at?: string
+        }
+        Update: {
+          advance_recovery?: number
+          allowance?: number
+          basic_salary?: number
+          created_at?: string
+          ctc?: number
+          employee_id?: string
+          employee_ssf?: number
+          employer_ssf?: number
+          filing_status?: string
+          gross_salary?: number
+          id?: string
+          journal_entry_id?: string | null
+          net_pay?: number
+          notes?: string | null
+          other_benefits?: number
+          other_deductions?: number
+          paid_at?: string | null
+          payment_mode?: string | null
+          period_id?: string
+          status?: string
+          tax_deduction?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payslips_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payslips_period_id_fkey"
+            columns: ["period_id"]
+            isOneToOne: false
+            referencedRelation: "payroll_periods"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string | null
@@ -1774,6 +2242,71 @@ export type Database = {
         }
         Relationships: []
       }
+      staff_advances: {
+        Row: {
+          amount_approved: number | null
+          amount_disbursed: number
+          amount_requested: number
+          amount_settled: number
+          created_at: string
+          employee_id: string
+          expected_settlement_date: string | null
+          id: string
+          is_deleted: boolean
+          outstanding_amount: number | null
+          reason: string | null
+          request_date: string
+          requested_by: string
+          settlement_method: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount_approved?: number | null
+          amount_disbursed?: number
+          amount_requested: number
+          amount_settled?: number
+          created_at?: string
+          employee_id: string
+          expected_settlement_date?: string | null
+          id?: string
+          is_deleted?: boolean
+          outstanding_amount?: number | null
+          reason?: string | null
+          request_date?: string
+          requested_by: string
+          settlement_method?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount_approved?: number | null
+          amount_disbursed?: number
+          amount_requested?: number
+          amount_settled?: number
+          created_at?: string
+          employee_id?: string
+          expected_settlement_date?: string | null
+          id?: string
+          is_deleted?: boolean
+          outstanding_amount?: number | null
+          reason?: string | null
+          request_date?: string
+          requested_by?: string
+          settlement_method?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_advances_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       static_expenses: {
         Row: {
           amount: number
@@ -1798,6 +2331,45 @@ export type Database = {
           is_recurring?: boolean
           name?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      tax_slabs: {
+        Row: {
+          created_at: string
+          filing_status: string
+          fiscal_year: string
+          from_amount: number
+          id: string
+          notes: string | null
+          rate_pct: number
+          slab_order: number
+          to_amount: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          filing_status: string
+          fiscal_year: string
+          from_amount: number
+          id?: string
+          notes?: string | null
+          rate_pct: number
+          slab_order: number
+          to_amount?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          filing_status?: string
+          fiscal_year?: string
+          from_amount?: number
+          id?: string
+          notes?: string | null
+          rate_pct?: number
+          slab_order?: number
+          to_amount?: number | null
+          updated_at?: string
         }
         Relationships: []
       }
@@ -2369,6 +2941,14 @@ export type Database = {
           total_withdrawals_cooperative_fonepay: number
         }[]
       }
+      calculate_payroll_tax: {
+        Args: {
+          p_annual_taxable: number
+          p_filing_status: string
+          p_fiscal_year: string
+        }
+        Returns: number
+      }
       convert_unit: {
         Args: { p_from: string; p_qty: number; p_to: string }
         Returns: number
@@ -2380,6 +2960,21 @@ export type Database = {
       daily_closing: {
         Args: { p_closing_date: string; p_user_id: string }
         Returns: Json
+      }
+      disburse_advance: {
+        Args: {
+          p_advance_id: string
+          p_amount: number
+          p_bank_account?: string
+          p_bank_name?: string
+          p_cashier?: string
+          p_disbursement_date?: string
+          p_method: string
+          p_payment_mode: string
+          p_remarks?: string
+          p_transaction_id?: string
+        }
+        Returns: string
       }
       generate_balance_sheet: {
         Args: { date_from: string; date_to: string; user_id_param: string }
@@ -2632,6 +3227,14 @@ export type Database = {
         Returns: Json
       }
       nexus_reconcile: { Args: { p_check_date?: string }; Returns: Json }
+      pay_payroll_period: {
+        Args: {
+          p_pay_date?: string
+          p_payment_mode?: string
+          p_period_id: string
+        }
+        Returns: number
+      }
       process_inventory_expense:
         | {
             Args: {
@@ -2753,6 +3356,19 @@ export type Database = {
         Returns: number
       }
       refresh_schema_cache: { Args: never; Returns: boolean }
+      run_payroll_for_employee: {
+        Args: {
+          p_advance_recovery?: number
+          p_allowance?: number
+          p_basic: number
+          p_employee_id: string
+          p_filing_status?: string
+          p_other_benefits?: number
+          p_other_deductions?: number
+          p_period_id: string
+        }
+        Returns: string
+      }
       safe_get_daily_summary_value: {
         Args: {
           fallback_column?: string
@@ -2789,6 +3405,14 @@ export type Database = {
       update_enhanced_daily_summary: {
         Args: { target_date: string }
         Returns: undefined
+      }
+      verify_advance_settlement: {
+        Args: {
+          p_decision: string
+          p_settlement_id: string
+          p_verifier_remarks?: string
+        }
+        Returns: string
       }
     }
     Enums: {
