@@ -32,11 +32,15 @@ import {
   User,
   Download,
   Eye,
+  Edit2,
+  Save,
+  Trash2,
 } from "lucide-react";
 import { format } from "date-fns";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 
 interface Employee {
   id: string;
@@ -89,6 +93,11 @@ const StaffAdvanceTab = () => {
     accountNumber: "",
     transactionId: "",
     date: format(new Date(), "yyyy-MM-dd"),
+  });
+
+  const [editDialog, setEditDialog] = useState<{open: boolean, advance: StaffAdvance | null}>({
+    open: false,
+    advance: null
   });
 
   useEffect(() => {
@@ -212,6 +221,37 @@ const StaffAdvanceTab = () => {
     } catch (error) {
       logError("disbursing advance", error);
       toast.error("Disbursement failed");
+    }
+  };
+
+  const handleUpdateAdvance = async () => {
+    if (!editDialog.advance) return;
+    try {
+      const { id, amount, reason, settlement_method, expected_settlement_date, status, disbursement_method, transfer_date, withdrawal_date } = editDialog.advance;
+
+      const updateData: any = {
+        amount,
+        reason,
+        settlement_method,
+        expected_settlement_date,
+        status,
+        disbursement_method,
+        transfer_date,
+        withdrawal_date
+      };
+
+      const { error } = await supabase
+        .from("staff_advances")
+        .update(updateData)
+        .eq("id", id);
+
+      if (error) throw error;
+      toast.success("Advance request updated");
+      setEditDialog({ open: false, advance: null });
+      fetchAdvances();
+    } catch (error) {
+      logError("updating advance", error);
+      toast.error("Update failed");
     }
   };
 
@@ -398,8 +438,13 @@ const StaffAdvanceTab = () => {
                             ) : "-"}
                          </TableCell>
                          <TableCell className="text-right">
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                              <Eye className="h-4 w-4" />
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0"
+                              onClick={() => setEditDialog({ open: true, advance: adv })}
+                            >
+                              <Edit2 className="h-4 w-4" />
                             </Button>
                          </TableCell>
                        </TableRow>
@@ -619,6 +664,151 @@ const StaffAdvanceTab = () => {
           <DialogFooter>
              <Button onClick={handleDisburse} className="w-full h-12 rounded-xl text-lg font-bold">
                Confirm Disbursement
+             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Advance Dialog */}
+      <Dialog open={editDialog.open} onOpenChange={(o) => !o && setEditDialog({open: false, advance: null})}>
+        <DialogContent className="rounded-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Advance Request</DialogTitle>
+          </DialogHeader>
+
+          {editDialog.advance && (
+            <div className="space-y-4 py-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Amount (NRs.)</Label>
+                  <Input
+                    type="number"
+                    value={editDialog.advance.amount}
+                    onChange={(e) => setEditDialog({
+                      ...editDialog,
+                      advance: {...editDialog.advance!, amount: parseFloat(e.target.value)}
+                    })}
+                    className="rounded-xl font-bold"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Status</Label>
+                  <Select
+                    value={editDialog.advance.status}
+                    onValueChange={(v) => setEditDialog({
+                      ...editDialog,
+                      advance: {...editDialog.advance!, status: v}
+                    })}
+                  >
+                    <SelectTrigger className="rounded-xl">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Submitted">Submitted</SelectItem>
+                      <SelectItem value="Approved">Approved</SelectItem>
+                      <SelectItem value="Rejected">Rejected</SelectItem>
+                      <SelectItem value="Disbursed">Disbursed</SelectItem>
+                      <SelectItem value="Partially Settled">Partially Settled</SelectItem>
+                      <SelectItem value="Fully Settled">Fully Settled</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Reason</Label>
+                <Textarea
+                  value={editDialog.advance.reason}
+                  onChange={(e) => setEditDialog({
+                    ...editDialog,
+                    advance: {...editDialog.advance!, reason: e.target.value}
+                  })}
+                  className="rounded-xl"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Settlement Method</Label>
+                  <Select
+                    value={editDialog.advance.settlement_method}
+                    onValueChange={(v) => setEditDialog({
+                      ...editDialog,
+                      advance: {...editDialog.advance!, settlement_method: v}
+                    })}
+                  >
+                    <SelectTrigger className="rounded-xl">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Salary Deduction">Salary Deduction</SelectItem>
+                      <SelectItem value="Expense Settlement">Expense Settlement</SelectItem>
+                      <SelectItem value="Mixed Settlement">Mixed Settlement</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Expected Settlement Date</Label>
+                  <Input
+                    type="date"
+                    value={editDialog.advance.expected_settlement_date}
+                    onChange={(e) => setEditDialog({
+                      ...editDialog,
+                      advance: {...editDialog.advance!, expected_settlement_date: e.target.value}
+                    })}
+                    className="rounded-xl"
+                  />
+                </div>
+              </div>
+
+              {editDialog.advance.status === "Disbursed" && (
+                <div className="pt-4 border-t space-y-4">
+                  <h3 className="font-bold text-sm">Disbursement Details</h3>
+                  <div className="space-y-2">
+                    <Label>Method</Label>
+                    <Select
+                      value={editDialog.advance.disbursement_method || ""}
+                      onValueChange={(v) => setEditDialog({
+                        ...editDialog,
+                        advance: {...editDialog.advance!, disbursement_method: v}
+                      })}
+                    >
+                      <SelectTrigger className="rounded-xl">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
+                        <SelectItem value="Cash Withdrawal">Cash Withdrawal</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Date</Label>
+                    <Input
+                      type="date"
+                      value={editDialog.advance.transfer_date || editDialog.advance.withdrawal_date || ""}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (editDialog.advance?.disbursement_method === "Bank Transfer") {
+                          setEditDialog({...editDialog, advance: {...editDialog.advance!, transfer_date: val}});
+                        } else {
+                          setEditDialog({...editDialog, advance: {...editDialog.advance!, withdrawal_date: val}});
+                        }
+                      }}
+                      className="rounded-xl"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          <DialogFooter>
+             <Button variant="outline" onClick={() => setEditDialog({open: false, advance: null})} className="rounded-xl">
+               Cancel
+             </Button>
+             <Button onClick={handleUpdateAdvance} className="rounded-xl font-bold bg-primary px-8">
+               <Save className="mr-2 h-4 w-4" /> Save Changes
              </Button>
           </DialogFooter>
         </DialogContent>

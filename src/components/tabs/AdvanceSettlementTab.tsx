@@ -32,8 +32,11 @@ import {
   ArrowRightLeft,
   FileText,
   Upload,
+  Edit2,
+  Save,
 } from "lucide-react";
 import { format } from "date-fns";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
 interface Employee {
   id: string;
@@ -64,6 +67,11 @@ const AdvanceSettlementTab = () => {
   const [settlements, setSettlements] = useState<Settlement[]>([]);
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const [editDialog, setEditDialog] = useState<{open: boolean, settlement: Settlement | null}>({
+    open: false,
+    settlement: null
+  });
 
   const [formData, setFormData] = useState({
     advanceId: "",
@@ -163,6 +171,33 @@ const AdvanceSettlementTab = () => {
     } catch (error) {
       logError("verifying settlement", error);
       toast.error(`Verification failed: ${error.message}`);
+    }
+  };
+
+  const handleUpdateSettlement = async () => {
+    if (!editDialog.settlement) return;
+    try {
+      const { id, amount, settlement_type, expense_type, description, settlement_date, status } = editDialog.settlement;
+
+      const { error } = await supabase
+        .from("advance_settlements")
+        .update({
+          amount,
+          settlement_type,
+          expense_type,
+          description,
+          settlement_date,
+          status
+        })
+        .eq("id", id);
+
+      if (error) throw error;
+      toast.success("Settlement updated");
+      setEditDialog({ open: false, settlement: null });
+      fetchSettlements();
+    } catch (error) {
+      logError("updating settlement", error);
+      toast.error("Update failed");
     }
   };
 
@@ -281,25 +316,35 @@ const AdvanceSettlementTab = () => {
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right">
-                           {s.status === "Pending Verification" && (
-                             <div className="flex justify-end gap-2">
-                               <Button
-                                  size="sm"
-                                  className="bg-emerald-600 h-8"
-                                  onClick={() => handleVerify(s.id, s.advance_id, s.amount, "Approved")}
-                                >
-                                 Approve
-                               </Button>
-                               <Button
-                                  size="sm"
-                                  variant="destructive"
-                                  className="h-8"
-                                  onClick={() => handleVerify(s.id, s.advance_id, s.amount, "Rejected")}
-                                >
-                                 Reject
-                               </Button>
-                             </div>
-                           )}
+                           <div className="flex justify-end gap-2">
+                             <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 w-8 p-0"
+                                onClick={() => setEditDialog({ open: true, settlement: s })}
+                              >
+                               <Edit2 className="h-4 w-4" />
+                             </Button>
+                             {s.status === "Pending Verification" && (
+                               <>
+                                 <Button
+                                    size="sm"
+                                    className="bg-emerald-600 h-8"
+                                    onClick={() => handleVerify(s.id, s.advance_id, s.amount, "Approved")}
+                                  >
+                                   Approve
+                                 </Button>
+                                 <Button
+                                    size="sm"
+                                    variant="destructive"
+                                    className="h-8"
+                                    onClick={() => handleVerify(s.id, s.advance_id, s.amount, "Rejected")}
+                                  >
+                                   Reject
+                                 </Button>
+                               </>
+                             )}
+                           </div>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -309,6 +354,99 @@ const AdvanceSettlementTab = () => {
            </Card>
         </div>
       </div>
+
+      {/* Edit Settlement Dialog */}
+      <Dialog open={editDialog.open} onOpenChange={(o) => !o && setEditDialog({open: false, settlement: null})}>
+        <DialogContent className="rounded-3xl">
+          <DialogHeader>
+            <DialogTitle>Edit Advance Settlement</DialogTitle>
+          </DialogHeader>
+
+          {editDialog.settlement && (
+            <div className="space-y-4 py-4">
+               <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Amount</Label>
+                    <Input
+                      type="number"
+                      value={editDialog.settlement.amount}
+                      onChange={(e) => setEditDialog({
+                        ...editDialog,
+                        settlement: {...editDialog.settlement!, amount: parseFloat(e.target.value)}
+                      })}
+                      className="rounded-xl font-bold"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Date</Label>
+                    <Input
+                      type="date"
+                      value={editDialog.settlement.settlement_date}
+                      onChange={(e) => setEditDialog({
+                        ...editDialog,
+                        settlement: {...editDialog.settlement!, settlement_date: e.target.value}
+                      })}
+                      className="rounded-xl"
+                    />
+                  </div>
+               </div>
+
+               <div className="space-y-2">
+                 <Label>Status</Label>
+                 <Select
+                    value={editDialog.settlement.status}
+                    onValueChange={(v) => setEditDialog({
+                      ...editDialog,
+                      settlement: {...editDialog.settlement!, status: v}
+                    })}
+                  >
+                    <SelectTrigger className="rounded-xl">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Pending Verification">Pending Verification</SelectItem>
+                      <SelectItem value="Approved">Approved</SelectItem>
+                      <SelectItem value="Rejected">Rejected</SelectItem>
+                    </SelectContent>
+                 </Select>
+               </div>
+
+               <div className="space-y-2">
+                 <Label>Expense Category</Label>
+                 <Input
+                    value={editDialog.settlement.expense_type || ""}
+                    onChange={(e) => setEditDialog({
+                      ...editDialog,
+                      settlement: {...editDialog.settlement!, expense_type: e.target.value}
+                    })}
+                    className="rounded-xl"
+                  />
+               </div>
+
+               <div className="space-y-2">
+                 <Label>Description</Label>
+                 <Textarea
+                    value={editDialog.settlement.description || ""}
+                    onChange={(e) => setEditDialog({
+                      ...editDialog,
+                      settlement: {...editDialog.settlement!, description: e.target.value}
+                    })}
+                    className="rounded-xl"
+                  />
+               </div>
+            </div>
+          )}
+
+          <DialogFooter>
+             <Button variant="outline" onClick={() => setEditDialog({open: false, settlement: null})} className="rounded-xl">
+               Cancel
+             </Button>
+             <Button onClick={handleUpdateSettlement} className="bg-emerald-600 rounded-xl font-bold px-8 text-white">
+               <Save className="mr-2 h-4 w-4" /> Save Changes
+             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
