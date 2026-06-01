@@ -169,34 +169,40 @@ export type Database = {
       balances: {
         Row: {
           bank_balance: number
+          cash_balance: number | null
           cash_in_hand: number
           cooperative_balance: number
           created_at: string
           esewa_balance: number
           fonepay_balance: number
           id: string
+          last_updated: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
           bank_balance?: number
+          cash_balance?: number | null
           cash_in_hand?: number
           cooperative_balance?: number
           created_at?: string
           esewa_balance?: number
           fonepay_balance?: number
           id?: string
+          last_updated?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
           bank_balance?: number
+          cash_balance?: number | null
           cash_in_hand?: number
           cooperative_balance?: number
           created_at?: string
           esewa_balance?: number
           fonepay_balance?: number
           id?: string
+          last_updated?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -217,6 +223,163 @@ export type Database = {
           created_at?: string | null
           id?: string
           name?: string
+        }
+        Relationships: []
+      }
+      charger_connectors: {
+        Row: {
+          charger_id: string
+          connector_id: number
+          current: number | null
+          power_kw: number | null
+          soc: number | null
+          status: string | null
+          updated_at: string | null
+          voltage: number | null
+        }
+        Insert: {
+          charger_id: string
+          connector_id: number
+          current?: number | null
+          power_kw?: number | null
+          soc?: number | null
+          status?: string | null
+          updated_at?: string | null
+          voltage?: number | null
+        }
+        Update: {
+          charger_id?: string
+          connector_id?: number
+          current?: number | null
+          power_kw?: number | null
+          soc?: number | null
+          status?: string | null
+          updated_at?: string | null
+          voltage?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "charger_connectors_charger_id_fkey"
+            columns: ["charger_id"]
+            isOneToOne: false
+            referencedRelation: "charger_status"
+            referencedColumns: ["charger_id"]
+          },
+        ]
+      }
+      charger_meter_values: {
+        Row: {
+          charger_id: string
+          connector_id: number | null
+          current: number | null
+          id: string
+          power_kw: number | null
+          soc: number | null
+          timestamp: string | null
+          transaction_id: string | null
+          voltage: number | null
+        }
+        Insert: {
+          charger_id: string
+          connector_id?: number | null
+          current?: number | null
+          id?: string
+          power_kw?: number | null
+          soc?: number | null
+          timestamp?: string | null
+          transaction_id?: string | null
+          voltage?: number | null
+        }
+        Update: {
+          charger_id?: string
+          connector_id?: number | null
+          current?: number | null
+          id?: string
+          power_kw?: number | null
+          soc?: number | null
+          timestamp?: string | null
+          transaction_id?: string | null
+          voltage?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "charger_meter_values_charger_id_fkey"
+            columns: ["charger_id"]
+            isOneToOne: false
+            referencedRelation: "charger_status"
+            referencedColumns: ["charger_id"]
+          },
+        ]
+      }
+      charger_status: {
+        Row: {
+          charger_id: string
+          charger_name: string | null
+          current: number
+          model: string | null
+          power_kw: number
+          price_per_kwh: number | null
+          soc: number
+          status: string
+          updated_at: string | null
+          vendor: string | null
+          voltage: number
+        }
+        Insert: {
+          charger_id: string
+          charger_name?: string | null
+          current?: number
+          model?: string | null
+          power_kw?: number
+          price_per_kwh?: number | null
+          soc?: number
+          status?: string
+          updated_at?: string | null
+          vendor?: string | null
+          voltage?: number
+        }
+        Update: {
+          charger_id?: string
+          charger_name?: string | null
+          current?: number
+          model?: string | null
+          power_kw?: number
+          price_per_kwh?: number | null
+          soc?: number
+          status?: string
+          updated_at?: string | null
+          vendor?: string | null
+          voltage?: number
+        }
+        Relationships: []
+      }
+      charger_transactions: {
+        Row: {
+          charger_id: string
+          created_at: string | null
+          id_tag: string | null
+          is_active: boolean | null
+          start_meter: number
+          start_time: string | null
+          transaction_id: string
+        }
+        Insert: {
+          charger_id: string
+          created_at?: string | null
+          id_tag?: string | null
+          is_active?: boolean | null
+          start_meter: number
+          start_time?: string | null
+          transaction_id: string
+        }
+        Update: {
+          charger_id?: string
+          created_at?: string | null
+          id_tag?: string | null
+          is_active?: boolean | null
+          start_meter?: number
+          start_time?: string | null
+          transaction_id?: string
         }
         Relationships: []
       }
@@ -242,6 +405,8 @@ export type Database = {
         Row: {
           amount: number | null
           category: string | null
+          charger_id: string | null
+          connector_id: number | null
           created_at: string | null
           date: string | null
           end_percentage: number | null
@@ -259,6 +424,8 @@ export type Database = {
         Insert: {
           amount?: number | null
           category?: string | null
+          charger_id?: string | null
+          connector_id?: number | null
           created_at?: string | null
           date?: string | null
           end_percentage?: number | null
@@ -276,6 +443,8 @@ export type Database = {
         Update: {
           amount?: number | null
           category?: string | null
+          charger_id?: string | null
+          connector_id?: number | null
           created_at?: string | null
           date?: string | null
           end_percentage?: number | null
@@ -341,18 +510,25 @@ export type Database = {
       }
       daily_summary: {
         Row: {
+          actual_cash_in_hand: number | null
+          actual_fonepay_total: number | null
           cash_balance: number | null
+          cash_diff: number | null
           cooperative_balance: number | null
           created_at: string | null
           esewa_balance: number | null
+          expenses_total: number | null
           fonepay_balance: number | null
+          fonepay_diff: number | null
           id: number
           summary_date: string
+          system_cash_calculation: number | null
           total_balance: number | null
           total_cash_income: number | null
           total_deposits: number | null
           total_deposits_cash: number | null
           total_deposits_esewa: number | null
+          total_deposits_from_cash: number | null
           total_esewa_income: number | null
           total_expenses: number | null
           total_expenses_cash: number | null
@@ -379,6 +555,7 @@ export type Database = {
           total_withdrawals_bank: number | null
           total_withdrawals_bank_cash: number | null
           total_withdrawals_bank_esewa: number | null
+          total_withdrawals_cash: number | null
           total_withdrawals_cooperative: number | null
           total_withdrawals_cooperative_cash: number | null
           total_withdrawals_cooperative_esewa: number | null
@@ -386,18 +563,25 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          actual_cash_in_hand?: number | null
+          actual_fonepay_total?: number | null
           cash_balance?: number | null
+          cash_diff?: number | null
           cooperative_balance?: number | null
           created_at?: string | null
           esewa_balance?: number | null
+          expenses_total?: number | null
           fonepay_balance?: number | null
+          fonepay_diff?: number | null
           id?: number
           summary_date: string
+          system_cash_calculation?: number | null
           total_balance?: number | null
           total_cash_income?: number | null
           total_deposits?: number | null
           total_deposits_cash?: number | null
           total_deposits_esewa?: number | null
+          total_deposits_from_cash?: number | null
           total_esewa_income?: number | null
           total_expenses?: number | null
           total_expenses_cash?: number | null
@@ -424,6 +608,7 @@ export type Database = {
           total_withdrawals_bank?: number | null
           total_withdrawals_bank_cash?: number | null
           total_withdrawals_bank_esewa?: number | null
+          total_withdrawals_cash?: number | null
           total_withdrawals_cooperative?: number | null
           total_withdrawals_cooperative_cash?: number | null
           total_withdrawals_cooperative_esewa?: number | null
@@ -431,18 +616,25 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          actual_cash_in_hand?: number | null
+          actual_fonepay_total?: number | null
           cash_balance?: number | null
+          cash_diff?: number | null
           cooperative_balance?: number | null
           created_at?: string | null
           esewa_balance?: number | null
+          expenses_total?: number | null
           fonepay_balance?: number | null
+          fonepay_diff?: number | null
           id?: number
           summary_date?: string
+          system_cash_calculation?: number | null
           total_balance?: number | null
           total_cash_income?: number | null
           total_deposits?: number | null
           total_deposits_cash?: number | null
           total_deposits_esewa?: number | null
+          total_deposits_from_cash?: number | null
           total_esewa_income?: number | null
           total_expenses?: number | null
           total_expenses_cash?: number | null
@@ -469,6 +661,7 @@ export type Database = {
           total_withdrawals_bank?: number | null
           total_withdrawals_bank_cash?: number | null
           total_withdrawals_bank_esewa?: number | null
+          total_withdrawals_cash?: number | null
           total_withdrawals_cooperative?: number | null
           total_withdrawals_cooperative_cash?: number | null
           total_withdrawals_cooperative_esewa?: number | null
@@ -600,63 +793,63 @@ export type Database = {
       expense_bookings: {
         Row: {
           amount: number
-          category: string
-          created_at: string | null
-          id: string
-          description: string
-          payment_date: string | null
-          remarks: string | null
-          user_id: string | null
-          is_inventory_purchase: boolean | null
-          inventory_item_id: string | null
-          quantity: number | null
-          unit: string | null
-          cost_per_unit: number | null
-          supplier: string | null
-          invoice_number: string | null
-          payment_mode: string | null
           booking_date: string | null
+          category: string
+          cost_per_unit: number | null
+          created_at: string | null
+          description: string
+          id: string
+          inventory_item_id: string | null
+          invoice_number: string | null
+          is_inventory_purchase: boolean | null
+          payment_date: string | null
+          payment_mode: string | null
+          quantity: number | null
+          remarks: string | null
           status: string | null
+          supplier: string | null
+          unit: string | null
+          user_id: string | null
         }
         Insert: {
           amount: number
-          category: string
-          created_at?: string | null
-          id?: string
-          description: string
-          payment_date?: string | null
-          remarks?: string | null
-          user_id?: string | null
-          is_inventory_purchase?: boolean | null
-          inventory_item_id?: string | null
-          quantity?: number | null
-          unit?: string | null
-          cost_per_unit?: number | null
-          supplier?: string | null
-          invoice_number?: string | null
-          payment_mode?: string | null
           booking_date?: string | null
+          category: string
+          cost_per_unit?: number | null
+          created_at?: string | null
+          description: string
+          id?: string
+          inventory_item_id?: string | null
+          invoice_number?: string | null
+          is_inventory_purchase?: boolean | null
+          payment_date?: string | null
+          payment_mode?: string | null
+          quantity?: number | null
+          remarks?: string | null
           status?: string | null
+          supplier?: string | null
+          unit?: string | null
+          user_id?: string | null
         }
         Update: {
           amount?: number
-          category?: string
-          created_at?: string | null
-          id?: string
-          description?: string
-          payment_date?: string | null
-          remarks?: string | null
-          user_id?: string | null
-          is_inventory_purchase?: boolean | null
-          inventory_item_id?: string | null
-          quantity?: number | null
-          unit?: string | null
-          cost_per_unit?: number | null
-          supplier?: string | null
-          invoice_number?: string | null
-          payment_mode?: string | null
           booking_date?: string | null
+          category?: string
+          cost_per_unit?: number | null
+          created_at?: string | null
+          description?: string
+          id?: string
+          inventory_item_id?: string | null
+          invoice_number?: string | null
+          is_inventory_purchase?: boolean | null
+          payment_date?: string | null
+          payment_mode?: string | null
+          quantity?: number | null
+          remarks?: string | null
           status?: string | null
+          supplier?: string | null
+          unit?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -682,6 +875,7 @@ export type Database = {
         Row: {
           amount: number
           category: string
+          converted_base_quantity: number | null
           cost_per_unit: number | null
           created_at: string | null
           date: string | null
@@ -690,8 +884,10 @@ export type Database = {
           id: string
           inventory_item_id: string | null
           invoice_number: string | null
+          is_credit: boolean | null
           is_inventory_purchase: boolean | null
           payment_mode: string
+          purchase_unit: string | null
           quantity: number | null
           remarks: string | null
           supplier: string | null
@@ -701,6 +897,7 @@ export type Database = {
         Insert: {
           amount: number
           category: string
+          converted_base_quantity?: number | null
           cost_per_unit?: number | null
           created_at?: string | null
           date?: string | null
@@ -709,8 +906,10 @@ export type Database = {
           id?: string
           inventory_item_id?: string | null
           invoice_number?: string | null
+          is_credit?: boolean | null
           is_inventory_purchase?: boolean | null
           payment_mode: string
+          purchase_unit?: string | null
           quantity?: number | null
           remarks?: string | null
           supplier?: string | null
@@ -720,6 +919,7 @@ export type Database = {
         Update: {
           amount?: number
           category?: string
+          converted_base_quantity?: number | null
           cost_per_unit?: number | null
           created_at?: string | null
           date?: string | null
@@ -728,8 +928,10 @@ export type Database = {
           id?: string
           inventory_item_id?: string | null
           invoice_number?: string | null
+          is_credit?: boolean | null
           is_inventory_purchase?: boolean | null
           payment_mode?: string
+          purchase_unit?: string | null
           quantity?: number | null
           remarks?: string | null
           supplier?: string | null
@@ -755,10 +957,12 @@ export type Database = {
       }
       inventory: {
         Row: {
+          average_cost_per_base_unit: number | null
           base_unit: string
           base_unit_id: string | null
           category: string | null
           created_at: string | null
+          current_stock_base: number | null
           description: string | null
           expense_id: string | null
           expiry_date: string | null
@@ -771,15 +975,18 @@ export type Database = {
           quantity: number | null
           supplier: string | null
           total_cost: number | null
+          unit_category: string | null
           unit_cost: number | null
           updated_at: string | null
           user_id: string
         }
         Insert: {
+          average_cost_per_base_unit?: number | null
           base_unit?: string
           base_unit_id?: string | null
           category?: string | null
           created_at?: string | null
+          current_stock_base?: number | null
           description?: string | null
           expense_id?: string | null
           expiry_date?: string | null
@@ -792,15 +999,18 @@ export type Database = {
           quantity?: number | null
           supplier?: string | null
           total_cost?: number | null
+          unit_category?: string | null
           unit_cost?: number | null
           updated_at?: string | null
           user_id: string
         }
         Update: {
+          average_cost_per_base_unit?: number | null
           base_unit?: string
           base_unit_id?: string | null
           category?: string | null
           created_at?: string | null
+          current_stock_base?: number | null
           description?: string | null
           expense_id?: string | null
           expiry_date?: string | null
@@ -813,6 +1023,7 @@ export type Database = {
           quantity?: number | null
           supplier?: string | null
           total_cost?: number | null
+          unit_category?: string | null
           unit_cost?: number | null
           updated_at?: string | null
           user_id?: string
@@ -823,6 +1034,57 @@ export type Database = {
             columns: ["base_unit_id"]
             isOneToOne: false
             referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventory_movements: {
+        Row: {
+          created_at: string | null
+          id: string
+          inventory_item_id: string | null
+          movement_type: string
+          quantity_base: number
+          reference_id: string | null
+          reference_type: string | null
+          unit_cost_base: number | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          inventory_item_id?: string | null
+          movement_type: string
+          quantity_base: number
+          reference_id?: string | null
+          reference_type?: string | null
+          unit_cost_base?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          inventory_item_id?: string | null
+          movement_type?: string
+          quantity_base?: number
+          reference_id?: string | null
+          reference_type?: string | null
+          unit_cost_base?: number | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_movements_inventory_item_id_fkey"
+            columns: ["inventory_item_id"]
+            isOneToOne: false
+            referencedRelation: "current_inventory_levels"
+            referencedColumns: ["inventory_item_id"]
+          },
+          {
+            foreignKeyName: "inventory_movements_inventory_item_id_fkey"
+            columns: ["inventory_item_id"]
+            isOneToOne: false
+            referencedRelation: "inventory"
             referencedColumns: ["id"]
           },
         ]
@@ -942,6 +1204,162 @@ export type Database = {
           transaction_type?: string
           unit_cost?: number | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      inventory_unit_conversions: {
+        Row: {
+          conversion_to_base: number
+          created_at: string | null
+          id: string
+          inventory_item_id: string | null
+          is_base_unit: boolean | null
+          is_purchase_unit: boolean | null
+          unit_category: string | null
+          unit_name: string
+        }
+        Insert: {
+          conversion_to_base: number
+          created_at?: string | null
+          id?: string
+          inventory_item_id?: string | null
+          is_base_unit?: boolean | null
+          is_purchase_unit?: boolean | null
+          unit_category?: string | null
+          unit_name: string
+        }
+        Update: {
+          conversion_to_base?: number
+          created_at?: string | null
+          id?: string
+          inventory_item_id?: string | null
+          is_base_unit?: boolean | null
+          is_purchase_unit?: boolean | null
+          unit_category?: string | null
+          unit_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_unit_conversions_inventory_item_id_fkey"
+            columns: ["inventory_item_id"]
+            isOneToOne: false
+            referencedRelation: "current_inventory_levels"
+            referencedColumns: ["inventory_item_id"]
+          },
+          {
+            foreignKeyName: "inventory_unit_conversions_inventory_item_id_fkey"
+            columns: ["inventory_item_id"]
+            isOneToOne: false
+            referencedRelation: "inventory"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      loan_repayments: {
+        Row: {
+          amount_paid: number
+          created_at: string | null
+          id: string
+          interest_paid: number
+          loan_id: string | null
+          payment_mode: string
+          principal_paid: number
+          remarks: string | null
+          repayment_date: string | null
+          user_id: string | null
+        }
+        Insert: {
+          amount_paid: number
+          created_at?: string | null
+          id?: string
+          interest_paid: number
+          loan_id?: string | null
+          payment_mode: string
+          principal_paid: number
+          remarks?: string | null
+          repayment_date?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          amount_paid?: number
+          created_at?: string | null
+          id?: string
+          interest_paid?: number
+          loan_id?: string | null
+          payment_mode?: string
+          principal_paid?: number
+          remarks?: string | null
+          repayment_date?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "loan_repayments_loan_id_fkey"
+            columns: ["loan_id"]
+            isOneToOne: false
+            referencedRelation: "loan_summaries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "loan_repayments_loan_id_fkey"
+            columns: ["loan_id"]
+            isOneToOne: false
+            referencedRelation: "loans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      loans: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          interest_rate: number
+          lender_name: string
+          loan_date: string | null
+          loan_name: string
+          loan_type: Database["public"]["Enums"]["loan_type"]
+          maturity_date: string | null
+          payment_mode: string | null
+          principal_amount: number
+          repayment_frequency: Database["public"]["Enums"]["repayment_frequency"]
+          status: Database["public"]["Enums"]["loan_status"] | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          interest_rate: number
+          lender_name: string
+          loan_date?: string | null
+          loan_name: string
+          loan_type: Database["public"]["Enums"]["loan_type"]
+          maturity_date?: string | null
+          payment_mode?: string | null
+          principal_amount: number
+          repayment_frequency: Database["public"]["Enums"]["repayment_frequency"]
+          status?: Database["public"]["Enums"]["loan_status"] | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          interest_rate?: number
+          lender_name?: string
+          loan_date?: string | null
+          loan_name?: string
+          loan_type?: Database["public"]["Enums"]["loan_type"]
+          maturity_date?: string | null
+          payment_mode?: string | null
+          principal_amount?: number
+          repayment_frequency?: Database["public"]["Enums"]["repayment_frequency"]
+          status?: Database["public"]["Enums"]["loan_status"] | null
+          updated_at?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -1327,6 +1745,7 @@ export type Database = {
           id: string
           investment_date: string | null
           payment_mode: string
+          remarks: string | null
           shareholder_name: string
           updated_at: string | null
           user_id: string
@@ -1337,6 +1756,7 @@ export type Database = {
           id?: string
           investment_date?: string | null
           payment_mode: string
+          remarks?: string | null
           shareholder_name: string
           updated_at?: string | null
           user_id: string
@@ -1347,6 +1767,7 @@ export type Database = {
           id?: string
           investment_date?: string | null
           payment_mode?: string
+          remarks?: string | null
           shareholder_name?: string
           updated_at?: string | null
           user_id?: string
@@ -1611,6 +2032,27 @@ export type Database = {
         }
         Relationships: []
       }
+      verification_settings: {
+        Row: {
+          cutoff_date: string | null
+          id: number
+          opening_cash_balance: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          cutoff_date?: string | null
+          id?: number
+          opening_cash_balance?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          cutoff_date?: string | null
+          id?: number
+          opening_cash_balance?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       withdrawal_categories: {
         Row: {
           created_at: string | null
@@ -1641,6 +2083,7 @@ export type Database = {
           recipient: string | null
           reference_number: string | null
           remarks: string | null
+          source_cooperative: string | null
           user_id: string
           withdrawal_date: string | null
           withdrawal_from: string | null
@@ -1656,6 +2099,7 @@ export type Database = {
           recipient?: string | null
           reference_number?: string | null
           remarks?: string | null
+          source_cooperative?: string | null
           user_id: string
           withdrawal_date?: string | null
           withdrawal_from?: string | null
@@ -1671,6 +2115,7 @@ export type Database = {
           recipient?: string | null
           reference_number?: string | null
           remarks?: string | null
+          source_cooperative?: string | null
           user_id?: string
           withdrawal_date?: string | null
           withdrawal_from?: string | null
@@ -1784,6 +2229,33 @@ export type Database = {
         }
         Relationships: []
       }
+      loan_summaries: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string | null
+          interest_paid: number | null
+          interest_rate: number | null
+          last_repayment_date: string | null
+          lender_name: string | null
+          loan_date: string | null
+          loan_name: string | null
+          loan_type: Database["public"]["Enums"]["loan_type"] | null
+          maturity_date: string | null
+          outstanding_principal: number | null
+          payment_mode: string | null
+          principal_amount: number | null
+          principal_paid: number | null
+          repayment_frequency:
+            | Database["public"]["Enums"]["repayment_frequency"]
+            | null
+          status: Database["public"]["Enums"]["loan_status"] | null
+          total_paid: number | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
       nepali_kitchen_intelligence: {
         Row: {
           business_date: string | null
@@ -1810,6 +2282,14 @@ export type Database = {
       }
     }
     Functions: {
+      calculate_base_quantity: {
+        Args: {
+          p_inventory_item_id: string
+          p_quantity: number
+          p_unit: string
+        }
+        Returns: number
+      }
       calculate_daily_summary_fixed: {
         Args: { target_date: string; target_user_id: string }
         Returns: {
@@ -2051,6 +2531,7 @@ export type Database = {
           total_spent: number
         }[]
       }
+      get_unit_category: { Args: { p_unit: string }; Returns: string }
       get_user_profiles_with_roles: {
         Args: never
         Returns: {
@@ -2151,24 +2632,114 @@ export type Database = {
         Returns: Json
       }
       nexus_reconcile: { Args: { p_check_date?: string }; Returns: Json }
-      process_inventory_expense: {
+      process_inventory_expense:
+        | {
+            Args: {
+              p_amount: number
+              p_category: string
+              p_cost_per_unit?: number
+              p_description: string
+              p_expense_date: string
+              p_inventory_item_id?: string
+              p_invoice_number?: string
+              p_is_inventory_purchase?: boolean
+              p_payment_mode: string
+              p_quantity?: number
+              p_remarks: string
+              p_supplier?: string
+              p_unit?: string
+              p_user_id: string
+            }
+            Returns: string
+          }
+        | {
+            Args: {
+              p_amount: number
+              p_category: string
+              p_cost_per_unit?: number
+              p_description: string
+              p_expense_date: string
+              p_inventory_item_id?: string
+              p_invoice_number?: string
+              p_is_inventory_purchase?: boolean
+              p_manual_conversion_factor?: number
+              p_payment_mode: string
+              p_quantity?: number
+              p_remarks: string
+              p_supplier?: string
+              p_unit?: string
+              p_user_id: string
+            }
+            Returns: string
+          }
+        | {
+            Args: {
+              p_amount: number
+              p_category: string
+              p_cost_per_unit?: number
+              p_description: string
+              p_expense_date: string
+              p_inventory_item_id?: string
+              p_invoice_number?: string
+              p_is_credit?: boolean
+              p_is_inventory_purchase?: boolean
+              p_manual_conversion_factor?: number
+              p_payment_mode: string
+              p_quantity?: number
+              p_remarks: string
+              p_supplier?: string
+              p_unit?: string
+              p_user_id: string
+            }
+            Returns: string
+          }
+        | {
+            Args: {
+              p_amount: number
+              p_category: string
+              p_cost_per_unit?: number
+              p_description: string
+              p_expense_date: string
+              p_id?: string
+              p_inventory_item_id?: string
+              p_invoice_number?: string
+              p_is_credit?: boolean
+              p_is_inventory_purchase?: boolean
+              p_manual_conversion_factor?: number
+              p_payment_mode: string
+              p_quantity?: number
+              p_remarks: string
+              p_supplier?: string
+              p_unit?: string
+              p_user_id: string
+            }
+            Returns: string
+          }
+      process_loan_repayment: {
         Args: {
-          p_amount: number
-          p_category: string
-          p_cost_per_unit?: number
-          p_description: string
-          p_expense_date: string
-          p_id?: string | null
-          p_inventory_item_id?: string | null
-          p_invoice_number?: string | null
-          p_is_credit?: boolean
-          p_is_inventory_purchase?: boolean
-          p_manual_conversion_factor?: number | null
+          p_amount_paid: number
+          p_interest_paid: number
+          p_loan_id: string
           p_payment_mode: string
-          p_quantity?: number | null
-          p_remarks: string | null
-          p_supplier?: string | null
-          p_unit?: string | null
+          p_principal_paid: number
+          p_remarks: string
+          p_repayment_date: string
+          p_user_id: string
+        }
+        Returns: string
+      }
+      process_new_loan: {
+        Args: {
+          p_description: string
+          p_interest_rate: number
+          p_lender_name: string
+          p_loan_date: string
+          p_loan_name: string
+          p_loan_type: Database["public"]["Enums"]["loan_type"]
+          p_maturity_date: string
+          p_payment_mode: string
+          p_principal_amount: number
+          p_repayment_frequency: Database["public"]["Enums"]["repayment_frequency"]
           p_user_id: string
         }
         Returns: string
@@ -2227,6 +2798,9 @@ export type Database = {
         | "super_admin"
         | "data_entry"
         | "reports_viewer"
+      loan_status: "active" | "closed" | "defaulted"
+      loan_type: "banking" | "cooperative" | "local"
+      repayment_frequency: "daily" | "weekly" | "monthly"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2361,6 +2935,9 @@ export const Constants = {
         "data_entry",
         "reports_viewer",
       ],
+      loan_status: ["active", "closed", "defaulted"],
+      loan_type: ["banking", "cooperative", "local"],
+      repayment_frequency: ["daily", "weekly", "monthly"],
     },
   },
 } as const
