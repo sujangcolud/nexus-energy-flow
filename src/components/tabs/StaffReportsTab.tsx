@@ -11,6 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
 import { format } from "date-fns";
 import { FileSpreadsheet, Download, Filter, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
