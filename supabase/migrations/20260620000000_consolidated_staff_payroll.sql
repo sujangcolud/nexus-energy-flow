@@ -4,8 +4,8 @@
 -- 1. Tables Creation
 CREATE TABLE IF NOT EXISTS public.employees (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-    employee_id TEXT UNIQUE NOT NULL,
-    name TEXT NOT NULL,
+    employee_code TEXT UNIQUE NOT NULL,
+    full_name TEXT NOT NULL,
     department TEXT,
     designation TEXT,
     joining_date DATE,
@@ -26,8 +26,8 @@ ALTER TABLE public.staff_advances ADD COLUMN IF NOT EXISTS outstanding_amount NU
 ALTER TABLE public.staff_advances ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;
 
 -- Ensure columns exist if table was already created without them
-ALTER TABLE public.employees ADD COLUMN IF NOT EXISTS employee_id TEXT;
-ALTER TABLE public.employees ADD COLUMN IF NOT EXISTS name TEXT;
+ALTER TABLE public.employees ADD COLUMN IF NOT EXISTS employee_code TEXT;
+ALTER TABLE public.employees ADD COLUMN IF NOT EXISTS full_name TEXT;
 ALTER TABLE public.employees ADD COLUMN IF NOT EXISTS department TEXT;
 ALTER TABLE public.employees ADD COLUMN IF NOT EXISTS designation TEXT;
 ALTER TABLE public.employees ADD COLUMN IF NOT EXISTS joining_date DATE;
@@ -41,6 +41,17 @@ ALTER TABLE public.employees ADD COLUMN IF NOT EXISTS marital_status TEXT DEFAUL
 ALTER TABLE public.employees ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true;
 ALTER TABLE public.employees ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;
 
+-- Fix for pre-existing table conflicts
+DO $$
+BEGIN
+    -- Ensure columns are consistent if they were created with different constraints
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name='employees' AND column_name='name') THEN
+        ALTER TABLE public.employees ALTER COLUMN name DROP NOT NULL;
+    END IF;
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name='employees' AND column_name='employee_id') THEN
+        ALTER TABLE public.employees ALTER COLUMN employee_id DROP NOT NULL;
+    END IF;
+END $$;
 CREATE TABLE IF NOT EXISTS public.staff_advances (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     employee_id UUID REFERENCES public.employees(id) ON DELETE CASCADE,
