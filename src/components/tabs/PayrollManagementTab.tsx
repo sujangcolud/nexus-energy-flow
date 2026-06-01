@@ -32,9 +32,16 @@ import {
   Settings,
   CreditCard,
   Building2,
+  Edit2,
+  Save,
+  Trash2,
+  Clock,
+  History,
+  CheckCircle,
 } from "lucide-react";
-import { format } from "date-fns";
+import { format, startOfMonth, endOfMonth } from "date-fns";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import StaffReportsTab from "./StaffReportsTab";
 
 interface Employee {
@@ -44,17 +51,38 @@ interface Employee {
   department: string;
   basic_salary: number;
   marital_status: string;
+  overtime_rate: number;
 }
 
 interface PayrollRecord {
   id: string;
   employee_id: string;
   month_year: string;
+  basic_salary: number;
+  allowance: number;
+  other_benefits: number;
+  overtime_hours: number;
+  overtime_pay: number;
   gross_salary: number;
   employee_ssf: number;
   tax_deduction: number;
   advance_recovery: number;
   net_salary: number;
+  status: string;
+  payment_date?: string;
+  payment_mode?: string;
+  other_deductions?: number;
+  employees: Employee;
+}
+
+interface OvertimeEntry {
+  id: string;
+  employee_id: string;
+  overtime_date: string;
+  hours: number;
+  rate_at_time: number;
+  total_amount: number;
+  reason: string;
   status: string;
   employees: Employee;
 }
@@ -63,6 +91,7 @@ const PayrollManagementTab = () => {
   const { user } = useAuth();
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [payrollRecords, setPayrollRecords] = useState<PayrollRecord[]>([]);
+  const [overtimeEntries, setOvertimeEntries] = useState<OvertimeEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("records");
 
@@ -72,13 +101,43 @@ const PayrollManagementTab = () => {
     full_name: "",
     department: "",
     basic_salary: "",
+    overtime_rate: "",
     marital_status: "single",
+  });
+
+  // Edit Payroll State
+  const [editPayroll, setEditPayroll] = useState<{open: boolean, record: PayrollRecord | null}>({
+    open: false,
+    record: null
+  });
+
+  // Overtime Form State
+  const [overtimeForm, setOvertimeForm] = useState({
+    employee_id: "",
+    overtime_date: format(new Date(), "yyyy-MM-dd"),
+    hours: "",
+    reason: ""
   });
 
   useEffect(() => {
     fetchEmployees();
     fetchPayrollRecords();
+    fetchOvertimeEntries();
   }, []);
+
+  const fetchOvertimeEntries = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("employee_overtime")
+        .select("*, employees(*)")
+        .is("deleted_at", null)
+        .order("overtime_date", { ascending: false });
+      if (error) throw error;
+      setOvertimeEntries(data || []);
+    } catch (error) {
+      logError("fetching overtime", error);
+    }
+  };
 
   const fetchEmployees = async () => {
     try {
@@ -114,7 +173,8 @@ const PayrollManagementTab = () => {
     try {
       const { error } = await supabase.from("employees").insert({
         ...newEmployee,
-        basic_salary: parseFloat(newEmployee.basic_salary),
+        basic_salary: parseFloat(newEmployee.basic_salary) || 0,
+        overtime_rate: parseFloat(newEmployee.overtime_rate) || 0,
       });
       if (error) throw error;
       toast.success("Employee added successfully");
@@ -123,12 +183,93 @@ const PayrollManagementTab = () => {
         full_name: "",
         department: "",
         basic_salary: "",
+        overtime_rate: "",
         marital_status: "single",
       });
       fetchEmployees();
     } catch (error) {
       logError("adding employee", error);
       toast.error("Failed to add employee");
+    }
+  };
+
+  const handleUpdatePayroll = async () => {
+    if (!editPayroll.record) return;
+    try {
+      const rec = editPayroll.record;
+      // Recalculate gross and net if needed, or trust the user input
+      const gross = (Number(rec.basic_salary) || 0) +
+                    (Number(rec.allowance) || 0) +
+                    (Number(rec.other_benefits) || 0) +
+                    (Number(rec.overtime_pay) || 0);
+
+      const net = gross -
+                  (Number(rec.employee_ssf) || 0) -
+                  (Number(rec.tax_deduction) || 0) -
+                  (Number(rec.advance_recovery) || 0) -
+                  (Number(rec.other_deductions) || 0);
+
+      const { error } = await supabase
+        .from("payroll_records")
+        .update({
+          basic_salary: rec.basic_salary,
+          allowance: rec.allowance,
+          other_benefits: rec.other_benefits,
+          overtime_hours: rec.overtime_hours,
+          overtime_pay: rec.overtime_pay,
+          gross_salary: gross,
+          employee_ssf: rec.employee_ssf,
+          tax_deduction: rec.tax_deduction,
+          advance_recovery: rec.advance_recovery,
+          other_deductions: rec.other_deductions,
+          net_salary: net,
+          status: rec.status,
+          payment_date: rec.payment_date,
+          payment_mode: rec.payment_mode,
+        })
+        .eq("id", rec.id);
+
+      if (error) throw error;
+      toast.success("Payroll record updated");
+      setEditPayroll({ open: false, record: null });
+      fetchPayrollRecords();
+    } catch (error) {
+      logError("updating payroll", error);
+      toast.error("Update failed");
+    }
+  };
+
+  const handleAddOvertime = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!overtimeForm.employee_id || !overtimeForm.hours) {
+      toast.error("Fill required fields");
+      return;
+    }
+    try {
+      const emp = employees.find(e => e.id === overtimeForm.employee_id);
+      if (!emp) return;
+
+      const { error } = await supabase.from("employee_overtime").insert({
+        employee_id: overtimeForm.employee_id,
+        overtime_date: overtimeForm.overtime_date,
+        hours: parseFloat(overtimeForm.hours),
+        rate_at_time: emp.overtime_rate || 0,
+        reason: overtimeForm.reason,
+        status: 'Approved' // Auto-approve for now as per simplicity or add logic
+      });
+
+      if (error) throw error;
+      toast.success("Overtime logged");
+      setOvertimeForm({
+        employee_id: "",
+        overtime_date: format(new Date(), "yyyy-MM-dd"),
+        hours: "",
+        reason: ""
+      });
+      fetchOvertimeEntries();
+    } catch (error) {
+      logError("adding overtime", error);
+      toast.error("Failed to log overtime");
     }
   };
 
@@ -170,8 +311,9 @@ const PayrollManagementTab = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid grid-cols-4 w-full h-auto p-1 bg-muted rounded-2xl">
+          <TabsList className="grid grid-cols-5 w-full h-auto p-1 bg-muted rounded-2xl">
             <TabsTrigger value="records" className="rounded-xl py-2 font-bold">Payroll Records</TabsTrigger>
+            <TabsTrigger value="overtime" className="rounded-xl py-2 font-bold">Overtime Tracking</TabsTrigger>
             <TabsTrigger value="employees" className="rounded-xl py-2 font-bold">Employees</TabsTrigger>
             <TabsTrigger value="reports" className="rounded-xl py-2 font-bold">Compliance Reports</TabsTrigger>
             <TabsTrigger value="settings" className="rounded-xl py-2 font-bold">Settings</TabsTrigger>
@@ -186,6 +328,7 @@ const PayrollManagementTab = () => {
                        <TableHead>Month</TableHead>
                        <TableHead>Employee</TableHead>
                          <TableHead className="text-right">Gross</TableHead>
+                         <TableHead className="text-right">Overtime</TableHead>
                          <TableHead className="text-right">SSF (11%)</TableHead>
                          <TableHead className="text-right">Tax</TableHead>
                          <TableHead className="text-right">Adv. Recovery</TableHead>
@@ -200,6 +343,10 @@ const PayrollManagementTab = () => {
                          <TableCell>{format(new Date(rec.month_year), "MMMM yyyy")}</TableCell>
                          <TableCell className="font-medium">{rec.employees?.full_name}</TableCell>
                          <TableCell className="text-right">रु {rec.gross_salary.toLocaleString()}</TableCell>
+                         <TableCell className="text-right text-emerald-600">
+                           रु {rec.overtime_pay?.toLocaleString() || 0}
+                           <div className="text-[10px] text-muted-foreground">{rec.overtime_hours || 0} hrs</div>
+                         </TableCell>
                          <TableCell className="text-right text-muted-foreground">रु {rec.employee_ssf.toLocaleString()}</TableCell>
                          <TableCell className="text-right text-rose-500">रु {rec.tax_deduction.toLocaleString()}</TableCell>
                          <TableCell className="text-right text-amber-600">रु {rec.advance_recovery.toLocaleString()}</TableCell>
@@ -210,7 +357,13 @@ const PayrollManagementTab = () => {
                             </Badge>
                          </TableCell>
                          <TableCell className="text-right">
-                            <Button variant="ghost" size="sm">View</Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setEditPayroll({ open: true, record: rec })}
+                            >
+                              <Edit2 className="h-4 w-4 mr-1" /> Edit
+                            </Button>
                          </TableCell>
                        </TableRow>
                      ))}
@@ -218,6 +371,107 @@ const PayrollManagementTab = () => {
                  </Table>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="overtime">
+             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <Card className="lg:col-span-1 rounded-3xl border-none shadow-sm overflow-hidden">
+                  <CardHeader className="bg-emerald-600 text-white p-4">
+                    <CardTitle className="text-lg font-bold flex items-center gap-2">
+                      <Clock className="h-5 w-5" /> Log Overtime
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-4 space-y-4">
+                    <form onSubmit={handleAddOvertime} className="space-y-4">
+                      <div className="space-y-2">
+                        <Label>Employee *</Label>
+                        <Select value={overtimeForm.employee_id} onValueChange={(v) => setOvertimeForm({...overtimeForm, employee_id: v})}>
+                          <SelectTrigger className="rounded-xl h-11">
+                            <SelectValue placeholder="Select Employee" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {employees.map((emp) => (
+                              <SelectItem key={emp.id} value={emp.id}>{emp.full_name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Date *</Label>
+                          <Input
+                            type="date"
+                            value={overtimeForm.overtime_date}
+                            onChange={(e) => setOvertimeForm({...overtimeForm, overtime_date: e.target.value})}
+                            className="rounded-xl h-11"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Hours *</Label>
+                          <Input
+                            type="number"
+                            step="0.5"
+                            value={overtimeForm.hours}
+                            onChange={(e) => setOvertimeForm({...overtimeForm, hours: e.target.value})}
+                            placeholder="0.0"
+                            className="rounded-xl h-11 font-bold"
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Reason/Remarks</Label>
+                        <Input
+                          value={overtimeForm.reason}
+                          onChange={(e) => setOvertimeForm({...overtimeForm, reason: e.target.value})}
+                          placeholder="e.g. Extra shift"
+                          className="rounded-xl h-11"
+                        />
+                      </div>
+                      <Button type="submit" className="w-full h-12 rounded-xl text-lg font-bold mt-4 bg-emerald-600">
+                        Submit Overtime
+                      </Button>
+                    </form>
+                  </CardContent>
+                </Card>
+
+                <Card className="lg:col-span-2 rounded-3xl border-none shadow-sm overflow-hidden">
+                   <CardHeader className="p-4 bg-muted/50 border-b">
+                     <CardTitle className="text-lg font-bold flex items-center gap-2">
+                       <History className="h-5 w-5 text-emerald-600" /> Overtime History
+                     </CardTitle>
+                   </CardHeader>
+                   <CardContent className="p-0">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Date</TableHead>
+                            <TableHead>Employee</TableHead>
+                            <TableHead>Hours</TableHead>
+                            <TableHead>Rate</TableHead>
+                            <TableHead>Total</TableHead>
+                            <TableHead>Status</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {overtimeEntries.map((entry) => (
+                            <TableRow key={entry.id}>
+                              <TableCell>{format(new Date(entry.overtime_date), "MMM dd, yyyy")}</TableCell>
+                              <TableCell className="font-medium">{entry.employees?.full_name}</TableCell>
+                              <TableCell className="font-bold">{entry.hours} hrs</TableCell>
+                              <TableCell>रु {entry.rate_at_time}</TableCell>
+                              <TableCell className="font-bold text-emerald-600">रु {entry.total_amount.toLocaleString()}</TableCell>
+                              <TableCell>
+                                <Badge variant={entry.status === "Processed" ? "default" : "secondary"}>
+                                  {entry.status}
+                                </Badge>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                   </CardContent>
+                </Card>
+             </div>
           </TabsContent>
 
           <TabsContent value="employees">
@@ -248,15 +502,27 @@ const PayrollManagementTab = () => {
                             className="rounded-xl"
                           />
                         </div>
-                        <div className="space-y-2">
-                          <Label>Basic Salary *</Label>
-                          <Input
-                            type="number"
-                            value={newEmployee.basic_salary}
-                            onChange={(e) => setNewEmployee({...newEmployee, basic_salary: e.target.value})}
-                            placeholder="0.00"
-                            className="rounded-xl font-bold"
-                          />
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label>Basic Salary *</Label>
+                            <Input
+                              type="number"
+                              value={newEmployee.basic_salary}
+                              onChange={(e) => setNewEmployee({...newEmployee, basic_salary: e.target.value})}
+                              placeholder="0.00"
+                              className="rounded-xl font-bold"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>OT Rate (per hr)</Label>
+                            <Input
+                              type="number"
+                              value={newEmployee.overtime_rate}
+                              onChange={(e) => setNewEmployee({...newEmployee, overtime_rate: e.target.value})}
+                              placeholder="0.00"
+                              className="rounded-xl font-bold text-emerald-600"
+                            />
+                          </div>
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                           <div className="space-y-2">
@@ -365,6 +631,200 @@ const PayrollManagementTab = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Edit Payroll Dialog */}
+      <Dialog open={editPayroll.open} onOpenChange={(o) => !o && setEditPayroll({open: false, record: null})}>
+        <DialogContent className="max-w-4xl rounded-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold flex items-center gap-2">
+              <Edit2 className="h-6 w-6 text-indigo-600" />
+              Edit Payroll: {editPayroll.record?.employees?.full_name} ({editPayroll.record?.month_year ? format(new Date(editPayroll.record.month_year), "MMMM yyyy") : ""})
+            </DialogTitle>
+          </DialogHeader>
+
+          {editPayroll.record && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4">
+              <div className="space-y-4">
+                <h3 className="font-bold text-lg border-b pb-2 flex items-center gap-2">
+                  <PlusCircle className="h-4 w-4 text-emerald-600" /> Earnings
+                </h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Basic Salary</Label>
+                    <Input
+                      type="number"
+                      value={editPayroll.record.basic_salary}
+                      onChange={(e) => setEditPayroll({
+                        ...editPayroll,
+                        record: {...editPayroll.record!, basic_salary: parseFloat(e.target.value)}
+                      })}
+                      className="rounded-xl font-bold"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Allowance</Label>
+                    <Input
+                      type="number"
+                      value={editPayroll.record.allowance}
+                      onChange={(e) => setEditPayroll({
+                        ...editPayroll,
+                        record: {...editPayroll.record!, allowance: parseFloat(e.target.value)}
+                      })}
+                      className="rounded-xl font-bold"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Other Benefits</Label>
+                    <Input
+                      type="number"
+                      value={editPayroll.record.other_benefits}
+                      onChange={(e) => setEditPayroll({
+                        ...editPayroll,
+                        record: {...editPayroll.record!, other_benefits: parseFloat(e.target.value)}
+                      })}
+                      className="rounded-xl font-bold"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Overtime Pay</Label>
+                    <Input
+                      type="number"
+                      value={editPayroll.record.overtime_pay}
+                      onChange={(e) => setEditPayroll({
+                        ...editPayroll,
+                        record: {...editPayroll.record!, overtime_pay: parseFloat(e.target.value)}
+                      })}
+                      className="rounded-xl font-bold text-emerald-600"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <h3 className="font-bold text-lg border-b pb-2 flex items-center gap-2 text-rose-600">
+                  <Trash2 className="h-4 w-4" /> Deductions
+                </h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>SSF (Employee 11%)</Label>
+                    <Input
+                      type="number"
+                      value={editPayroll.record.employee_ssf}
+                      onChange={(e) => setEditPayroll({
+                        ...editPayroll,
+                        record: {...editPayroll.record!, employee_ssf: parseFloat(e.target.value)}
+                      })}
+                      className="rounded-xl font-bold"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Tax Deduction</Label>
+                    <Input
+                      type="number"
+                      value={editPayroll.record.tax_deduction}
+                      onChange={(e) => setEditPayroll({
+                        ...editPayroll,
+                        record: {...editPayroll.record!, tax_deduction: parseFloat(e.target.value)}
+                      })}
+                      className="rounded-xl font-bold"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Advance Recovery</Label>
+                    <Input
+                      type="number"
+                      value={editPayroll.record.advance_recovery}
+                      onChange={(e) => setEditPayroll({
+                        ...editPayroll,
+                        record: {...editPayroll.record!, advance_recovery: parseFloat(e.target.value)}
+                      })}
+                      className="rounded-xl font-bold"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Other Deductions</Label>
+                    <Input
+                      type="number"
+                      value={editPayroll.record.other_deductions || 0}
+                      onChange={(e) => setEditPayroll({
+                        ...editPayroll,
+                        record: {...editPayroll.record!, other_deductions: parseFloat(e.target.value)}
+                      })}
+                      className="rounded-xl font-bold"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="md:col-span-2 space-y-4 pt-4 border-t">
+                <h3 className="font-bold text-lg flex items-center gap-2">
+                   <Settings className="h-4 w-4" /> Payment Status & Mode
+                </h3>
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label>Status</Label>
+                    <Select
+                      value={editPayroll.record.status}
+                      onValueChange={(v) => setEditPayroll({
+                        ...editPayroll,
+                        record: {...editPayroll.record!, status: v}
+                      })}
+                    >
+                      <SelectTrigger className="rounded-xl">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Calculated">Calculated</SelectItem>
+                        <SelectItem value="Approved">Approved</SelectItem>
+                        <SelectItem value="Paid">Paid</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Payment Mode</Label>
+                    <Select
+                      value={editPayroll.record.payment_mode || "Cash"}
+                      onValueChange={(v) => setEditPayroll({
+                        ...editPayroll,
+                        record: {...editPayroll.record!, payment_mode: v}
+                      })}
+                    >
+                      <SelectTrigger className="rounded-xl">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Cash">Cash</SelectItem>
+                        <SelectItem value="Bank">Bank</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Payment Date</Label>
+                    <Input
+                      type="date"
+                      value={editPayroll.record.payment_date || format(new Date(), "yyyy-MM-dd")}
+                      onChange={(e) => setEditPayroll({
+                        ...editPayroll,
+                        record: {...editPayroll.record!, payment_date: e.target.value}
+                      })}
+                      className="rounded-xl"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setEditPayroll({open: false, record: null})} className="rounded-xl h-12">
+              Cancel
+            </Button>
+            <Button onClick={handleUpdatePayroll} className="bg-indigo-600 rounded-xl h-12 px-8 font-bold">
+              <Save className="mr-2 h-5 w-5" /> Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
