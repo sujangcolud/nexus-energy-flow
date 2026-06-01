@@ -167,8 +167,8 @@ BEGIN
     END IF;
 
     v_remaining := v_taxable_income;
-    FOR v_slab IN SELECT * FROM jsonb_to_recordset(v_slabs) AS x(limit NUMERIC, rate NUMERIC) LOOP
-        v_taxable_in_slab := LEAST(v_remaining, v_slab.limit);
+    FOR v_slab IN SELECT * FROM jsonb_to_recordset(v_slabs) AS x("limit" NUMERIC, rate NUMERIC) LOOP
+        v_taxable_in_slab := LEAST(v_remaining, v_slab."limit");
         v_tax := v_tax + (v_taxable_in_slab * v_slab.rate / 100);
         v_remaining := v_remaining - v_taxable_in_slab;
         EXIT WHEN v_remaining <= 0;
