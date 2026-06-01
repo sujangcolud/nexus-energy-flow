@@ -39,8 +39,8 @@ import StaffReportsTab from "./StaffReportsTab";
 
 interface Employee {
   id: string;
-  employee_id: string;
-  name: string;
+  employee_code: string;
+  full_name: string;
   department: string;
   basic_salary: number;
   marital_status: string;
@@ -68,8 +68,8 @@ const PayrollManagementTab = () => {
 
   // Form states for new employee
   const [newEmployee, setNewEmployee] = useState({
-    employee_id: "",
-    name: "",
+    employee_code: "",
+    full_name: "",
     department: "",
     basic_salary: "",
     marital_status: "single",
@@ -85,7 +85,7 @@ const PayrollManagementTab = () => {
       const { data, error } = await supabase
         .from("employees")
         .select("*")
-        .order("name");
+        .order("full_name");
       if (error) throw error;
       setEmployees(data || []);
     } catch (error) {
@@ -119,8 +119,8 @@ const PayrollManagementTab = () => {
       if (error) throw error;
       toast.success("Employee added successfully");
       setNewEmployee({
-        employee_id: "",
-        name: "",
+        employee_code: "",
+        full_name: "",
         department: "",
         basic_salary: "",
         marital_status: "single",
@@ -198,7 +198,7 @@ const PayrollManagementTab = () => {
                      {payrollRecords.map((rec) => (
                        <TableRow key={rec.id}>
                          <TableCell>{format(new Date(rec.month_year), "MMMM yyyy")}</TableCell>
-                         <TableCell className="font-medium">{rec.employees?.name}</TableCell>
+                         <TableCell className="font-medium">{rec.employees?.full_name}</TableCell>
                          <TableCell className="text-right">रु {rec.gross_salary.toLocaleString()}</TableCell>
                          <TableCell className="text-right text-muted-foreground">रु {rec.employee_ssf.toLocaleString()}</TableCell>
                          <TableCell className="text-right text-rose-500">रु {rec.tax_deduction.toLocaleString()}</TableCell>
@@ -233,8 +233,8 @@ const PayrollManagementTab = () => {
                         <div className="space-y-2">
                           <Label>Employee ID *</Label>
                           <Input
-                            value={newEmployee.employee_id}
-                            onChange={(e) => setNewEmployee({...newEmployee, employee_id: e.target.value})}
+                            value={newEmployee.employee_code}
+                            onChange={(e) => setNewEmployee({...newEmployee, employee_code: e.target.value})}
                             placeholder="EMP001"
                             className="rounded-xl"
                           />
@@ -242,8 +242,8 @@ const PayrollManagementTab = () => {
                         <div className="space-y-2">
                           <Label>Full Name *</Label>
                           <Input
-                            value={newEmployee.name}
-                            onChange={(e) => setNewEmployee({...newEmployee, name: e.target.value})}
+                            value={newEmployee.full_name}
+                            onChange={(e) => setNewEmployee({...newEmployee, full_name: e.target.value})}
                             placeholder="John Doe"
                             className="rounded-xl"
                           />
@@ -303,8 +303,8 @@ const PayrollManagementTab = () => {
                           {employees.map((emp) => (
                             <TableRow key={emp.id}>
                               <TableCell>
-                                <div className="font-medium">{emp.name}</div>
-                                <div className="text-xs text-muted-foreground">{emp.employee_id} | {emp.department}</div>
+                                <div className="font-medium">{emp.full_name}</div>
+                                <div className="text-xs text-muted-foreground">{emp.employee_code} | {emp.department}</div>
                               </TableCell>
                               <TableCell className="font-bold">रु {emp.basic_salary.toLocaleString()}</TableCell>
                               <TableCell><Badge variant="outline" className="text-green-600">Active</Badge></TableCell>

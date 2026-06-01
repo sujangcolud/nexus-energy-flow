@@ -40,8 +40,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 
 interface Employee {
   id: string;
-  employee_id: string;
-  name: string;
+  employee_code: string;
+  full_name: string;
   department: string;
   designation: string;
 }
@@ -102,7 +102,7 @@ const StaffAdvanceTab = () => {
         .from("employees")
         .select("*")
         .eq("is_active", true)
-        .order("name");
+        .order("full_name");
       if (error) throw error;
       setEmployees(data || []);
     } catch (error) {
@@ -268,7 +268,7 @@ const StaffAdvanceTab = () => {
                         <SelectContent>
                           {employees.map((emp) => (
                             <SelectItem key={emp.id} value={emp.id}>
-                              {emp.name} ({emp.employee_id})
+                              {emp.full_name} ({emp.employee_code})
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -349,7 +349,7 @@ const StaffAdvanceTab = () => {
                         <TableBody>
                           {advances.slice(0, 10).map((adv) => (
                             <TableRow key={adv.id}>
-                              <TableCell className="font-medium">{adv.employees?.name}</TableCell>
+                              <TableCell className="font-medium">{adv.employees?.full_name}</TableCell>
                               <TableCell>{format(new Date(adv.request_date), "MMM dd, yyyy")}</TableCell>
                               <TableCell className="font-bold">रु {adv.amount.toLocaleString()}</TableCell>
                               <TableCell>{getStatusBadge(adv.status)}</TableCell>
@@ -383,7 +383,7 @@ const StaffAdvanceTab = () => {
                        <TableRow key={adv.id}>
                          <TableCell>{format(new Date(adv.request_date), "MMM dd, yyyy")}</TableCell>
                          <TableCell className="font-medium">
-                           <div>{adv.employees?.name}</div>
+                           <div>{adv.employees?.full_name}</div>
                            <div className="text-[10px] text-muted-foreground uppercase">{adv.employees?.department}</div>
                          </TableCell>
                          <TableCell className="font-black text-primary">रु {adv.amount.toLocaleString()}</TableCell>
@@ -439,7 +439,7 @@ const StaffAdvanceTab = () => {
                         const outstanding = empAdvances.reduce((sum, a) => sum + a.outstanding_amount, 0);
                         return (
                           <TableRow key={emp.id}>
-                            <TableCell className="font-medium">{emp.name}</TableCell>
+                            <TableCell className="font-medium">{emp.full_name}</TableCell>
                             <TableCell className="text-right font-bold">रु {total.toLocaleString()}</TableCell>
                             <TableCell className="text-right text-emerald-600">रु {(total - outstanding).toLocaleString()}</TableCell>
                             <TableCell className="text-right text-rose-600 font-black">रु {outstanding.toLocaleString()}</TableCell>
@@ -504,7 +504,7 @@ const StaffAdvanceTab = () => {
                     <TableBody>
                       {advances.filter(a => ["Submitted", "Approved"].includes(a.status)).map((adv) => (
                         <TableRow key={adv.id}>
-                          <TableCell className="font-medium">{adv.employees?.name}</TableCell>
+                          <TableCell className="font-medium">{adv.employees?.full_name}</TableCell>
                           <TableCell>{format(new Date(adv.request_date), "MMM dd, yyyy")}</TableCell>
                           <TableCell className="font-bold">रु {adv.amount.toLocaleString()}</TableCell>
                           <TableCell className="max-w-xs truncate text-xs">{adv.reason}</TableCell>

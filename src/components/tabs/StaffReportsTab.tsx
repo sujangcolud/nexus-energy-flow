@@ -30,7 +30,7 @@ const StaffReportsTab = () => {
   }, [reportType, selectedEmployee]);
 
   const fetchEmployees = async () => {
-    const { data } = await supabase.from("employees").select("id, name");
+    const { data } = await supabase.from("employees").select("id, full_name");
     setEmployees(data || []);
   };
 
@@ -40,7 +40,7 @@ const StaffReportsTab = () => {
       if (reportType === "outstanding_advances") {
         let query = supabase
           .from("staff_advances")
-          .select("*, employees(name, department)")
+          .select("*, employees(full_name, department)")
           .in("status", ["Disbursed", "Partially Settled"]);
 
         if (selectedEmployee !== "all") {
@@ -52,7 +52,7 @@ const StaffReportsTab = () => {
       } else if (reportType === "payroll_register") {
         let query = supabase
           .from("payroll_records")
-          .select("*, employees(name, designation, pan_number, ssf_number)")
+          .select("*, employees(full_name, designation, pan_number, ssf_number)")
           .eq("status", "Paid");
 
         const { data } = await query;
@@ -106,7 +106,7 @@ const StaffReportsTab = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Employees</SelectItem>
-                  {employees.map(e => <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>)}
+                  {employees.map(e => <SelectItem key={e.id} value={e.id}>{e.full_name}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
@@ -154,7 +154,7 @@ const StaffReportsTab = () => {
                   <TableRow key={row.id}>
                     {reportType === "outstanding_advances" ? (
                       <>
-                        <TableCell className="font-bold">{row.employees?.name}</TableCell>
+                        <TableCell className="font-bold">{row.employees?.full_name}</TableCell>
                         <TableCell>{format(new Date(row.transfer_date || row.withdrawal_date), "MMM dd, yyyy")}</TableCell>
                         <TableCell>रु {row.amount.toLocaleString()}</TableCell>
                         <TableCell className="text-emerald-600">रु 0</TableCell>
@@ -167,7 +167,7 @@ const StaffReportsTab = () => {
                       </>
                     ) : (
                       <>
-                        <TableCell className="font-bold">{row.employees?.name}</TableCell>
+                        <TableCell className="font-bold">{row.employees?.full_name}</TableCell>
                         <TableCell>रु {row.gross_salary.toLocaleString()}</TableCell>
                         <TableCell>रु {row.employee_ssf.toLocaleString()}</TableCell>
                         <TableCell>रु {row.tax_deduction.toLocaleString()}</TableCell>
