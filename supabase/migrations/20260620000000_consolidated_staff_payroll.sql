@@ -41,6 +41,15 @@ ALTER TABLE public.employees ADD COLUMN IF NOT EXISTS marital_status TEXT DEFAUL
 ALTER TABLE public.employees ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true;
 ALTER TABLE public.employees ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;
 
+-- Fix for pre-existing table conflicts
+DO $$
+BEGIN
+    -- If employee_code exists and is NOT NULL, make it nullable to prevent insertion errors
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name='employees' AND column_name='employee_code') THEN
+        ALTER TABLE public.employees ALTER COLUMN employee_code DROP NOT NULL;
+    END IF;
+END $$;
+
 CREATE TABLE IF NOT EXISTS public.staff_advances (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     employee_id UUID REFERENCES public.employees(id) ON DELETE CASCADE,
