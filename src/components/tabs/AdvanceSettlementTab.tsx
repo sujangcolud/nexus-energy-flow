@@ -37,7 +37,7 @@ import { format } from "date-fns";
 
 interface Employee {
   id: string;
-  name: string;
+  full_name: string;
 }
 
 interface StaffAdvance {
@@ -83,7 +83,7 @@ const AdvanceSettlementTab = () => {
     try {
       const { data, error } = await supabase
         .from("staff_advances")
-        .select("*, employees(id, name)")
+        .select("*, employees(id, full_name)")
         .in("status", ["Disbursed", "Partially Settled"]);
       if (error) throw error;
       setActiveAdvances(data || []);
@@ -97,7 +97,7 @@ const AdvanceSettlementTab = () => {
     try {
       const { data, error } = await supabase
         .from("advance_settlements")
-        .select("*, staff_advances(amount, employees(name))")
+        .select("*, staff_advances(amount, employees(full_name))")
         .order("created_at", { ascending: false });
       if (error) throw error;
       setSettlements(data || []);
@@ -199,7 +199,7 @@ const AdvanceSettlementTab = () => {
                        <SelectContent>
                          {activeAdvances.map((adv) => (
                            <SelectItem key={adv.id} value={adv.id}>
-                             {adv.employees?.name} (रु {adv.amount.toLocaleString()})
+                             {adv.employees?.full_name} (रु {adv.amount.toLocaleString()})
                            </SelectItem>
                          ))}
                        </SelectContent>
@@ -273,7 +273,7 @@ const AdvanceSettlementTab = () => {
                     {settlements.map((s) => (
                       <TableRow key={s.id}>
                         <TableCell>{format(new Date(s.settlement_date), "MMM dd, yyyy")}</TableCell>
-                        <TableCell className="font-medium">{s.staff_advances?.employees?.name}</TableCell>
+                        <TableCell className="font-medium">{s.staff_advances?.employees?.full_name}</TableCell>
                         <TableCell className="font-bold">रु {s.amount.toLocaleString()}</TableCell>
                         <TableCell>
                           <Badge variant={s.status === "Approved" ? "default" : "outline"}>
