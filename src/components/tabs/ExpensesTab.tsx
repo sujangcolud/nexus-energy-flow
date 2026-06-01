@@ -752,7 +752,7 @@ const ExpensesTab = () => {
           </div>
           <MultiExpenseEntry
             categories={categories}
-            inventory={inventoryItems}
+            inventory={inventoryItems as any}
             onComplete={fetchExpenses}
           />
         </div>

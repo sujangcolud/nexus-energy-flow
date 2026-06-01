@@ -80,7 +80,7 @@ const MobileDashboard = () => {
   // Scroll velocity tracking for 3D tilt
   useEffect(() => {
     let lastScrollY = window.scrollY;
-    let timeoutId: NodeJS.Timeout;
+    let timeoutId: ReturnType<typeof setTimeout>;
 
     const handleScroll = () => {
       const currentScrollY = window.scrollY;

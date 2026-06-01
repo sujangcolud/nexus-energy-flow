@@ -60,9 +60,9 @@ async function computeTotalsFromTransactions(dateStr: string): Promise<Totals> {
     supabase.from("orders").select("total, payment_mode").eq("order_date", dateStr),
     supabase.from("charging_sessions").select("total_amount, payment_mode").eq("session_date", dateStr),
     supabase.from("expenses").select("amount, payment_mode").eq("expense_date", dateStr),
-    supabase.from("deposits").select("amount").eq("deposit_date", dateStr),
-    supabase.from("withdrawals").select("amount, withdrawal_from").eq("withdrawal_date", dateStr),
-    supabase.from("cooperative_savings").select("contribution_amount").eq("contribution_date", dateStr),
+    supabase.from("deposits").select("amount, mode, deposited_to").eq("deposit_date", dateStr),
+    supabase.from("withdrawals").select("amount, withdrawal_from, payment_mode").eq("withdrawal_date", dateStr),
+    supabase.from("cooperative_savings").select("contribution_amount, payment_mode").eq("contribution_date", dateStr),
   ]);
   const sum = (rows: any[] | null, k: string) =>
     (rows || []).reduce((acc, r) => acc + (Number(r[k]) || 0), 0);

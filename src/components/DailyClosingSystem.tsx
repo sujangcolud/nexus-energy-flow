@@ -153,7 +153,7 @@ export const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
           totalDeposits: acc.totalDeposits + safeGet(daily, 'total_deposits'),
           totalWithdrawals: acc.totalWithdrawals + safeGet(daily, 'total_withdrawals'),
           totalSavings: acc.totalSavings + safeGet(daily, 'total_savings'),
-        totalSavingsCash: acc.totalSavingsCash + safeGet(daily, 'total_savings_cash'),
+        totalSavingsCash: (acc as any).totalSavingsCash + safeGet(daily, 'total_savings_cash'),
           cooperativeWithdrawals: acc.cooperativeWithdrawals + safeGet(daily, 'total_withdrawals_cooperative'),
           bankWithdrawals: acc.bankWithdrawals + safeGet(daily, 'total_withdrawals_bank'),
         };
@@ -195,7 +195,7 @@ export const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
         totalDeposits: aggregatedData.totalDeposits,
         totalWithdrawals: aggregatedData.totalWithdrawals,
         totalSavings: aggregatedData.totalSavings,
-        totalSavingsCash: aggregatedData.totalSavingsCash,
+        totalSavingsCash: (aggregatedData as any).totalSavingsCash,
         cashIncome: aggregatedData.totalIncomeCash,
         esewaIncome: aggregatedData.totalIncomeEsewa,
         fonepayIncome: aggregatedData.totalIncomeFonepay,
@@ -369,7 +369,7 @@ export const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
       };
 
       console.log('💰 Calculated data from transactions:', calculatedData);
-      setClosingData(calculatedData);
+      setClosingData(calculatedData as any);
 
     } catch (error) {
       console.error('Error calculating from transaction tables:', error);
@@ -383,6 +383,8 @@ export const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
         totalDeposits: 0,
         totalWithdrawals: 0,
         totalSavings: 0,
+        totalSavingsCash: 0,
+        systemCashCalculation: 0,
         cashIncome: 0,
         esewaIncome: 0,
         fonepayIncome: 0,
@@ -397,7 +399,7 @@ export const DailyClosingSystem: React.FC<DailyClosingSystemProps> = ({
         netProfit: 0,
         cooperativeWithdrawals: 0,
         bankWithdrawals: 0
-      });
+      } as any);
     }
   };
 

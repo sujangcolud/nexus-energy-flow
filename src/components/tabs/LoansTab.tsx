@@ -193,7 +193,7 @@ const LoansTab = () => {
       repayment_frequency: loan.repayment_frequency,
       loan_date: loan.loan_date,
       maturity_date: loan.maturity_date || "",
-      payment_mode: loan.payment_mode || "Cash",
+      payment_mode: (loan as any).payment_mode || "Cash",
       description: loan.description || "",
     });
     setIsAddLoanOpen(true);

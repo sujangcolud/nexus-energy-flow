@@ -39,6 +39,8 @@ import {
   Clock,
   Coins,
   Trash2,
+  Edit,
+  CreditCard,
 } from "lucide-react";
 import { DateRange } from "react-day-picker";
 import {
@@ -219,7 +221,6 @@ const CooperativeSavingsTab = () => {
           cycle_period: formData.cyclePeriod,
           contribution_date: transactionDate,
           payment_mode: formData.paymentMode,
-          description: formData.remarks || null,
         },
       ]);
 

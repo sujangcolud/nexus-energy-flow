@@ -126,7 +126,7 @@ const InventoryTab = () => {
         .eq("is_active", true)
         .order("item_name");
       if (error) throw error;
-      setInventory(data || []);
+      setInventory((data || []) as any);
     } catch (error) {
       logError("fetching inventory", error);
       toast.error(`Error: ${extractErrorMessage(error)}`);
