@@ -41,6 +41,7 @@ import {
   Trash2,
   Landmark,
   Paperclip,
+  CreditCard,
 } from "lucide-react";
 import { DateRange } from "react-day-picker";
 import {
@@ -384,8 +385,8 @@ const WithdrawalsTab = () => {
               <div className="space-y-1.5">
                 <Label htmlFor="editPaymentMode" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Payment Mode</Label>
                 <Select
-                  value={selectedWithdrawal.payment_mode || "Cash"}
-                  onValueChange={(val) => setSelectedWithdrawal({...selectedWithdrawal, payment_mode: val})}
+                  value={(selectedWithdrawal as any).payment_mode || "Cash"}
+                  onValueChange={(val) => setSelectedWithdrawal({...(selectedWithdrawal as any), payment_mode: val} as any)}
                 >
                   <SelectTrigger className="h-11 rounded-xl">
                     <SelectValue />

@@ -304,7 +304,7 @@ const SavingsWithdrawalsTab = () => {
                   </div>
                   <div className="space-y-1.5">
                     <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Bank/Cooperative</Label>
-                    <Input value={(selectedItem as Withdrawal).source_cooperative || ""} onChange={(e) => setSelectedItem({ ...selectedItem, source_cooperative: e.target.value } as Withdrawal)} className="h-11 rounded-xl" />
+                    <Input value={(selectedItem as any).source_cooperative || ""} onChange={(e) => setSelectedItem({ ...(selectedItem as any), source_cooperative: e.target.value } as any)} className="h-11 rounded-xl" />
                   </div>
                 </>
               )}
