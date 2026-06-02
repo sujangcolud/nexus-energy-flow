@@ -224,6 +224,22 @@ const StaffAdvanceTab = () => {
     }
   };
 
+  const handleDeleteAdvance = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this advance request?")) return;
+    try {
+      const { error } = await supabase
+        .from("staff_advances")
+        .update({ deleted_at: new Date().toISOString() })
+        .eq("id", id);
+      if (error) throw error;
+      toast.success("Advance request deleted");
+      fetchAdvances();
+    } catch (error) {
+      logError("deleting advance", error);
+      toast.error("Delete failed");
+    }
+  };
+
   const handleUpdateAdvance = async () => {
     if (!editDialog.advance) return;
     try {
@@ -803,13 +819,27 @@ const StaffAdvanceTab = () => {
             </div>
           )}
 
-          <DialogFooter>
-             <Button variant="outline" onClick={() => setEditDialog({open: false, advance: null})} className="rounded-xl">
-               Cancel
-             </Button>
-             <Button onClick={handleUpdateAdvance} className="rounded-xl font-bold bg-primary px-8">
-               <Save className="mr-2 h-4 w-4" /> Save Changes
-             </Button>
+          <DialogFooter className="justify-between items-center">
+            <Button
+              variant="destructive"
+              onClick={() => {
+                if (editDialog.advance) {
+                  handleDeleteAdvance(editDialog.advance.id);
+                  setEditDialog({open: false, advance: null});
+                }
+              }}
+              className="rounded-xl"
+            >
+              <Trash2 className="mr-2 h-4 w-4" /> Delete
+            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setEditDialog({open: false, advance: null})} className="rounded-xl">
+                Cancel
+              </Button>
+              <Button onClick={handleUpdateAdvance} className="rounded-xl font-bold bg-primary px-8">
+                <Save className="mr-2 h-4 w-4" /> Save Changes
+              </Button>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>

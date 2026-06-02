@@ -51,7 +51,7 @@ BEGIN
         WHERE employee_id = v_emp.id
           AND overtime_date >= p_month_year
           AND overtime_date < (p_month_year + interval '1 month')
-          AND status = 'Approved'
+          AND status IN ('Approved', 'Processed')
           AND deleted_at IS NULL;
 
         v_gross := v_emp.basic_salary + COALESCE(v_emp.allowance, 0) + COALESCE(v_emp.other_benefits, 0) + v_overtime_pay;

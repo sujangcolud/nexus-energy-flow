@@ -95,6 +95,12 @@ const PayrollManagementTab = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("records");
 
+  // Edit Employee State
+  const [editEmployee, setEditEmployee] = useState<{open: boolean, employee: Employee | null}>({
+    open: false,
+    employee: null
+  });
+
   // Form states for new employee
   const [newEmployee, setNewEmployee] = useState({
     employee_code: "",
@@ -117,6 +123,12 @@ const PayrollManagementTab = () => {
     overtime_date: format(new Date(), "yyyy-MM-dd"),
     hours: "",
     reason: ""
+  });
+
+  // Edit Overtime State
+  const [editOvertime, setEditOvertime] = useState<{open: boolean, entry: OvertimeEntry | null}>({
+    open: false,
+    entry: null
   });
 
   useEffect(() => {
@@ -144,6 +156,7 @@ const PayrollManagementTab = () => {
       const { data, error } = await supabase
         .from("employees")
         .select("*")
+        .is("deleted_at", null)
         .order("full_name");
       if (error) throw error;
       setEmployees(data || []);
@@ -158,6 +171,7 @@ const PayrollManagementTab = () => {
       const { data, error } = await supabase
         .from("payroll_records")
         .select("*, employees(*)")
+        .is("deleted_at", null)
         .order("month_year", { ascending: false });
       if (error) throw error;
       setPayrollRecords(data || []);
@@ -190,6 +204,56 @@ const PayrollManagementTab = () => {
     } catch (error) {
       logError("adding employee", error);
       toast.error("Failed to add employee");
+    }
+  };
+
+  const handleUpdateEmployee = async () => {
+    if (!editEmployee.employee) return;
+    try {
+      const { id, ...updateData } = editEmployee.employee;
+      const { error } = await supabase
+        .from("employees")
+        .update(updateData)
+        .eq("id", id);
+      if (error) throw error;
+      toast.success("Employee updated");
+      setEditEmployee({ open: false, employee: null });
+      fetchEmployees();
+    } catch (error) {
+      logError("updating employee", error);
+      toast.error("Update failed");
+    }
+  };
+
+  const handleDeleteEmployee = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this employee?")) return;
+    try {
+      const { error } = await supabase
+        .from("employees")
+        .update({ deleted_at: new Date().toISOString(), is_active: false })
+        .eq("id", id);
+      if (error) throw error;
+      toast.success("Employee deleted");
+      fetchEmployees();
+    } catch (error) {
+      logError("deleting employee", error);
+      toast.error("Delete failed");
+    }
+  };
+
+  const handleDeletePayroll = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this payroll record?")) return;
+    try {
+      const { error } = await supabase
+        .from("payroll_records")
+        .update({ deleted_at: new Date().toISOString() })
+        .eq("id", id);
+      if (error) throw error;
+      toast.success("Payroll record deleted");
+      fetchPayrollRecords();
+    } catch (error) {
+      logError("deleting payroll", error);
+      toast.error("Delete failed");
     }
   };
 
@@ -236,6 +300,40 @@ const PayrollManagementTab = () => {
     } catch (error) {
       logError("updating payroll", error);
       toast.error("Update failed");
+    }
+  };
+
+  const handleUpdateOvertime = async () => {
+    if (!editOvertime.entry) return;
+    try {
+      const { id, hours, overtime_date, reason } = editOvertime.entry;
+      const { error } = await supabase
+        .from("employee_overtime")
+        .update({ hours, overtime_date, reason })
+        .eq("id", id);
+      if (error) throw error;
+      toast.success("Overtime record updated");
+      setEditOvertime({ open: false, entry: null });
+      fetchOvertimeEntries();
+    } catch (error) {
+      logError("updating overtime", error);
+      toast.error("Update failed");
+    }
+  };
+
+  const handleDeleteOvertime = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this overtime record?")) return;
+    try {
+      const { error } = await supabase
+        .from("employee_overtime")
+        .update({ deleted_at: new Date().toISOString() })
+        .eq("id", id);
+      if (error) throw error;
+      toast.success("Overtime record deleted");
+      fetchOvertimeEntries();
+    } catch (error) {
+      logError("deleting overtime", error);
+      toast.error("Delete failed");
     }
   };
 
@@ -465,6 +563,17 @@ const PayrollManagementTab = () => {
                                   {entry.status}
                                 </Badge>
                               </TableCell>
+                              <TableCell className="text-right">
+                                {entry.status !== "Processed" && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setEditOvertime({ open: true, entry: entry })}
+                                  >
+                                    <Edit2 className="h-4 w-4" />
+                                  </Button>
+                                )}
+                              </TableCell>
                             </TableRow>
                           ))}
                         </TableBody>
@@ -574,8 +683,22 @@ const PayrollManagementTab = () => {
                               </TableCell>
                               <TableCell className="font-bold">रु {emp.basic_salary.toLocaleString()}</TableCell>
                               <TableCell><Badge variant="outline" className="text-green-600">Active</Badge></TableCell>
-                              <TableCell className="text-right">
-                                <Button variant="ghost" size="sm">Edit</Button>
+                              <TableCell className="text-right space-x-2">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => setEditEmployee({ open: true, employee: emp })}
+                                >
+                                  <Edit2 className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="text-rose-600"
+                                  onClick={() => handleDeleteEmployee(emp.id)}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
                               </TableCell>
                             </TableRow>
                           ))}
@@ -815,13 +938,216 @@ const PayrollManagementTab = () => {
             </div>
           )}
 
+          <DialogFooter className="justify-between items-center">
+            <Button
+              variant="destructive"
+              onClick={() => {
+                if (editPayroll.record) {
+                  handleDeletePayroll(editPayroll.record.id);
+                  setEditPayroll({open: false, record: null});
+                }
+              }}
+              className="rounded-xl h-12"
+            >
+              <Trash2 className="mr-2 h-5 w-5" /> Delete Record
+            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setEditPayroll({open: false, record: null})} className="rounded-xl h-12">
+                Cancel
+              </Button>
+              <Button onClick={handleUpdatePayroll} className="bg-indigo-600 rounded-xl h-12 px-8 font-bold text-white">
+                <Save className="mr-2 h-5 w-5" /> Save Changes
+              </Button>
+            </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Employee Dialog */}
+      <Dialog open={editEmployee.open} onOpenChange={(o) => !o && setEditEmployee({open: false, employee: null})}>
+        <DialogContent className="rounded-3xl">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold flex items-center gap-2">
+              <Users className="h-6 w-6 text-indigo-600" /> Edit Employee Details
+            </DialogTitle>
+          </DialogHeader>
+
+          {editEmployee.employee && (
+            <div className="space-y-4 py-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Employee Code</Label>
+                  <Input
+                    value={editEmployee.employee.employee_code}
+                    onChange={(e) => setEditEmployee({
+                      ...editEmployee,
+                      employee: {...editEmployee.employee!, employee_code: e.target.value}
+                    })}
+                    className="rounded-xl"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Full Name</Label>
+                  <Input
+                    value={editEmployee.employee.full_name}
+                    onChange={(e) => setEditEmployee({
+                      ...editEmployee,
+                      employee: {...editEmployee.employee!, full_name: e.target.value}
+                    })}
+                    className="rounded-xl"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Basic Salary</Label>
+                  <Input
+                    type="number"
+                    value={editEmployee.employee.basic_salary}
+                    onChange={(e) => setEditEmployee({
+                      ...editEmployee,
+                      employee: {...editEmployee.employee!, basic_salary: parseFloat(e.target.value)}
+                    })}
+                    className="rounded-xl font-bold"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>OT Rate (per hr)</Label>
+                  <Input
+                    type="number"
+                    value={editEmployee.employee.overtime_rate}
+                    onChange={(e) => setEditEmployee({
+                      ...editEmployee,
+                      employee: {...editEmployee.employee!, overtime_rate: parseFloat(e.target.value)}
+                    })}
+                    className="rounded-xl font-bold text-emerald-600"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Department</Label>
+                  <Input
+                    value={editEmployee.employee.department}
+                    onChange={(e) => setEditEmployee({
+                      ...editEmployee,
+                      employee: {...editEmployee.employee!, department: e.target.value}
+                    })}
+                    className="rounded-xl"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Marital Status</Label>
+                  <Select
+                    value={editEmployee.employee.marital_status}
+                    onValueChange={(v) => setEditEmployee({
+                      ...editEmployee,
+                      employee: {...editEmployee.employee!, marital_status: v}
+                    })}
+                  >
+                    <SelectTrigger className="rounded-xl">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="single">Single</SelectItem>
+                      <SelectItem value="married">Married</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+          )}
+
           <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setEditPayroll({open: false, record: null})} className="rounded-xl h-12">
+            <Button variant="outline" onClick={() => setEditEmployee({open: false, employee: null})} className="rounded-xl h-12 px-6">
               Cancel
             </Button>
-            <Button onClick={handleUpdatePayroll} className="bg-indigo-600 rounded-xl h-12 px-8 font-bold">
+            <Button onClick={handleUpdateEmployee} className="bg-indigo-600 rounded-xl h-12 px-8 font-bold text-white">
               <Save className="mr-2 h-5 w-5" /> Save Changes
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Overtime Dialog */}
+      <Dialog open={editOvertime.open} onOpenChange={(o) => !o && setEditOvertime({open: false, entry: null})}>
+        <DialogContent className="rounded-3xl">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold flex items-center gap-2">
+              <Clock className="h-6 w-6 text-emerald-600" /> Edit Overtime Record
+            </DialogTitle>
+          </DialogHeader>
+
+          {editOvertime.entry && (
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label>Employee</Label>
+                <Input value={editOvertime.entry.employees?.full_name} disabled className="rounded-xl bg-muted" />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Date</Label>
+                  <Input
+                    type="date"
+                    value={editOvertime.entry.overtime_date}
+                    onChange={(e) => setEditOvertime({
+                      ...editOvertime,
+                      entry: {...editOvertime.entry!, overtime_date: e.target.value}
+                    })}
+                    className="rounded-xl"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Hours</Label>
+                  <Input
+                    type="number"
+                    step="0.5"
+                    value={editOvertime.entry.hours}
+                    onChange={(e) => setEditOvertime({
+                      ...editOvertime,
+                      entry: {...editOvertime.entry!, hours: parseFloat(e.target.value)}
+                    })}
+                    className="rounded-xl font-bold"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Reason/Remarks</Label>
+                <Input
+                  value={editOvertime.entry.reason || ""}
+                  onChange={(e) => setEditOvertime({
+                    ...editOvertime,
+                    entry: {...editOvertime.entry!, reason: e.target.value}
+                  })}
+                  className="rounded-xl"
+                />
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="justify-between items-center">
+            <Button
+              variant="destructive"
+              onClick={() => {
+                if (editOvertime.entry) {
+                  handleDeleteOvertime(editOvertime.entry.id);
+                  setEditOvertime({open: false, entry: null});
+                }
+              }}
+              className="rounded-xl h-12"
+            >
+              <Trash2 className="mr-2 h-5 w-5" /> Delete
+            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setEditOvertime({open: false, entry: null})} className="rounded-xl h-12">
+                Cancel
+              </Button>
+              <Button onClick={handleUpdateOvertime} className="bg-emerald-600 rounded-xl h-12 px-8 font-bold text-white">
+                <Save className="mr-2 h-5 w-5" /> Save Changes
+              </Button>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>
