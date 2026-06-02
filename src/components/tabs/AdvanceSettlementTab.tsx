@@ -34,9 +34,11 @@ import {
   Upload,
   Edit2,
   Save,
+  Trash2,
 } from "lucide-react";
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 
 interface Employee {
   id: string;
@@ -106,6 +108,7 @@ const AdvanceSettlementTab = () => {
       const { data, error } = await supabase
         .from("advance_settlements")
         .select("*, staff_advances(amount, employees(full_name))")
+        .is("deleted_at", null)
         .order("created_at", { ascending: false });
       if (error) throw error;
       setSettlements(data || []);
@@ -171,6 +174,22 @@ const AdvanceSettlementTab = () => {
     } catch (error) {
       logError("verifying settlement", error);
       toast.error(`Verification failed: ${error.message}`);
+    }
+  };
+
+  const handleDeleteSettlement = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this settlement?")) return;
+    try {
+      const { error } = await supabase
+        .from("advance_settlements")
+        .update({ deleted_at: new Date().toISOString() })
+        .eq("id", id);
+      if (error) throw error;
+      toast.success("Settlement deleted");
+      fetchSettlements();
+    } catch (error) {
+      logError("deleting settlement", error);
+      toast.error("Delete failed");
     }
   };
 
@@ -437,13 +456,27 @@ const AdvanceSettlementTab = () => {
             </div>
           )}
 
-          <DialogFooter>
-             <Button variant="outline" onClick={() => setEditDialog({open: false, settlement: null})} className="rounded-xl">
-               Cancel
-             </Button>
-             <Button onClick={handleUpdateSettlement} className="bg-emerald-600 rounded-xl font-bold px-8 text-white">
-               <Save className="mr-2 h-4 w-4" /> Save Changes
-             </Button>
+          <DialogFooter className="justify-between items-center">
+            <Button
+              variant="destructive"
+              onClick={() => {
+                if (editDialog.settlement) {
+                  handleDeleteSettlement(editDialog.settlement.id);
+                  setEditDialog({open: false, settlement: null});
+                }
+              }}
+              className="rounded-xl"
+            >
+              <Trash2 className="mr-2 h-4 w-4" /> Delete
+            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setEditDialog({open: false, settlement: null})} className="rounded-xl">
+                Cancel
+              </Button>
+              <Button onClick={handleUpdateSettlement} className="bg-emerald-600 rounded-xl font-bold px-8 text-white">
+                <Save className="mr-2 h-4 w-4" /> Save Changes
+              </Button>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>
