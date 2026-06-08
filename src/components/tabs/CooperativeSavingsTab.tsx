@@ -337,9 +337,18 @@ const CooperativeSavingsTab = () => {
     if (!selectedSaving) return;
 
     try {
+      const updateData = {
+        contribution_amount: selectedSaving.contribution_amount,
+        member_id: selectedSaving.member_id,
+        cycle_period: selectedSaving.cycle_period,
+        contribution_date: selectedSaving.contribution_date,
+        date: selectedSaving.contribution_date, // Sync date with contribution_date
+        payment_mode: (selectedSaving as any).payment_mode,
+      };
+
       const { error } = await supabase
         .from("cooperative_savings")
-        .update(selectedSaving)
+        .update(updateData)
         .eq("id", selectedSaving.id);
 
       if (error) throw error;

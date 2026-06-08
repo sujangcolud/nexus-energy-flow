@@ -496,9 +496,20 @@ const DepositsTab = () => {
     if (!selectedDeposit) return;
 
     try {
+      const updateData = {
+        amount: selectedDeposit.amount,
+        mode: selectedDeposit.mode,
+        deposited_by: selectedDeposit.deposited_by,
+        deposited_by_type: (selectedDeposit as any).deposited_by_type,
+        remarks: selectedDeposit.remarks,
+        deposit_date: selectedDeposit.deposit_date,
+        date: selectedDeposit.deposit_date, // Sync date with deposit_date
+        deposited_to: (selectedDeposit as any).deposited_to,
+      };
+
       const { error } = await supabase
         .from("deposits")
-        .update(selectedDeposit)
+        .update(updateData)
         .eq("id", selectedDeposit.id);
 
       if (error) throw error;

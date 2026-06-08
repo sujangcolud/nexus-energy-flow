@@ -348,9 +348,22 @@ const ChargingTab = () => {
     if (!selectedSession) return;
 
     try {
+      const updateData = {
+        start_percentage: selectedSession.start_percentage,
+        end_percentage: selectedSession.end_percentage,
+        per_percent_rate: selectedSession.per_percent_rate,
+        kcal: selectedSession.kcal,
+        per_unit_rate: selectedSession.per_unit_rate,
+        total_amount: selectedSession.total_amount,
+        amount: selectedSession.total_amount, // Sync amount with total_amount
+        payment_mode: selectedSession.payment_mode,
+        session_date: selectedSession.session_date,
+        date: selectedSession.session_date, // Sync date with session_date
+      };
+
       const { error } = await supabase
         .from("charging_sessions")
-        .update(selectedSession)
+        .update(updateData)
         .eq("id", selectedSession.id);
 
       if (error) throw error;

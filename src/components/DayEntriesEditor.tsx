@@ -285,6 +285,24 @@ const ModuleSection = ({ config, fromDate, toDate, editable }: ModuleSectionProp
           if (v === undefined) continue;
           cleaned[col.key] = col.type === "number" ? (v === "" || v === null ? null : Number(v)) : v;
         }
+
+        // Synchronization logic for date columns and compatibility fields
+        if (config.table === "orders") {
+          if (cleaned.order_date) cleaned.date = cleaned.order_date;
+          if (cleaned.total !== undefined) cleaned.amount = cleaned.total;
+        } else if (config.table === "charging_sessions") {
+          if (cleaned.session_date) cleaned.date = cleaned.session_date;
+          if (cleaned.total_amount !== undefined) cleaned.amount = cleaned.total_amount;
+        } else if (config.table === "expenses") {
+          if (cleaned.expense_date) cleaned.date = cleaned.expense_date;
+        } else if (config.table === "deposits") {
+          if (cleaned.deposit_date) cleaned.date = cleaned.deposit_date;
+        } else if (config.table === "withdrawals") {
+          if (cleaned.withdrawal_date) cleaned.date = cleaned.withdrawal_date;
+        } else if (config.table === "cooperative_savings") {
+          if (cleaned.contribution_date) cleaned.date = cleaned.contribution_date;
+        }
+
         const { error } = await (supabase as any).from(config.table).update(cleaned).eq("id", id);
         if (error) throw error;
       }
