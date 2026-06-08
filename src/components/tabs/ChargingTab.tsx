@@ -485,6 +485,21 @@ const ChargingTab = () => {
                   </SelectContent>
                 </Select>
               </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="editSessionDate" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Session Date</Label>
+                <Input
+                  id="editSessionDate"
+                  type="date"
+                  value={selectedSession.session_date}
+                  onChange={(e) =>
+                    setSelectedSession({
+                      ...selectedSession,
+                      session_date: e.target.value,
+                    })
+                  }
+                  className="h-11 rounded-xl"
+                />
+              </div>
             </div>
           )}
           <DialogFooter className="pt-2">

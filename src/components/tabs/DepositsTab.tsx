@@ -601,6 +601,21 @@ const DepositsTab = () => {
                   className="rounded-xl"
                 />
               </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="editDepositDate" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Deposit Date</Label>
+                <Input
+                  id="editDepositDate"
+                  type="date"
+                  value={selectedDeposit.deposit_date}
+                  onChange={(e) =>
+                    setSelectedDeposit({
+                      ...selectedDeposit,
+                      deposit_date: e.target.value,
+                    })
+                  }
+                  className="h-11 rounded-xl"
+                />
+              </div>
               <RecordAttachments recordType="deposit" recordId={selectedDeposit.id} compact />
             </div>
           )}

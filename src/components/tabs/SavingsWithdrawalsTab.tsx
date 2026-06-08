@@ -308,6 +308,23 @@ const SavingsWithdrawalsTab = () => {
                   </div>
                 </>
               )}
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                  Date
+                </Label>
+                <Input
+                  type="date"
+                  value={editType === "saving" ? (selectedItem as Saving).contribution_date : (selectedItem as Withdrawal).withdrawal_date}
+                  onChange={(e) => {
+                    if (editType === "saving") {
+                      setSelectedItem({ ...selectedItem, contribution_date: e.target.value } as Saving);
+                    } else {
+                      setSelectedItem({ ...selectedItem, withdrawal_date: e.target.value } as Withdrawal);
+                    }
+                  }}
+                  className="h-11 rounded-xl"
+                />
+              </div>
             </div>
           )}
           <DialogFooter className="pt-2"><Button onClick={handleUpdate} className="w-full h-12 rounded-xl text-lg font-bold">Save Changes</Button></DialogFooter>

@@ -570,6 +570,22 @@ const ExpensesTab = () => {
                 </div>
               </div>
 
+              <div className="space-y-1.5">
+                <Label htmlFor="editExpenseDate" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Expense Date</Label>
+                <Input
+                  id="editExpenseDate"
+                  type="date"
+                  value={selectedExpense.expense_date}
+                  onChange={(e) =>
+                    setSelectedExpense({
+                      ...selectedExpense,
+                      expense_date: e.target.value,
+                    })
+                  }
+                  className="h-11 rounded-xl"
+                />
+              </div>
+
               <div className="flex items-center justify-between py-2 bg-primary/5 p-3 rounded-xl border border-primary/10">
                 <div className="flex items-center space-x-2">
                   <Switch

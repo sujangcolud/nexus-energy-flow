@@ -516,6 +516,20 @@ const OrdersTab = () => {
                   }
                 />
               </div>
+              <div>
+                <Label htmlFor="editOrderDate">Order Date</Label>
+                <Input
+                  id="editOrderDate"
+                  type="date"
+                  value={selectedOrder.order_date}
+                  onChange={(e) =>
+                    setSelectedOrder({
+                      ...selectedOrder,
+                      order_date: e.target.value,
+                    })
+                  }
+                />
+              </div>
             </div>
           )}
           <DialogFooter>
