@@ -422,6 +422,21 @@ const CooperativeSavingsTab = () => {
                   className="h-11 rounded-xl"
                 />
               </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="editContributionDate" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Contribution Date</Label>
+                <Input
+                  id="editContributionDate"
+                  type="date"
+                  value={selectedSaving.contribution_date}
+                  onChange={(e) =>
+                    setSelectedSaving({
+                      ...selectedSaving,
+                      contribution_date: e.target.value,
+                    })
+                  }
+                  className="h-11 rounded-xl"
+                />
+              </div>
               <RecordAttachments recordType="cooperative_saving" recordId={selectedSaving.id} compact />
             </div>
           )}

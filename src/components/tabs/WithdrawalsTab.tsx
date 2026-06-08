@@ -412,6 +412,21 @@ const WithdrawalsTab = () => {
                   className="rounded-xl"
                 />
               </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="editWithdrawalDate" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Withdrawal Date</Label>
+                <Input
+                  id="editWithdrawalDate"
+                  type="date"
+                  value={selectedWithdrawal.withdrawal_date}
+                  onChange={(e) =>
+                    setSelectedWithdrawal({
+                      ...selectedWithdrawal,
+                      withdrawal_date: e.target.value,
+                    })
+                  }
+                  className="h-11 rounded-xl"
+                />
+              </div>
               <RecordAttachments recordType="withdrawal" recordId={selectedWithdrawal.id} compact />
             </div>
           )}

@@ -40,6 +40,7 @@ const MODULES: ModuleConfig[] = [
     amountColumn: "actual_cash_in_hand",
     hideAdd: true,
     columns: [
+      { key: "summary_date", label: "Date", type: "date", editable: true },
       { key: "system_cash_calculation", label: "System Cash", type: "number", editable: false },
       { key: "actual_cash_in_hand", label: "Actual Cash", type: "number", editable: true },
       { key: "total_income_fonepay", label: "System Fonepay", type: "number", editable: false },
@@ -53,6 +54,7 @@ const MODULES: ModuleConfig[] = [
     dateColumn: "order_date",
     amountColumn: "total",
     columns: [
+      { key: "order_date", label: "Date", type: "date", editable: true },
       { key: "item_name", label: "Item", type: "text", editable: true },
       { key: "quantity", label: "Qty", type: "number", editable: true },
       { key: "rate", label: "Rate", type: "number", editable: true },
@@ -67,6 +69,7 @@ const MODULES: ModuleConfig[] = [
     dateColumn: "session_date",
     amountColumn: "total_amount",
     columns: [
+      { key: "session_date", label: "Date", type: "date", editable: true },
       { key: "start_percentage", label: "From %", type: "number", editable: true },
       { key: "end_percentage", label: "To %", type: "number", editable: true },
       { key: "per_percent_rate", label: "Rate / %", type: "number", editable: true },
@@ -89,6 +92,7 @@ const MODULES: ModuleConfig[] = [
     attachmentType: "expense",
     updateRpc: "process_inventory_expense",
     columns: [
+      { key: "expense_date", label: "Date", type: "date", editable: true },
       { key: "description", label: "Description", type: "text", editable: true },
       { key: "category", label: "Category", type: "text", editable: true },
       { key: "payment_mode", label: "Payment", type: "text", editable: true },
@@ -115,6 +119,7 @@ const MODULES: ModuleConfig[] = [
     attachmentType: "expense_booking",
     updateRpc: "process_inventory_expense",
     columns: [
+      { key: "booking_date", label: "Date", type: "date", editable: true },
       { key: "party_name", label: "Party", type: "text", editable: true },
       { key: "category", label: "Category", type: "text", editable: true },
       { key: "payment_mode", label: "Payment", type: "text", editable: true },
@@ -139,6 +144,7 @@ const MODULES: ModuleConfig[] = [
     amountColumn: "amount",
     attachmentType: "deposit",
     columns: [
+      { key: "deposit_date", label: "Date", type: "date", editable: true },
       { key: "deposited_by", label: "Deposited By", type: "text", editable: true },
       { key: "deposited_to", label: "To Wallet", type: "text", editable: true },
       { key: "mode", label: "Mode", type: "text", editable: true },
@@ -154,6 +160,7 @@ const MODULES: ModuleConfig[] = [
     amountColumn: "amount",
     attachmentType: "withdrawal",
     columns: [
+      { key: "withdrawal_date", label: "Date", type: "date", editable: true },
       { key: "purpose", label: "Purpose", type: "text", editable: true },
       { key: "withdrawal_from", label: "From", type: "text", editable: true },
       { key: "payment_mode", label: "Payment", type: "text", editable: true },
@@ -169,6 +176,7 @@ const MODULES: ModuleConfig[] = [
     amountColumn: "contribution_amount",
     attachmentType: "cooperative_saving",
     columns: [
+      { key: "contribution_date", label: "Date", type: "date", editable: true },
       { key: "member_id", label: "Member", type: "text", editable: true },
       { key: "cycle_period", label: "Cycle", type: "text", editable: true },
       { key: "savings_to", label: "To", type: "text", editable: true },
@@ -563,7 +571,7 @@ const ModuleSection = ({ config, fromDate, toDate, editable }: ModuleSectionProp
                   {config.columns.map((c) => (
                     <TableCell key={c.key} className="text-xs">
                       <Input
-                        type={c.type === "number" ? "number" : "text"}
+                        type={c.type === "number" ? "number" : c.type === "date" ? "date" : "text"}
                         value={newDraft[c.key] ?? ""}
                         onChange={(e) =>
                           setNewDraft((d: any) => ({ ...d, [c.key]: e.target.value }))
@@ -689,7 +697,7 @@ const ModuleSection = ({ config, fromDate, toDate, editable }: ModuleSectionProp
                             )}
                             {bulkEdit && c.editable ? (
                               <Input
-                                type={c.type === "number" ? "number" : "text"}
+                                type={c.type === "number" ? "number" : c.type === "date" ? "date" : "text"}
                                 value={bulkDrafts[row.id]?.[c.key] ?? row[c.key] ?? ""}
                                 onChange={(e) => handleBulkUpdate(row.id, c.key, e.target.value)}
                                 className="h-7 text-xs min-w-[80px]"
@@ -749,7 +757,7 @@ const ModuleSection = ({ config, fromDate, toDate, editable }: ModuleSectionProp
                                   {c.label}
                                 </label>
                                 <Input
-                                  type={c.type === "number" ? "number" : "text"}
+                                  type={c.type === "number" ? "number" : c.type === "date" ? "date" : "text"}
                                   value={draft[c.key] ?? ""}
                                   onChange={(e) =>
                                     setDraft((d: any) => ({ ...d, [c.key]: e.target.value }))
