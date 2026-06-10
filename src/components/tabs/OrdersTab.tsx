@@ -405,6 +405,9 @@ const OrdersTab = () => {
 
   const handleDelete = async (id: string) => {
     try {
+      // First delete related order items if they exist
+      await supabase.from("order_items").delete().eq("order_id", id);
+
       const { error } = await supabase.from("orders").delete().eq("id", id);
 
       if (error) throw error;
@@ -422,9 +425,21 @@ const OrdersTab = () => {
     if (!selectedOrder) return;
 
     try {
+      // Only send editable fields to avoid issues with generated columns
+      const updateData = {
+        item_name: selectedOrder.item_name,
+        quantity: selectedOrder.quantity,
+        rate: selectedOrder.rate,
+        total: selectedOrder.total,
+        amount: selectedOrder.total, // Sync amount with total
+        payment_mode: selectedOrder.payment_mode,
+        order_date: selectedOrder.order_date,
+        date: selectedOrder.order_date, // Sync date with order_date
+      };
+
       const { error } = await supabase
         .from("orders")
-        .update(selectedOrder)
+        .update(updateData)
         .eq("id", selectedOrder.id);
 
       if (error) throw error;

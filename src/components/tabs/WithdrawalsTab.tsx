@@ -284,9 +284,21 @@ const WithdrawalsTab = () => {
     if (!selectedWithdrawal) return;
 
     try {
+      const updateData = {
+        amount: selectedWithdrawal.amount,
+        purpose: selectedWithdrawal.purpose,
+        recipient: selectedWithdrawal.recipient,
+        reference_number: selectedWithdrawal.reference_number,
+        remarks: selectedWithdrawal.remarks,
+        withdrawal_date: selectedWithdrawal.withdrawal_date,
+        date: selectedWithdrawal.withdrawal_date, // Sync date with withdrawal_date
+        source_cooperative: selectedWithdrawal.source_cooperative,
+        payment_mode: (selectedWithdrawal as any).payment_mode,
+      };
+
       const { error } = await supabase
         .from("withdrawals")
-        .update(selectedWithdrawal)
+        .update(updateData)
         .eq("id", selectedWithdrawal.id);
 
       if (error) throw error;
