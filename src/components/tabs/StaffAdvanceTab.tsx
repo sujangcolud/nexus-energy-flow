@@ -148,7 +148,9 @@ const StaffAdvanceTab = () => {
     try {
       const { error } = await supabase.from("staff_advances").insert({
         employee_id: formData.employeeId,
+        amount_requested: parseFloat(formData.amount),
         amount: parseFloat(formData.amount),
+        requested_by: user?.id as string,
         reason: formData.reason,
         settlement_method: formData.settlementMethod,
         expected_settlement_date: formData.expectedDate,
