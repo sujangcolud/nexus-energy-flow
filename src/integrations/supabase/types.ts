@@ -108,11 +108,47 @@ export type Database = {
           },
         ]
       }
+      advance_settlement_attachments: {
+        Row: {
+          created_at: string | null
+          file_name: string | null
+          file_type: string | null
+          file_url: string
+          id: string
+          settlement_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          file_name?: string | null
+          file_type?: string | null
+          file_url: string
+          id?: string
+          settlement_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          file_name?: string | null
+          file_type?: string | null
+          file_url?: string
+          id?: string
+          settlement_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "advance_settlement_attachments_settlement_id_fkey"
+            columns: ["settlement_id"]
+            isOneToOne: false
+            referencedRelation: "advance_settlements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       advance_settlements: {
         Row: {
           advance_id: string
           amount: number
           created_at: string
+          deleted_at: string | null
           description: string | null
           employee_id: string
           expense_date: string | null
@@ -131,6 +167,7 @@ export type Database = {
           advance_id: string
           amount: number
           created_at?: string
+          deleted_at?: string | null
           description?: string | null
           employee_id: string
           expense_date?: string | null
@@ -149,6 +186,7 @@ export type Database = {
           advance_id?: string
           amount?: number
           created_at?: string
+          deleted_at?: string | null
           description?: string | null
           employee_id?: string
           expense_date?: string | null
@@ -713,10 +751,16 @@ export type Database = {
           total_income_from_orders_cash: number | null
           total_income_from_orders_esewa: number | null
           total_income_from_orders_fonepay: number | null
+          total_payroll_bank: number | null
+          total_payroll_cash: number | null
+          total_payroll_paid: number | null
           total_savings: number | null
           total_savings_cash: number | null
           total_savings_esewa: number | null
           total_savings_fonepay: number | null
+          total_staff_advances_bank: number | null
+          total_staff_advances_cash: number | null
+          total_staff_advances_disbursed: number | null
           total_withdrawals: number | null
           total_withdrawals_bank: number | null
           total_withdrawals_bank_cash: number | null
@@ -766,10 +810,16 @@ export type Database = {
           total_income_from_orders_cash?: number | null
           total_income_from_orders_esewa?: number | null
           total_income_from_orders_fonepay?: number | null
+          total_payroll_bank?: number | null
+          total_payroll_cash?: number | null
+          total_payroll_paid?: number | null
           total_savings?: number | null
           total_savings_cash?: number | null
           total_savings_esewa?: number | null
           total_savings_fonepay?: number | null
+          total_staff_advances_bank?: number | null
+          total_staff_advances_cash?: number | null
+          total_staff_advances_disbursed?: number | null
           total_withdrawals?: number | null
           total_withdrawals_bank?: number | null
           total_withdrawals_bank_cash?: number | null
@@ -819,10 +869,16 @@ export type Database = {
           total_income_from_orders_cash?: number | null
           total_income_from_orders_esewa?: number | null
           total_income_from_orders_fonepay?: number | null
+          total_payroll_bank?: number | null
+          total_payroll_cash?: number | null
+          total_payroll_paid?: number | null
           total_savings?: number | null
           total_savings_cash?: number | null
           total_savings_esewa?: number | null
           total_savings_fonepay?: number | null
+          total_staff_advances_bank?: number | null
+          total_staff_advances_cash?: number | null
+          total_staff_advances_disbursed?: number | null
           total_withdrawals?: number | null
           total_withdrawals_bank?: number | null
           total_withdrawals_bank_cash?: number | null
@@ -938,59 +994,133 @@ export type Database = {
         }
         Relationships: []
       }
+      employee_overtime: {
+        Row: {
+          approved_by: string | null
+          created_at: string | null
+          deleted_at: string | null
+          employee_id: string | null
+          hours: number
+          id: string
+          overtime_date: string
+          rate_at_time: number
+          reason: string | null
+          status: string | null
+          total_amount: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          approved_by?: string | null
+          created_at?: string | null
+          deleted_at?: string | null
+          employee_id?: string | null
+          hours: number
+          id?: string
+          overtime_date: string
+          rate_at_time: number
+          reason?: string | null
+          status?: string | null
+          total_amount?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          approved_by?: string | null
+          created_at?: string | null
+          deleted_at?: string | null
+          employee_id?: string | null
+          hours?: number
+          id?: string
+          overtime_date?: string
+          rate_at_time?: number
+          reason?: string | null
+          status?: string | null
+          total_amount?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_overtime_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       employees: {
         Row: {
+          allowance: number | null
           bank_account: string | null
           bank_name: string | null
+          basic_salary: number | null
           contact_email: string | null
           contact_phone: string | null
           created_at: string
+          deleted_at: string | null
           department: string | null
           designation: string | null
-          employee_code: string
+          employee_code: string | null
+          employee_id: string | null
           full_name: string
           id: string
           is_active: boolean
           joining_date: string | null
           marital_status: string
+          name: string | null
+          other_benefits: number | null
+          overtime_rate: number | null
           pan_number: string | null
           ssf_number: string | null
           updated_at: string
           user_id: string | null
         }
         Insert: {
+          allowance?: number | null
           bank_account?: string | null
           bank_name?: string | null
+          basic_salary?: number | null
           contact_email?: string | null
           contact_phone?: string | null
           created_at?: string
+          deleted_at?: string | null
           department?: string | null
           designation?: string | null
-          employee_code: string
+          employee_code?: string | null
+          employee_id?: string | null
           full_name: string
           id?: string
           is_active?: boolean
           joining_date?: string | null
           marital_status?: string
+          name?: string | null
+          other_benefits?: number | null
+          overtime_rate?: number | null
           pan_number?: string | null
           ssf_number?: string | null
           updated_at?: string
           user_id?: string | null
         }
         Update: {
+          allowance?: number | null
           bank_account?: string | null
           bank_name?: string | null
+          basic_salary?: number | null
           contact_email?: string | null
           contact_phone?: string | null
           created_at?: string
+          deleted_at?: string | null
           department?: string | null
           designation?: string | null
-          employee_code?: string
+          employee_code?: string | null
+          employee_id?: string | null
           full_name?: string
           id?: string
           is_active?: boolean
           joining_date?: string | null
           marital_status?: string
+          name?: string | null
+          other_benefits?: number | null
+          overtime_rate?: number | null
           pan_number?: string | null
           ssf_number?: string | null
           updated_at?: string
@@ -1911,6 +2041,110 @@ export type Database = {
         }
         Relationships: []
       }
+      payroll_records: {
+        Row: {
+          advance_recovery: number | null
+          allowance: number | null
+          basic_salary: number | null
+          created_at: string | null
+          ctc: number | null
+          deleted_at: string | null
+          employee_id: string | null
+          employee_ssf: number | null
+          employer_ssf: number | null
+          gross_salary: number | null
+          id: string
+          month_year: string
+          net_salary: number | null
+          other_benefits: number | null
+          other_deductions: number | null
+          overtime_hours: number | null
+          overtime_pay: number | null
+          payment_date: string | null
+          payment_mode: string | null
+          status: string | null
+          tax_deduction: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          advance_recovery?: number | null
+          allowance?: number | null
+          basic_salary?: number | null
+          created_at?: string | null
+          ctc?: number | null
+          deleted_at?: string | null
+          employee_id?: string | null
+          employee_ssf?: number | null
+          employer_ssf?: number | null
+          gross_salary?: number | null
+          id?: string
+          month_year: string
+          net_salary?: number | null
+          other_benefits?: number | null
+          other_deductions?: number | null
+          overtime_hours?: number | null
+          overtime_pay?: number | null
+          payment_date?: string | null
+          payment_mode?: string | null
+          status?: string | null
+          tax_deduction?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          advance_recovery?: number | null
+          allowance?: number | null
+          basic_salary?: number | null
+          created_at?: string | null
+          ctc?: number | null
+          deleted_at?: string | null
+          employee_id?: string | null
+          employee_ssf?: number | null
+          employer_ssf?: number | null
+          gross_salary?: number | null
+          id?: string
+          month_year?: string
+          net_salary?: number | null
+          other_benefits?: number | null
+          other_deductions?: number | null
+          overtime_hours?: number | null
+          overtime_pay?: number | null
+          payment_date?: string | null
+          payment_mode?: string | null
+          status?: string | null
+          tax_deduction?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payroll_records_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payroll_settings: {
+        Row: {
+          id: number
+          key: string
+          updated_at: string | null
+          value: Json | null
+        }
+        Insert: {
+          id?: number
+          key: string
+          updated_at?: string | null
+          value?: Json | null
+        }
+        Update: {
+          id?: number
+          key?: string
+          updated_at?: string | null
+          value?: Json | null
+        }
+        Relationships: []
+      }
       payslips: {
         Row: {
           advance_recovery: number
@@ -2242,13 +2476,51 @@ export type Database = {
         }
         Relationships: []
       }
+      staff_advance_attachments: {
+        Row: {
+          advance_id: string | null
+          created_at: string | null
+          file_name: string | null
+          file_type: string | null
+          file_url: string
+          id: string
+        }
+        Insert: {
+          advance_id?: string | null
+          created_at?: string | null
+          file_name?: string | null
+          file_type?: string | null
+          file_url: string
+          id?: string
+        }
+        Update: {
+          advance_id?: string | null
+          created_at?: string | null
+          file_name?: string | null
+          file_type?: string | null
+          file_url?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_advance_attachments_advance_id_fkey"
+            columns: ["advance_id"]
+            isOneToOne: false
+            referencedRelation: "staff_advances"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       staff_advances: {
         Row: {
+          amount: number | null
           amount_approved: number | null
           amount_disbursed: number
           amount_requested: number
           amount_settled: number
           created_at: string
+          deleted_at: string | null
+          disbursement_method: string | null
           employee_id: string
           expected_settlement_date: string | null
           id: string
@@ -2259,14 +2531,19 @@ export type Database = {
           requested_by: string
           settlement_method: string
           status: string
+          transfer_date: string | null
           updated_at: string
+          withdrawal_date: string | null
         }
         Insert: {
+          amount?: number | null
           amount_approved?: number | null
           amount_disbursed?: number
           amount_requested: number
           amount_settled?: number
           created_at?: string
+          deleted_at?: string | null
+          disbursement_method?: string | null
           employee_id: string
           expected_settlement_date?: string | null
           id?: string
@@ -2277,14 +2554,19 @@ export type Database = {
           requested_by: string
           settlement_method?: string
           status?: string
+          transfer_date?: string | null
           updated_at?: string
+          withdrawal_date?: string | null
         }
         Update: {
+          amount?: number | null
           amount_approved?: number | null
           amount_disbursed?: number
           amount_requested?: number
           amount_settled?: number
           created_at?: string
+          deleted_at?: string | null
+          disbursement_method?: string | null
           employee_id?: string
           expected_settlement_date?: string | null
           id?: string
@@ -2295,7 +2577,9 @@ export type Database = {
           requested_by?: string
           settlement_method?: string
           status?: string
+          transfer_date?: string | null
           updated_at?: string
+          withdrawal_date?: string | null
         }
         Relationships: [
           {
@@ -2941,6 +3225,14 @@ export type Database = {
           total_withdrawals_cooperative_fonepay: number
         }[]
       }
+      calculate_nepal_tax: {
+        Args: {
+          p_annual_gross: number
+          p_marital_status: string
+          p_ssf_deduction: number
+        }
+        Returns: number
+      }
       calculate_payroll_tax: {
         Args: {
           p_annual_taxable: number
@@ -3158,6 +3450,7 @@ export type Database = {
         }
         Returns: {
           created_at: string
+          date: string
           id: string
           item_name: string
           order_date: string
@@ -3234,6 +3527,14 @@ export type Database = {
           p_period_id: string
         }
         Returns: number
+      }
+      process_advance_settlement: {
+        Args: {
+          p_settlement_id: string
+          p_status: string
+          p_verifier_remarks: string
+        }
+        Returns: undefined
       }
       process_inventory_expense:
         | {
@@ -3330,6 +3631,10 @@ export type Database = {
           p_user_id: string
         }
         Returns: string
+      }
+      process_monthly_payroll: {
+        Args: { p_month_year: string; p_user_id: string }
+        Returns: undefined
       }
       process_new_loan: {
         Args: {

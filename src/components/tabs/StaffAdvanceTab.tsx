@@ -40,7 +40,7 @@ import { format } from "date-fns";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
+
 
 interface Employee {
   id: string;
@@ -148,7 +148,9 @@ const StaffAdvanceTab = () => {
     try {
       const { error } = await supabase.from("staff_advances").insert({
         employee_id: formData.employeeId,
+        amount_requested: parseFloat(formData.amount),
         amount: parseFloat(formData.amount),
+        requested_by: user?.id as string,
         reason: formData.reason,
         settlement_method: formData.settlementMethod,
         expected_settlement_date: formData.expectedDate,
@@ -178,7 +180,7 @@ const StaffAdvanceTab = () => {
     try {
       const { error } = await supabase
         .from("staff_advances")
-        .update({ status, approved_by: user?.id, approval_date: new Date().toISOString() })
+        .update({ status })
         .eq("id", id);
       if (error) throw error;
       toast.success(`Advance request ${status.toLowerCase()}`);
