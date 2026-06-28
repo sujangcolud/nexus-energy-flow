@@ -131,12 +131,14 @@ const AdvanceSettlementTab = () => {
     try {
       const { error } = await supabase.from("advance_settlements").insert({
         advance_id: formData.advanceId,
+        employee_id: activeAdvances.find(a => a.id === formData.advanceId)?.employee_id as string,
+        submitted_by: user?.id as string,
         amount: parseFloat(formData.amount),
         settlement_type: formData.settlementType,
-        expense_type: formData.expenseType,
+        expense_type: formData.expenseType || null,
         description: formData.description,
-        settlement_date: formData.date,
-        status: "Pending Verification",
+        expense_date: formData.date,
+        verification_status: "Pending Verification",
       });
 
       if (error) throw error;
