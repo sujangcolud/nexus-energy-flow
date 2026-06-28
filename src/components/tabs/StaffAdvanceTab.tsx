@@ -180,7 +180,7 @@ const StaffAdvanceTab = () => {
     try {
       const { error } = await supabase
         .from("staff_advances")
-        .update({ status, approved_by: user?.id, approval_date: new Date().toISOString() })
+        .update({ status })
         .eq("id", id);
       if (error) throw error;
       toast.success(`Advance request ${status.toLowerCase()}`);
