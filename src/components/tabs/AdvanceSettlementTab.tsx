@@ -47,6 +47,7 @@ interface Employee {
 interface StaffAdvance {
   id: string;
   amount: number;
+  employee_id: string;
   employees: Employee;
   status: string;
 }
