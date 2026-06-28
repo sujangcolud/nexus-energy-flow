@@ -56,11 +56,13 @@ interface Settlement {
   advance_id: string;
   amount: number;
   settlement_type: string;
-  settlement_date: string;
-  status: string;
-  description: string;
-  staff_advances: StaffAdvance;
+  expense_date: string | null;
+  expense_type: string | null;
+  verification_status: string;
+  description: string | null;
+  staff_advances: any;
 }
+
 
 const AdvanceSettlementTab = () => {
   const { user } = useAuth();
