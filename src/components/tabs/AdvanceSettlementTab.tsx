@@ -210,7 +210,7 @@ const AdvanceSettlementTab = () => {
           expense_type,
           description,
           expense_date,
-          status
+          verification_status,
         })
         .eq("id", id);
 
