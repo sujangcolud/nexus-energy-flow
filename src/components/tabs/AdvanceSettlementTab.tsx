@@ -199,7 +199,7 @@ const AdvanceSettlementTab = () => {
   const handleUpdateSettlement = async () => {
     if (!editDialog.settlement) return;
     try {
-      const { id, amount, settlement_type, expense_type, description, settlement_date, status } = editDialog.settlement;
+      const { id, amount, settlement_type, expense_type, description, expense_date, verification_status } = editDialog.settlement;
 
       const { error } = await supabase
         .from("advance_settlements")
@@ -208,7 +208,7 @@ const AdvanceSettlementTab = () => {
           settlement_type,
           expense_type,
           description,
-          settlement_date,
+          expense_date,
           status
         })
         .eq("id", id);
@@ -329,12 +329,12 @@ const AdvanceSettlementTab = () => {
                   <TableBody>
                     {settlements.map((s) => (
                       <TableRow key={s.id}>
-                        <TableCell>{format(new Date(s.settlement_date), "MMM dd, yyyy")}</TableCell>
+                        <TableCell>{format(new Date(s.expense_date), "MMM dd, yyyy")}</TableCell>
                         <TableCell className="font-medium">{s.staff_advances?.employees?.full_name}</TableCell>
                         <TableCell className="font-bold">रु {s.amount.toLocaleString()}</TableCell>
                         <TableCell>
-                          <Badge variant={s.status === "Approved" ? "default" : "outline"}>
-                            {s.status}
+                          <Badge variant={s.verification_status === "Approved" ? "default" : "outline"}>
+                            {s.verification_status}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right">
@@ -347,7 +347,7 @@ const AdvanceSettlementTab = () => {
                               >
                                <Edit2 className="h-4 w-4" />
                              </Button>
-                             {s.status === "Pending Verification" && (
+                             {s.verification_status === "Pending Verification" && (
                                <>
                                  <Button
                                     size="sm"
@@ -403,10 +403,10 @@ const AdvanceSettlementTab = () => {
                     <Label>Date</Label>
                     <Input
                       type="date"
-                      value={editDialog.settlement.settlement_date}
+                      value={editDialog.settlement.expense_date}
                       onChange={(e) => setEditDialog({
                         ...editDialog,
-                        settlement: {...editDialog.settlement!, settlement_date: e.target.value}
+                        settlement: {...editDialog.settlement!, expense_date: e.target.value}
                       })}
                       className="rounded-xl"
                     />
@@ -416,10 +416,10 @@ const AdvanceSettlementTab = () => {
                <div className="space-y-2">
                  <Label>Status</Label>
                  <Select
-                    value={editDialog.settlement.status}
+                    value={editDialog.settlement.verification_status}
                     onValueChange={(v) => setEditDialog({
                       ...editDialog,
-                      settlement: {...editDialog.settlement!, status: v}
+                      settlement: {...editDialog.settlement!, verification_status: v}
                     })}
                   >
                     <SelectTrigger className="rounded-xl">
