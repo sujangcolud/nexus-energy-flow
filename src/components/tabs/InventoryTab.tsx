@@ -98,6 +98,29 @@ const InventoryTab = () => {
     if (user) {
       fetchInventory();
       fetchCategories();
+
+      // Set up real-time subscription for inventory
+      const inventoryChannel = supabase
+        .channel('inventory-updates')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'inventory' },
+          () => {
+            fetchInventory();
+          }
+        )
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'inventory_unit_conversions' },
+          () => {
+            fetchInventory();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(inventoryChannel);
+      };
     }
   }, [user]);
 
@@ -488,6 +511,10 @@ const InventoryTab = () => {
               inventory={inventory}
               categories={categories}
               onComplete={fetchInventory}
+              onOpen={() => {
+                fetchInventory();
+                fetchCategories();
+              }}
             />
             <Button onClick={() => setManualAddDialogOpen(true)} className="flex-1 md:flex-none rounded-xl h-11 px-6 font-bold shadow-sm">
               <Plus className="h-4 w-4 mr-2" />

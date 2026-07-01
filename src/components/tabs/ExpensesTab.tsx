@@ -210,12 +210,36 @@ const ExpensesTab = () => {
     fetchExpenses();
     fetchCategories();
     fetchInventoryItems();
+
+    // Set up real-time subscription for inventory
+    const inventoryChannel = supabase
+      .channel('inventory-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'inventory' },
+        () => {
+          fetchInventoryItems();
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'inventory_unit_conversions' },
+        () => {
+          fetchInventoryItems();
+        }
+      )
+      .subscribe();
+
     // Default to true if no setting exists
     const canEdit = localStorage.getItem("canEditTransactions");
     setCanEditTransactions(canEdit === null ? true : JSON.parse(canEdit));
     
     const canAdd = localStorage.getItem("canAddExpenseCategory");
     setCanAddCategory(canAdd === null ? true : JSON.parse(canAdd));
+
+    return () => {
+      supabase.removeChannel(inventoryChannel);
+    };
   }, [user, page, range]);
 
   const fetchCategories = async () => {
@@ -770,6 +794,10 @@ const ExpensesTab = () => {
             categories={categories}
             inventory={inventoryItems as any}
             onComplete={fetchExpenses}
+            onOpen={() => {
+              fetchCategories();
+              fetchInventoryItems();
+            }}
           />
         </div>
 
