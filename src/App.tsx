@@ -159,6 +159,8 @@ const App = () => {
                 <Route path="recipes" element={<RecipeManagementTab />} />
 
                 <Route path="bulk-import" element={<UnifiedBulkImportTab />} />
+                <Route path="file-upload" element={<FileUploadTab />} />
+                <Route path="data-input" element={<DataInputTab />} />
                 <Route path="user-management" element={<UserManagementTab />} />
 
                 <Route
@@ -169,6 +171,17 @@ const App = () => {
                     </ProtectedRoute>
                   }
                 />
+                <Route
+                  path="admin-panel"
+                  element={
+                    <ProtectedRoute allowedRoles={["super_admin"]}>
+                      <AdminPanel />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route path="analytics" element={<Analytics />} />
+                <Route path="unified-insights" element={<UnifiedInsightsTab />} />
+                <Route path="custom-report-creator" element={<CustomReportCreator />} />
                 <Route path="settings" element={<Settings />} />
                 <Route
                   path="dashboard-studio"
